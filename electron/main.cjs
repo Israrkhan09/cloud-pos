@@ -211,8 +211,8 @@ async function ensureServerRunning() {
         console.error('[Vegetable POS Desktop] Failed to start PHP server:', err);
     });
 
-    // Poll until server responds (up to 12 seconds)
-    for (let i = 0; i < 24; i++) {
+    // Poll until server responds (up to 20 seconds)
+    for (let i = 0; i < 40; i++) {
         await new Promise((r) => setTimeout(r, 500));
         const up = await checkServer();
         if (up) {
@@ -380,7 +380,22 @@ app.whenReady().then(async () => {
     createSplashWindow();
 
     // Ensure server is running in background
-    await ensureServerRunning();
+    const serverReady = await ensureServerRunning();
+
+    if (!serverReady) {
+        console.error('[Vegetable POS Desktop] PHP server failed to start!');
+        // Show error window instead of white blank screen
+        if (splashWindow && !splashWindow.isDestroyed()) splashWindow.close();
+        const errWin = new BrowserWindow({ width: 700, height: 400, title: 'Vegetable POS - Error', backgroundColor: '#fff' });
+        errWin.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(`
+            <html><body style="font-family:sans-serif;padding:40px;background:#fff;color:#333">
+            <h2 style="color:#dc2626">Vegetable POS - Startup Error</h2>
+            <p>PHP server failed to start. Please contact support.</p>
+            <p style="color:#666;font-size:13px">Make sure no other app is using port 8000.</p>
+            <button onclick="window.close()" style="margin-top:20px;padding:10px 24px;background:#166534;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:15px">Close</button>
+            </body></html>`));
+        return;
+    }
 
     // Create main window (hidden in background)
     createMainWindow();
