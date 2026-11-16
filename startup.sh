@@ -28,13 +28,16 @@ php artisan view:cache || true
 # Run migrations
 php artisan migrate --force || true
 
-# Create test user directly via artisan (safe - uses firstOrCreate)
+# Create test user with verified email (email_verified_at required for dashboard access)
 php artisan tinker --execute="
-App\Models\User::firstOrCreate(
+\$user = App\Models\User::firstOrCreate(
     ['email' => 'test@test.com'],
-    ['name' => 'Test User', 'password' => bcrypt('password')]
+    ['name' => 'Test User', 'password' => bcrypt('password'), 'email_verified_at' => now()]
 );
-echo 'User ready: ' . App\Models\User::count() . ' users';
+if (is_null(\$user->email_verified_at)) {
+    \$user->update(['email_verified_at' => now()]);
+}
+echo 'User verified: ' . \$user->email . ' at ' . \$user->email_verified_at;
 " || true
 
 echo "==> Launching PHP server..."
