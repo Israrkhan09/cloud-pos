@@ -24,7 +24,7 @@ COPY . .
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
 # Install Node dependencies and build frontend assets
-RUN npm ci --prefer-offline || npm install
+RUN npm install --legacy-peer-deps
 RUN npm run build
 
 # Setup storage directories
