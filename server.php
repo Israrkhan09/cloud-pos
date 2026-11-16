@@ -8,9 +8,9 @@ $filePath = __DIR__ . '/public' . $uri;
 
 if ($uri !== '/' && file_exists($filePath) && !is_dir($filePath)) {
     $mime = match (pathinfo($filePath, PATHINFO_EXTENSION)) {
-        'css' => 'text/css',
-        'js' => 'application/javascript',
-        'json' => 'application/json',
+        'css' => 'text/css; charset=utf-8',
+        'js' => 'application/javascript; charset=utf-8',
+        'json' => 'application/json; charset=utf-8',
         'svg' => 'image/svg+xml',
         'png' => 'image/png',
         'jpg', 'jpeg' => 'image/jpeg',
