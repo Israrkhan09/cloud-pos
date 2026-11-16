@@ -31,4 +31,4 @@ php artisan migrate --force || true
 echo "==> Launching PHP server..."
 
 # Start server from project root - server.php handles static files from public/
-exec PHP_CLI_SERVER_WORKERS=$PHP_CLI_SERVER_WORKERS php -S 0.0.0.0:${PORT:-8000} server.php
+exec php -S 0.0.0.0:${PORT:-8000} server.php
