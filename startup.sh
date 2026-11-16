@@ -25,8 +25,11 @@ php artisan config:cache || true
 php artisan route:cache || true
 php artisan view:cache || true
 
-# Run migrations (non-fatal if already done)
+# Run migrations
 php artisan migrate --force || true
+
+# Seed database (DatabaseSeeder uses firstOrCreate so it is safe to run multiple times)
+php artisan db:seed --force || true
 
 echo "==> Launching PHP server..."
 
