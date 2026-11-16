@@ -21,13 +21,13 @@ WORKDIR /app
 COPY . .
 
 # Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
+RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 # Install Node dependencies and build frontend assets
 RUN npm install --legacy-peer-deps
 RUN npm run build
 
-# Setup storage directories
+# Setup storage and bootstrap directories
 RUN mkdir -p storage/framework/views \
              storage/framework/cache/data \
              storage/framework/sessions \
@@ -35,20 +35,16 @@ RUN mkdir -p storage/framework/views \
              bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
-# Use Railway .env if available, otherwise keep existing
-RUN if [ -f .env.railway ]; then cp .env.railway .env; fi
+# Use Railway .env
+RUN cp .env.railway .env
 
 # Generate app key
 RUN php artisan key:generate --force
 
-# Cache for performance
-RUN php artisan config:cache || true
-RUN php artisan route:cache || true
-RUN php artisan view:cache || true
-
-# Run database migrations
-RUN php artisan migrate --force || true
+# Make startup script executable
+RUN chmod +x /app/startup.sh
 
 EXPOSE 8000
 
-CMD php -S 0.0.0.0:${PORT:-8000} -t public server.php
+# Use startup script (clears and rebuilds cache at runtime with correct APP_URL)
+CMD ["/app/startup.sh"]
