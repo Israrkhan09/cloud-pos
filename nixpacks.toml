@@ -1,0 +1,24 @@
+[phases.setup]
+nixPkgs = ["php82", "php82Packages.composer", "nodejs_20", "nodePackages.npm", "sqlite"]
+
+[phases.install]
+cmds = [
+  "composer install --no-dev --optimize-autoloader --no-interaction",
+  "npm install",
+  "npm run build"
+]
+
+[phases.build]
+cmds = [
+  "mkdir -p storage/framework/views storage/framework/cache/data storage/framework/sessions storage/logs bootstrap/cache",
+  "chmod -R 775 storage bootstrap/cache",
+  "cp .env.railway .env",
+  "php artisan key:generate --force",
+  "php artisan config:cache || true",
+  "php artisan route:cache || true",
+  "php artisan view:cache || true",
+  "php artisan migrate --force || true"
+]
+
+[start]
+cmd = "php -S 0.0.0.0:$PORT -t public server.php"
