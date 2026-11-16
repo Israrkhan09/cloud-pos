@@ -41,6 +41,10 @@ RUN cp .env.railway .env
 # Generate app key
 RUN php artisan key:generate --force
 
+# Pre-seed database with test user (baked into Docker image)
+RUN php artisan migrate --force && \
+    php artisan tinker --execute="App\Models\User::firstOrCreate(['email'=>'test@test.com'],['name'=>'Test User','password'=>bcrypt('password'),'email_verified_at'=>now()]); echo 'Seeded';"
+
 # Make startup script executable
 RUN chmod +x /app/startup.sh
 
