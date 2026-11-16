@@ -51,81 +51,81 @@ export default function ReportsIndex() {
         {
             id: 'merchants',
             name: 'Merchants',
-            name_ur: 'Ø®Ø±ÛŒØ¯Ø§Ø± (Ù…Ø±Ú†Ù†Ù¹Ø³)',
+            name_ur: 'خریدار (مرچنٹس)',
             icon: 'Users',
             reports: [
                 {
                     id: 'amroza_print',
                     title: 'Amroza Print',
-                    title_ur: 'Ø§Ù…Ø±ÙˆØ²Û Ù¾Ø±Ù†Ù¹',
+                    title_ur: 'امروزہ پرنٹ',
                     desc: 'Aaj ki sale ki list',
-                    desc_ur: 'Ø¢Ø¬ Ú©ÛŒ Ø³ÛŒÙ„ Ú©ÛŒ Ù„Ø³Ù¹',
+                    desc_ur: 'آج کی سیل کی لسٹ',
                     url: '/amroza',
                 },
                 {
                     id: 'amroza_parchi',
                     title: 'Amroza Parchi',
-                    title_ur: 'Ø§Ù…Ø±ÙˆØ²Û Ù¾Ø±Ú†ÛŒ',
+                    title_ur: 'امروزہ پرچی',
                     desc: 'Merchant ko dene ki parchi',
-                    desc_ur: 'Ù…Ø±Ú†Ù†Ù¹ Ú©Ùˆ Ø¯ÛŒÙ†Û’ Ú©ÛŒ Ù¾Ø±Ú†ÛŒ',
+                    desc_ur: 'مرچنٹ کو دینے کی پرچی',
                     url: '/amroza',
                 },
                 {
                     id: 'naqdi_print',
                     title: 'Naqdi Print',
-                    title_ur: 'Ù†Ù‚Ø¯ÛŒ Ù¾Ø±Ù†Ù¹',
+                    title_ur: 'نقدی پرنٹ',
                     desc: 'Naqdi wasooli ki list',
-                    desc_ur: 'Ù†Ù‚Ø¯ÛŒ ÙˆØµÙˆÙ„ÛŒ Ú©ÛŒ Ù„Ø³Ù¹',
+                    desc_ur: 'نقدی وصولی کی لسٹ',
                     url: '/naqdi',
                 },
                 {
                     id: 'wasooli_print',
                     title: 'Wasooli Print',
-                    title_ur: 'ÙˆØµÙˆÙ„ÛŒ Ù¾Ø±Ù†Ù¹',
+                    title_ur: 'وصولی پرنٹ',
                     desc: 'Wasooli (recovery) ki list',
-                    desc_ur: 'ÙˆØµÙˆÙ„ÛŒ (Ø±ÛŒÚ©ÙˆØ±ÛŒ) Ú©ÛŒ Ù„Ø³Ù¹',
+                    desc_ur: 'وصولی (ریکوری) کی لسٹ',
                     url: '/wasooli',
                 },
                 {
                     id: 'merchant_amroza',
                     title: 'Merchant Amroza',
-                    title_ur: 'Ù…Ø±Ú†Ù†Ù¹ Ø§Ù…Ø±ÙˆØ²Û',
+                    title_ur: 'مرچنٹ امروزہ',
                     desc: 'Merchant wise sale',
-                    desc_ur: 'Ù…Ø±Ú†Ù†Ù¹ Ú©Û’ Ù…Ø·Ø§Ø¨Ù‚ Ø³ÛŒÙ„',
+                    desc_ur: 'مرچنٹ کے مطابق سیل',
                     url: '/merchant-amroza',
                 },
                 {
                     id: 'merchant_wasooli',
                     title: 'Merchant Wasooli',
-                    title_ur: 'Ù…Ø±Ú†Ù†Ù¹ ÙˆØµÙˆÙ„ÛŒ',
+                    title_ur: 'مرچنٹ وصولی',
                     desc: 'Merchant wise wasooli',
-                    desc_ur: 'Ù…Ø±Ú†Ù†Ù¹ Ú©Û’ Ù…Ø·Ø§Ø¨Ù‚ ÙˆØµÙˆÙ„ÛŒ',
+                    desc_ur: 'مرچنٹ کے مطابق وصولی',
                     url: '/merchant-wasooli',
                 },
                 {
                     id: 'amroza_tafseel',
                     title: 'Amroza Tafseel',
-                    title_ur: 'Ø§Ù…Ø±ÙˆØ²Û ØªÙØµÛŒÙ„',
+                    title_ur: 'امروزہ تفصیل',
                     desc: 'Sale ki poori tafseel',
-                    desc_ur: 'Ø³ÛŒÙ„ Ú©ÛŒ Ù¾ÙˆØ±ÛŒ ØªÙØµÛŒÙ„',
+                    desc_ur: 'سیل کی پوری تفصیل',
                     url: '/amroza-detail',
                     isRange: true,
                 },
                 {
                     id: 'wasooli_tafseel',
                     title: 'Wasooli Tafseel',
-                    title_ur: 'ÙˆØµÙˆÙ„ÛŒ ØªÙØµÛŒÙ„',
+                    title_ur: 'وصولی تفصیل',
                     desc: 'Wasooli ki poori tafseel',
-                    desc_ur: 'ÙˆØµÙˆÙ„ÛŒ Ú©ÛŒ Ù¾ÙˆØ±ÛŒ ØªÙØµÛŒÙ„',
+                    desc_ur: 'وصولی کی پوری تفصیل',
                     url: '/wasooli-detail',
                     isRange: true,
                 },
                 {
                     id: 'amroza_wasooli',
                     title: 'Amroza / Wasooli',
-                    title_ur: 'Ø§Ù…Ø±ÙˆØ²Û / ÙˆØµÙˆÙ„ÛŒ Ø³Ù…Ø±ÛŒ',
+                    title_ur: 'امروزہ / وصولی سمری',
                     desc: 'Sale aur wasooli ek saath',
-                    desc_ur: 'Ø³ÛŒÙ„ Ø§ÙˆØ± ÙˆØµÙˆÙ„ÛŒ Ø§ÛŒÚ© Ø³Ø§ØªÚ¾',
+                    desc_ur: 'سیل اور وصولی ایک ساتھ',
                     url: '/amroza-wasooli',
                     isRange: true,
                 },
@@ -134,47 +134,47 @@ export default function ReportsIndex() {
         {
             id: 'farmers',
             name: 'Farmers',
-            name_ur: 'Ø²Ù…ÛŒÙ†Ø¯Ø§Ø± (Ú©Ø³Ø§Ù†)',
+            name_ur: 'زمیندار (کسان)',
             icon: 'Tractor',
             reports: [
                 {
                     id: 'farmer_bill',
                     title: 'Farmer Bill (Bijak)',
-                    title_ur: 'Ú©Ø³Ø§Ù† Ø¨Ù„ (Ø¨ÛŒØ¬Ú©)',
+                    title_ur: 'کسان بل (بیجک)',
                     desc: 'Kisan ka rozana ka hisab',
-                    desc_ur: 'Ú©Ø³Ø§Ù† Ú©Ø§ Ø±ÙˆØ²Ø§Ù†Û Ú©Ø§ Ø­Ø³Ø§Ø¨',
+                    desc_ur: 'کسان کا روزانہ کا حساب',
                     url: '/bijak',
                 },
                 {
                     id: 'farmer_khata',
                     title: 'Farmer Khata',
-                    title_ur: 'Ú©Ø³Ø§Ù† Ú©Ú¾Ø§ØªÛ',
+                    title_ur: 'کسان کھاتہ',
                     desc: 'Farmer ka Jama / Banam (Fard Hisab)',
-                    desc_ur: 'Ú©Ø³Ø§Ù† Ú©Ø§ Ø¬Ù…Ø¹ / Ø¨Ù†Ø§Ù… (ÙØ±Ø¯ Ø­Ø³Ø§Ø¨)',
+                    desc_ur: 'کسان کا جمع / بنام (فرد حساب)',
                     url: '/khata',
                 },
                 {
                     id: 'farmer_list',
                     title: 'Farmer List',
-                    title_ur: 'Ú©Ø³Ø§Ù† Ù„Ø³Ù¹',
+                    title_ur: 'کسان لسٹ',
                     desc: 'Tamaam farmers ki fehrist',
-                    desc_ur: 'ØªÙ…Ø§Ù… Ú©Ø³Ø§Ù†ÙˆÚº Ú©ÛŒ ÙÛØ±Ø³Øª',
+                    desc_ur: 'تمام کسانوں کی فہرست',
                     url: '/masters/farmers',
                 },
                 {
                     id: 'farmer_marks',
                     title: 'Farmer Marks',
-                    title_ur: 'Ú©Ø³Ø§Ù† Ù…Ø§Ø±Ú©Ø³',
+                    title_ur: 'کسان مارکس',
                     desc: 'Farmer marks aur bariyan',
-                    desc_ur: 'Ú©Ø³Ø§Ù† Ù…Ø§Ø±Ú©Ø³ Ø§ÙˆØ± Ø¨Ø§Ú‘ÛŒØ§Úº',
+                    desc_ur: 'کسان مارکس اور باڑیاں',
                     url: '/masters/marks',
                 },
                 {
                     id: 'farmer_balances',
                     title: 'Farmer Balances',
-                    title_ur: 'Ú©Ø³Ø§Ù† Ø¨Ù‚Ø§ÛŒØ§ Ø¬Ø§Øª',
+                    title_ur: 'کسان بقایا جات',
                     desc: 'Farmer baqaya jaat',
-                    desc_ur: 'Ú©Ø³Ø§Ù† Ú©Û’ Ø¨Ù‚Ø§ÛŒØ§ Ø¬Ø§Øª',
+                    desc_ur: 'کسان کے بقایا جات',
                     url: '/khata',
                 },
             ],
@@ -182,23 +182,23 @@ export default function ReportsIndex() {
         {
             id: 'ledger',
             name: 'Ledger',
-            name_ur: 'Ù„ÛŒØ¬Ø±',
+            name_ur: 'لیجر',
             icon: 'BookBookmark',
             reports: [
                 {
                     id: 'general_ledger',
                     title: 'General Ledger',
-                    title_ur: 'Ø¬Ù†Ø±Ù„ Ù„ÛŒØ¬Ø± (Ø±ÙˆÚ©Ú‘)',
+                    title_ur: 'جنرل لیجر (روکڑ)',
                     desc: 'Roker aur rozana ka lena dena',
-                    desc_ur: 'Ø±ÙˆÚ©Ú‘ Ø§ÙˆØ± Ø±ÙˆØ²Ø§Ù†Û Ú©Ø§ Ù„ÛŒÙ†Ø§ Ø¯ÛŒÙ†Ø§',
+                    desc_ur: 'روکڑ اور روزانہ کا لینا دینا',
                     url: '/general-ledger',
                 },
                 {
                     id: 'cash_book',
                     title: 'Daily Cash Book',
-                    title_ur: 'Ø±ÙˆØ²Ø§Ù†Û Ú©ÛŒØ´ Ø¨Ú©',
+                    title_ur: 'روزانہ کیش بک',
                     desc: 'Cash aamad o kharch',
-                    desc_ur: 'Ú©ÛŒØ´ Ø¢Ù…Ø¯ Ùˆ Ø®Ø±Ú†',
+                    desc_ur: 'کیش آمد و خرچ',
                     url: '/general-ledger',
                 },
             ],
@@ -219,7 +219,7 @@ export default function ReportsIndex() {
     const [loading, setLoading] = useState(false);
 
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: isUrdu ? 'Ø±Ù¾ÙˆØ±Ù¹Ø³' : 'Reports', href: '/reports' },
+        { title: isUrdu ? 'رپورٹس' : 'Reports', href: '/reports' },
     ];
 
     async function fetchReportData(rep: ReportItem, d: string, from: string, to: string) {
@@ -231,7 +231,7 @@ export default function ReportsIndex() {
             setReportData(data);
             return data;
         } catch (err) {
-            toast.error(isUrdu ? 'Ø±Ù¾ÙˆØ±Ù¹ ÚˆÛŒÙ¹Ø§ Ù„ÙˆÚˆ Ù†ÛÛŒÚº ÛÙˆ Ø³Ú©Ø§' : 'Could not load report data');
+            toast.error(isUrdu ? 'رپورٹ ڈیٹا لوڈ نہیں ہو سکا' : 'Could not load report data');
             return null;
         } finally {
             setLoading(false);
@@ -260,7 +260,7 @@ export default function ReportsIndex() {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={isUrdu ? 'Ø±Ù¾ÙˆØ±Ù¹Ø³' : 'Reports'} />
+            <Head title={isUrdu ? 'رپورٹس' : 'Reports'} />
 
             {/* Interactive Screen UI */}
             <div className="w-full max-w-full overflow-x-hidden -mt-4 -mx-4 pb-20 bg-[#f4f6f4] min-h-[calc(100vh-4rem)] font-sans text-[#1a211c] dark:text-[#e7ece8] print:hidden" dir={isUrdu ? 'rtl' : 'ltr'}>
@@ -278,10 +278,10 @@ export default function ReportsIndex() {
                                 <span>{isUrdu ? 'ڈیش بورڈ پر واپس' : 'Dashboard par wapas jayein'}</span>
                             </Link>
                             <h1 className={`text-lg md:text-xl font-bold text-white tracking-tight ${isUrdu ? 'font-nastaliq text-xl' : ''}`}>
-                                {isUrdu ? 'Ø±Ù¾ÙˆØ±Ù¹Ø³' : 'Reports'}
+                                {isUrdu ? 'رپورٹس' : 'Reports'}
                             </h1>
                             <p className={`text-emerald-100/80 text-xs font-medium mt-0.5 ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                {isUrdu ? 'Ø±Ù¾ÙˆØ±Ù¹ Ù…Ù†ØªØ®Ø¨ Ú©Ø±ÛŒÚºØŒ Ù¾Ú¾Ø± Ù¾Ø±Ù†Ù¹ Ú©Ø±ÛŒÚº' : 'Report chunein, phir print karein'}
+                                {isUrdu ? 'رپورٹ منتخب کریں، پھر پرنٹ کریں' : 'Report chunein, phir print karein'}
                             </p>
                         </div>
 
@@ -294,7 +294,7 @@ export default function ReportsIndex() {
                                     setSelectedDate(e.target.value);
                                     setSelectedFromDate(e.target.value);
                                     setSelectedToDate(e.target.value);
-                                    toast.success(isUrdu ? `ØªØ§Ø±ÛŒØ® Ù…Ù†ØªØ®Ø¨ ÛÙˆØ¦ÛŒ: ${e.target.value}` : `Date selected: ${e.target.value}`);
+                                    toast.success(isUrdu ? `تاریخ منتخب ہوئی: ${e.target.value}` : `Date selected: ${e.target.value}`);
                                 }}
                                 className="h-9 px-3 rounded-xl bg-white text-gray-900 font-bold text-xs cursor-pointer shadow-xs border-0 outline-none"
                             />
@@ -370,7 +370,7 @@ export default function ReportsIndex() {
                                                     className="h-8 px-3 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold cursor-pointer transition-colors shadow-2xs flex items-center gap-1.5"
                                                 >
                                                     <Icon name="Eye" className="size-3.5 text-gray-500" />
-                                                    <span>{isUrdu ? 'Ù¾ÛŒØ´ Ù†Ø¸Ø§Ø±Û' : 'Preview'}</span>
+                                                    <span>{isUrdu ? 'پیش نظارہ' : 'Preview'}</span>
                                                 </button>
 
                                                 {/* Print Button */}
@@ -380,7 +380,7 @@ export default function ReportsIndex() {
                                                     className="h-8 px-3.5 rounded-lg bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-semibold cursor-pointer transition-colors shadow-2xs flex items-center gap-1.5"
                                                 >
                                                     <Icon name="Printer" className="size-3.5" />
-                                                    <span>{isUrdu ? 'Ù¾Ø±Ù†Ù¹' : 'Print'}</span>
+                                                    <span>{isUrdu ? 'پرنٹ' : 'Print'}</span>
                                                 </button>
                                             </div>
                                         </div>
