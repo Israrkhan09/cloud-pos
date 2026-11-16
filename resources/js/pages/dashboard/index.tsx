@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Head, Link, usePage, router } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/layouts/app-layout';
@@ -110,14 +110,14 @@ export default function Dashboard() {
     ];
 
     const alerts: AlertItem[] = pageProps.alerts || [
-        { title: "Haji Gulâ€™s balance is over Rs. 85,000", subtitle: "No payment in 14 days", type: "warn" },
+        { title: "Haji Gul’s balance is over Rs. 85,000", subtitle: "No payment in 14 days", type: "warn" },
         { title: "3 farmer bills not yet created", subtitle: "Bijak received today", type: "warn" },
-        { title: "Yesterdayâ€™s day is not closed", subtitle: "Close it to lock the entries", type: "warn" },
+        { title: "Yesterday’s day is not closed", subtitle: "Close it to lock the entries", type: "warn" },
     ];
 
     const recentSales: RecentEntry[] = pageProps.recentSales || [
         { time: '11:42 PM', type: 'Sale', isCash: true, party: 'Baloch Trading Co', item: 'Aloo (Potato)', nag: 40, amount: 62000 },
-        { time: '11:20 PM', type: 'Recovery', isCash: false, party: 'Haji Gul', item: 'â€”', nag: 'â€”', amount: 25000 },
+        { time: '11:20 PM', type: 'Recovery', isCash: false, party: 'Haji Gul', item: '—', nag: '—', amount: 25000 },
         { time: '10:58 PM', type: 'Cash sale', isCash: true, party: 'Naqdi (Cash Customer)', item: 'Piyaz (Onion)', nag: 12, amount: 18400 },
         { time: '10:31 PM', type: 'Farmer bill', isCash: false, party: 'Ghulam Nabi', item: 'Tamatar (Tomato)', nag: 60, amount: 0 },
         { time: '10:05 PM', type: 'Sale', isCash: true, party: 'Karachi Fresh Store', item: 'Lehsan (Garlic)', nag: 8, amount: 31200 },
@@ -142,7 +142,7 @@ export default function Dashboard() {
 
     const breadcrumbs: BreadcrumbItem[] = [
         {
-            title: isUrdu ? 'ÚˆÛŒØ´ Ø¨ÙˆØ±Úˆ' : 'Dashboard',
+            title: isUrdu ? 'ڈیش بورڈ' : 'Dashboard',
             href: '/dashboard',
         },
     ];
@@ -154,7 +154,7 @@ export default function Dashboard() {
             preserveScroll: true,
             replace: true,
             onSuccess: () => {
-                toast.success(isUrdu ? `${label} Ú©Ø§ ÚˆÛŒÙ¹Ø§ Ù„ÙˆÚˆ ÛÙˆ Ú¯ÛŒØ§ ÛÛ’` : `Loaded data for ${label}`);
+                toast.success(isUrdu ? `${label} کا ڈیٹا لوڈ ہو گیا ہے` : `Loaded data for ${label}`);
             },
         });
     };
@@ -165,14 +165,14 @@ export default function Dashboard() {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={isUrdu ? 'ÚˆÛŒØ´ Ø¨ÙˆØ±Úˆ - Ø¬Û’ Ú©Û’ Ø³ÛŒ' : 'Dashboard'} />
+            <Head title={isUrdu ? 'ڈیش بورڈ - جے کے سی' : 'Dashboard'} />
 
             <div className="w-full max-w-[1400px] mx-auto space-y-4 pb-12 font-sans text-[#1a211c] dark:text-[#e7ece8]">
                 {/* Title & Range Switcher */}
                 <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 pt-2">
                     <div>
                         <h1 className={`text-[22px] font-bold tracking-tight text-[#1a211c] dark:text-[#e7ece8] ${isUrdu ? 'font-nastaliq text-2xl' : ''}`}>
-                            {isUrdu ? 'ÚˆÛŒØ´ Ø¨ÙˆØ±Úˆ' : 'Dashboard'}
+                            {isUrdu ? 'ڈیش بورڈ' : 'Dashboard'}
                         </h1>
                         <p className={`text-xs text-[#68736b] dark:text-[#8b968e] mt-0.5 ${isUrdu ? 'font-nastaliq' : ''}`}>
                             {formattedDate}
@@ -181,44 +181,44 @@ export default function Dashboard() {
 
                     <div className="inline-flex items-center p-0.5 border border-[#e6e9e6] dark:border-[#262d28] rounded-lg bg-white dark:bg-[#161b18] shadow-2xs self-start sm:self-auto">
                         <button
-                            onClick={() => handleRangeChange('today', isUrdu ? 'Ø¢Ø¬' : 'Today')}
+                            onClick={() => handleRangeChange('today', isUrdu ? 'آج' : 'Today')}
                             className={`px-3 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
                                 range === 'today'
                                     ? 'bg-[#ecf5ee] dark:bg-[#1b2a20] text-[#166534] dark:text-[#4ade80]'
                                     : 'text-[#68736b] dark:text-[#8b968e] hover:text-[#1a211c] dark:hover:text-[#e7ece8]'
                             } ${isUrdu ? 'font-nastaliq' : ''}`}
                         >
-                            {isUrdu ? 'Ø¢Ø¬' : 'Today'}
+                            {isUrdu ? 'آج' : 'Today'}
                         </button>
                         <button
-                            onClick={() => handleRangeChange('yesterday', isUrdu ? 'Ú©Ù„' : 'Yesterday')}
+                            onClick={() => handleRangeChange('yesterday', isUrdu ? 'کل' : 'Yesterday')}
                             className={`px-3 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
                                 range === 'yesterday'
                                     ? 'bg-[#ecf5ee] dark:bg-[#1b2a20] text-[#166534] dark:text-[#4ade80]'
                                     : 'text-[#68736b] dark:text-[#8b968e] hover:text-[#1a211c] dark:hover:text-[#e7ece8]'
                             } ${isUrdu ? 'font-nastaliq' : ''}`}
                         >
-                            {isUrdu ? 'Ú©Ù„' : 'Yesterday'}
+                            {isUrdu ? 'کل' : 'Yesterday'}
                         </button>
                         <button
-                            onClick={() => handleRangeChange('week', isUrdu ? 'ÛÙØªÛ' : 'This week')}
+                            onClick={() => handleRangeChange('week', isUrdu ? 'ہفتہ' : 'This week')}
                             className={`px-3 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
                                 range === 'week'
                                     ? 'bg-[#ecf5ee] dark:bg-[#1b2a20] text-[#166534] dark:text-[#4ade80]'
                                     : 'text-[#68736b] dark:text-[#8b968e] hover:text-[#1a211c] dark:hover:text-[#e7ece8]'
                             } ${isUrdu ? 'font-nastaliq' : ''}`}
                         >
-                            {isUrdu ? 'ÛÙØªÛ' : 'This week'}
+                            {isUrdu ? 'ہفتہ' : 'This week'}
                         </button>
                         <button
-                            onClick={() => handleRangeChange('month', isUrdu ? 'Ù…ÛÛŒÙ†Û' : 'This month')}
+                            onClick={() => handleRangeChange('month', isUrdu ? 'مہینہ' : 'This month')}
                             className={`px-3 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
                                 range === 'month'
                                     ? 'bg-[#ecf5ee] dark:bg-[#1b2a20] text-[#166534] dark:text-[#4ade80]'
                                     : 'text-[#68736b] dark:text-[#8b968e] hover:text-[#1a211c] dark:hover:text-[#e7ece8]'
                             } ${isUrdu ? 'font-nastaliq' : ''}`}
                         >
-                            {isUrdu ? 'Ù…ÛÛŒÙ†Û' : 'This month'}
+                            {isUrdu ? 'مہینہ' : 'This month'}
                         </button>
                     </div>
                 </div>
@@ -228,7 +228,7 @@ export default function Dashboard() {
                     {/* KPI 1: Sale */}
                     <div className="bg-white dark:bg-[#161b18] border border-[#e6e9e6] dark:border-[#262d28] rounded-xl p-4 shadow-2xs">
                         <span className={`text-[12.5px] font-medium text-[#68736b] dark:text-[#8b968e] block ${isUrdu ? 'font-nastaliq' : ''}`}>
-                            {isUrdu ? (pageProps.rangeLabels?.saleTitleUr || 'Ø³ÛŒÙ„') : (pageProps.rangeLabels?.saleTitle || 'Todayâ€™s sale')}
+                            {isUrdu ? (pageProps.rangeLabels?.saleTitleUr || 'سیل') : (pageProps.rangeLabels?.saleTitle || 'Today’s sale')}
                         </span>
                         <strong className="block text-[26px] font-bold text-[#1a211c] dark:text-[#e7ece8] tracking-tight my-1.5 tabular-nums">
                             {formatRupees(stats.todaysSale)}
@@ -237,40 +237,40 @@ export default function Dashboard() {
                             <b className="text-[#166534] dark:text-[#4ade80] font-semibold">
                                 {stats.saleChangePct >= 0 ? `+${stats.saleChangePct}%` : `${stats.saleChangePct}%`}
                             </b>{' '}
-                            {isUrdu ? (pageProps.rangeLabels?.compTextUr || 'Ù¾Ú†Ú¾Ù„Û’ Ø¯ÙˆØ±Ø§Ù†ÛŒÛ Ú©Û’ Ù…Ù‚Ø§Ø¨Ù„Û’') : (pageProps.rangeLabels?.compText || 'vs yesterday')}
+                            {isUrdu ? (pageProps.rangeLabels?.compTextUr || 'پچھلے دورانیہ کے مقابلے') : (pageProps.rangeLabels?.compText || 'vs yesterday')}
                         </small>
                     </div>
 
                     {/* KPI 2: Cash Received */}
                     <div className="bg-white dark:bg-[#161b18] border border-[#e6e9e6] dark:border-[#262d28] rounded-xl p-4 shadow-2xs">
                         <span className={`text-[12.5px] font-medium text-[#68736b] dark:text-[#8b968e] block ${isUrdu ? 'font-nastaliq' : ''}`}>
-                            {isUrdu ? 'Ù†Ù‚Ø¯ ÙˆØµÙˆÙ„' : 'Cash received'}
+                            {isUrdu ? 'نقد وصول' : 'Cash received'}
                         </span>
                         <strong className="block text-[26px] font-bold text-[#1a211c] dark:text-[#e7ece8] tracking-tight my-1.5 tabular-nums">
                             {formatRupees(stats.cashReceived)}
                         </strong>
                         <small className="text-xs text-[#68736b] dark:text-[#8b968e] block">
-                            {stats.cashPct}% {isUrdu ? (pageProps.rangeLabels?.cashReceivedSubUr || 'Ú©Ù„ Ø³ÛŒÙ„ Ú©Ø§') : (pageProps.rangeLabels?.cashReceivedSub || 'of todayâ€™s sale')}
+                            {stats.cashPct}% {isUrdu ? (pageProps.rangeLabels?.cashReceivedSubUr || 'کل سیل کا') : (pageProps.rangeLabels?.cashReceivedSub || 'of today’s sale')}
                         </small>
                     </div>
 
                     {/* KPI 3: Recovery */}
                     <div className="bg-white dark:bg-[#161b18] border border-[#e6e9e6] dark:border-[#262d28] rounded-xl p-4 shadow-2xs">
                         <span className={`text-[12.5px] font-medium text-[#68736b] dark:text-[#8b968e] block ${isUrdu ? 'font-nastaliq' : ''}`}>
-                            {isUrdu ? (pageProps.rangeLabels?.recoveryTitleUr || 'ÙˆØµÙˆÙ„ÛŒ') : (pageProps.rangeLabels?.recoveryTitle || 'Recovery today')}
+                            {isUrdu ? (pageProps.rangeLabels?.recoveryTitleUr || 'وصولی') : (pageProps.rangeLabels?.recoveryTitle || 'Recovery today')}
                         </span>
                         <strong className="block text-[26px] font-bold text-[#1a211c] dark:text-[#e7ece8] tracking-tight my-1.5 tabular-nums">
                             {formatRupees(stats.received)}
                         </strong>
                         <small className="text-xs text-[#68736b] dark:text-[#8b968e] block">
-                            {isUrdu ? `${stats.recoveryMerchantsCount} Ù…Ø±Ú†Ù†Ù¹Ø³ Ø³Û’` : `From ${stats.recoveryMerchantsCount} merchants`}
+                            {isUrdu ? `${stats.recoveryMerchantsCount} مرچنٹس سے` : `From ${stats.recoveryMerchantsCount} merchants`}
                         </small>
                     </div>
 
                     {/* KPI 4: Total Outstanding */}
                     <div className="bg-white dark:bg-[#161b18] border border-[#e6e9e6] dark:border-[#262d28] rounded-xl p-4 shadow-2xs">
                         <span className={`text-[12.5px] font-medium text-[#68736b] dark:text-[#8b968e] block ${isUrdu ? 'font-nastaliq' : ''}`}>
-                            {isUrdu ? 'Ú©Ù„ Ø¨Ù‚Ø§ÛŒØ§' : 'Total outstanding'}
+                            {isUrdu ? 'کل بقایا' : 'Total outstanding'}
                         </span>
                         <strong className="block text-[26px] font-bold text-[#1a211c] dark:text-[#e7ece8] tracking-tight my-1.5 tabular-nums">
                             {formatRupees(stats.merchantsBalance)}
@@ -279,7 +279,7 @@ export default function Dashboard() {
                             <b className="text-[#b42318] dark:text-[#f97066] font-semibold">
                                 +Rs. {Number(stats.weekChange).toLocaleString()}
                             </b>{' '}
-                            {isUrdu ? 'Ø³Ø³Ù¹Ù… Ø¨Ù‚Ø§ÛŒØ§ Ø¬Ø§Øª' : 'active parties'}
+                            {isUrdu ? 'سسٹم بقایا جات' : 'active parties'}
                         </small>
                     </div>
                 </div>
@@ -291,13 +291,13 @@ export default function Dashboard() {
                         <div>
                             <div className="flex items-center justify-between mb-2">
                                 <h2 className={`text-sm font-bold text-[#1a211c] dark:text-[#e7ece8] ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                    {isUrdu ? 'Ù¾Ú†Ú¾Ù„Û’ 7 Ø¯Ù† Ú©ÛŒ Ø³ÛŒÙ„' : 'Sales, last 7 days'}
+                                    {isUrdu ? 'پچھلے 7 دن کی سیل' : 'Sales, last 7 days'}
                                 </h2>
                                 <Link
                                     href="/reports"
                                     className="text-xs font-semibold text-[#68736b] hover:text-[#166534] dark:hover:text-[#4ade80] transition-colors"
                                 >
-                                    {isUrdu ? 'Ø±Ù¾ÙˆØ±Ù¹ Ø¯ÛŒÚ©Ú¾ÛŒÚº' : 'View report'}
+                                    {isUrdu ? 'رپورٹ دیکھیں' : 'View report'}
                                 </Link>
                             </div>
 
@@ -334,19 +334,19 @@ export default function Dashboard() {
                         {/* Legend */}
                         <div className="flex flex-wrap items-center gap-4 text-xs text-[#68736b] dark:text-[#8b968e] mt-4 pt-2 border-t border-[#f0f2f0] dark:border-[#1e2420]">
                             <span>
-                                {isUrdu ? 'Ú©Ù„:' : 'Total'}{' '}
+                                {isUrdu ? 'کل:' : 'Total'}{' '}
                                 <b className="text-[#1a211c] dark:text-[#e7ece8] font-bold">
                                     {formatRupees(chartSummary.total)}
                                 </b>
                             </span>
                             <span>
-                                {isUrdu ? 'Ø±ÙˆØ²Ø§Ù†Û Ø§ÙˆØ³Ø·:' : 'Daily average'}{' '}
+                                {isUrdu ? 'روزانہ اوسط:' : 'Daily average'}{' '}
                                 <b className="text-[#1a211c] dark:text-[#e7ece8] font-bold">
                                     {formatRupees(chartSummary.average)}
                                 </b>
                             </span>
                             <span>
-                                {isUrdu ? 'Ø¨ÛØªØ±ÛŒÙ† Ø¯Ù†:' : 'Best day'}{' '}
+                                {isUrdu ? 'بہترین دن:' : 'Best day'}{' '}
                                 <b className="text-[#1a211c] dark:text-[#e7ece8] font-bold">
                                     {chartSummary.bestDay}
                                 </b>
@@ -358,7 +358,7 @@ export default function Dashboard() {
                     <div className="bg-white dark:bg-[#161b18] border border-[#e6e9e6] dark:border-[#262d28] rounded-xl p-4 shadow-2xs flex flex-col justify-between">
                         <div>
                             <h2 className={`text-sm font-bold text-[#1a211c] dark:text-[#e7ece8] mb-3 ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                {isUrdu ? 'Ù†Ù‚Ø¯ Ø¨Ù…Ù‚Ø§Ø¨Ù„Û Ø§Ø¯Ú¾Ø§Ø±' : 'Cash vs credit today'}
+                                {isUrdu ? 'نقد بمقابلہ ادھار' : 'Cash vs credit today'}
                             </h2>
 
                             {/* Split progress bar */}
@@ -379,7 +379,7 @@ export default function Dashboard() {
                             <div className="space-y-0 text-xs">
                                 <div className="flex justify-between items-center py-2.5 border-t border-[#e6e9e6] dark:border-[#262d28]">
                                     <span className="text-[#1a211c] dark:text-[#e7ece8] font-medium">
-                                        {isUrdu ? 'Ù†Ù‚Ø¯ Ø³ÛŒÙ„' : 'Cash sale'}
+                                        {isUrdu ? 'نقد سیل' : 'Cash sale'}
                                     </span>
                                     <b className="font-bold text-[#1a211c] dark:text-[#e7ece8] tabular-nums">
                                         {formatRupees(stats.cashSale)}
@@ -387,7 +387,7 @@ export default function Dashboard() {
                                 </div>
                                 <div className="flex justify-between items-center py-2.5 border-t border-[#e6e9e6] dark:border-[#262d28]">
                                     <span className="text-[#1a211c] dark:text-[#e7ece8] font-medium">
-                                        {isUrdu ? 'Ø§Ø¯Ú¾Ø§Ø± Ø³ÛŒÙ„' : 'Credit sale'}
+                                        {isUrdu ? 'ادھار سیل' : 'Credit sale'}
                                     </span>
                                     <b className="font-bold text-[#1a211c] dark:text-[#e7ece8] tabular-nums">
                                         {formatRupees(stats.creditSale)}
@@ -395,7 +395,7 @@ export default function Dashboard() {
                                 </div>
                                 <div className="flex justify-between items-center py-2.5 border-t border-[#e6e9e6] dark:border-[#262d28]">
                                     <span className="text-[#1a211c] dark:text-[#e7ece8] font-medium">
-                                        {isUrdu ? 'Ø¢Ø¬ Ú©Û’ Ø¨Ù„' : 'Bills today'}
+                                        {isUrdu ? 'آج کے بل' : 'Bills today'}
                                     </span>
                                     <b className="font-bold text-[#1a211c] dark:text-[#e7ece8] tabular-nums">
                                         {stats.billsToday}
@@ -403,7 +403,7 @@ export default function Dashboard() {
                                 </div>
                                 <div className="flex justify-between items-center py-2.5 border-t border-[#e6e9e6] dark:border-[#262d28]">
                                     <span className="text-[#1a211c] dark:text-[#e7ece8] font-medium">
-                                        {isUrdu ? 'Ú©Ù„ ÙØ±ÙˆØ®Øª Ø´Ø¯Û Ù†Ú¯' : 'Total nag sold'}
+                                        {isUrdu ? 'کل فروخت شدہ نگ' : 'Total nag sold'}
                                     </span>
                                     <b className="font-bold text-[#1a211c] dark:text-[#e7ece8] tabular-nums">
                                         {Number(stats.totalNagSold).toLocaleString()}
@@ -421,20 +421,20 @@ export default function Dashboard() {
                         <div>
                             <div className="flex items-center justify-between mb-2">
                                 <h2 className={`text-sm font-bold text-[#1a211c] dark:text-[#e7ece8] ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                    {isUrdu ? 'Ø³Ø¨ Ø³Û’ Ø²ÛŒØ§Ø¯Û Ø§Ø¯Ú¾Ø§Ø±' : 'Top outstanding merchants'}
+                                    {isUrdu ? 'سب سے زیادہ ادھار' : 'Top outstanding merchants'}
                                 </h2>
                                 <Link
                                     href="/merchant-wasooli"
                                     className="text-xs font-semibold text-[#68736b] hover:text-[#166534] dark:hover:text-[#4ade80] transition-colors"
                                 >
-                                    {isUrdu ? 'Ø³Ø¨ Ø¯ÛŒÚ©Ú¾ÛŒÚº' : 'View all'}
+                                    {isUrdu ? 'سب دیکھیں' : 'View all'}
                                 </Link>
                             </div>
 
                             <div className="space-y-0 text-xs">
                                 {topMerchants.length === 0 ? (
                                     <div className="py-6 text-center text-muted-foreground text-xs">
-                                        {isUrdu ? 'Ú©ÙˆØ¦ÛŒ Ø¨Ù‚Ø§ÛŒØ§ Ù…Ø±Ú†Ù†Ù¹ Ù†ÛÛŒÚº ÛÛ’' : 'No outstanding merchants'}
+                                        {isUrdu ? 'کوئی بقایا مرچنٹ نہیں ہے' : 'No outstanding merchants'}
                                     </div>
                                 ) : (
                                     topMerchants.map((m, idx) => (
@@ -466,7 +466,7 @@ export default function Dashboard() {
                     <div className="bg-white dark:bg-[#161b18] border border-[#e6e9e6] dark:border-[#262d28] rounded-xl p-4 shadow-2xs">
                         <div className="mb-2">
                             <h2 className={`text-sm font-bold text-[#1a211c] dark:text-[#e7ece8] ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                {isUrdu ? 'Ø§Ø·Ù„Ø§Ø¹Ø§Øª' : 'Needs attention'}
+                                {isUrdu ? 'اطلاعات' : 'Needs attention'}
                             </h2>
                         </div>
 
@@ -492,13 +492,13 @@ export default function Dashboard() {
                 <div className="bg-white dark:bg-[#161b18] border border-[#e6e9e6] dark:border-[#262d28] rounded-xl p-4 shadow-2xs">
                     <div className="flex items-center justify-between mb-3">
                         <h2 className={`text-sm font-bold text-[#1a211c] dark:text-[#e7ece8] ${isUrdu ? 'font-nastaliq' : ''}`}>
-                            {isUrdu ? 'Ø­Ø§Ù„ÛŒÛ Ø§Ù†Ø¯Ø±Ø§Ø¬' : 'Recent entries'}
+                            {isUrdu ? 'حالیہ اندراج' : 'Recent entries'}
                         </h2>
                         <Link
                             href="/amroza-detail"
                             className="text-xs font-semibold text-[#68736b] hover:text-[#166534] dark:hover:text-[#4ade80] transition-colors"
                         >
-                            {isUrdu ? 'Ø³Ø¨ Ø¯ÛŒÚ©Ú¾ÛŒÚº' : 'View all'}
+                            {isUrdu ? 'سب دیکھیں' : 'View all'}
                         </Link>
                     </div>
 
@@ -506,12 +506,12 @@ export default function Dashboard() {
                         <table className="w-full text-xs text-start">
                             <thead>
                                 <tr className="border-b border-[#e6e9e6] dark:border-[#262d28] text-[#68736b] dark:text-[#8b968e]">
-                                    <th className="py-2 px-3 text-start font-semibold">{isUrdu ? 'ÙˆÙ‚Øª' : 'Time'}</th>
-                                    <th className="py-2 px-3 text-start font-semibold">{isUrdu ? 'Ù‚Ø³Ù…' : 'Type'}</th>
-                                    <th className="py-2 px-3 text-start font-semibold">{isUrdu ? 'Ù…Ø±Ú†Ù†Ù¹ / Ú©Ø³Ø§Ù†' : 'Merchant / Farmer'}</th>
-                                    <th className="py-2 px-3 text-start font-semibold">{isUrdu ? 'Ø¢Ø¦Ù¹Ù…' : 'Item'}</th>
-                                    <th className="py-2 px-3 text-end font-semibold">{isUrdu ? 'Ù†Ú¯' : 'Nag'}</th>
-                                    <th className="py-2 px-3 text-end font-semibold">{isUrdu ? 'Ø±Ù‚Ù…' : 'Amount'}</th>
+                                    <th className="py-2 px-3 text-start font-semibold">{isUrdu ? 'وقت' : 'Time'}</th>
+                                    <th className="py-2 px-3 text-start font-semibold">{isUrdu ? 'قسم' : 'Type'}</th>
+                                    <th className="py-2 px-3 text-start font-semibold">{isUrdu ? 'مرچنٹ / کسان' : 'Merchant / Farmer'}</th>
+                                    <th className="py-2 px-3 text-start font-semibold">{isUrdu ? 'آئٹم' : 'Item'}</th>
+                                    <th className="py-2 px-3 text-end font-semibold">{isUrdu ? 'نگ' : 'Nag'}</th>
+                                    <th className="py-2 px-3 text-end font-semibold">{isUrdu ? 'رقم' : 'Amount'}</th>
                                 </tr>
                             </thead>
                             <tbody className="tabular-nums">
@@ -539,7 +539,7 @@ export default function Dashboard() {
                                             {entry.nag}
                                         </td>
                                         <td className="py-2.5 px-3 text-end font-bold text-[#1a211c] dark:text-[#e7ece8]">
-                                            {entry.amount ? formatRupees(entry.amount) : 'â€”'}
+                                            {entry.amount ? formatRupees(entry.amount) : '—'}
                                         </td>
                                     </tr>
                                 ))}
