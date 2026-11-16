@@ -28,8 +28,14 @@ php artisan view:cache || true
 # Run migrations
 php artisan migrate --force || true
 
-# Seed database (DatabaseSeeder uses firstOrCreate so it is safe to run multiple times)
-php artisan db:seed --force || true
+# Create test user directly via artisan (safe - uses firstOrCreate)
+php artisan tinker --execute="
+App\Models\User::firstOrCreate(
+    ['email' => 'test@test.com'],
+    ['name' => 'Test User', 'password' => bcrypt('password')]
+);
+echo 'User ready: ' . App\Models\User::count() . ' users';
+" || true
 
 echo "==> Launching PHP server..."
 
