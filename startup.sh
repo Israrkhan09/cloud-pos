@@ -1,21 +1,32 @@
 #!/bin/sh
 
-# Force HTTPS APP_URL from Railway domain
-if [ -n "$RAILWAY_PUBLIC_DOMAIN" ]; then
+# Detect platform and set APP_URL accordingly
+if [ -n "$RENDER_EXTERNAL_URL" ]; then
+    # Render.com - provides full HTTPS URL automatically
+    export APP_URL="$RENDER_EXTERNAL_URL"
+    export ASSET_URL="$RENDER_EXTERNAL_URL"
+    echo "==> Render detected: $APP_URL"
+elif [ -n "$RAILWAY_PUBLIC_DOMAIN" ]; then
+    # Railway - provides domain without scheme
     export APP_URL="https://$RAILWAY_PUBLIC_DOMAIN"
     export ASSET_URL="https://$RAILWAY_PUBLIC_DOMAIN"
+    echo "==> Railway detected: $APP_URL"
+elif [ -n "$APP_URL" ]; then
+    # APP_URL set manually via environment variable
+    export ASSET_URL="$APP_URL"
+    echo "==> Manual APP_URL: $APP_URL"
 else
     export APP_URL="https://cloud-pos-production.up.railway.app"
-    export ASSET_URL="https://cloud-pos-production.up.railway.app"
+    export ASSET_URL="$APP_URL"
+    echo "==> Fallback URL: $APP_URL"
 fi
 
 export TRUSTED_PROXIES="*"
 export PHP_CLI_SERVER_WORKERS=4
 
-echo "==> APP_URL: $APP_URL"
 echo "==> PORT: ${PORT:-8000}"
 
-# Clear and rebuild config cache (errors are non-fatal)
+# Clear and rebuild config cache
 php artisan config:clear || true
 php artisan cache:clear || true
 php artisan route:clear || true
@@ -37,10 +48,9 @@ php artisan tinker --execute="
 if (is_null(\$user->email_verified_at)) {
     \$user->update(['email_verified_at' => now()]);
 }
-echo 'User verified: ' . \$user->email . ' at ' . \$user->email_verified_at;
+echo 'User OK: ' . \$user->email;
 " || true
 
-echo "==> Launching PHP server..."
+echo "==> Launching PHP server on port ${PORT:-8000}..."
 
-# Start server from project root - server.php handles static files from public/
 exec php -S 0.0.0.0:${PORT:-8000} server.php
