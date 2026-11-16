@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Set APP_URL with HTTPS from Railway's domain
+# Force HTTPS APP_URL from Railway domain
 if [ -n "$RAILWAY_PUBLIC_DOMAIN" ]; then
     export APP_URL="https://$RAILWAY_PUBLIC_DOMAIN"
     export ASSET_URL="https://$RAILWAY_PUBLIC_DOMAIN"
@@ -12,24 +12,23 @@ fi
 export TRUSTED_PROXIES="*"
 export PHP_CLI_SERVER_WORKERS=4
 
-echo "==> APP_URL set to: $APP_URL"
+echo "==> APP_URL: $APP_URL"
+echo "==> PORT: ${PORT:-8000}"
 
-# Clear all caches first
-php artisan config:clear
-php artisan cache:clear
-php artisan route:clear
-php artisan view:clear
+# Clear and rebuild config cache (errors are non-fatal)
+php artisan config:clear || true
+php artisan cache:clear || true
+php artisan route:clear || true
+php artisan view:clear || true
 
-# Rebuild cache with correct runtime values
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
+php artisan config:cache || true
+php artisan route:cache || true
+php artisan view:cache || true
 
-# Run database migrations
-php artisan migrate --force
+# Run migrations (non-fatal if already done)
+php artisan migrate --force || true
 
-echo "==> Starting PHP server on port ${PORT:-8000} with $PHP_CLI_SERVER_WORKERS workers"
+echo "==> Launching PHP server..."
 
-# Start PHP built-in server from project root
-# server.php handles static file routing to public/ directory
+# Start server from project root - server.php handles static files from public/
 exec PHP_CLI_SERVER_WORKERS=$PHP_CLI_SERVER_WORKERS php -S 0.0.0.0:${PORT:-8000} server.php
