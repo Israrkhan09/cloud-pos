@@ -50,6 +50,37 @@ export const jkcSidebarNav: NavGroup[] = [
         ]
     },
     {
+        id: "banking",
+        title: "nav.banking",
+        icon: "BankIcon",
+        isGroup: true,
+        items: [
+            {
+                title: "nav.bank_accounts",
+                url: "/banking/accounts",
+                icon: "BankIcon",
+            },
+            {
+                title: "nav.deposit_transfer",
+                url: "/banking/transfers",
+                icon: "ArrowsLeftRightIcon",
+            },
+            {
+                title: "nav.cheques",
+                url: "/banking/cheques",
+                icon: "CheckSquareOffsetIcon",
+            },
+            {
+                title: "nav.reconciliation",
+                url: "/banking/reconciliation",
+                icon: "ScalesIcon",
+            },
+        ],
+        includeRoutes: [
+            "banking"
+        ]
+    },
+    {
         id: "khata",
         title: "nav.khata",
         icon: "BookOpenIcon",

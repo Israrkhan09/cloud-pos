@@ -44,10 +44,15 @@ class AmrozaSale extends Model
             if (empty($sale->payment_type)) {
                 $sale->payment_type = ($sale->merchant && (int)$sale->merchant->code === 1) ? 'naqdi' : 'udhaar';
             }
-            $weight = floatval($sale->weight);
-            $nag = intval($sale->nag);
-            $rate = floatval($sale->rate);
-            $bardana = floatval($sale->bardana);
+            $weight = floatval($sale->weight ?? 0);
+            $nag = intval($sale->nag ?? 0);
+            $rate = floatval($sale->rate ?? 0);
+            $bardana = floatval($sale->bardana ?? 0);
+
+            $sale->weight = $weight;
+            $sale->bardana = $bardana;
+            $sale->nag = $nag;
+            $sale->rate = $rate;
 
             // Calculation rule from Section 11:
             // Line amount = Nag x Rate, or Weight x Rate when Weight > 0

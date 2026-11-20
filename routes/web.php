@@ -34,6 +34,11 @@ Route::middleware(['auth', 'verified'])
 
         Route::get('reports', [\App\Http\Controllers\Merchants\MerchantReportController::class, 'index'])->name('reports.index');
         Route::get('reports/data', [\App\Http\Controllers\Merchants\MerchantReportController::class, 'getReportData'])->name('reports.data');
+
+        Route::get('banking/accounts', [\App\Http\Controllers\Banking\BankController::class, 'index'])->name('banking.accounts');
+        Route::get('banking/transfers', [\App\Http\Controllers\Banking\BankController::class, 'transfers'])->name('banking.transfers');
+        Route::get('banking/cheques', [\App\Http\Controllers\Banking\BankController::class, 'cheques'])->name('banking.cheques');
+        Route::get('banking/reconciliation', [\App\Http\Controllers\Banking\BankController::class, 'reconciliation'])->name('banking.reconciliation');
     });
 
 require __DIR__ . '/auth.php';

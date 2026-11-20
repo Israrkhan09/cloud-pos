@@ -94,6 +94,8 @@ class AmrozaService
         $cashAmount = 0;
         $creditNag = 0;
         $creditAmount = 0;
+        $bankNag = 0;
+        $bankAmount = 0;
 
         foreach ($sales as $sale) {
             $gross = floatval($sale->gross_amount);
@@ -102,8 +104,12 @@ class AmrozaService
             $totalNag += $nag;
 
             $isNaqdi = $sale->payment_type === 'naqdi' || ($sale->merchant && (int)$sale->merchant->code === 1);
+            $isBank = $sale->payment_type === 'bank';
 
-            if ($isNaqdi) {
+            if ($isBank) {
+                $bankNag += $nag;
+                $bankAmount += $gross;
+            } elseif ($isNaqdi) {
                 $cashNag += $nag;
                 $cashAmount += $gross;
             } else {
@@ -120,6 +126,8 @@ class AmrozaService
             'cash_amount' => round($cashAmount, 2),
             'credit_nag' => $creditNag,
             'credit_amount' => round($creditAmount, 2),
+            'bank_nag' => $bankNag,
+            'bank_amount' => round($bankAmount, 2),
         ];
     }
 

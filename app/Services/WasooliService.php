@@ -49,9 +49,15 @@ class WasooliService
             $receipt = MerchantReceipt::where('merchant_id', $merchant->id)
                 ->where('date', $date)
                 ->where('type', 'recovery')
+                ->latest()
                 ->first();
 
-            $wasooli = $receipt ? floatval($receipt->amount) : 0;
+            $wasooli = floatval(
+                MerchantReceipt::where('merchant_id', $merchant->id)
+                    ->where('date', $date)
+                    ->where('type', 'recovery')
+                    ->sum('amount')
+            );
 
             // Total Baqaya = Sabiqa + Amroza - Wasooli
             // Example: 16100 + 8500 - 8000 = 16600
@@ -100,18 +106,14 @@ class WasooliService
     public function saveWasooliReceipt(int $merchantId, string $date, float $amount, ?string $note = null): MerchantReceipt
     {
         return DB::transaction(function () use ($merchantId, $date, $amount, $note) {
-            $receipt = MerchantReceipt::updateOrCreate(
-                [
-                    'merchant_id' => $merchantId,
-                    'date' => $date,
-                    'type' => 'recovery',
-                ],
-                [
-                    'amount' => $amount,
-                    'note' => $note,
-                    'created_by' => auth()->id(),
-                ]
-            );
+            $receipt = MerchantReceipt::create([
+                'merchant_id' => $merchantId,
+                'date' => $date,
+                'type' => 'recovery',
+                'amount' => $amount,
+                'note' => $note,
+                'created_by' => auth()->id(),
+            ]);
 
             // Update merchant balance
             app(AmrozaService::class)->recalculateMerchantBalance($merchantId);

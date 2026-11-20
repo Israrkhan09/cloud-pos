@@ -35,15 +35,25 @@ class WasooliController extends Controller
         $validated = $request->validate([
             'merchant_id' => 'required|exists:merchants,id',
             'date' => 'required|date',
-            'amount' => 'required|numeric|min:0',
+            'amount' => 'required|numeric|min:0.01',
             'note' => 'nullable|string|max:255',
+            'payment_type' => 'nullable|string',
+            'bank_account' => 'nullable|string',
         ]);
+
+        $note = $validated['note'] ?? null;
+        if (!empty($validated['payment_type'])) {
+            $note = ($note ? $note . ' · ' : '') . ucfirst($validated['payment_type']);
+            if (!empty($validated['bank_account'])) {
+                $note .= ' (' . $validated['bank_account'] . ')';
+            }
+        }
 
         $this->wasooliService->saveWasooliReceipt(
             $validated['merchant_id'],
             $validated['date'],
             floatval($validated['amount']),
-            $validated['note'] ?? null
+            $note
         );
 
         return redirect()->back()->with('success', 'Recovery receipt saved.');

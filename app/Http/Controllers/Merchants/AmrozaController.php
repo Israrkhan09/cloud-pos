@@ -81,10 +81,12 @@ class AmrozaController extends Controller
             'weight' => 'nullable|numeric|min:0',
             'rate' => 'required|numeric|min:0',
             'bardana' => 'nullable|numeric|min:0',
-            'payment_type' => 'nullable|in:naqdi,udhaar',
+            'payment_type' => 'nullable|in:naqdi,udhaar,bank',
         ]);
 
         $validated['created_by'] = auth()->id();
+        $validated['weight'] = $validated['weight'] ?? 0;
+        $validated['bardana'] = $validated['bardana'] ?? 0;
 
         $this->amrozaService->createSale($validated);
 
@@ -101,8 +103,11 @@ class AmrozaController extends Controller
             'weight' => 'nullable|numeric|min:0',
             'rate' => 'required|numeric|min:0',
             'bardana' => 'nullable|numeric|min:0',
-            'payment_type' => 'nullable|in:naqdi,udhaar',
+            'payment_type' => 'nullable|in:naqdi,udhaar,bank',
         ]);
+
+        $validated['weight'] = $validated['weight'] ?? 0;
+        $validated['bardana'] = $validated['bardana'] ?? 0;
 
         $this->amrozaService->updateSale($id, $validated);
 

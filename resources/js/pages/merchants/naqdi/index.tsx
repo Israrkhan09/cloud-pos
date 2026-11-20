@@ -130,7 +130,7 @@ export default function NaqdiIndex({ rows, totals, filters }: Props) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('naqdi.title')} />
 
-            <div className="-mt-3 md:-mt-6 -mx-3 md:-mx-6 pb-24 bg-[#eef2ee] min-h-screen font-sans text-[#1a211c] dark:text-[#e7ece8]" dir={isUrdu ? 'rtl' : 'ltr'}>
+            <div className="-mt-4 -mx-4 pb-24 bg-[#eef2ee] min-h-screen font-sans text-[#1a211c] dark:text-[#e7ece8]" dir={isUrdu ? 'rtl' : 'ltr'}>
                 {/* 1. Dark Green Top Header Banner */}
                 <MandiPageHeader
                     title={t('naqdi.title')}
@@ -199,8 +199,8 @@ export default function NaqdiIndex({ rows, totals, filters }: Props) {
                                                     onClick={() => setSelectedRowIndex(idx)}
                                                     className="bg-white hover:bg-gray-50/60 transition-colors cursor-pointer"
                                                 >
-                                                    <td className="p-3 text-center text-gray-400 font-mono tabular-nums text-xs">{idx + 1}</td>
-                                                    <td className="p-3 font-mono tabular-nums font-bold text-gray-900 text-xs">
+                                                    <td className="p-3 text-center text-gray-400 tabular-nums text-xs">{idx + 1}</td>
+                                                    <td className="p-3 tabular-nums font-bold text-gray-900 text-xs">
                                                         #{row.code}
                                                     </td>
                                                     <td className="p-3">
@@ -208,8 +208,8 @@ export default function NaqdiIndex({ rows, totals, filters }: Props) {
                                                             {isUrdu ? (row.name_ur || row.name_en) : (row.name_en || row.name_ur)}
                                                         </span>
                                                     </td>
-                                                    <td className="p-3 text-end font-mono tabular-nums font-bold text-gray-800">{row.total_nag}</td>
-                                                    <td className="p-3 text-end font-mono tabular-nums font-bold text-gray-900">
+                                                    <td className="p-3 text-end tabular-nums font-bold text-gray-800">{row.total_nag}</td>
+                                                    <td className="p-3 text-end tabular-nums font-bold text-gray-900">
                                                         Rs. {Number(row.kham_bikri).toLocaleString()}
                                                     </td>
                                                     <td className="p-2 text-end" onClick={e => e.stopPropagation()}>
@@ -226,7 +226,7 @@ export default function NaqdiIndex({ rows, totals, filters }: Props) {
                                                                         saveCashReceipt(row.merchant_id);
                                                                     }
                                                                 }}
-                                                                className="h-9 w-28 text-end font-mono tabular-nums text-xs font-bold rounded-xl border-gray-200 bg-white focus:border-[#1e713e]"
+                                                                className="h-9 w-28 text-end tabular-nums text-xs font-bold rounded-xl border-gray-200 bg-white focus:border-[#1e713e]"
                                                                 placeholder="0.00"
                                                             />
                                                             <Button
@@ -239,7 +239,7 @@ export default function NaqdiIndex({ rows, totals, filters }: Props) {
                                                             </Button>
                                                         </div>
                                                     </td>
-                                                    <td className="p-3 text-end font-mono tabular-nums font-black text-[#14532d] text-sm">
+                                                    <td className="p-3 text-end tabular-nums font-black text-[#14532d] text-sm">
                                                         Rs. {liveBaqaya.toLocaleString()}
                                                     </td>
                                                 </tr>
@@ -262,11 +262,11 @@ export default function NaqdiIndex({ rows, totals, filters }: Props) {
                             })}
                         </span>
                         <span className="text-gray-300">
-                            {t('naqdi.total_nag')}: <strong className="text-white font-mono text-sm">{totals.total_nag}</strong>
+                            {t('naqdi.total_nag')}: <strong className="text-white text-sm">{totals.total_nag}</strong>
                         </span>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-2 font-mono tabular-nums text-xs">
+                    <div className="flex flex-wrap items-center gap-2 tabular-nums text-xs">
                         <div className="bg-emerald-800/90 border border-emerald-600 px-3 py-1 rounded-lg flex items-center gap-1">
                             <span className="text-emerald-200 font-semibold font-sans">{t('naqdi.kham_bikri')}:</span>
                             <span className="font-bold text-white">Rs. {Number(totals.total_kham_bikri).toLocaleString()}</span>

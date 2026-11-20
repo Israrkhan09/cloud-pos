@@ -11,6 +11,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('amroza', [AmrozaController::class, 'index'])->name('amroza.index');
     Route::get('naqdi', [NaqdiController::class, 'index'])->name('naqdi.index');
     Route::get('wasooli', [WasooliController::class, 'index'])->name('wasooli.index');
+    Route::post('wasooli', [WasooliController::class, 'store'])->name('wasooli.store.top');
 
     // Merchant Reports & Detail Views
     Route::get('merchant-amroza', [MerchantReportController::class, 'merchantAmroza'])->name('reports.merchant_amroza');

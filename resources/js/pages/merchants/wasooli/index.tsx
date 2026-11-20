@@ -1,12 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Head, router } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Button } from '@/components/ui/button';
-import Icon from '@/components/ui/icon';
 import MandiPageHeader from '@/components/app/mandi-page-header';
 import { toast } from 'sonner';
+import {
+    type BankAccount,
+    getStoredBankAccounts,
+    updateAccountBalance,
+    addStoredTransfer,
+    EVENT_BANKING_UPDATED,
+} from '@/lib/banking-store';
 
 interface WasooliRow {
     merchant_id: number;
@@ -44,26 +49,65 @@ export default function WasooliIndex({ rows, totals, filters }: Props) {
 
     const [selectedDate, setSelectedDate] = useState(filters.date || new Date().toISOString().split('T')[0]);
     const [searchQuery, setSearchQuery] = useState(filters.search || '');
-    const [selectedRowIndex, setSelectedRowIndex] = useState<number>(rows.length > 0 ? 0 : -1);
 
-    // Track input edits for Wasooli amount
-    const [editedAmounts, setEditedAmounts] = useState<Record<number, string>>(() => {
-        const initial: Record<number, string> = {};
-        rows.forEach(r => {
-            initial[r.merchant_id] = r.wasooli > 0 ? String(r.wasooli) : '';
-        });
-        return initial;
-    });
+    // Bank accounts from reactive banking store
+    const [accounts, setAccounts] = useState<BankAccount[]>([]);
 
     useEffect(() => {
-        const initial: Record<number, string> = {};
-        rows.forEach(r => {
-            initial[r.merchant_id] = r.wasooli > 0 ? String(r.wasooli) : '';
-        });
-        setEditedAmounts(initial);
-    }, [rows, selectedDate]);
+        function loadAccounts() {
+            const accs = getStoredBankAccounts().filter(a => a.status === 'Active');
+            setAccounts(accs);
+        }
+        loadAccounts();
 
-    const [savingId, setSavingId] = useState<number | null>(null);
+        window.addEventListener(EVENT_BANKING_UPDATED, loadAccounts);
+        window.addEventListener('storage', loadAccounts);
+        return () => {
+            window.removeEventListener(EVENT_BANKING_UPDATED, loadAccounts);
+            window.removeEventListener('storage', loadAccounts);
+        };
+    }, []);
+
+    // Filtered merchants for left side list
+    const filteredRows = useMemo(() => {
+        const q = searchQuery.toLowerCase().trim();
+        if (!q) return rows;
+        return rows.filter(r => {
+            const nameEn = (r.name_en || '').toLowerCase();
+            const nameUr = (r.name_ur || '').toLowerCase();
+            const nameRaw = (r.name || '').toLowerCase();
+            const code = String(r.code);
+            return nameEn.includes(q) || nameUr.includes(q) || nameRaw.includes(q) || code.includes(q);
+        });
+    }, [rows, searchQuery]);
+
+    // Selected merchant (default: first merchant or previously selected)
+    const [selectedMerchantId, setSelectedMerchantId] = useState<number | null>(() => {
+        return rows.length > 0 ? rows[0].merchant_id : null;
+    });
+
+    const selectedMerchant = useMemo(() => {
+        if (!selectedMerchantId && filteredRows.length > 0) {
+            return filteredRows[0];
+        }
+        const found = rows.find(r => r.merchant_id === selectedMerchantId);
+        return found || (filteredRows.length > 0 ? filteredRows[0] : null);
+    }, [rows, filteredRows, selectedMerchantId]);
+
+    // Form inputs: Payment method, bank account, amount
+    const [paymentMethod, setPaymentMethod] = useState<'' | 'cash' | 'bank' | 'credit'>('');
+    const [selectedBankAccount, setSelectedBankAccount] = useState<string>('');
+    const [amount, setAmount] = useState<string>('');
+    const [saving, setSaving] = useState(false);
+    const amountInputRef = useRef<HTMLInputElement>(null);
+
+    // Rule 17: Dukaan badalne par payment, account aur amount reset ho jayein
+    function handleSelectMerchant(m: WasooliRow) {
+        setSelectedMerchantId(m.merchant_id);
+        setPaymentMethod('');
+        setSelectedBankAccount('');
+        setAmount('');
+    }
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: isUrdu ? 'روزانہ کام' : 'Daily Kaam', href: '#' },
@@ -85,83 +129,148 @@ export default function WasooliIndex({ rows, totals, filters }: Props) {
         handleDateChange(str);
     }
 
-    function handleAmountChange(merchantId: number, val: string) {
-        setEditedAmounts(prev => ({
-            ...prev,
-            [merchantId]: val,
-        }));
+    // Calculations for selected merchant
+    const sabiqa = selectedMerchant ? Number(selectedMerchant.sabiqa) : 0;
+    const amroza = selectedMerchant ? Number(selectedMerchant.amroza) : 0;
+    const wasooliMili = selectedMerchant ? Number(selectedMerchant.wasooli) : 0;
+    const totalOutstanding = Math.max(0, sabiqa + amroza - wasooliMili);
+
+    const numAmount = parseFloat(amount) || 0;
+    const liveNetBaqaya = Math.max(0, totalOutstanding - numAmount);
+    const isOverLimit = numAmount > totalOutstanding;
+
+    // Reset current form fields
+    function handleReset() {
+        setPaymentMethod('');
+        setSelectedBankAccount('');
+        setAmount('');
     }
 
-    function saveWasooliReceipt(merchantId: number) {
-        const amount = parseFloat(editedAmounts[merchantId]) || 0;
-        setSavingId(merchantId);
+    // Save wasooli receipt
+    function handleSave() {
+        if (!selectedMerchant) {
+            toast.error(isUrdu ? 'براہ کرم پہلے دکان منتخب کریں۔' : 'Baraye meherbani pehle dukaan chunein.');
+            return;
+        }
 
-        router.post('/merchants/wasooli', {
-            merchant_id: merchantId,
+        if (!paymentMethod) {
+            toast.error(
+                isUrdu
+                    ? 'براہ کرم ادائیگی کا طریقہ (Cash, Bank / Wallet, یا Credit) منتخب کریں۔'
+                    : 'Baraye meherbani payment ka zariya (Cash, Bank / Wallet, ya Credit) muntakhib karein.'
+            );
+            return;
+        }
+
+        if (paymentMethod === 'bank' && !selectedBankAccount) {
+            toast.error(
+                isUrdu
+                    ? 'براہ کرم بینک یا والٹ اکاؤنٹ منتخب کریں۔'
+                    : 'Baraye meherbani bank ya wallet account muntakhib karein.'
+            );
+            return;
+        }
+
+        if (numAmount <= 0) {
+            toast.error(
+                isUrdu
+                    ? 'براہ کرم وصولی کی درست رقم درج کریں۔'
+                    : 'Baraye meherbani wasooli ki raqam darj karein.'
+            );
+            amountInputRef.current?.focus();
+            return;
+        }
+
+        if (numAmount > totalOutstanding) {
+            toast.error(
+                isUrdu
+                    ? `وصولی کی رقم کل بقایا (Rs. ${Number(totalOutstanding).toLocaleString()}) سے زیادہ نہیں ہو سکتی۔`
+                    : `Wasooli ki raqam baqaya (Rs. ${Number(totalOutstanding).toLocaleString()}) se zyada nahi ho sakti.`
+            );
+            return;
+        }
+
+        setSaving(true);
+
+        router.post('/wasooli', {
+            merchant_id: selectedMerchant.merchant_id,
             date: selectedDate,
-            amount: amount,
+            amount: numAmount,
+            payment_type: paymentMethod,
+            bank_account: selectedBankAccount,
+            note: `Wasooli via ${paymentMethod === 'bank' ? `Bank (${selectedBankAccount})` : paymentMethod === 'cash' ? 'Cash' : 'Credit'}`,
         }, {
             preserveScroll: true,
             preserveState: false,
             onSuccess: () => {
-                toast.success(isUrdu ? 'وصولی کامیابی سے محفوظ ہو گئی' : 'Wasooli saved successfully');
-                setSavingId(null);
+                setSaving(false);
+
+                // Real-time synchronization with Banking System
+                if (paymentMethod === 'bank' && selectedBankAccount) {
+                    updateAccountBalance(selectedBankAccount, numAmount);
+                    addStoredTransfer({
+                        id: Date.now(),
+                        title: `Merchant Wasooli → ${selectedBankAccount}`,
+                        subtext: `${selectedDate} · Dukaan: ${selectedMerchant.name_en || selectedMerchant.name_ur || selectedMerchant.name} · Wasooli`,
+                        amount: numAmount,
+                        date: selectedDate,
+                        bankName: selectedBankAccount,
+                        type: 'deposit',
+                    });
+                }
+
+                toast.success(
+                    isUrdu
+                        ? `Rs. ${numAmount.toLocaleString()} کی وصولی کامیابی سے محفوظ ہو گئی!`
+                        : `Rs. ${numAmount.toLocaleString()} ki wasooli kamyabi se save ho gayi!`
+                );
+
+                // Reset form fields
+                handleReset();
             },
             onError: () => {
-                toast.error(isUrdu ? 'محفوظ کرنے میں خرابی ہوئی' : 'Could not save wasooli');
-                setSavingId(null);
+                setSaving(false);
+                toast.error(
+                    isUrdu
+                        ? 'محفوظ کرنے میں خرابی پیش آئی۔'
+                        : 'Wasooli save karne mein masla pesh aaya.'
+                );
             },
         });
     }
 
-    // Filter merchants for left list
-    const filteredRows = rows.filter(r => {
-        const q = searchQuery.toLowerCase().trim();
-        if (!q) return true;
-        const nameEn = (r.name_en || '').toLowerCase();
-        const nameUr = (r.name_ur || '').toLowerCase();
-        const code = String(r.code);
-        return nameEn.includes(q) || nameUr.includes(q) || code.includes(q);
-    });
-
-    const selectedRow = rows[selectedRowIndex] || (rows.length > 0 ? rows[0] : null);
-
-    // Live baqaya for selected merchant
-    const currentInputVal = selectedRow ? (editedAmounts[selectedRow.merchant_id] ?? '') : '';
-    const currentNumVal = parseFloat(currentInputVal) || (selectedRow?.wasooli || 0);
-    const liveBaqaya = selectedRow ? Math.round((selectedRow.sabiqa + selectedRow.amroza - currentNumVal) * 100) / 100 : 0;
-    const totalOutstanding = selectedRow ? Math.max(0, selectedRow.sabiqa + selectedRow.amroza) : 0;
-
-    // Cleared count calculation
-    const clearedCount = rows.filter(r => {
-        const val = parseFloat(editedAmounts[r.merchant_id]) || r.wasooli || 0;
-        return (r.sabiqa + r.amroza - val) <= 0;
-    }).length;
+    const selectedMerchantDisplayName = selectedMerchant
+        ? (Number(selectedMerchant.code) === 1
+            ? (isUrdu ? 'نقدی (عام خریدار)' : 'Naqdi (Cash Customer)')
+            : isUrdu
+            ? (selectedMerchant.name_ur || selectedMerchant.name_en || selectedMerchant.name)
+            : (selectedMerchant.name_en || selectedMerchant.name_ur || selectedMerchant.name))
+        : '—';
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={isUrdu ? 'وصولی فارم - جے کے سی' : 'Wasooli Form (Recovery)'} />
+            <Head title={isUrdu ? 'وصولی اینٹری - جے کے سی' : 'Wasooli Entry - Vegetable POS'} />
 
-            {/* Main Outer Container without horizontal overflow */}
-            <div className="w-full max-w-full overflow-x-hidden -mt-4 -mx-4 pb-24 bg-[#f4f6f4] min-h-[calc(100vh-4rem)] font-sans text-[#1a211c] dark:text-[#e7ece8]" dir={isUrdu ? 'rtl' : 'ltr'}>
+            {/* Main Outer Container */}
+            <div className="-mt-4 -mx-4 -mb-8 pb-28 bg-[#f4f6f4] min-h-screen font-sans text-gray-900" dir={isUrdu ? 'rtl' : 'ltr'}>
                 
-                {/* 1. Dark Green Top Header Banner */}
+                {/* Green Header Banner matching screenshot and existing style */}
                 <MandiPageHeader
-                    title={isUrdu ? 'وصولی فارم (ریکوری)' : 'Wasooli Form (Recovery)'}
-                    subtitle={isUrdu ? 'مرچنٹس سے وصولی · ریکوری' : 'Merchants se wasooli · Recovery'}
+                    title={isUrdu ? 'وصولی اینٹری' : 'Wasooli Entry'}
+                    subtitle={isUrdu ? 'لیفٹ سے دکان چنیں، رائٹ پر 3 سٹیپس پورے کریں' : 'Left se dukaan chunein, right par 3 steps poore karein'}
                     isUrdu={isUrdu}
                 >
                     <button
                         type="button"
                         onClick={() => setQuickDate(0)}
-                        className={`h-9 px-4 rounded-xl text-xs md:text-sm font-semibold bg-[#20693e] hover:bg-[#287d4a] text-white border border-emerald-600/50 shadow-xs transition-colors cursor-pointer ${isUrdu ? 'font-nastaliq' : ''}`}
+                        className={`min-h-[36px] h-9 px-4 rounded-xl text-xs md:text-sm font-semibold bg-[#20693e] hover:bg-[#287d4a] text-white border border-emerald-600/50 shadow-xs transition-colors cursor-pointer ${isUrdu ? 'font-nastaliq' : ''}`}
                     >
                         {isUrdu ? 'آج' : 'Today'}
                     </button>
                     <button
                         type="button"
                         onClick={() => setQuickDate(-1)}
-                        className={`h-9 px-4 rounded-xl text-xs md:text-sm font-semibold bg-[#20693e] hover:bg-[#287d4a] text-white border border-emerald-600/50 shadow-xs transition-colors cursor-pointer ${isUrdu ? 'font-nastaliq' : ''}`}
+                        className={`min-h-[36px] h-9 px-4 rounded-xl text-xs md:text-sm font-semibold bg-[#20693e] hover:bg-[#287d4a] text-white border border-emerald-600/50 shadow-xs transition-colors cursor-pointer ${isUrdu ? 'font-nastaliq' : ''}`}
                     >
                         {isUrdu ? 'گزشتہ کل' : 'Yesterday'}
                     </button>
@@ -170,297 +279,330 @@ export default function WasooliIndex({ rows, totals, filters }: Props) {
                             type="date"
                             value={selectedDate}
                             onChange={e => handleDateChange(e.target.value)}
-                            className="h-9 w-32 md:w-36 rounded-xl bg-white text-gray-900 font-bold text-xs md:text-sm cursor-pointer shadow-xs px-2.5 text-center border-0 outline-none"
+                            className="min-h-[36px] h-9 w-32 md:w-36 rounded-xl bg-white text-gray-900 font-bold text-xs md:text-sm cursor-pointer shadow-xs px-2.5 text-center border-0 outline-none"
                         />
                     </div>
                 </MandiPageHeader>
 
-                {/* 2. Main Master-Detail Floating Card */}
+                {/* Main Two-Column Desk */}
                 <div className="max-w-7xl mx-auto px-3 md:px-6 -mt-6 md:-mt-8">
-                    <div className="bg-white rounded-xl border border-gray-200/90 shadow-sm p-4 md:p-5 grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
                         
-                        {/* LEFT COLUMN: Clean Professional Search & Merchant List */}
-                        <div className="md:col-span-4 lg:col-span-4 border-b md:border-b-0 md:border-e border-gray-100 pb-4 md:pb-0 md:pe-4 space-y-2.5">
-                            <div className="flex items-center justify-between px-1">
-                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                                    {isUrdu ? 'خریدار فہرست' : 'Merchants List'}
-                                </span>
-                                <span className="text-[10px] font-mono text-gray-400">
-                                    {filteredRows.length} {isUrdu ? 'پارٹیاں' : 'parties'}
-                                </span>
-                            </div>
-
-                            {/* Clean Search Input */}
-                            <div className="relative">
-                                <input
-                                    type="text"
-                                    value={searchQuery}
-                                    onChange={e => setSearchQuery(e.target.value)}
-                                    placeholder={isUrdu ? 'مرچنٹ یا کوڈ تلاش کریں...' : 'Search merchant or code...'}
-                                    className={`w-full h-8.5 px-3 ps-8 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-900 placeholder:text-gray-400 focus:bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none transition-all ${isUrdu ? 'font-nastaliq ps-3 pe-8' : ''}`}
-                                />
-                                <Icon name="MagnifyingGlass" className="size-3.5 text-gray-400 absolute start-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                            </div>
-
-                            {/* Merchant Items List - Professional selection without chunky side bar */}
-                            <div className="space-y-0.5 max-h-[400px] overflow-y-auto pe-1">
-                                {filteredRows.length === 0 ? (
-                                    <div className="p-4 text-center text-gray-400 text-xs">
-                                        {isUrdu ? 'کوئی مرچنٹ نہیں ملا' : 'No merchant found'}
+                        {/* LEFT COLUMN: DUKAAN LIST */}
+                        <div className="lg:col-span-4 bg-white rounded-2xl border border-gray-200/90 shadow-xs p-4 flex flex-col justify-between min-h-[580px]">
+                            <div>
+                                {/* Search Box */}
+                                <div className="mb-4">
+                                    <label className="block text-xs font-semibold text-gray-500 mb-1.5">
+                                        {isUrdu ? 'دکان تلاش کریں' : 'Dukaan search'}
+                                    </label>
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            value={searchQuery}
+                                            onChange={e => setSearchQuery(e.target.value)}
+                                            placeholder={isUrdu ? 'نام یا کوڈ لکھیں' : 'Naam ya code likhein'}
+                                            className="w-full min-h-[44px] h-11 px-3.5 rounded-xl border border-gray-200 text-xs md:text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#1e713e] focus:ring-1 focus:ring-[#1e713e] transition-all bg-white"
+                                        />
                                     </div>
-                                ) : (
-                                    filteredRows.map(m => {
-                                        const originalIndex = rows.findIndex(x => x.merchant_id === m.merchant_id);
-                                        const isSelected = selectedRow?.merchant_id === m.merchant_id;
-                                        const mInputVal = editedAmounts[m.merchant_id] ?? (m.wasooli > 0 ? String(m.wasooli) : '');
-                                        const mNumVal = parseFloat(mInputVal) || (m.wasooli || 0);
-                                        const mBaqaya = Math.round((m.sabiqa + m.amroza - mNumVal) * 100) / 100;
-                                        const displayName = isUrdu ? (m.name_ur || m.name_en) : (m.name_en || m.name_ur);
+                                </div>
 
-                                        return (
-                                            <button
-                                                key={m.merchant_id}
-                                                type="button"
-                                                onClick={() => setSelectedRowIndex(originalIndex)}
-                                                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-colors cursor-pointer text-start ${
-                                                    isSelected
-                                                        ? 'bg-emerald-50 text-emerald-950 font-semibold'
-                                                        : 'text-gray-700 hover:bg-gray-100/70 hover:text-gray-900'
-                                                }`}
-                                            >
-                                                <div className="flex items-center gap-2 truncate">
-                                                    <span className={`font-mono text-[11px] px-1.5 py-0.5 rounded ${
+                                {/* Count Heading */}
+                                <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-2.5 px-0.5">
+                                    {filteredRows.length} {isUrdu ? 'دکانیں (بقایا کے حساب سے)' : 'DUKAANEIN (BAQAYA KE HISAAB SE)'}
+                                </div>
+
+                                {/* Rows List */}
+                                <div className="space-y-2 max-h-[480px] overflow-y-auto pe-1">
+                                    {filteredRows.length === 0 ? (
+                                        <div className="p-6 text-center text-gray-400 text-xs">
+                                            {isUrdu ? 'کوئی دکان نہیں ملی' : 'Koi dukaan nahi mili'}
+                                        </div>
+                                    ) : (
+                                        filteredRows.map(m => {
+                                            const isSelected = selectedMerchant?.merchant_id === m.merchant_id;
+                                            const mBaqaya = Math.round((Number(m.sabiqa) + Number(m.amroza) - Number(m.wasooli)) * 100) / 100;
+                                            const displayName = Number(m.code) === 1
+                                                ? (isUrdu ? 'نقدی (عام خریدار)' : 'Naqdi (Cash)')
+                                                : isUrdu
+                                                ? (m.name_ur || m.name_en || m.name)
+                                                : (m.name_en || m.name_ur || m.name);
+
+                                            return (
+                                                <button
+                                                    key={m.merchant_id}
+                                                    type="button"
+                                                    onClick={() => handleSelectMerchant(m)}
+                                                    className={`w-full min-h-[44px] flex items-center justify-between px-3.5 py-3 rounded-xl transition-all cursor-pointer text-start ${
                                                         isSelected
-                                                            ? 'bg-emerald-200/80 text-emerald-900 font-bold'
-                                                            : 'bg-gray-100 text-gray-500 font-medium'
-                                                    }`}>
-                                                        #{m.code}
-                                                    </span>
-                                                    <span className={`truncate ${isUrdu ? 'font-nastaliq' : ''}`}>
+                                                            ? 'border-2 border-[#1e713e] bg-[#eef7f0] shadow-xs'
+                                                            : 'border border-gray-150 bg-white hover:bg-gray-50/80 text-gray-800'
+                                                    }`}
+                                                >
+                                                    <span className={`text-xs md:text-sm font-semibold truncate ${isSelected ? 'text-[#14532d] font-bold' : 'text-gray-900'}`}>
                                                         {displayName}
                                                     </span>
-                                                </div>
-                                                <span className={`font-mono tabular-nums text-xs ms-2 shrink-0 ${
-                                                    mBaqaya <= 0
-                                                        ? 'text-emerald-700 font-bold'
-                                                        : isSelected
-                                                        ? 'text-emerald-900 font-bold'
-                                                        : 'text-gray-500'
-                                                }`}>
-                                                    {Number(mBaqaya).toLocaleString()}
-                                                </span>
-                                            </button>
-                                        );
-                                    })
-                                )}
+                                                    <span className={`text-xs md:text-sm font-bold tabular-nums ms-2 shrink-0 ${isSelected ? 'text-[#14532d]' : 'text-gray-800'}`}>
+                                                        {Number(mBaqaya).toLocaleString()}
+                                                    </span>
+                                                </button>
+                                            );
+                                        })
+                                    )}
+                                </div>
                             </div>
+
+                            {/* Left Column Bottom Note */}
+                            <p className="text-[11px] text-gray-400 mt-6 pt-3 border-t border-gray-100 leading-relaxed">
+                                {isUrdu
+                                    ? 'سابقہ، آج کی سیل اور وصولی کا حساب ہر دکان کے لیے الگ رہتا ہے۔'
+                                    : 'Sabiqa, Aaj ki sale aur Wasooli ka hisaab har dukaan ke liye alag rehta hai.'}
+                            </p>
                         </div>
 
-                        {/* RIGHT COLUMN: Merchant Details & Wasooli Entry */}
-                        <div className="md:col-span-8 lg:col-span-8 space-y-4">
-                            {selectedRow ? (
-                                <>
-                                    {/* 1. Header: Merchant Name + Code + Phone Icon + Status */}
-                                    <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-gray-100">
-                                        <div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="font-mono font-bold text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-md">
-                                                    #{selectedRow.code}
-                                                </span>
-                                                <h2 className={`text-xl font-bold text-gray-900 tracking-tight ${isUrdu ? 'font-nastaliq text-2xl' : ''}`}>
-                                                    {isUrdu ? (selectedRow.name_ur || selectedRow.name_en) : (selectedRow.name_en || selectedRow.name_ur)}
-                                                </h2>
-                                            </div>
-                                            {selectedRow.phone && (
-                                                <div className="flex items-center gap-1.5 text-xs text-gray-500 font-mono mt-1">
-                                                    <Icon name="Phone" className="size-3 text-gray-400" />
-                                                    <span>{selectedRow.phone}</span>
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        <div className="flex items-center">
-                                            {liveBaqaya <= 0 ? (
-                                                <div className="flex items-center gap-1.5 text-xs text-emerald-800 bg-emerald-50 border border-emerald-200/80 px-2.5 py-1 rounded-md font-medium">
-                                                    <Icon name="CheckCircle" className="size-3.5 text-emerald-600" weight="fill" />
-                                                    <span>{isUrdu ? 'مکمل کلئیر' : 'Cleared'}</span>
-                                                </div>
-                                            ) : (
-                                                <div className="flex items-center gap-1.5 text-xs text-amber-800 bg-amber-50 border border-amber-200/80 px-2.5 py-1 rounded-md font-medium">
-                                                    <Icon name="Clock" className="size-3.5 text-amber-600" />
-                                                    <span>{isUrdu ? 'بقایا واجب الادا' : 'Pending Payment'}</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* 2. Clean Flat Balance Breakdown (3 Cards - No Gradients / No Glows) */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                        <div className="bg-white border border-gray-200 rounded-xl p-3.5 shadow-2xs">
-                                            <span className={`text-[11px] font-semibold text-gray-400 uppercase tracking-wider block ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                                {isUrdu ? 'سابقہ رقم (Sabiqa)' : 'Previous Balance (Sabiqa)'}
+                        {/* RIGHT COLUMN: WASOOLI FORM */}
+                        <div className="lg:col-span-8 space-y-3.5">
+                            {/* 1. Dukaan Header Card */}
+                            <div className="bg-white rounded-2xl border border-gray-200/90 shadow-xs p-4 md:p-5 flex items-center justify-between gap-3">
+                                <div>
+                                    <h2 className="text-lg md:text-xl font-bold text-gray-900 tracking-tight">
+                                        {selectedMerchantDisplayName}
+                                    </h2>
+                                    <p className="text-xs text-gray-500 mt-0.5">
+                                        {selectedMerchant?.phone || '0300-0000000'}
+                                    </p>
+                                </div>
+                                <div>
+                                    {selectedMerchant ? (
+                                        liveNetBaqaya > 0 ? (
+                                            <span className="inline-block bg-[#fef3c7] text-[#92400e] border border-[#fde68a] text-xs font-semibold px-3 py-1 rounded-md">
+                                                {isUrdu ? 'ادائیگی باقی ہے' : 'Payment Pending'}
                                             </span>
-                                            <span className="text-lg font-bold font-mono tabular-nums text-gray-900 mt-1 block">
-                                                Rs. {Number(selectedRow.sabiqa).toLocaleString()}
+                                        ) : (
+                                            <span className="inline-block bg-emerald-100/90 text-emerald-800 border border-emerald-200 text-xs font-semibold px-3 py-1 rounded-md">
+                                                {isUrdu ? 'مکمل کلیئر' : 'Payment Cleared'}
                                             </span>
-                                        </div>
+                                        )
+                                    ) : (
+                                        <span className="text-gray-400 text-sm">—</span>
+                                    )}
+                                </div>
+                            </div>
 
-                                        <div className="bg-white border border-gray-200 rounded-xl p-3.5 shadow-2xs">
-                                            <span className={`text-[11px] font-semibold text-gray-400 uppercase tracking-wider block ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                                {isUrdu ? 'آج کی بکری (Amroza)' : "Today's Sale (Amroza)"}
-                                            </span>
-                                            <span className="text-lg font-bold font-mono tabular-nums text-gray-900 mt-1 block">
-                                                Rs. {Number(selectedRow.amroza).toLocaleString()}
-                                            </span>
-                                        </div>
+                            {/* 2. Three Balance Cards */}
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div className="bg-white rounded-xl border border-gray-200 p-3.5 shadow-2xs">
+                                    <span className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase tracking-wider block">
+                                        {isUrdu ? 'سابقہ بقایا' : 'SABIQA BAQAYA'}
+                                    </span>
+                                    <span className="text-base md:text-lg font-bold text-gray-900 mt-1 block">
+                                        {selectedMerchant ? `Rs. ${Number(sabiqa).toLocaleString()}` : '—'}
+                                    </span>
+                                </div>
 
-                                        <div className="bg-white border border-gray-200 rounded-xl p-3.5 shadow-2xs">
-                                            <span className={`text-[11px] font-semibold text-gray-400 uppercase tracking-wider block ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                                {isUrdu ? 'اب تک موصول' : 'Received so far'}
-                                            </span>
-                                            <span className="text-lg font-bold font-mono tabular-nums text-gray-900 mt-1 block">
-                                                Rs. {Number(selectedRow.wasooli).toLocaleString()}
-                                            </span>
-                                        </div>
-                                    </div>
+                                <div className="bg-white rounded-xl border border-gray-200 p-3.5 shadow-2xs">
+                                    <span className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase tracking-wider block">
+                                        {isUrdu ? 'آج کی سیل' : 'AAJ KI SALE'}
+                                    </span>
+                                    <span className="text-base md:text-lg font-bold text-gray-900 mt-1 block">
+                                        {selectedMerchant ? `Rs. ${Number(amroza).toLocaleString()}` : '—'}
+                                    </span>
+                                </div>
 
-                                    {/* 3. Net Baqaya Card - Flat & Elegant */}
-                                    <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-between shadow-2xs">
-                                        <div>
-                                            <span className={`text-xs font-bold text-gray-500 uppercase tracking-wider block ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                                {isUrdu ? 'کل بقایا رقم (NET BAQAYA)' : 'NET BAQAYA (OUTSTANDING)'}
-                                            </span>
-                                            <span className="text-[11px] text-gray-400">
-                                                Sabiqa + Amroza − Wasooli
-                                            </span>
-                                        </div>
-                                        <div className="text-xl md:text-2xl font-black font-mono tabular-nums text-emerald-800" dir="ltr">
-                                            Rs. {Number(liveBaqaya).toLocaleString()}
-                                        </div>
-                                    </div>
+                                <div className="bg-white rounded-xl border border-gray-200 p-3.5 shadow-2xs">
+                                    <span className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase tracking-wider block">
+                                        {isUrdu ? 'وصولی ملی' : 'WASOOLI MILI'}
+                                    </span>
+                                    <span className="text-base md:text-lg font-bold text-gray-900 mt-1 block">
+                                        {selectedMerchant ? `Rs. ${Number(wasooliMili).toLocaleString()}` : '—'}
+                                    </span>
+                                </div>
+                            </div>
 
-                                    {/* 4. Wasooli Entry Form - Clean Flat Box with Real Icons */}
-                                    <div className="bg-white border border-gray-200 rounded-xl p-4 md:p-5 space-y-3.5 shadow-2xs">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <Icon name="HandCoins" className="size-4 text-emerald-700" />
-                                                <label className={`text-xs font-bold text-gray-800 uppercase tracking-wider ${isUrdu ? 'font-nastaliq text-sm' : ''}`}>
-                                                    {isUrdu ? 'نئی وصولی درج کریں (WASOOLI RECEIVED)' : 'ENTER WASOOLI RECEIVED'}
-                                                </label>
-                                            </div>
-                                            {currentNumVal > 0 && (
-                                                <span className="text-xs text-emerald-700 font-semibold font-mono tabular-nums">
-                                                    New Baqaya: Rs. {Number(liveBaqaya).toLocaleString()}
-                                                </span>
-                                            )}
-                                        </div>
+                            {/* 3. Net Baqaya Strip Card */}
+                            <div className="bg-white rounded-2xl border border-gray-200/90 shadow-xs p-4 md:p-5 flex items-center justify-between gap-4">
+                                <div>
+                                    <span className="text-xs md:text-sm font-bold text-gray-900 block">
+                                        {isUrdu ? 'نیٹ بقایا (ابھی دینا ہے)' : 'Net baqaya (abhi dena hai)'}
+                                    </span>
+                                    <span className="text-[11px] text-gray-400 mt-0.5 block">
+                                        {isUrdu ? 'سابقہ + آج کی سیل − وصولی' : 'Sabiqa + Aaj ki sale − Wasooli'}
+                                    </span>
+                                </div>
+                                <div className="text-2xl md:text-3xl font-black tabular-nums text-[#1e713e]" dir="ltr">
+                                    {selectedMerchant ? `Rs. ${Number(liveNetBaqaya).toLocaleString()}` : '—'}
+                                </div>
+                            </div>
 
-                                        {/* Input + Save Button */}
-                                        <div className="flex items-center gap-2.5">
-                                            <div className="relative flex-1">
-                                                <span className="absolute start-3.5 top-1/2 -translate-y-1/2 font-mono text-xs font-bold text-gray-400">
-                                                    Rs.
-                                                </span>
-                                                <input
-                                                    type="number"
-                                                    step="0.01"
-                                                    min="0"
-                                                    value={currentInputVal}
-                                                    onChange={e => handleAmountChange(selectedRow.merchant_id, e.target.value)}
-                                                    onKeyDown={e => {
-                                                        if (e.key === 'Enter') {
-                                                            e.preventDefault();
-                                                            saveWasooliReceipt(selectedRow.merchant_id);
-                                                        }
-                                                    }}
-                                                    placeholder="0.00"
-                                                    className="w-full h-11 ps-10 pe-4 rounded-xl border border-gray-300 bg-white text-base md:text-lg font-bold font-mono tabular-nums text-gray-900 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none transition-all"
-                                                />
-                                            </div>
+                            {/* 4. Step 1: Paise kaise mile? */}
+                            <div className="bg-white rounded-2xl border border-gray-200/90 border-l-4 border-l-[#1e713e] shadow-xs p-4 md:p-5 space-y-3">
+                                <h3 className="text-sm md:text-base font-bold text-gray-900">
+                                    {isUrdu ? '1 پیسے کیسے ملے؟' : '1 Paise kaise mile?'}
+                                </h3>
+                                <div className="grid grid-cols-3 gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setPaymentMethod('cash')}
+                                        className={`min-h-[44px] h-11 rounded-xl text-xs md:text-sm font-semibold flex items-center justify-center transition-all cursor-pointer ${
+                                            paymentMethod === 'cash'
+                                                ? 'border-2 border-[#1e713e] bg-[#eef7f0] text-gray-900 font-bold'
+                                                : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                                        }`}
+                                    >
+                                        Cash
+                                    </button>
 
-                                            <Button
-                                                type="button"
-                                                disabled={savingId === selectedRow.merchant_id}
-                                                onClick={() => saveWasooliReceipt(selectedRow.merchant_id)}
-                                                className="h-11 px-5 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white font-semibold text-xs md:text-sm flex items-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-50"
-                                            >
-                                                <Icon name="Check" className="size-4" weight="bold" />
-                                                <span>{isUrdu ? 'محفوظ کریں' : 'Save Wasooli'}</span>
-                                            </Button>
-                                        </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setPaymentMethod('bank')}
+                                        className={`min-h-[44px] h-11 rounded-xl text-xs md:text-sm font-semibold flex items-center justify-center transition-all cursor-pointer ${
+                                            paymentMethod === 'bank'
+                                                ? 'border-2 border-[#1e713e] bg-[#eef7f0] text-gray-900 font-bold'
+                                                : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                                        }`}
+                                    >
+                                        Bank / Wallet
+                                    </button>
 
-                                        {/* Quick Amount Helper Pills */}
-                                        <div className="flex flex-wrap items-center gap-2 pt-1">
-                                            <div className="flex items-center gap-1 text-xs text-gray-400 font-medium me-1">
-                                                <Icon name="Lightning" className="size-3 text-amber-600" weight="fill" />
-                                                <span>Quick:</span>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={() => handleAmountChange(selectedRow.merchant_id, String(totalOutstanding))}
-                                                className="px-3 py-1 rounded-md bg-gray-50 hover:bg-gray-100 text-gray-700 font-medium text-xs cursor-pointer transition-colors border border-gray-200/80"
-                                            >
-                                                {isUrdu ? 'مکمل رقم' : 'Full Balance'} ({Number(totalOutstanding).toLocaleString()})
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => handleAmountChange(selectedRow.merchant_id, String(Math.round(totalOutstanding / 2)))}
-                                                className="px-3 py-1 rounded-md bg-gray-50 hover:bg-gray-100 text-gray-700 font-medium text-xs cursor-pointer transition-colors border border-gray-200/80"
-                                            >
-                                                {isUrdu ? 'نصف رقم' : 'Half'} ({Number(Math.round(totalOutstanding / 2)).toLocaleString()})
-                                            </button>
-                                            {currentInputVal && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleAmountChange(selectedRow.merchant_id, '')}
-                                                    className="px-2.5 py-1 rounded-md text-gray-400 hover:text-red-600 text-xs cursor-pointer transition-colors"
-                                                >
-                                                    {isUrdu ? 'خالی کریں' : 'Clear'}
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                </>
-                            ) : (
-                                <div className="p-12 text-center text-muted-foreground text-sm">
-                                    {t('common.no_records')}
+                                    <button
+                                        type="button"
+                                        onClick={() => setPaymentMethod('credit')}
+                                        className={`min-h-[44px] h-11 rounded-xl text-xs md:text-sm font-semibold flex items-center justify-center transition-all cursor-pointer ${
+                                            paymentMethod === 'credit'
+                                                ? 'border-2 border-[#1e713e] bg-[#eef7f0] text-gray-900 font-bold'
+                                                : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                                        }`}
+                                    >
+                                        Credit
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* 5. Step 2: Kis account mein paise aaye? (Visible only when Bank / Wallet is selected) */}
+                            {paymentMethod === 'bank' && (
+                                <div className="bg-white rounded-2xl border border-gray-200/90 border-l-4 border-l-[#1e713e] shadow-xs p-4 md:p-5 space-y-2 animate-in fade-in duration-150">
+                                    <h3 className="text-sm md:text-base font-bold text-gray-900">
+                                        {isUrdu ? '2 کس اکاؤنٹ میں پیسے آئے؟' : '2 Kis account mein paise aaye?'}
+                                    </h3>
+                                    <p className="text-xs text-gray-400 mb-2">
+                                        {isUrdu ? 'یہ صرف Bank / Wallet چننے پر دکھتا ہے' : 'Ye sirf Bank / Wallet chunne par dikhta hai'}
+                                    </p>
+                                    <select
+                                        value={selectedBankAccount}
+                                        onChange={e => setSelectedBankAccount(e.target.value)}
+                                        className="w-full min-h-[44px] h-11 rounded-xl border border-gray-200 px-3 text-xs md:text-sm font-semibold bg-white text-gray-900 focus:outline-none focus:border-[#1e713e] focus:ring-1 focus:ring-[#1e713e] transition-all cursor-pointer"
+                                    >
+                                        <option value="" disabled>
+                                            {isUrdu ? 'اکاؤنٹ منتخب کریں' : 'Account select karein'}
+                                        </option>
+                                        {accounts.length === 0 ? (
+                                            <option value="" disabled>
+                                                {isUrdu ? 'کوئی بینک اکاؤنٹ دستیاب نہیں' : 'No active bank account available'}
+                                            </option>
+                                        ) : (
+                                            accounts.map(acc => (
+                                                <option key={acc.id} value={acc.name}>
+                                                    {acc.name} (Rs. {Number(acc.current_balance).toLocaleString('en-US')})
+                                                </option>
+                                            ))
+                                        )}
+                                    </select>
                                 </div>
                             )}
-                        </div>
-                    </div>
-                </div>
 
-                {/* 3. Sticky Live Footer - Clean, Unified, Professional */}
-                <div className="fixed bottom-0 start-0 end-0 bg-[#0e2416] text-white px-4 md:px-8 py-2.5 shadow-xl border-t border-[#1b4329] z-30 flex flex-wrap items-center justify-between gap-3 text-xs">
-                    <div className="flex items-center gap-3">
-                        <span className="font-semibold text-emerald-200">
-                            {isUrdu ? `اندراج: ${selectedRowIndex >= 0 ? selectedRowIndex + 1 : 0} از ${rows.length}` : `Record ${selectedRowIndex >= 0 ? selectedRowIndex + 1 : 0} of ${rows.length}`}
-                        </span>
-                        <span className="text-emerald-500/60 hidden sm:inline">|</span>
-                        <span className="text-emerald-300/80 hidden sm:inline">
-                            {isUrdu ? `${clearedCount} کلئیرڈ` : `${clearedCount} of ${rows.length} Cleared`}
-                        </span>
-                    </div>
+                            {/* 6. Step 3: Kitni wasooli hui? */}
+                            <div className="bg-white rounded-2xl border border-gray-200/90 border-l-4 border-l-[#1e713e] shadow-xs p-4 md:p-5 space-y-3">
+                                <h3 className="text-sm md:text-base font-bold text-gray-900">
+                                    {isUrdu ? '3 کتنی وصولی ہوئی؟' : '3 Kitni wasooli hui?'}
+                                </h3>
 
-                    <div className="flex flex-wrap items-center gap-4 sm:gap-6 font-mono tabular-nums text-xs">
-                        <div>
-                            <span className="text-emerald-300/70 font-sans me-1.5">{isUrdu ? 'کل سابقہ:' : 'Total Sabiqa:'}</span>
-                            <span className="font-semibold text-white">Rs. {Number(totals.total_sabiqa).toLocaleString()}</span>
-                        </div>
+                                <div className="relative">
+                                    <input
+                                        ref={amountInputRef}
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        value={amount}
+                                        onChange={e => setAmount(e.target.value)}
+                                        placeholder="Rs. 0.00"
+                                        className={`w-full min-h-[44px] h-12 rounded-xl border px-4 text-base md:text-lg font-bold text-gray-900 placeholder:text-gray-400 focus:outline-none transition-all bg-white ${
+                                            isOverLimit
+                                                ? 'border-red-400 focus:border-red-600 focus:ring-1 focus:ring-red-600 text-red-900'
+                                                : 'border-gray-200 focus:border-[#1e713e] focus:ring-1 focus:ring-[#1e713e]'
+                                        }`}
+                                    />
+                                </div>
 
-                        <div>
-                            <span className="text-emerald-300/70 font-sans me-1.5">{isUrdu ? 'کل بکری:' : "Today's Sale:"}</span>
-                            <span className="font-semibold text-emerald-300">Rs. {Number(totals.total_amroza).toLocaleString()}</span>
-                        </div>
+                                {/* Maximum Note */}
+                                <div className="flex items-center justify-between text-xs">
+                                    <span className={isOverLimit ? 'text-red-600 font-semibold' : 'text-gray-400'}>
+                                        {isOverLimit
+                                            ? (isUrdu
+                                                ? `وصولی کی رقم بقایا (Rs. ${Number(totalOutstanding).toLocaleString()}) سے زیادہ نہیں ہو سکتی!`
+                                                : `Wasooli ki raqam baqaya (Rs. ${Number(totalOutstanding).toLocaleString()}) se zyada nahi ho sakti!`)
+                                            : (isUrdu
+                                                ? `زیادہ سے زیادہ Rs. ${Number(totalOutstanding).toLocaleString()} (نیٹ بقایا سے زیادہ نہیں ہو سکتی)`
+                                                : `Maximum Rs. ${Number(totalOutstanding).toLocaleString()} (net baqaya se zyada nahi ho sakti)`)}
+                                    </span>
+                                </div>
 
-                        <div>
-                            <span className="text-emerald-300/70 font-sans me-1.5">{isUrdu ? 'کل وصولی:' : 'Total Wasooli:'}</span>
-                            <span className="font-semibold text-blue-300">Rs. {Number(totals.total_wasooli).toLocaleString()}</span>
-                        </div>
+                                {/* Quick Buttons */}
+                                <div className="flex flex-wrap items-center gap-2.5 pt-1">
+                                    <button
+                                        type="button"
+                                        onClick={() => setAmount(String(totalOutstanding))}
+                                        className="min-h-[36px] h-9 px-4 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-xs font-semibold text-gray-700 transition-colors cursor-pointer"
+                                    >
+                                        {isUrdu ? 'پورا' : 'Poora'} ({Number(totalOutstanding).toLocaleString()})
+                                    </button>
 
-                        <div>
-                            <span className="text-emerald-300/70 font-sans me-1.5">{isUrdu ? 'بقایا:' : 'Net Baqaya:'}</span>
-                            <span className="font-bold text-white text-sm">Rs. {Number(totals.total_baqaya).toLocaleString()}</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setAmount(String(Math.round(totalOutstanding / 2)))}
+                                        className="min-h-[36px] h-9 px-4 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-xs font-semibold text-gray-700 transition-colors cursor-pointer"
+                                    >
+                                        {isUrdu ? 'آدھا' : 'Aadha'} ({Number(Math.round(totalOutstanding / 2)).toLocaleString()})
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setAmount('');
+                                            amountInputRef.current?.focus();
+                                        }}
+                                        className="min-h-[36px] h-9 px-4 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-xs font-semibold text-gray-700 transition-colors cursor-pointer"
+                                    >
+                                        Custom
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* 7. Bottom Action Row */}
+                            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+                                <p className="text-xs text-gray-500 leading-relaxed text-center sm:text-start">
+                                    {isUrdu
+                                        ? 'سیو کے بعد انٹری لیجر میں جائے گی اور اکاؤنٹ کا بیلنس اپ ڈیٹ ہو گا۔'
+                                        : 'Save ke baad entry ledger mein jayegi aur account ka balance update hoga.'}
+                                </p>
+                                <div className="flex items-center gap-3 shrink-0">
+                                    <button
+                                        type="button"
+                                        onClick={handleReset}
+                                        className="min-h-[44px] h-11 px-5 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 font-semibold text-xs md:text-sm cursor-pointer transition-colors"
+                                    >
+                                        Reset
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        disabled={saving || isOverLimit}
+                                        onClick={handleSave}
+                                        className="min-h-[44px] h-11 px-6 rounded-xl bg-[#1e713e] hover:bg-[#165a31] text-white font-bold text-xs md:text-sm shadow-xs cursor-pointer transition-colors disabled:opacity-50"
+                                    >
+                                        {saving ? (isUrdu ? 'محفوظ ہو رہا ہے...' : 'Saving...') : 'Save Karein'}
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

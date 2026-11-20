@@ -333,7 +333,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                                         value={data.truck_no}
                                         onChange={e => setData('truck_no', e.target.value)}
                                         placeholder="e.g. NAB652"
-                                        className="w-full h-10 px-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-900 focus:bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none font-mono"
+                                        className="w-full h-10 px-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-900 focus:bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none"
                                     />
                                 </div>
 
@@ -396,7 +396,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                                             value={data.nag}
                                             onChange={e => setData('nag', e.target.value)}
                                             placeholder="40"
-                                            className="w-full h-10 px-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-900 focus:bg-white focus:border-emerald-600 outline-none font-mono"
+                                            className="w-full h-10 px-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-900 focus:bg-white focus:border-emerald-600 outline-none"
                                         />
                                     </div>
 
@@ -411,7 +411,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                                             value={data.weight}
                                             onChange={e => setData('weight', e.target.value)}
                                             placeholder="2000"
-                                            className="w-full h-10 px-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-900 focus:bg-white focus:border-emerald-600 outline-none font-mono"
+                                            className="w-full h-10 px-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-900 focus:bg-white focus:border-emerald-600 outline-none"
                                         />
                                     </div>
 
@@ -426,7 +426,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                                             value={data.rate}
                                             onChange={e => setData('rate', e.target.value)}
                                             placeholder="80"
-                                            className="w-full h-10 px-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-900 focus:bg-white focus:border-emerald-600 outline-none font-mono"
+                                            className="w-full h-10 px-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-900 focus:bg-white focus:border-emerald-600 outline-none"
                                         />
                                     </div>
                                 </div>
@@ -439,7 +439,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                                     <span className="text-gray-600">
                                         Kul raqam ({isWeightBased ? 'Wazan × Rate' : 'Nag × Rate'})
                                     </span>
-                                    <span className="font-mono font-bold text-sm text-gray-900">
+                                    <span className="font-bold text-sm text-gray-900">
                                         Rs. {kulRaqam.toLocaleString()}
                                     </span>
                                 </div>
@@ -489,7 +489,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                                             value={data.commission_pct}
                                             onChange={e => setData('commission_pct', e.target.value)}
                                             placeholder="6"
-                                            className="w-full h-10 px-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-900 focus:bg-white focus:border-emerald-600 outline-none font-mono font-bold"
+                                            className="w-full h-10 px-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-900 focus:bg-white focus:border-emerald-600 outline-none font-bold"
                                         />
                                     </div>
 
@@ -503,7 +503,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                                             value={data.bardana_amount}
                                             onChange={e => setData('bardana_amount', e.target.value)}
                                             placeholder="1200"
-                                            className="w-full h-10 px-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-900 focus:bg-white focus:border-emerald-600 outline-none font-mono"
+                                            className="w-full h-10 px-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-900 focus:bg-white focus:border-emerald-600 outline-none"
                                         />
                                     </div>
 
@@ -517,7 +517,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                                             value={data.kiraya}
                                             onChange={e => setData('kiraya', e.target.value)}
                                             placeholder="0"
-                                            className="w-full h-10 px-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-900 focus:bg-white focus:border-emerald-600 outline-none font-mono"
+                                            className="w-full h-10 px-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-900 focus:bg-white focus:border-emerald-600 outline-none"
                                         />
                                     </div>
 
@@ -531,7 +531,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                                             value={data.mazdoori}
                                             onChange={e => setData('mazdoori', e.target.value)}
                                             placeholder="0"
-                                            className="w-full h-10 px-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-900 focus:bg-white focus:border-emerald-600 outline-none font-mono"
+                                            className="w-full h-10 px-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-900 focus:bg-white focus:border-emerald-600 outline-none"
                                         />
                                     </div>
                                 </div>
@@ -546,7 +546,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                                         value={data.market_fee}
                                         onChange={e => setData('market_fee', e.target.value)}
                                         placeholder="0"
-                                        className="w-full h-10 px-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-900 focus:bg-white focus:border-emerald-600 outline-none font-mono"
+                                        className="w-full h-10 px-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-900 focus:bg-white focus:border-emerald-600 outline-none"
                                     />
                                 </div>
 
@@ -554,19 +554,19 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                                 <div className="pt-3 border-t border-gray-100 space-y-1.5 text-xs">
                                     <div className="flex justify-between text-gray-600">
                                         <span>Kul raqam</span>
-                                        <span className="font-mono">Rs. {kulRaqam.toLocaleString()}</span>
+                                        <span>Rs. {kulRaqam.toLocaleString()}</span>
                                     </div>
                                     <div className="flex justify-between text-gray-600">
                                         <span>Commission {commPctNum}%</span>
-                                        <span className="font-mono text-red-600">- Rs. {commAmount.toLocaleString()}</span>
+                                        <span className="text-red-600">- Rs. {commAmount.toLocaleString()}</span>
                                     </div>
                                     <div className="flex justify-between text-gray-600">
                                         <span>Bardana aur akhrajat</span>
-                                        <span className="font-mono text-red-600">- Rs. {totalExpenses.toLocaleString()}</span>
+                                        <span className="text-red-600">- Rs. {totalExpenses.toLocaleString()}</span>
                                     </div>
                                     <div className="flex justify-between items-center pt-2 border-t border-gray-200">
                                         <span className="font-bold text-gray-900 text-sm">Kisan ko dene ki raqam</span>
-                                        <span className="font-mono font-black text-base text-gray-900">
+                                        <span className="font-black text-base text-gray-900">
                                             Rs. {safiRaqam.toLocaleString()}
                                         </span>
                                     </div>
@@ -614,7 +614,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                                     {data.truck_no && (
                                         <div className="flex justify-between py-2">
                                             <span className="text-gray-500">Truck No</span>
-                                            <span className="font-mono text-gray-900 font-bold">{data.truck_no}</span>
+                                            <span className="text-gray-900 font-bold">{data.truck_no}</span>
                                         </div>
                                     )}
 
@@ -627,7 +627,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
 
                                     <div className="flex justify-between py-2">
                                         <span className="text-gray-500">Nag / Wazan / Rate</span>
-                                        <span className="font-mono font-bold text-gray-900">
+                                        <span className="font-bold text-gray-900">
                                             {nagNum} / {weightNum > 0 ? `${weightNum} kg` : '—'} / Rs. {rateNum}
                                         </span>
                                     </div>
@@ -637,19 +637,19 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                                 <div className="pt-2 border-t border-gray-100 space-y-1.5 text-xs">
                                     <div className="flex justify-between text-gray-600">
                                         <span>Kul raqam</span>
-                                        <span className="font-mono font-bold">Rs. {kulRaqam.toLocaleString()}</span>
+                                        <span className="font-bold">Rs. {kulRaqam.toLocaleString()}</span>
                                     </div>
                                     <div className="flex justify-between text-gray-600">
                                         <span>Commission {commPctNum}%</span>
-                                        <span className="font-mono text-red-600">- Rs. {commAmount.toLocaleString()}</span>
+                                        <span className="text-red-600">- Rs. {commAmount.toLocaleString()}</span>
                                     </div>
                                     <div className="flex justify-between text-gray-600">
                                         <span>Bardana aur akhrajat</span>
-                                        <span className="font-mono text-red-600">- Rs. {totalExpenses.toLocaleString()}</span>
+                                        <span className="text-red-600">- Rs. {totalExpenses.toLocaleString()}</span>
                                     </div>
                                     <div className="flex justify-between items-center pt-2 border-t border-gray-200">
                                         <span className="font-bold text-gray-900 text-sm">Kisan ko dene ki raqam</span>
-                                        <span className="font-mono font-black text-base text-gray-900">
+                                        <span className="font-black text-base text-gray-900">
                                             Rs. {safiRaqam.toLocaleString()}
                                         </span>
                                     </div>
@@ -694,7 +694,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                                     Bill No: {completedBill.bill_no} · {completedBill.farmer_name}
                                 </p>
 
-                                <div className="text-3xl font-black font-mono text-gray-900 pt-1">
+                                <div className="text-3xl font-black text-gray-900 pt-1">
                                     Rs. {Number(completedBill.net_amount).toLocaleString()}
                                 </div>
 
@@ -741,7 +741,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                     <div className="border border-gray-400 rounded p-2 mb-3 text-[11px] space-y-1 bg-gray-50/50">
                         <div className="flex justify-between font-bold">
                             <span>Bill No: {completedBill.bill_no}</span>
-                            <span className="font-mono">{completedBill.date}</span>
+                            <span>{completedBill.date}</span>
                         </div>
                         <div className="pt-0.5 border-t border-gray-200">
                             <strong>Kisan: </strong>
@@ -750,7 +750,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                         {data.truck_no && (
                             <div>
                                 <strong>Truck No: </strong>
-                                <span className="font-mono">{data.truck_no}</span>
+                                <span>{data.truck_no}</span>
                             </div>
                         )}
                         <div>
@@ -759,11 +759,11 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                         </div>
                         <div>
                             <strong>Nag / Wazan: </strong>
-                            <span className="font-mono">{nagNum} nag / {weightNum > 0 ? `${weightNum} kg` : '—'}</span>
+                            <span>{nagNum} nag / {weightNum > 0 ? `${weightNum} kg` : '—'}</span>
                         </div>
                         <div>
                             <strong>Rate: </strong>
-                            <span className="font-mono">Rs. {rateNum}</span>
+                            <span>Rs. {rateNum}</span>
                         </div>
                     </div>
 
@@ -771,44 +771,44 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                     <div className="border border-black rounded p-2 mb-3 text-xs space-y-1">
                         <div className="flex justify-between">
                             <span>Kul raqam:</span>
-                            <span className="font-mono font-bold">Rs. {kulRaqam.toLocaleString()}</span>
+                            <span className="font-bold">Rs. {kulRaqam.toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between text-gray-700">
                             <span>Commission ({commPctNum}%):</span>
-                            <span className="font-mono">- Rs. {commAmount.toLocaleString()}</span>
+                            <span>- Rs. {commAmount.toLocaleString()}</span>
                         </div>
                         {bardanaNum > 0 && (
                             <div className="flex justify-between text-gray-700">
                                 <span>Bardana:</span>
-                                <span className="font-mono">- Rs. {bardanaNum.toLocaleString()}</span>
+                                <span>- Rs. {bardanaNum.toLocaleString()}</span>
                             </div>
                         )}
                         {kirayaNum > 0 && (
                             <div className="flex justify-between text-gray-700">
                                 <span>Kiraya:</span>
-                                <span className="font-mono">- Rs. {kirayaNum.toLocaleString()}</span>
+                                <span>- Rs. {kirayaNum.toLocaleString()}</span>
                             </div>
                         )}
                         {mazdooriNum > 0 && (
                             <div className="flex justify-between text-gray-700">
                                 <span>Mazdoori:</span>
-                                <span className="font-mono">- Rs. {mazdooriNum.toLocaleString()}</span>
+                                <span>- Rs. {mazdooriNum.toLocaleString()}</span>
                             </div>
                         )}
                         {marketFeeNum > 0 && (
                             <div className="flex justify-between text-gray-700">
                                 <span>Market fee:</span>
-                                <span className="font-mono">- Rs. {marketFeeNum.toLocaleString()}</span>
+                                <span>- Rs. {marketFeeNum.toLocaleString()}</span>
                             </div>
                         )}
                         <div className="flex justify-between items-center pt-1.5 border-t border-black font-bold text-sm">
                             <span>Kisan ki safi raqam:</span>
-                            <span className="font-mono font-black">Rs. {Number(completedBill.net_amount).toLocaleString()}</span>
+                            <span className="font-black">Rs. {Number(completedBill.net_amount).toLocaleString()}</span>
                         </div>
                     </div>
 
                     {/* Footer */}
-                    <div className="text-center text-[9px] text-gray-500 font-mono pt-2 border-t border-gray-300">
+                    <div className="text-center text-[9px] text-gray-500 pt-2 border-t border-gray-300">
                         Printed on: {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}
                     </div>
                 </div>

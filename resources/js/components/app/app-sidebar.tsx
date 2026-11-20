@@ -28,6 +28,7 @@ import { getNavigationItems } from '@/lib/navigation';
 import { NavGroup } from '@/types';
 import { cn } from '@/lib/utils';
 import { NavUser } from '../nav/nav-user';
+import { toast } from 'sonner';
 
 export function AppSidebar() {
     const { url, props } = usePage();
@@ -171,10 +172,12 @@ export function AppSidebar() {
                                                 <SidebarMenuSub className="ms-4 my-1 border-s border-[#e6e9e6] dark:border-[#262d28] ps-2.5 gap-0.5">
                                                     {group.items.map((subItem) => {
                                                         const isSubActive = url === subItem.url ||
+                                                            url.startsWith(subItem.url) ||
                                                             (subItem.url === '/merchant-wasooli' && (url.startsWith('/merchant-wasooli') || url.startsWith('/merchant-amroza') || url.startsWith('/amroza-detail') || url.startsWith('/wasooli-detail') || url.startsWith('/amroza-wasooli'))) ||
                                                             (subItem.url === '/masters/merchants' && (url.startsWith('/masters/merchants') || url.startsWith('/masters/farmers'))) ||
                                                             (subItem.url === '/masters/items' && (url.startsWith('/masters/items') || url.startsWith('/masters/marks') || url.startsWith('/masters/areas')));
                                                         const subLabel = t(subItem.title);
+                                                        const isPlaceholder = false;
 
                                                         return (
                                                             <SidebarMenuSubItem key={subItem.url}>
@@ -182,17 +185,36 @@ export function AppSidebar() {
                                                                     asChild
                                                                     isActive={isSubActive}
                                                                     className={cn(
-                                                                        "rounded-md py-1.5 px-2.5 transition-colors text-xs font-medium h-8",
+                                                                        "rounded-md py-1.5 px-2.5 transition-colors text-xs font-medium h-8 cursor-pointer",
                                                                         isSubActive
                                                                             ? "bg-[#ecf5ee] dark:bg-[#1b2a20] text-[#166534] dark:text-[#4ade80] font-semibold hover:bg-[#ecf5ee] hover:text-[#166534]"
                                                                             : "text-[#68736b] dark:text-[#8b968e] hover:bg-[#f0f2f0] dark:hover:bg-[#1e2420] hover:text-[#1a211c] dark:hover:text-[#e7ece8]"
                                                                     )}
                                                                 >
-                                                                    <Link href={subItem.url} className="flex items-center gap-2">
-                                                                        <span className={cn("truncate text-[15px] font-medium text-black dark:text-white", isUrdu && "font-nastaliq text-[16px]")}>
-                                                                            {subLabel}
-                                                                        </span>
-                                                                    </Link>
+                                                                    {isPlaceholder ? (
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={(e) => {
+                                                                                e.preventDefault();
+                                                                                toast.info(isUrdu ? `${subLabel} کا صفحہ جلد شامل کیا جائے گا` : `${subLabel} page will be available soon`);
+                                                                            }}
+                                                                            className="flex items-center gap-2 w-full text-start"
+                                                                        >
+                                                                            <span className={cn("truncate text-[15px] font-medium text-[#68736b] dark:text-[#8b968e]", isUrdu && "font-nastaliq text-[16px]")}>
+                                                                                {subLabel}
+                                                                            </span>
+                                                                        </button>
+                                                                    ) : (
+                                                                        <Link href={subItem.url} className="flex items-center gap-2">
+                                                                            <span className={cn(
+                                                                                "truncate text-[15px] font-medium",
+                                                                                isSubActive ? "text-[#166534] dark:text-[#4ade80] font-semibold" : "text-[#2e3831] dark:text-white",
+                                                                                isUrdu && "font-nastaliq text-[16px]"
+                                                                            )}>
+                                                                                {subLabel}
+                                                                            </span>
+                                                                        </Link>
+                                                                    )}
                                                                 </SidebarMenuSubButton>
                                                             </SidebarMenuSubItem>
                                                         );
