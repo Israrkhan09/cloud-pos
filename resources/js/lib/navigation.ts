@@ -27,11 +27,6 @@ export const jkcSidebarNav: NavGroup[] = [
                 icon: "TagIcon",
             },
             {
-                title: "nav.naqdi",
-                url: "/naqdi",
-                icon: "CoinsIcon",
-            },
-            {
                 title: "nav.wasooli",
                 url: "/wasooli",
                 icon: "HandCoinsIcon",
@@ -44,7 +39,6 @@ export const jkcSidebarNav: NavGroup[] = [
         ],
         includeRoutes: [
             "amroza",
-            "naqdi",
             "wasooli",
             "bijak"
         ]

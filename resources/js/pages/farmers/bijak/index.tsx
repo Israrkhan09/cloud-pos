@@ -1,10 +1,8 @@
-import React, { useState, useMemo } from 'react';
-import { Head, router, useForm } from '@inertiajs/react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Head, router } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import Icon from '@/components/ui/icon';
-import MandiPageHeader from '@/components/app/mandi-page-header';
 import { toast } from 'sonner';
 
 interface Area {
@@ -46,6 +44,9 @@ interface SavedBillData {
     farmer_name: string;
     net_amount: number;
     gross_amount: number;
+    total_nag?: number;
+    total_weight?: number;
+    total_charges?: number;
     date: string;
 }
 
@@ -56,72 +57,86 @@ interface Props {
     filters: { date: string };
 }
 
+interface BillItemRow {
+    item_id: number;
+    name: string;
+    nag: string;
+    weight: string;
+    rate: string;
+}
+
 export default function BijjakIndex({ farmers, items, saved_bill, filters }: Props) {
     const { t, i18n } = useTranslation();
     const isUrdu = i18n.language === 'ur';
-
-    // Wizard Step: 1 = Kisan, 2 = Maal, 3 = Charges, 4 = Jaiza, 5 = Saved
-    const [step, setStep] = useState<number>(saved_bill ? 5 : 1);
-    const [infoExpanded, setInfoExpanded] = useState(false);
-    const [completedBill, setCompletedBill] = useState<SavedBillData | null>(saved_bill || null);
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: isUrdu ? 'روزانہ کام' : 'Daily Kaam', href: '#' },
         { title: isUrdu ? 'کسان کا بل (بیجک)' : 'Farmer Bill (Bijak)', href: '/bijak' },
     ];
 
-    // Form State - all inputs editable by user
-    const { data, setData, post, processing, reset } = useForm({
-        date: filters.date || new Date().toISOString().split('T')[0],
-        farmer_id: '',
-        farmer_mark_id: '',
-        truck_no: '',
-        item_id: '',
-        nag: '',
-        weight: '',
-        rate: '',
-        commission_pct: '',
-        bardana_amount: '',
-        kiraya: '',
-        mazdoori: '',
-        market_fee: '',
-        note: '',
-    });
+    // Find Muneeb Ahmed Khan or first farmer as initial
+    const initialFarmer = useMemo(() => {
+        return farmers.find(f => (f.name_en && f.name_en.toLowerCase().includes('muneeb'))) || farmers[0];
+    }, [farmers]);
 
-    // Selected objects
+    // Top Card States
+    const [farmerId, setFarmerId] = useState<string>(initialFarmer ? String(initialFarmer.id) : '');
+    const [farmerMarkId, setFarmerMarkId] = useState<string>('');
+    const [truckNo, setTruckNo] = useState<string>('NAB652');
+    const [billDate, setBillDate] = useState<string>(filters?.date || '2026-11-21');
+
+    // Selected Farmer Object & Marks
     const selectedFarmer = useMemo(() => {
-        if (!data.farmer_id) return null;
-        return farmers.find(f => String(f.id) === String(data.farmer_id)) || null;
-    }, [farmers, data.farmer_id]);
+        if (!farmerId) return null;
+        return farmers.find(f => String(f.id) === String(farmerId)) || null;
+    }, [farmers, farmerId]);
 
     const farmerMarks = useMemo(() => {
         return selectedFarmer?.marks || [];
     }, [selectedFarmer]);
 
-    const selectedMark = useMemo(() => {
-        return farmerMarks.find(m => String(m.id) === String(data.farmer_mark_id)) || null;
-    }, [farmerMarks, data.farmer_mark_id]);
+    // Quick Items resolution
+    const getItemByKeyword = (kw: string) => {
+        const lower = kw.toLowerCase();
+        return items.find(it => 
+            (it.name_en && it.name_en.toLowerCase().includes(lower)) || 
+            (it.name_ur && it.name_ur.includes(kw))
+        ) || items[0];
+    };
 
-    const selectedItem = useMemo(() => {
-        if (!data.item_id) return null;
-        return items.find(it => String(it.id) === String(data.item_id)) || null;
-    }, [items, data.item_id]);
+    // Default 2 rows matching the mockup:
+    // Row 1: Tamatar, Nag 12, Wazan 300, Rate 80 => Raqam 24,000
+    // Row 2: Aloo, Nag 8, Wazan 320, Rate 55 => Raqam 17,600
+    const [billItems, setBillItems] = useState<BillItemRow[]>(() => {
+        const tamatar = items.find(it => it.name_en.toLowerCase().includes('tamat') || it.name_en.toLowerCase().includes('tomato')) || items[2] || items[0];
+        const aloo = items.find(it => it.name_en.toLowerCase().includes('aloo') || it.name_en.toLowerCase().includes('potato')) || items[0];
+        return [
+            {
+                item_id: tamatar ? tamatar.id : 3,
+                name: 'Tamatar',
+                nag: '12',
+                weight: '300',
+                rate: '80',
+            },
+            {
+                item_id: aloo ? aloo.id : 1,
+                name: 'Aloo',
+                nag: '8',
+                weight: '320',
+                rate: '55',
+            },
+        ];
+    });
 
-    // Live Calculations
-    const nagNum = parseFloat(data.nag) || 0;
-    const weightNum = parseFloat(data.weight) || 0;
-    const rateNum = parseFloat(data.rate) || 0;
-    const commPctNum = parseFloat(data.commission_pct) || 0;
-    const bardanaNum = parseFloat(data.bardana_amount) || 0;
-    const kirayaNum = parseFloat(data.kiraya) || 0;
-    const mazdooriNum = parseFloat(data.mazdoori) || 0;
-    const marketFeeNum = parseFloat(data.market_fee) || 0;
+    // Charges States
+    const [commissionPct, setCommissionPct] = useState<string>('5');
+    const [mazdooriRate, setMazdooriRate] = useState<string>('15');
+    const [kiraya, setKiraya] = useState<string>('500');
+    const [marketFeePct, setMarketFeePct] = useState<string>('0.5');
 
-    const isWeightBased = weightNum > 0;
-    const kulRaqam = isWeightBased ? Math.round(weightNum * rateNum) : Math.round(nagNum * rateNum);
-    const commAmount = Math.round((kulRaqam * commPctNum) / 100);
-    const totalExpenses = Math.round(bardanaNum + kirayaNum + mazdooriNum + marketFeeNum);
-    const safiRaqam = Math.round(kulRaqam - commAmount - totalExpenses);
+    const [isSaving, setIsSaving] = useState<boolean>(false);
+    const [completedBill, setCompletedBill] = useState<SavedBillData | null>(saved_bill || null);
+    const [showSuccessModal, setShowSuccessModal] = useState<boolean>(false);
 
     // Helpers
     const farmerTitle = (f: FarmerOption) => {
@@ -130,601 +145,537 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
         return area ? `${name} - ${area}` : name;
     };
 
-    const handleFarmerChange = (farmerIdStr: string) => {
-        setData(prev => {
-            const f = farmers.find(item => String(item.id) === farmerIdStr);
-            const defaultMarkId = f?.marks && f.marks.length > 0 ? String(f.marks[0].id) : '';
-            return {
-                ...prev,
-                farmer_id: farmerIdStr,
-                farmer_mark_id: defaultMarkId,
-            };
+    const handleFarmerChange = (fId: string) => {
+        setFarmerId(fId);
+        setFarmerMarkId('');
+    };
+
+    // Row management
+    const addQuickItem = (name: string) => {
+        const matched = getItemByKeyword(name);
+        const newItemId = matched ? matched.id : (items[0]?.id || 1);
+        setBillItems(prev => [
+            ...prev,
+            {
+                item_id: newItemId,
+                name: name,
+                nag: '10',
+                weight: '100',
+                rate: matched?.default_rate ? String(matched.default_rate) : '50',
+            },
+        ]);
+    };
+
+    const updateRow = (index: number, field: keyof BillItemRow, value: any) => {
+        setBillItems(prev => {
+            const copy = [...prev];
+            copy[index] = { ...copy[index], [field]: value };
+            if (field === 'item_id') {
+                const found = items.find(it => it.id === Number(value));
+                if (found) {
+                    copy[index].name = found.name_en.split(' ')[0];
+                }
+            }
+            return copy;
         });
     };
 
+    const removeRow = (index: number) => {
+        setBillItems(prev => prev.filter((_, i) => i !== index));
+    };
+
+    // Live Calculations
+    const calculations = useMemo(() => {
+        let totalNag = 0;
+        let totalWeight = 0;
+        let totalGross = 0;
+
+        billItems.forEach(item => {
+            const n = parseFloat(item.nag) || 0;
+            const w = parseFloat(item.weight) || 0;
+            const r = parseFloat(item.rate) || 0;
+            const g = w > 0 ? Math.round(w * r) : Math.round(n * r);
+            totalNag += n;
+            totalWeight += w;
+            totalGross += g;
+        });
+
+        const commPctNum = parseFloat(commissionPct) || 0;
+        const commAmount = Math.round((totalGross * commPctNum) / 100);
+
+        const mazRateNum = parseFloat(mazdooriRate) || 0;
+        const mazdooriAmount = Math.round(totalNag * mazRateNum);
+
+        const kirayaAmount = parseFloat(kiraya) || 0;
+
+        const feePctNum = parseFloat(marketFeePct) || 0;
+        const marketFeeAmount = Math.round((totalGross * feePctNum) / 100);
+
+        const totalCharges = Math.round(commAmount + mazdooriAmount + kirayaAmount + marketFeeAmount);
+        const netPayable = Math.round(totalGross - totalCharges);
+
+        return {
+            totalNag,
+            totalWeight,
+            totalGross,
+            commAmount,
+            mazdooriAmount,
+            kirayaAmount,
+            marketFeeAmount,
+            totalCharges,
+            netPayable,
+        };
+    }, [billItems, commissionPct, mazdooriRate, kiraya, marketFeePct]);
+
+    // Handle Save Bill
     const handleSaveBill = (e: React.FormEvent) => {
         e.preventDefault();
-        post('/bijak', {
+        if (billItems.length === 0) {
+            toast.error('Baraye meharbani kam az kam aik maal item shamil karein');
+            return;
+        }
+
+        setIsSaving(true);
+        const payload = {
+            date: billDate,
+            farmer_id: farmerId,
+            farmer_mark_id: farmerMarkId || null,
+            truck_no: truckNo || null,
+            items: billItems.map(it => ({
+                item_id: it.item_id,
+                nag: parseFloat(it.nag) || 0,
+                weight: parseFloat(it.weight) || 0,
+                rate: parseFloat(it.rate) || 0,
+            })),
+            commission_pct: parseFloat(commissionPct) || 0,
+            mazdoori_rate: parseFloat(mazdooriRate) || 0,
+            kiraya: parseFloat(kiraya) || 0,
+            market_fee_pct: parseFloat(marketFeePct) || 0,
+        };
+
+        router.post('/bijak', payload, {
             preserveScroll: true,
             onSuccess: (page: any) => {
+                setIsSaving(false);
                 toast.success(isUrdu ? 'بیجک محفوظ ہو گیا' : 'Bill saved successfully');
                 const saved = page.props?.saved_bill;
-                if (saved) {
-                    setCompletedBill(saved);
-                } else {
-                    setCompletedBill({
-                        id: Date.now(),
-                        bill_no: 'BJ-' + String(Math.floor(1000 + Math.random() * 9000)),
-                        farmer_name: selectedFarmer ? farmerTitle(selectedFarmer) : 'Farmer',
-                        net_amount: safiRaqam,
-                        gross_amount: kulRaqam,
-                        date: data.date,
-                    });
-                }
-                setStep(5);
+                const billData: SavedBillData = saved || {
+                    id: Date.now(),
+                    bill_no: 'BJ-' + String(Math.floor(1000 + Math.random() * 9000)),
+                    farmer_name: selectedFarmer ? farmerTitle(selectedFarmer) : 'Farmer',
+                    net_amount: calculations.netPayable,
+                    gross_amount: calculations.totalGross,
+                    total_nag: calculations.totalNag,
+                    total_weight: calculations.totalWeight,
+                    total_charges: calculations.totalCharges,
+                    date: billDate,
+                };
+                setCompletedBill(billData);
+                setShowSuccessModal(true);
             },
-            onError: () => toast.error(isUrdu ? 'محفوظ نہیں ہو سکا' : 'Could not save bill'),
+            onError: () => {
+                setIsSaving(false);
+                toast.error(isUrdu ? 'محفوظ نہیں ہو سکا' : 'Could not save bill');
+            },
         });
     };
 
     const handleNewBill = () => {
-        reset();
-        setData({
-            date: new Date().toISOString().split('T')[0],
-            farmer_id: farmers[0]?.id ? String(farmers[0].id) : '',
-            farmer_mark_id: farmers[0]?.marks?.[0]?.id ? String(farmers[0].marks[0].id) : '',
-            truck_no: '',
-            item_id: items[0]?.id ? String(items[0].id) : '',
-            nag: '',
-            weight: '',
-            rate: '',
-            commission_pct: '6',
-            bardana_amount: '0',
-            kiraya: '0',
-            mazdoori: '0',
-            market_fee: '0',
-            note: '',
-        });
+        setShowSuccessModal(false);
         setCompletedBill(null);
-        setStep(1);
+        setBillItems([
+            {
+                item_id: items[2]?.id || items[0]?.id || 1,
+                name: 'Tamatar',
+                nag: '',
+                weight: '',
+                rate: '',
+            },
+        ]);
+        setTruckNo('');
     };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Kisan ka Bill (Bijak)" />
 
-            {/* Screen UI */}
             <div className="w-full max-w-full overflow-x-hidden -mt-4 -mx-4 pb-20 bg-[#f4f6f4] min-h-[calc(100vh-4rem)] font-sans text-[#1a211c] print:hidden" dir="ltr">
                 
-                {/* 1. Greenish Top Header Banner */}
-                <MandiPageHeader
-                    title={
-                        <span className="flex items-center gap-2">
-                            <span>Kisan ka Bill (Bijak)</span>
-                            <span className="font-nastaliq font-normal text-emerald-100 text-lg md:text-xl">بیجک</span>
-                        </span>
-                    }
-                    subtitle="Kisan ke maal ka bill banayein"
-                />
+                {/* Header Banner */}
+                <div className="bg-[#14532d] text-white pt-6 pb-14 px-6 md:px-8">
+                    <div className="w-full max-w-[1400px] mx-auto flex items-center justify-between">
+                        <div>
+                            <h1 className="text-xl md:text-2xl font-bold tracking-tight flex items-center gap-2">
+                                <span>Kisan ka Bill (Bijak)</span>
+                                <span className="font-normal font-sans text-emerald-100 text-xl md:text-2xl">بیجک</span>
+                            </h1>
+                            <p className="text-xs md:text-sm text-emerald-100/90 mt-1 font-normal">
+                                Kisan ke maal ka bill banayein
+                            </p>
+                        </div>
+                    </div>
+                </div>
 
-                {/* 2. Floating Content Area */}
-                <div className="max-w-3xl mx-auto px-4 md:px-6 -mt-6 md:-mt-8 space-y-3">
+                {/* Floating Main Content Container */}
+                <div className="w-full max-w-[1400px] mx-auto px-4 md:px-6 -mt-8 space-y-5">
                     
-                    {/* Main White Card with Step Wizard */}
-                    <div className="bg-white rounded-xl border border-gray-200/90 shadow-2xs p-5 md:p-6">
-                        
-                        {/* 4-Step Stepper Bar */}
-                        <div className="flex items-center justify-between border-b border-gray-100 pb-5 mb-6 text-xs font-medium">
-                            {/* Step 1: Kisan */}
-                            <div className="flex items-center gap-2">
-                                <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs ${
-                                    step > 1
-                                        ? 'bg-emerald-100 text-emerald-800'
-                                        : step === 1
-                                        ? 'bg-[#14532d] text-white'
-                                        : 'bg-gray-100 text-gray-400'
-                                }`}>
-                                    {step > 1 ? '✓' : '1'}
-                                </div>
-                                <span className={step >= 1 ? 'font-bold text-gray-900' : 'text-gray-400'}>
+                    {/* Top Floating Card (Farmer & Transport Details) */}
+                    <div className="bg-white rounded-xl shadow-xs border border-gray-200/80 p-4 md:p-5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-center">
+                            {/* Kisan */}
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                                     Kisan
+                                </label>
+                                <select
+                                    value={farmerId}
+                                    onChange={e => handleFarmerChange(e.target.value)}
+                                    className="w-full h-10 px-3 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#14532d]"
+                                >
+                                    {farmers.map(f => (
+                                        <option key={f.id} value={f.id}>
+                                            {farmerTitle(f)}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Mark (Bari) */}
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                                    Mark (Bari)
+                                </label>
+                                <select
+                                    value={farmerMarkId}
+                                    onChange={e => setFarmerMarkId(e.target.value)}
+                                    className="w-full h-10 px-3 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#14532d]"
+                                >
+                                    <option value="">Khud (Self)</option>
+                                    {farmerMarks.map(m => (
+                                        <option key={m.id} value={m.id}>
+                                            {m.name_en || m.name_ur}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Truck No */}
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                                    Truck No (zaroori nahi)
+                                </label>
+                                <input
+                                    type="text"
+                                    value={truckNo}
+                                    onChange={e => setTruckNo(e.target.value)}
+                                    placeholder="e.g. NAB652"
+                                    className="w-full h-10 px-3 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#14532d]"
+                                />
+                            </div>
+
+                            {/* Tareekh */}
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                                    Tareekh
+                                </label>
+                                <input
+                                    type="date"
+                                    value={billDate}
+                                    onChange={e => setBillDate(e.target.value)}
+                                    className="w-full h-10 px-3 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#14532d]"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Main 2-Column Section */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+                        
+                        {/* LEFT COLUMN: Maal Card */}
+                        <div className="lg:col-span-8 bg-white rounded-xl shadow-xs border border-gray-200/80 p-5 space-y-4">
+                            
+                            {/* Card Header */}
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-base font-bold text-gray-900">Maal</h2>
+                                <span className="text-xs text-gray-500 font-medium">
+                                    {billItems.length} item · {calculations.totalNag} nag · {calculations.totalWeight} kg
                                 </span>
                             </div>
 
-                            <div className="flex-1 h-px bg-gray-200 mx-3" />
-
-                            {/* Step 2: Maal */}
-                            <div className="flex items-center gap-2">
-                                <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs ${
-                                    step > 2
-                                        ? 'bg-emerald-100 text-emerald-800'
-                                        : step === 2
-                                        ? 'bg-[#14532d] text-white'
-                                        : 'bg-gray-100 text-gray-400'
-                                }`}>
-                                    {step > 2 ? '✓' : '2'}
-                                </div>
-                                <span className={step >= 2 ? 'font-bold text-gray-900' : 'text-gray-400'}>
-                                    Maal
-                                </span>
+                            {/* Quick Add Pills */}
+                            <div className="flex items-center gap-1.5 flex-wrap text-xs">
+                                <span className="text-gray-500 font-medium mr-1">Jaldi add karein:</span>
+                                {['Tamatar', 'Aloo', 'Pyaz', 'Gobi', 'Bhindi', 'Hari Mirch'].map(pill => (
+                                    <button
+                                        key={pill}
+                                        type="button"
+                                        onClick={() => addQuickItem(pill)}
+                                        className="inline-flex items-center px-2.5 py-1 bg-white border border-gray-300 rounded-full font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-colors cursor-pointer"
+                                    >
+                                        + {pill}
+                                    </button>
+                                ))}
                             </div>
 
-                            <div className="flex-1 h-px bg-gray-200 mx-3" />
-
-                            {/* Step 3: Charges */}
-                            <div className="flex items-center gap-2">
-                                <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs ${
-                                    step > 3
-                                        ? 'bg-emerald-100 text-emerald-800'
-                                        : step === 3
-                                        ? 'bg-[#14532d] text-white'
-                                        : 'bg-gray-100 text-gray-400'
-                                }`}>
-                                    {step > 3 ? '✓' : '3'}
+                            {/* Items Table - No Horizontal Scrollbar */}
+                            <div className="w-full">
+                                {/* Table Header */}
+                                <div className="grid grid-cols-12 gap-2 px-2 py-2.5 bg-gray-50/90 rounded-lg text-xs font-semibold text-gray-600 mb-2 items-center">
+                                    <div className="col-span-3">Maal</div>
+                                    <div className="col-span-2 text-center">Nag</div>
+                                    <div className="col-span-2 text-center">Wazan (kg)</div>
+                                    <div className="col-span-2 text-center">Rate (Rs/kg)</div>
+                                    <div className="col-span-2 text-right pr-1">Raqam</div>
+                                    <div className="col-span-1 text-center"></div>
                                 </div>
-                                <span className={step >= 3 ? 'font-bold text-gray-900' : 'text-gray-400'}>
-                                    Charges
-                                </span>
-                            </div>
 
-                            <div className="flex-1 h-px bg-gray-200 mx-3" />
+                                {/* Table Body Rows */}
+                                <div className="space-y-2">
+                                    {billItems.map((row, idx) => {
+                                        const n = parseFloat(row.nag) || 0;
+                                        const w = parseFloat(row.weight) || 0;
+                                        const r = parseFloat(row.rate) || 0;
+                                        const raqam = w > 0 ? Math.round(w * r) : Math.round(n * r);
 
-                            {/* Step 4: Jaiza */}
-                            <div className="flex items-center gap-2">
-                                <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs ${
-                                    step >= 5
-                                        ? 'bg-emerald-100 text-emerald-800'
-                                        : step === 4
-                                        ? 'bg-[#14532d] text-white'
-                                        : 'bg-gray-100 text-gray-400'
-                                }`}>
-                                    {step >= 5 ? '✓' : '4'}
+                                        return (
+                                            <div key={idx} className="grid grid-cols-12 gap-2 px-2 py-1.5 items-center hover:bg-gray-50/50 rounded-lg transition-colors">
+                                                {/* Maal Name / Select */}
+                                                <div className="col-span-3">
+                                                    <select
+                                                        value={row.item_id}
+                                                        onChange={e => updateRow(idx, 'item_id', Number(e.target.value))}
+                                                        className="w-full h-9 px-2 border border-gray-200 rounded-lg text-xs md:text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-1 focus:ring-[#14532d]"
+                                                    >
+                                                        {items.map(it => (
+                                                            <option key={it.id} value={it.id}>
+                                                                {it.name_en.split(' ')[0]}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+
+                                                {/* Nag */}
+                                                <div className="col-span-2">
+                                                    <input
+                                                        type="number"
+                                                        value={row.nag}
+                                                        onChange={e => updateRow(idx, 'nag', e.target.value)}
+                                                        className="w-full h-9 px-1 text-center border border-gray-200 rounded-lg text-xs md:text-sm font-medium text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#14532d]"
+                                                        placeholder="0"
+                                                    />
+                                                </div>
+
+                                                {/* Wazan (kg) */}
+                                                <div className="col-span-2">
+                                                    <input
+                                                        type="number"
+                                                        value={row.weight}
+                                                        onChange={e => updateRow(idx, 'weight', e.target.value)}
+                                                        className="w-full h-9 px-1 text-center border border-gray-200 rounded-lg text-xs md:text-sm font-medium text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#14532d]"
+                                                        placeholder="0"
+                                                    />
+                                                </div>
+
+                                                {/* Rate (Rs/kg) */}
+                                                <div className="col-span-2">
+                                                    <input
+                                                        type="number"
+                                                        value={row.rate}
+                                                        onChange={e => updateRow(idx, 'rate', e.target.value)}
+                                                        className="w-full h-9 px-1 text-center border border-gray-200 rounded-lg text-xs md:text-sm font-medium text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#14532d]"
+                                                        placeholder="0"
+                                                    />
+                                                </div>
+
+                                                {/* Raqam */}
+                                                <div className="col-span-2 text-right font-bold text-gray-900 text-xs md:text-sm whitespace-nowrap pr-1">
+                                                    Rs. {raqam.toLocaleString()}
+                                                </div>
+
+                                                {/* Delete Action Button */}
+                                                <div className="col-span-1 flex justify-center">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeRow(idx)}
+                                                        className="w-6 h-6 md:w-7 md:h-7 flex items-center justify-center border border-red-200 text-red-500 hover:bg-red-50 rounded text-xs md:text-sm font-bold transition-colors cursor-pointer"
+                                                        title="Delete row"
+                                                    >
+                                                        ×
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
-                                <span className={step >= 4 ? 'font-bold text-gray-900' : 'text-gray-400'}>
-                                    Jaiza
-                                </span>
+
+                                {/* Table Footer / Totals Row */}
+                                <div className="grid grid-cols-12 gap-2 px-2 py-3 border-t border-gray-200 mt-3 font-bold text-xs md:text-sm text-gray-900 items-center">
+                                    <div className="col-span-3">Total</div>
+                                    <div className="col-span-2 text-center">{calculations.totalNag}</div>
+                                    <div className="col-span-2 text-center">{calculations.totalWeight}</div>
+                                    <div className="col-span-2"></div>
+                                    <div className="col-span-2 text-right whitespace-nowrap pr-1">Rs. {calculations.totalGross.toLocaleString()}</div>
+                                    <div className="col-span-1"></div>
+                                </div>
                             </div>
                         </div>
 
-                        {/* STEP 1: KISAN SELECTION */}
-                        {step === 1 && (
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-[11px] font-semibold text-gray-600 mb-1">
-                                        Kisan
-                                    </label>
-                                    <select
-                                        value={data.farmer_id}
-                                        onChange={e => handleFarmerChange(e.target.value)}
-                                        className="w-full h-10 px-3 rounded-lg bg-gray-50 border border-gray-200 text-xs font-medium text-gray-900 focus:bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none cursor-pointer"
-                                    >
-                                        {farmers.map(f => (
-                                            <option key={f.id} value={f.id}>
-                                                {farmerTitle(f)}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
+                        {/* RIGHT COLUMN: Charges & Net Payable Cards */}
+                        <div className="lg:col-span-4 space-y-4">
+                            
+                            {/* Charges Card */}
+                            <div className="bg-white rounded-xl shadow-xs border border-gray-200/80 p-5 space-y-4">
+                                <h2 className="text-base font-bold text-gray-900">Charges</h2>
 
-                                <div>
-                                    <label className="block text-[11px] font-semibold text-gray-600 mb-1">
-                                        Mark (Bari)
-                                    </label>
-                                    <select
-                                        value={data.farmer_mark_id}
-                                        onChange={e => setData('farmer_mark_id', e.target.value)}
-                                        className="w-full h-10 px-3 rounded-lg bg-gray-50 border border-gray-200 text-xs font-medium text-gray-900 focus:bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none cursor-pointer"
-                                    >
-                                        <option value="">Khud (Self)</option>
-                                        {farmerMarks.map(m => (
-                                            <option key={m.id} value={m.id}>
-                                                {m.name_en || m.name_ur} (#{m.code})
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="block text-[11px] font-semibold text-gray-600 mb-1">
-                                        Truck No (zaroori nahi)
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={data.truck_no}
-                                        onChange={e => setData('truck_no', e.target.value)}
-                                        placeholder="e.g. NAB652"
-                                        className="w-full h-10 px-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-900 focus:bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none"
-                                    />
-                                </div>
-
-                                <div className="flex justify-end pt-3">
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            if (!data.farmer_id) {
-                                                toast.error('Kisan select karein');
-                                                return;
-                                            }
-                                            setStep(2);
-                                        }}
-                                        className="h-9 px-5 rounded-lg bg-[#14532d] hover:bg-[#0e3b20] text-white text-xs font-bold transition-colors cursor-pointer flex items-center gap-1 shadow-xs"
-                                    >
-                                        <span>Agla</span>
-                                        <span>→</span>
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* STEP 2: MAAL ENTRY */}
-                        {step === 2 && (
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-[11px] font-semibold text-gray-600 mb-1">
-                                        Maal
-                                    </label>
-                                    <select
-                                        value={data.item_id}
-                                        onChange={e => {
-                                            const id = e.target.value;
-                                            const it = items.find(item => String(item.id) === id);
-                                            setData(prev => ({
-                                                ...prev,
-                                                item_id: id,
-                                                rate: it?.default_rate ? String(it.default_rate) : prev.rate,
-                                                bardana_amount: it?.default_bardana ? String(it.default_bardana * (parseFloat(prev.nag) || 1)) : prev.bardana_amount,
-                                            }));
-                                        }}
-                                        className="w-full h-10 px-3 rounded-lg bg-gray-50 border border-gray-200 text-xs font-medium text-gray-900 focus:bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none cursor-pointer"
-                                    >
-                                        {items.map(it => (
-                                            <option key={it.id} value={it.id}>
-                                                {it.name_en || it.name_ur}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div className="grid grid-cols-3 gap-3">
-                                    <div>
-                                        <label className="block text-[11px] font-semibold text-gray-600 mb-1">
-                                            Nag
-                                        </label>
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            value={data.nag}
-                                            onChange={e => setData('nag', e.target.value)}
-                                            placeholder="40"
-                                            className="w-full h-10 px-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-900 focus:bg-white focus:border-emerald-600 outline-none"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-[11px] font-semibold text-gray-600 mb-1">
-                                            Wazan (kg)
-                                        </label>
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            step="0.01"
-                                            value={data.weight}
-                                            onChange={e => setData('weight', e.target.value)}
-                                            placeholder="2000"
-                                            className="w-full h-10 px-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-900 focus:bg-white focus:border-emerald-600 outline-none"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-[11px] font-semibold text-gray-600 mb-1">
-                                            Rate
-                                        </label>
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            step="0.01"
-                                            value={data.rate}
-                                            onChange={e => setData('rate', e.target.value)}
-                                            placeholder="80"
-                                            className="w-full h-10 px-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-900 focus:bg-white focus:border-emerald-600 outline-none"
-                                        />
-                                    </div>
-                                </div>
-
-                                <p className="text-[11px] text-gray-500">
-                                    Agar Wazan likha ho to raqam Wazan × Rate se banegi, warna Nag × Rate se.
-                                </p>
-
-                                <div className="flex justify-between items-center pt-2 text-xs">
-                                    <span className="text-gray-600">
-                                        Kul raqam ({isWeightBased ? 'Wazan × Rate' : 'Nag × Rate'})
-                                    </span>
-                                    <span className="font-bold text-sm text-gray-900">
-                                        Rs. {kulRaqam.toLocaleString()}
-                                    </span>
-                                </div>
-
-                                <div className="flex justify-between items-center pt-4">
-                                    <button
-                                        type="button"
-                                        onClick={() => setStep(1)}
-                                        className="h-9 px-4 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold transition-colors cursor-pointer"
-                                    >
-                                        ← Wapas
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            if (!data.item_id) {
-                                                toast.error('Maal select karein');
-                                                return;
-                                            }
-                                            if (kulRaqam <= 0) {
-                                                toast.error('Nag ya Wazan aur Rate darj karein');
-                                                return;
-                                            }
-                                            setStep(3);
-                                        }}
-                                        className="h-9 px-5 rounded-lg bg-[#14532d] hover:bg-[#0e3b20] text-white text-xs font-bold transition-colors cursor-pointer flex items-center gap-1 shadow-xs"
-                                    >
-                                        <span>Agla</span>
-                                        <span>→</span>
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* STEP 3: CHARGES & EXPENSES */}
-                        {step === 3 && (
-                            <div className="space-y-4">
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                    <div>
-                                        <label className="block text-[11px] font-semibold text-gray-600 mb-1">
-                                            Commission %
-                                        </label>
-                                        <input
-                                            type="number"
-                                            step="0.1"
-                                            value={data.commission_pct}
-                                            onChange={e => setData('commission_pct', e.target.value)}
-                                            placeholder="6"
-                                            className="w-full h-10 px-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-900 focus:bg-white focus:border-emerald-600 outline-none font-bold"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-[11px] font-semibold text-gray-600 mb-1">
-                                            Bardana
-                                        </label>
-                                        <input
-                                            type="number"
-                                            step="1"
-                                            value={data.bardana_amount}
-                                            onChange={e => setData('bardana_amount', e.target.value)}
-                                            placeholder="1200"
-                                            className="w-full h-10 px-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-900 focus:bg-white focus:border-emerald-600 outline-none"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-[11px] font-semibold text-gray-600 mb-1">
-                                            Kiraya
-                                        </label>
-                                        <input
-                                            type="number"
-                                            step="1"
-                                            value={data.kiraya}
-                                            onChange={e => setData('kiraya', e.target.value)}
-                                            placeholder="0"
-                                            className="w-full h-10 px-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-900 focus:bg-white focus:border-emerald-600 outline-none"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-[11px] font-semibold text-gray-600 mb-1">
-                                            Mazdoori
-                                        </label>
-                                        <input
-                                            type="number"
-                                            step="1"
-                                            value={data.mazdoori}
-                                            onChange={e => setData('mazdoori', e.target.value)}
-                                            placeholder="0"
-                                            className="w-full h-10 px-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-900 focus:bg-white focus:border-emerald-600 outline-none"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="sm:w-1/2">
-                                    <label className="block text-[11px] font-semibold text-gray-600 mb-1">
-                                        Market fee / Baaki
-                                    </label>
-                                    <input
-                                        type="number"
-                                        step="1"
-                                        value={data.market_fee}
-                                        onChange={e => setData('market_fee', e.target.value)}
-                                        placeholder="0"
-                                        className="w-full h-10 px-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-900 focus:bg-white focus:border-emerald-600 outline-none"
-                                    />
-                                </div>
-
-                                {/* Financial Calculations Breakdown */}
-                                <div className="pt-3 border-t border-gray-100 space-y-1.5 text-xs">
-                                    <div className="flex justify-between text-gray-600">
-                                        <span>Kul raqam</span>
-                                        <span>Rs. {kulRaqam.toLocaleString()}</span>
-                                    </div>
-                                    <div className="flex justify-between text-gray-600">
-                                        <span>Commission {commPctNum}%</span>
-                                        <span className="text-red-600">- Rs. {commAmount.toLocaleString()}</span>
-                                    </div>
-                                    <div className="flex justify-between text-gray-600">
-                                        <span>Bardana aur akhrajat</span>
-                                        <span className="text-red-600">- Rs. {totalExpenses.toLocaleString()}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-                                        <span className="font-bold text-gray-900 text-sm">Kisan ko dene ki raqam</span>
-                                        <span className="font-black text-base text-gray-900">
-                                            Rs. {safiRaqam.toLocaleString()}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div className="flex justify-between items-center pt-4">
-                                    <button
-                                        type="button"
-                                        onClick={() => setStep(2)}
-                                        className="h-9 px-4 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold transition-colors cursor-pointer"
-                                    >
-                                        ← Wapas
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        onClick={() => setStep(4)}
-                                        className="h-9 px-5 rounded-lg bg-[#14532d] hover:bg-[#0e3b20] text-white text-xs font-bold transition-colors cursor-pointer flex items-center gap-1 shadow-xs"
-                                    >
-                                        <span>Agla</span>
-                                        <span>→</span>
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* STEP 4: JAIZA (REVIEW & SAVE) */}
-                        {step === 4 && (
-                            <div className="space-y-4">
-                                <div className="divide-y divide-gray-100 text-xs">
-                                    <div className="flex justify-between py-2">
-                                        <span className="text-gray-500">Kisan</span>
-                                        <span className="font-bold text-gray-900">
-                                            {selectedFarmer ? farmerTitle(selectedFarmer) : '—'}
-                                        </span>
-                                    </div>
-
-                                    <div className="flex justify-between py-2">
-                                        <span className="text-gray-500">Mark (Bari)</span>
-                                        <span className="font-bold text-gray-900">
-                                            {selectedMark ? `${selectedMark.name_en || selectedMark.name_ur} (#${selectedMark.code})` : 'Khud (Self)'}
-                                        </span>
-                                    </div>
-
-                                    {data.truck_no && (
-                                        <div className="flex justify-between py-2">
-                                            <span className="text-gray-500">Truck No</span>
-                                            <span className="text-gray-900 font-bold">{data.truck_no}</span>
+                                <div className="space-y-3 text-sm">
+                                    {/* 1. Commission (Arhat) */}
+                                    <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                                        <div>
+                                            <div className="font-medium text-gray-800">Commission (Arhat)</div>
+                                            <div className="text-xs text-gray-500">Rs. {calculations.commAmount.toLocaleString()}</div>
                                         </div>
-                                    )}
-
-                                    <div className="flex justify-between py-2">
-                                        <span className="text-gray-500">Maal</span>
-                                        <span className="font-bold text-gray-900">
-                                            {selectedItem ? (selectedItem.name_en || selectedItem.name_ur) : '—'}
-                                        </span>
+                                        <div className="flex items-center gap-1.5">
+                                            <input
+                                                type="number"
+                                                value={commissionPct}
+                                                onChange={e => setCommissionPct(e.target.value)}
+                                                className="w-14 h-9 px-2 text-center border border-gray-200 rounded-lg text-sm font-medium text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#14532d]"
+                                            />
+                                            <span className="text-xs text-gray-500 font-medium">%</span>
+                                        </div>
                                     </div>
 
-                                    <div className="flex justify-between py-2">
-                                        <span className="text-gray-500">Nag / Wazan / Rate</span>
-                                        <span className="font-bold text-gray-900">
-                                            {nagNum} / {weightNum > 0 ? `${weightNum} kg` : '—'} / Rs. {rateNum}
-                                        </span>
+                                    {/* 2. Mazdoori */}
+                                    <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                                        <div>
+                                            <div className="font-medium text-gray-800">Mazdoori</div>
+                                            <div className="text-xs text-gray-500">Rs. {calculations.mazdooriAmount.toLocaleString()}</div>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                            <input
+                                                type="number"
+                                                value={mazdooriRate}
+                                                onChange={e => setMazdooriRate(e.target.value)}
+                                                className="w-14 h-9 px-2 text-center border border-gray-200 rounded-lg text-sm font-medium text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#14532d]"
+                                            />
+                                            <span className="text-xs text-gray-500 font-medium">Rs/nag</span>
+                                        </div>
                                     </div>
-                                </div>
 
-                                {/* Financial Calculations Breakdown */}
-                                <div className="pt-2 border-t border-gray-100 space-y-1.5 text-xs">
-                                    <div className="flex justify-between text-gray-600">
-                                        <span>Kul raqam</span>
-                                        <span className="font-bold">Rs. {kulRaqam.toLocaleString()}</span>
+                                    {/* 3. Kiraya (Freight) */}
+                                    <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                                        <div>
+                                            <div className="font-medium text-gray-800">Kiraya (Freight)</div>
+                                            <div className="text-xs text-gray-500">Rs. {calculations.kirayaAmount.toLocaleString()}</div>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                            <input
+                                                type="number"
+                                                value={kiraya}
+                                                onChange={e => setKiraya(e.target.value)}
+                                                className="w-20 h-9 px-2 text-center border border-gray-200 rounded-lg text-sm font-medium text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#14532d]"
+                                            />
+                                            <span className="text-xs text-gray-500 font-medium">Rs</span>
+                                        </div>
                                     </div>
-                                    <div className="flex justify-between text-gray-600">
-                                        <span>Commission {commPctNum}%</span>
-                                        <span className="text-red-600">- Rs. {commAmount.toLocaleString()}</span>
-                                    </div>
-                                    <div className="flex justify-between text-gray-600">
-                                        <span>Bardana aur akhrajat</span>
-                                        <span className="text-red-600">- Rs. {totalExpenses.toLocaleString()}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-                                        <span className="font-bold text-gray-900 text-sm">Kisan ko dene ki raqam</span>
-                                        <span className="font-black text-base text-gray-900">
-                                            Rs. {safiRaqam.toLocaleString()}
-                                        </span>
-                                    </div>
-                                </div>
 
-                                <div className="flex justify-between items-center pt-4">
-                                    <button
-                                        type="button"
-                                        onClick={() => setStep(3)}
-                                        className="h-9 px-4 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold transition-colors cursor-pointer"
-                                    >
-                                        ← Wapas
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        disabled={processing}
-                                        onClick={handleSaveBill}
-                                        className="h-9 px-5 rounded-lg bg-[#14532d] hover:bg-[#0e3b20] text-white text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs disabled:opacity-50"
-                                    >
-                                        <span>✓</span>
-                                        <span>Bill save karein</span>
-                                    </button>
+                                    {/* 4. Market fee */}
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <div className="font-medium text-gray-800">Market fee</div>
+                                            <div className="text-xs text-gray-500">Rs. {calculations.marketFeeAmount.toLocaleString()}</div>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                            <input
+                                                type="number"
+                                                step="0.1"
+                                                value={marketFeePct}
+                                                onChange={e => setMarketFeePct(e.target.value)}
+                                                className="w-14 h-9 px-2 text-center border border-gray-200 rounded-lg text-sm font-medium text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#14532d]"
+                                            />
+                                            <span className="text-xs text-gray-500 font-medium">%</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        )}
 
-                        {/* STEP 5: SUCCESS STATE */}
-                        {step === 5 && completedBill && (
-                            <div className="py-8 text-center space-y-4">
-                                <div className="flex items-center justify-center">
-                                    <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center text-xl font-bold">
-                                        ✓
+                            {/* Summary & Net Payable Card */}
+                            <div className="bg-white rounded-xl shadow-xs border border-gray-200/80 p-5 space-y-4">
+                                <div className="space-y-2 text-sm font-medium">
+                                    <div className="flex justify-between items-center text-gray-800">
+                                        <span>Gross sale</span>
+                                        <span className="font-bold">Rs. {calculations.totalGross.toLocaleString()}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-amber-600">
+                                        <span>Total charges</span>
+                                        <span className="font-bold">- Rs. {calculations.totalCharges.toLocaleString()}</span>
                                     </div>
                                 </div>
 
-                                <h2 className="text-xl font-black text-gray-900 tracking-tight">
-                                    ✓ Bill save ho gaya
-                                </h2>
-
-                                <p className="text-xs text-gray-500 font-medium">
-                                    Bill No: {completedBill.bill_no} · {completedBill.farmer_name}
-                                </p>
-
-                                <div className="text-3xl font-black text-gray-900 pt-1">
-                                    Rs. {Number(completedBill.net_amount).toLocaleString()}
+                                {/* Big Green Box: Net Payable */}
+                                <div className="bg-[#14532d] text-white rounded-xl p-4 space-y-1">
+                                    <div className="text-xs text-emerald-100 font-medium">
+                                        Kisan ko dena hai (Net payable)
+                                    </div>
+                                    <div className="text-2xl font-bold tracking-tight">
+                                        Rs. {calculations.netPayable.toLocaleString()}
+                                    </div>
                                 </div>
 
-                                <div className="flex items-center justify-center gap-3 pt-4">
-                                    <button
-                                        type="button"
-                                        onClick={() => window.print()}
-                                        className="h-9 px-5 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold cursor-pointer transition-colors shadow-2xs"
-                                    >
-                                        Print
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        onClick={handleNewBill}
-                                        className="h-9 px-5 rounded-lg bg-[#14532d] hover:bg-[#0e3b20] text-white text-xs font-bold cursor-pointer transition-colors shadow-xs"
-                                    >
-                                        Naya Bill
-                                    </button>
-                                </div>
+                                {/* Save Button */}
+                                <button
+                                    type="button"
+                                    onClick={handleSaveBill}
+                                    disabled={isSaving || billItems.length === 0}
+                                    className="w-full py-3 bg-[#14532d] hover:bg-[#0f3f22] text-white font-semibold rounded-xl text-center shadow-xs transition-colors cursor-pointer disabled:opacity-50 text-sm"
+                                >
+                                    {isSaving ? 'Bachaya ja raha hai...' : 'Bill save karein'}
+                                </button>
                             </div>
-                        )}
+                        </div>
                     </div>
                 </div>
             </div>
 
+            {/* Success Modal */}
+            {showSuccessModal && completedBill && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 font-sans">
+                    <div className="bg-white rounded-2xl max-w-sm w-full p-6 text-center shadow-xl space-y-4">
+                        <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-800 mx-auto flex items-center justify-center text-2xl font-bold">
+                            ✓
+                        </div>
+                        <h2 className="text-xl font-bold text-gray-900">
+                            Bill save ho gaya
+                        </h2>
+                        <p className="text-xs text-gray-500 font-medium">
+                            Bill No: {completedBill.bill_no} · {completedBill.farmer_name}
+                        </p>
+                        <div className="text-3xl font-extrabold text-[#14532d]">
+                            Rs. {Number(completedBill.net_amount).toLocaleString()}
+                        </div>
+                        <div className="flex gap-2 pt-2">
+                            <button
+                                type="button"
+                                onClick={() => window.print()}
+                                className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+                            >
+                                Print Slip
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleNewBill}
+                                className="flex-1 py-2.5 bg-[#14532d] hover:bg-[#0e3b20] text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+                            >
+                                Naya Bill
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Thermal 80mm Print Document for Saved Bill */}
             {completedBill && (
                 <div id="printable-farmer-bill" className="hidden print:block p-4 bg-white text-black font-sans text-xs max-w-[80mm] mx-auto print-document-container" dir="ltr">
-                    {/* Header: Green V Logo + Vegetable POS */}
                     <div className="text-center border-b-2 border-[#166534] pb-2 mb-3">
                         <div className="flex items-center justify-center gap-1.5 mb-1">
                             <div className="w-6 h-6 rounded bg-[#166534] flex items-center justify-center text-white font-black text-xs">V</div>
@@ -737,7 +688,6 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                         </p>
                     </div>
 
-                    {/* Bill Meta */}
                     <div className="border border-gray-400 rounded p-2 mb-3 text-[11px] space-y-1 bg-gray-50/50">
                         <div className="flex justify-between font-bold">
                             <span>Bill No: {completedBill.bill_no}</span>
@@ -747,67 +697,55 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                             <strong>Kisan: </strong>
                             <span>{completedBill.farmer_name}</span>
                         </div>
-                        {data.truck_no && (
+                        {truckNo && (
                             <div>
                                 <strong>Truck No: </strong>
-                                <span>{data.truck_no}</span>
+                                <span>{truckNo}</span>
                             </div>
                         )}
                         <div>
-                            <strong>Maal: </strong>
-                            <span>{selectedItem ? (selectedItem.name_en || selectedItem.name_ur) : '—'}</span>
+                            <strong>Items: </strong>
+                            <span>{billItems.map(it => it.name).join(', ')}</span>
                         </div>
                         <div>
-                            <strong>Nag / Wazan: </strong>
-                            <span>{nagNum} nag / {weightNum > 0 ? `${weightNum} kg` : '—'}</span>
-                        </div>
-                        <div>
-                            <strong>Rate: </strong>
-                            <span>Rs. {rateNum}</span>
+                            <strong>Total Nag / Wazan: </strong>
+                            <span>{calculations.totalNag} nag / {calculations.totalWeight} kg</span>
                         </div>
                     </div>
 
-                    {/* Breakdown Box */}
                     <div className="border border-black rounded p-2 mb-3 text-xs space-y-1">
                         <div className="flex justify-between">
-                            <span>Kul raqam:</span>
-                            <span className="font-bold">Rs. {kulRaqam.toLocaleString()}</span>
+                            <span>Gross Sale:</span>
+                            <span className="font-bold">Rs. {calculations.totalGross.toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between text-gray-700">
-                            <span>Commission ({commPctNum}%):</span>
-                            <span>- Rs. {commAmount.toLocaleString()}</span>
+                            <span>Commission ({commissionPct}%):</span>
+                            <span>- Rs. {calculations.commAmount.toLocaleString()}</span>
                         </div>
-                        {bardanaNum > 0 && (
+                        {calculations.mazdooriAmount > 0 && (
                             <div className="flex justify-between text-gray-700">
-                                <span>Bardana:</span>
-                                <span>- Rs. {bardanaNum.toLocaleString()}</span>
+                                <span>Mazdoori ({mazdooriRate} Rs/nag):</span>
+                                <span>- Rs. {calculations.mazdooriAmount.toLocaleString()}</span>
                             </div>
                         )}
-                        {kirayaNum > 0 && (
+                        {calculations.kirayaAmount > 0 && (
                             <div className="flex justify-between text-gray-700">
                                 <span>Kiraya:</span>
-                                <span>- Rs. {kirayaNum.toLocaleString()}</span>
+                                <span>- Rs. {calculations.kirayaAmount.toLocaleString()}</span>
                             </div>
                         )}
-                        {mazdooriNum > 0 && (
+                        {calculations.marketFeeAmount > 0 && (
                             <div className="flex justify-between text-gray-700">
-                                <span>Mazdoori:</span>
-                                <span>- Rs. {mazdooriNum.toLocaleString()}</span>
-                            </div>
-                        )}
-                        {marketFeeNum > 0 && (
-                            <div className="flex justify-between text-gray-700">
-                                <span>Market fee:</span>
-                                <span>- Rs. {marketFeeNum.toLocaleString()}</span>
+                                <span>Market fee ({marketFeePct}%):</span>
+                                <span>- Rs. {calculations.marketFeeAmount.toLocaleString()}</span>
                             </div>
                         )}
                         <div className="flex justify-between items-center pt-1.5 border-t border-black font-bold text-sm">
-                            <span>Kisan ki safi raqam:</span>
+                            <span>Kisan Net Payable:</span>
                             <span className="font-black">Rs. {Number(completedBill.net_amount).toLocaleString()}</span>
                         </div>
                     </div>
 
-                    {/* Footer */}
                     <div className="text-center text-[9px] text-gray-500 pt-2 border-t border-gray-300">
                         Printed on: {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}
                     </div>

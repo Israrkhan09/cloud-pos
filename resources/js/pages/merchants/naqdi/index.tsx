@@ -166,22 +166,22 @@ export default function NaqdiIndex({ rows, totals, filters }: Props) {
                     {/* Table Card */}
                     <div className="rounded-2xl border border-gray-200/90 overflow-hidden shadow-sm bg-white">
                         <div className="overflow-x-auto">
-                            <table className="w-full text-xs">
-                                <thead className="bg-[#f0f4f1] text-[#14532d] border-b border-gray-200 select-none">
+                            <table className="w-full text-sm">
+                                <thead className="bg-[#f0f4f1] border-b border-gray-200 select-none">
                                     <tr>
-                                        <th className="p-3 text-center w-12 font-bold">#</th>
-                                        <th className="p-3 text-start w-20 font-bold">{t('common.code')}</th>
-                                        <th className="p-3 text-start font-bold">{t('merchants.merchant')}</th>
-                                        <th className="p-3 text-end w-24 font-bold">{t('naqdi.total_nag')}</th>
-                                        <th className="p-3 text-end w-36 font-bold">{t('naqdi.kham_bikri')}</th>
-                                        <th className="p-3 text-end w-48 font-bold">{t('naqdi.naqdi_wasooli')} ({t('common.save')})</th>
-                                        <th className="p-3 text-end w-36 font-bold">{t('naqdi.total_baqaya')}</th>
+                                        <th className="p-3 text-center w-12 text-xs font-semibold text-gray-600">#</th>
+                                        <th className="p-3 text-start w-20 text-xs font-semibold text-gray-600">{t('common.code')}</th>
+                                        <th className="p-3 text-start text-xs font-semibold text-gray-600">{t('merchants.merchant')}</th>
+                                        <th className="p-3 text-end w-24 text-xs font-semibold text-gray-600">{t('naqdi.total_nag')}</th>
+                                        <th className="p-3 text-end w-36 text-xs font-semibold text-gray-600">{t('naqdi.kham_bikri')}</th>
+                                        <th className="p-3 text-end w-48 text-xs font-semibold text-gray-600">{t('naqdi.naqdi_wasooli')} ({t('common.save')})</th>
+                                        <th className="p-3 text-end w-36 text-xs font-semibold text-gray-600">{t('naqdi.total_baqaya')}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
                                     {rows.length === 0 ? (
                                         <tr>
-                                            <td colSpan={7} className="p-12 text-center text-muted-foreground text-sm">
+                                            <td colSpan={7} className="p-12 text-center text-muted-foreground text-sm font-medium">
                                                 {t('common.no_records')}
                                             </td>
                                         </tr>
@@ -199,8 +199,8 @@ export default function NaqdiIndex({ rows, totals, filters }: Props) {
                                                     onClick={() => setSelectedRowIndex(idx)}
                                                     className="bg-white hover:bg-gray-50/60 transition-colors cursor-pointer"
                                                 >
-                                                    <td className="p-3 text-center text-gray-400 tabular-nums text-xs">{idx + 1}</td>
-                                                    <td className="p-3 tabular-nums font-bold text-gray-900 text-xs">
+                                                    <td className="p-3 text-center text-gray-400 tabular-nums text-sm font-medium">{idx + 1}</td>
+                                                    <td className="p-3 tabular-nums font-semibold text-gray-900 text-sm">
                                                         #{row.code}
                                                     </td>
                                                     <td className="p-3">
@@ -208,8 +208,8 @@ export default function NaqdiIndex({ rows, totals, filters }: Props) {
                                                             {isUrdu ? (row.name_ur || row.name_en) : (row.name_en || row.name_ur)}
                                                         </span>
                                                     </td>
-                                                    <td className="p-3 text-end tabular-nums font-bold text-gray-800">{row.total_nag}</td>
-                                                    <td className="p-3 text-end tabular-nums font-bold text-gray-900">
+                                                    <td className="p-3 text-end tabular-nums font-medium text-gray-800 text-sm">{row.total_nag}</td>
+                                                    <td className="p-3 text-end tabular-nums font-bold text-gray-900 text-sm">
                                                         Rs. {Number(row.kham_bikri).toLocaleString()}
                                                     </td>
                                                     <td className="p-2 text-end" onClick={e => e.stopPropagation()}>
@@ -226,7 +226,7 @@ export default function NaqdiIndex({ rows, totals, filters }: Props) {
                                                                         saveCashReceipt(row.merchant_id);
                                                                     }
                                                                 }}
-                                                                className="h-9 w-28 text-end tabular-nums text-xs font-bold rounded-xl border-gray-200 bg-white focus:border-[#1e713e]"
+                                                                className="h-9 w-28 text-end tabular-nums text-sm font-medium rounded-xl border-gray-200 bg-white focus:border-[#1e713e]"
                                                                 placeholder="0.00"
                                                             />
                                                             <Button
@@ -239,7 +239,7 @@ export default function NaqdiIndex({ rows, totals, filters }: Props) {
                                                             </Button>
                                                         </div>
                                                     </td>
-                                                    <td className="p-3 text-end tabular-nums font-black text-[#14532d] text-sm">
+                                                    <td className="p-3 text-end tabular-nums font-bold text-[#14532d] text-sm">
                                                         Rs. {liveBaqaya.toLocaleString()}
                                                     </td>
                                                 </tr>
@@ -255,31 +255,31 @@ export default function NaqdiIndex({ rows, totals, filters }: Props) {
                 {/* 4. Sticky Live Footer */}
                 <div className="fixed bottom-0 start-0 end-0 bg-green-950 text-white px-4 py-2 shadow-xl border-t border-green-700 z-30 flex flex-wrap items-center justify-between gap-2 text-xs">
                     <div className="flex items-center gap-3">
-                        <span className="font-semibold bg-emerald-800/90 border border-emerald-600 px-3 py-1 rounded-lg text-white">
+                        <span className="font-semibold bg-emerald-800/90 border border-emerald-600 px-3 py-1 rounded-lg text-white text-xs">
                             {t('common.record_x_of_y', {
                                 current: selectedRowIndex >= 0 ? selectedRowIndex + 1 : 0,
                                 total: rows.length,
                             })}
                         </span>
-                        <span className="text-gray-300">
-                            {t('naqdi.total_nag')}: <strong className="text-white text-sm">{totals.total_nag}</strong>
+                        <span className="text-gray-300 text-xs">
+                            {t('naqdi.total_nag')}: <strong className="text-white text-sm font-bold">{totals.total_nag}</strong>
                         </span>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2 tabular-nums text-xs">
-                        <div className="bg-emerald-800/90 border border-emerald-600 px-3 py-1 rounded-lg flex items-center gap-1">
-                            <span className="text-emerald-200 font-semibold font-sans">{t('naqdi.kham_bikri')}:</span>
-                            <span className="font-bold text-white">Rs. {Number(totals.total_kham_bikri).toLocaleString()}</span>
+                        <div className="bg-emerald-800/90 border border-emerald-600 px-3 py-1 rounded-lg flex items-center gap-1.5">
+                            <span className="text-emerald-200 font-medium">{t('naqdi.kham_bikri')}:</span>
+                            <span className="font-bold text-white text-sm">Rs. {Number(totals.total_kham_bikri).toLocaleString()}</span>
                         </div>
 
-                        <div className="bg-blue-900/90 border border-blue-600 px-3 py-1 rounded-lg flex items-center gap-1">
-                            <span className="text-blue-200 font-semibold font-sans">{t('naqdi.naqdi_wasooli')}:</span>
-                            <span className="font-bold text-blue-100">Rs. {Number(totals.total_cash_received).toLocaleString()}</span>
+                        <div className="bg-blue-900/90 border border-blue-600 px-3 py-1 rounded-lg flex items-center gap-1.5">
+                            <span className="text-blue-200 font-medium">{t('naqdi.naqdi_wasooli')}:</span>
+                            <span className="font-bold text-blue-100 text-sm">Rs. {Number(totals.total_cash_received).toLocaleString()}</span>
                         </div>
 
-                        <div className="bg-amber-600 px-3.5 py-1 rounded-lg font-bold text-white shadow-xs flex items-center gap-1">
-                            <span className="text-amber-100 font-sans">{t('naqdi.total_baqaya')}:</span>
-                            <span>Rs. {Number(totals.total_baqaya).toLocaleString()}</span>
+                        <div className="bg-amber-600 px-3.5 py-1 rounded-lg font-bold text-white shadow-xs flex items-center gap-1.5">
+                            <span className="text-amber-100 font-medium">{t('naqdi.total_baqaya')}:</span>
+                            <span className="text-sm font-bold">Rs. {Number(totals.total_baqaya).toLocaleString()}</span>
                         </div>
                     </div>
                 </div>
