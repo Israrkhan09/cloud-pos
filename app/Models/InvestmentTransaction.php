@@ -65,13 +65,17 @@ class InvestmentTransaction extends Model
 
     public function getTypeLabelAttribute(): string
     {
+        if ($this->is_reversed || str_starts_with($this->ref_no, 'REV-')) {
+            return 'Mansookh (cancel)';
+        }
+
         return match ($this->type) {
-            'capital_in'  => 'Paisa Lagaya (Capital In)',
-            'capital_out' => 'Paisa Nikala (Drawings)',
-            'loan_in'     => 'Qarza Liya (Loan In)',
-            'loan_out'    => 'Qarza Wapsi (Loan Out)',
-            'surplus_out' => 'Faltu Paisa Lagaya (Surplus Out)',
-            'surplus_in'  => 'Investment Wapsi (Surplus In)',
+            'capital_in'  => 'Paisa dala',
+            'capital_out' => 'Paisa nikala',
+            'loan_in'     => 'Qarza liya',
+            'loan_out'    => 'Qarza wapas',
+            'surplus_out' => 'Faltu paisa lagaya',
+            'surplus_in'  => 'Faltu paisa wapas aaya',
             default       => $this->type,
         };
     }

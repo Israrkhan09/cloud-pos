@@ -21,6 +21,7 @@ interface TransactionRow {
     id: number;
     ref_no: string;
     date: string;
+    created_time?: string;
     raw_date: string;
     created_at_label: string;
     created_by: string;
@@ -45,14 +46,17 @@ interface TransactionRow {
 interface Props {
     userName?: string;
     isOwner?: boolean;
-    currentRole: 'munshi' | 'owner';
     pendingApprovalsCount?: number;
-    lastUpdated?: string;
     partnersList: any[];
     loansList: any[];
     surplusList: any[];
     bankAccounts: string[];
     transactions: TransactionRow[];
+    singleAlert?: {
+        text: string;
+        action_label: string;
+        action_url: string;
+    } | null;
     search?: string;
     activeFilter?: string;
 }
@@ -61,13 +65,12 @@ export default function InvestmentAuditPage({
     userName,
     isOwner = true,
     pendingApprovalsCount = 0,
-    lastUpdated,
     partnersList,
     loansList,
     surplusList,
     bankAccounts,
     transactions,
-    search = '',
+    singleAlert,
     activeFilter = '',
 }: Props) {
     const { i18n } = useTranslation();
@@ -78,6 +81,7 @@ export default function InvestmentAuditPage({
     );
     const [selectedTxId, setSelectedTxId] = useState<number | null>(transactions[0]?.id ?? null);
     const [isEntryDrawerOpen, setIsEntryDrawerOpen] = useState(false);
+    const [isLegendOpen, setIsLegendOpen] = useState(false);
 
     // Void Modal state
     const [voidModalTx, setVoidModalTx] = useState<TransactionRow | null>(null);
@@ -89,7 +93,7 @@ export default function InvestmentAuditPage({
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: isUrdu ? 'انویسٹمنٹ' : 'Investment', href: '/investment/partners' },
-        { title: isUrdu ? 'آڈٹ اور واؤچرز' : 'Audit & Vouchers', href: '/investment/audit' },
+        { title: isUrdu ? 'ریکارڈ (Audit)' : 'Record', href: '/investment/audit' },
     ];
 
     // Filter transactions
@@ -103,12 +107,12 @@ export default function InvestmentAuditPage({
         return true;
     });
 
-    // Handle Owner Approval (No "Role" label - Section A.1)
+    // Handle Owner Approval (Section A.1: No "Role" label)
     const handleApprove = (tx: TransactionRow) => {
         router.post(`/investment/approve/${tx.id}`, {}, {
             preserveScroll: true,
             onSuccess: () => {
-                toast.success(isUrdu ? 'اینٹری کامیابی سے منظور ہو گئی' : `Entry ${tx.ref_no} kamyabi se approve ho gayi!`);
+                toast.success(`Entry ${tx.ref_no} kamyabi se approve ho gayi.`);
             },
             onError: (errs) => {
                 toast.error(Object.values(errs)[0] || 'Approval failed.');
@@ -128,7 +132,7 @@ export default function InvestmentAuditPage({
         if (!voidModalTx) return;
 
         if (!voidReason.trim()) {
-            toast.error(isUrdu ? 'منسوخی کی وجہ درج کرنا لازمی ہے' : 'Void karne ki waja (Reason) likhna lazmi hai.');
+            toast.error('Mansookh karne ki wajah (Reason) likhna lazmi hai.');
             return;
         }
 
@@ -150,7 +154,7 @@ export default function InvestmentAuditPage({
         });
     };
 
-    // Open Voucher for printing / WhatsApp
+    // Open Voucher for printing
     const handleOpenVoucher = (tx: TransactionRow) => {
         setActiveVoucher({
             ref_no: tx.ref_no,
@@ -171,7 +175,7 @@ export default function InvestmentAuditPage({
 
     // Export CSV
     const handleExportCSV = () => {
-        const headers = ['Ref No', 'Kab (Date & Time)', 'Party', 'Qisam', 'Rakam', 'Banaya Kisne', 'Approve Kisne Kiya', 'Status', 'Reason'];
+        const headers = ['Parchi No', 'Kab', 'Party', 'Qisam', 'Rakam', 'Banaya Kisne', 'Approve Kisne Kiya', 'Status', 'Wajah'];
         const rows = filteredTx.map(tx => [
             `"${tx.ref_no}"`,
             `"${tx.created_at_label}"`,
@@ -188,7 +192,7 @@ export default function InvestmentAuditPage({
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement('a');
         link.setAttribute('href', encodedUri);
-        link.setAttribute('download', `Audit_Ledger_${new Date().toISOString().slice(0, 10)}.csv`);
+        link.setAttribute('download', `Record_Ledger_${new Date().toISOString().slice(0, 10)}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -196,148 +200,119 @@ export default function InvestmentAuditPage({
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={isUrdu ? 'آڈٹ اور واؤچرز - انویسٹمنٹ' : 'Audit & Vouchers - Investment'} />
+            <Head title={isUrdu ? 'ریکارڈ - انویسٹمنٹ' : 'Record (Audit) - Investment'} />
 
-            <div className="-mt-4 -mx-4 -mb-8 pb-28 bg-[#f4f6f4] min-h-screen font-sans text-[#1a211c]">
-                {/* Header */}
+            <div className="-mt-4 -mx-4 -mb-8 pb-28 bg-[#f4f6f4] min-h-screen font-sans text-[#1F2937]">
+                {/* Header (Section B.5 short tabs & single alert line) */}
                 <InvestmentHeader
                     currentTab="audit"
                     userName={userName}
                     pendingApprovalsCount={pendingApprovalsCount}
-                    lastUpdated={lastUpdated}
+                    singleAlert={singleAlert}
                     onOpenEntry={() => setIsEntryDrawerOpen(true)}
                     isUrdu={isUrdu}
                 />
 
-                <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-auto">
-                    {/* Section C.4: Reference Codes Legend Card */}
-                    <div className="p-4 rounded-xl bg-white border border-gray-200 shadow-2xs space-y-2.5">
-                        <div className="flex items-center gap-2 border-b border-gray-100 pb-2">
-                            <Icon name="Tag" className="size-4 text-[#14532d]" />
-                            <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wide">
-                                Reference Codes Legend (Parchi Codes Ki Pehchan)
-                            </h4>
-                        </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-7 gap-2 text-xs">
-                            <div className="p-2 rounded bg-gray-50 border border-gray-200">
-                                <span className="font-bold text-[#14532d] block text-xs">CI</span>
-                                <span className="text-[11px] text-gray-600">Capital In (Sarmaya Jama)</span>
-                            </div>
-                            <div className="p-2 rounded bg-gray-50 border border-gray-200">
-                                <span className="font-bold text-red-600 block text-xs">CO</span>
-                                <span className="text-[11px] text-gray-600">Capital Out (Drawings)</span>
-                            </div>
-                            <div className="p-2 rounded bg-gray-50 border border-gray-200">
-                                <span className="font-bold text-blue-700 block text-xs">LN / LI</span>
-                                <span className="text-[11px] text-gray-600">Loan In (Qarza Liya)</span>
-                            </div>
-                            <div className="p-2 rounded bg-gray-50 border border-gray-200">
-                                <span className="font-bold text-purple-700 block text-xs">LR</span>
-                                <span className="text-[11px] text-gray-600">Loan Return (Qarza Wapas)</span>
-                            </div>
-                            <div className="p-2 rounded bg-gray-50 border border-gray-200">
-                                <span className="font-bold text-amber-700 block text-xs">SO</span>
-                                <span className="text-[11px] text-gray-600">Surplus Out (Lagaya)</span>
-                            </div>
-                            <div className="p-2 rounded bg-gray-50 border border-gray-200">
-                                <span className="font-bold text-emerald-700 block text-xs">SI</span>
-                                <span className="text-[11px] text-gray-600">Surplus In (Wapas Aaya)</span>
-                            </div>
-                            <div className="p-2 rounded bg-gray-50 border border-gray-200">
-                                <span className="font-bold text-rose-700 block text-xs">REV</span>
-                                <span className="text-[11px] text-gray-600">Reversal (Mansookh Entry)</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Filter Tabs & Export */}
+                <div className="p-4 md:p-6 space-y-5 max-w-7xl mx-auto">
+                    {/* Top Bar: Clean Filter Tabs & Info Icon (Section B.4) */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                             <button
                                 type="button"
                                 onClick={() => setSelectedTabFilter('all')}
                                 className={cn(
-                                    "px-3.5 py-1.5 text-xs font-bold rounded-lg border transition-colors cursor-pointer",
+                                    "px-4 py-2 text-sm font-bold rounded-lg border transition-colors cursor-pointer",
                                     selectedTabFilter === 'all'
                                         ? "bg-[#14532d] text-white border-[#14532d]"
-                                        : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                                        : "bg-white text-[#374151] border-gray-200 hover:bg-gray-50"
                                 )}
                             >
-                                Tamam Andrajaat ({transactions.length})
+                                Tamam Record ({transactions.length})
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setSelectedTabFilter('pending')}
                                 className={cn(
-                                    "px-3.5 py-1.5 text-xs font-bold rounded-lg border transition-colors flex items-center gap-1.5 cursor-pointer",
+                                    "px-4 py-2 text-sm font-bold rounded-lg border transition-colors flex items-center gap-1.5 cursor-pointer",
                                     selectedTabFilter === 'pending'
-                                        ? "bg-amber-600 text-white border-amber-600"
-                                        : "bg-white text-amber-900 border-amber-200 hover:bg-amber-50"
+                                        ? "bg-amber-700 text-white border-amber-700"
+                                        : "bg-white text-amber-900 border-amber-300 hover:bg-amber-50"
                                 )}
                             >
                                 <span className="size-2 rounded-full bg-amber-500 animate-pulse" />
-                                <span>Pending Owner ({transactions.filter(t => t.approval_status === 'pending_owner').length})</span>
+                                <span>Malik Ki Manzoori Baaki ({transactions.filter(t => t.approval_status === 'pending_owner').length})</span>
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setSelectedTabFilter('reversed')}
                                 className={cn(
-                                    "px-3.5 py-1.5 text-xs font-bold rounded-lg border transition-colors cursor-pointer",
+                                    "px-4 py-2 text-sm font-bold rounded-lg border transition-colors cursor-pointer",
                                     selectedTabFilter === 'reversed'
                                         ? "bg-rose-700 text-white border-rose-700"
-                                        : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                                        : "bg-white text-[#374151] border-gray-200 hover:bg-gray-50"
                                 )}
                             >
-                                Reversed ({transactions.filter(t => t.is_reversed).length})
+                                Mansookh ({transactions.filter(t => t.is_reversed).length})
                             </button>
                         </div>
 
                         <div className="flex items-center gap-2">
+                            {/* Section B.4: Small "i" icon button for codes information instead of 8 big boxes */}
+                            <button
+                                type="button"
+                                onClick={() => setIsLegendOpen(true)}
+                                className="px-3 py-2 text-xs font-bold text-[#374151] bg-white border border-gray-200 hover:bg-gray-50 rounded-lg shadow-2xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                                title="Parchi codes ki maloomat"
+                            >
+                                <Icon name="Info" className="size-4 text-[#14532d]" />
+                                <span>Codes Ki Maloomat</span>
+                            </button>
+
                             <button
                                 type="button"
                                 onClick={handleExportCSV}
-                                className="px-3.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 rounded-lg shadow-2xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                                className="px-3.5 py-2 text-xs font-semibold text-[#374151] bg-white border border-gray-200 hover:bg-gray-50 rounded-lg shadow-2xs transition-colors flex items-center gap-1.5 cursor-pointer"
                             >
-                                <Icon name="DownloadSimple" className="size-3.5" />
+                                <Icon name="DownloadSimple" className="size-4" />
                                 <span>Excel / CSV</span>
                             </button>
                         </div>
                     </div>
 
-                    {/* Section C.6: Append-only Audit Ledger Table with Banaya Kisne, Kab, Kisne Approve Kiya */}
+                    {/* Append-only Record Ledger Table */}
                     <div className="bg-white rounded-xl border border-gray-200 shadow-2xs overflow-hidden">
                         <div className="px-5 py-3.5 border-b border-gray-200 flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <Icon name="Receipt" className="size-5 text-[#14532d]" />
-                                <h3 className="text-sm font-bold text-gray-900">
-                                    {isUrdu ? 'آڈٹ رجسٹر (Append-Only Transaction Ledger)' : 'Audit & Vouchers Register (Mukammal Audit Trail)'}
+                                <h3 className="text-sm font-bold text-[#1F2937]">
+                                    {isUrdu ? 'مکمل ریکارڈ رجسٹر' : 'Parchi & Transaction Record (Mukammal Khata)'}
                                 </h3>
                             </div>
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs text-[#4B5563]">
                                 {filteredTx.length} Andrajaat
                             </span>
                         </div>
 
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-start text-xs border-collapse">
+                        <div className="overflow-x-auto scrollbar-thin">
+                            <table className="w-full text-start text-sm border-collapse min-w-[780px]">
                                 <thead>
-                                    <tr className="bg-gray-50/80 border-b border-gray-200 text-gray-500 uppercase tracking-wider text-[11px] font-bold">
-                                        <th className="py-3 px-4 text-start font-bold">Parchi No (Ref)</th>
-                                        <th className="py-3 px-4 text-start font-bold">Kab (Date & Time)</th>
-                                        <th className="py-3 px-4 text-start font-bold">Party (Kis Ke Sath)</th>
-                                        <th className="py-3 px-4 text-start font-bold">Qisam (Type)</th>
-                                        <th className="py-3 px-4 text-end font-bold">Rakam (Amount)</th>
-                                        <th className="py-3 px-4 text-start font-bold">Banaya Kisne</th>
-                                        <th className="py-3 px-4 text-start font-bold">Approve Kisne Kiya</th>
-                                        <th className="py-3 px-4 text-center font-bold">Status</th>
-                                        <th className="py-3 px-4 text-center font-bold">Actions</th>
+                                    <tr className="bg-gray-50/80 border-b border-gray-200 text-[#374151] uppercase tracking-wider text-xs font-bold">
+                                        <th className="py-2.5 px-2.5 text-start whitespace-nowrap">Parchi No</th>
+                                        <th className="py-2.5 px-2.5 text-start whitespace-nowrap">Tareekh</th>
+                                        <th className="py-2.5 px-2.5 text-start whitespace-nowrap">Party</th>
+                                        <th className="py-2.5 px-2.5 text-start whitespace-nowrap">Qisam</th>
+                                        <th className="py-2.5 px-2.5 text-end whitespace-nowrap">Rakam</th>
+                                        <th className="py-2.5 px-2.5 text-start whitespace-nowrap">Banaya</th>
+                                        <th className="py-2.5 px-2.5 text-start whitespace-nowrap">Approve Kiya</th>
+                                        <th className="py-2.5 px-2.5 text-center whitespace-nowrap">Status</th>
+                                        <th className="py-2.5 px-2.5 text-center whitespace-nowrap">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-100">
+                                <tbody className="divide-y divide-gray-100 text-[#1F2937]">
                                     {filteredTx.length === 0 ? (
                                         <tr>
-                                            <td colSpan={9} className="py-8 text-center text-gray-500 text-xs">
-                                                {isUrdu ? 'کوئی ٹرانزیکشن نہیں ملی' : 'Koi transaction record nahi mila.'}
+                                            <td colSpan={9} className="py-8 text-center text-[#4B5563] text-sm">
+                                                Koi transaction record nahi mila.
                                             </td>
                                         </tr>
                                     ) : (
@@ -356,93 +331,98 @@ export default function InvestmentAuditPage({
                                                         isReversed && "opacity-60 bg-gray-50/40"
                                                     )}
                                                 >
-                                                    {/* Ref No */}
+                                                    {/* Parchi No */}
                                                     <td className={cn(
-                                                        "py-3.5 px-4 font-semibold text-gray-900 whitespace-nowrap",
-                                                        isReversed && "line-through text-gray-400"
+                                                        "py-2 px-2.5 font-bold whitespace-nowrap text-xs",
+                                                        isReversed && "line-through text-[#6B7280]"
                                                     )}>
                                                         {tx.ref_no}
                                                     </td>
 
-                                                    {/* Kab (Date & Time) Section C.6 */}
+                                                    {/* Tareekh & Time */}
                                                     <td className={cn(
-                                                        "py-3.5 px-4 text-gray-600 font-medium whitespace-nowrap",
-                                                        isReversed && "line-through text-gray-400"
+                                                        "py-2 px-2.5 text-[#374151] font-medium whitespace-nowrap text-xs",
+                                                        isReversed && "line-through text-[#6B7280]"
                                                     )}>
-                                                        {tx.created_at_label}
+                                                        <div>{tx.date}</div>
+                                                        {tx.created_time && (
+                                                            <span className="text-[10px] text-[#6B7280] block font-normal leading-tight">
+                                                                {tx.created_time}
+                                                            </span>
+                                                        )}
                                                     </td>
 
                                                     {/* Party */}
                                                     <td className={cn(
-                                                        "py-3.5 px-4 font-bold text-gray-900",
-                                                        isReversed && "line-through text-gray-400"
+                                                        "py-2 px-2.5 font-bold whitespace-nowrap text-xs",
+                                                        isReversed && "line-through text-[#6B7280]"
                                                     )}>
                                                         {tx.party}
                                                     </td>
 
-                                                    {/* Type */}
+                                                    {/* Qisam: Section B.4 Simple Naam directly */}
                                                     <td className={cn(
-                                                        "py-3.5 px-4 font-medium text-gray-700",
-                                                        isReversed && "line-through text-gray-400"
+                                                        "py-2 px-2.5 font-semibold text-[#374151] whitespace-nowrap text-xs",
+                                                        isReversed && "line-through text-[#6B7280]"
                                                     )}>
                                                         {tx.type_label}
                                                     </td>
 
                                                     {/* Amount */}
-                                                    <td className="py-3.5 px-4 text-end whitespace-nowrap">
+                                                    <td className="py-2 px-2.5 text-end whitespace-nowrap">
                                                         <span className={cn(
-                                                            "font-bold text-sm",
+                                                            "font-black text-xs",
                                                             isReversed
-                                                                ? "line-through text-gray-400"
-                                                                : isIncome ? "text-emerald-700" : "text-red-600"
+                                                                ? "line-through text-[#6B7280]"
+                                                                : isIncome ? "text-[#14532d]" : "text-red-700"
                                                         )}>
                                                             {tx.formatted_amount}
                                                         </span>
                                                         {tx.is_advance && (
-                                                            <span className="text-[10px] text-amber-700 font-semibold block">
+                                                            <span className="text-[10px] text-amber-800 font-bold block">
                                                                 (Advance)
                                                             </span>
                                                         )}
                                                     </td>
 
-                                                    {/* Banaya Kisne Section C.6 */}
-                                                    <td className="py-3.5 px-4 text-gray-700 font-medium">
+                                                    {/* Banaya Kisne */}
+                                                    <td className="py-2 px-2.5 text-[#374151] font-medium text-xs whitespace-nowrap">
                                                         {tx.created_by}
                                                     </td>
 
-                                                    {/* Approve Kisne Kiya Section C.6 */}
-                                                    <td className="py-3.5 px-4 text-gray-700 font-medium">
+                                                    {/* Approve Kisne Kiya */}
+                                                    <td className="py-2 px-2.5 text-[#374151] font-medium text-xs whitespace-nowrap">
                                                         {tx.approved_by}
                                                     </td>
 
-                                                    {/* Section C.1 Standardized Status */}
-                                                    <td className="py-3.5 px-4 text-center">
+                                                    {/* Status */}
+                                                    <td className="py-2 px-2.5 text-center whitespace-nowrap">
                                                         {tx.is_reversed ? (
-                                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-100 text-rose-800 border border-rose-200">
-                                                                Reversed
+                                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-rose-100 text-rose-900 border border-rose-300">
+                                                                Mansookh
                                                             </span>
                                                         ) : tx.approval_status === 'pending_owner' ? (
-                                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-900 border border-amber-300">
-                                                                Pending Owner
+                                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                                                                Manzoori Baaki
                                                             </span>
                                                         ) : (
-                                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-[#14532d] border border-emerald-200">
                                                                 Approved
                                                             </span>
                                                         )}
                                                     </td>
 
-                                                    {/* Actions (Approve, Void, Print) */}
-                                                    <td className="py-3.5 px-4 text-center" onClick={(e) => e.stopPropagation()}>
+                                                    {/* Actions */}
+                                                    <td className="py-2 px-2.5 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                                                         <div className="flex items-center justify-center gap-1.5">
-                                                            {/* Approve button (Only for pending, label is Manzoor Karein, NO 'Role' text) */}
+                                                            {/* Approve button (Only for pending, label is Manzoor karein, NO 'Role' text) */}
                                                             {tx.approval_status === 'pending_owner' && isOwner && (
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => handleApprove(tx)}
-                                                                    className="px-2.5 py-1 text-xs font-bold text-white bg-[#14532d] hover:bg-[#166534] rounded shadow-2xs transition-colors cursor-pointer"
+                                                                    className="px-2 py-0.5 text-xs font-bold text-white bg-[#14532d] hover:bg-[#166534] rounded shadow-2xs transition-colors cursor-pointer"
                                                                 >
-                                                                    Manzoor Karein
+                                                                    Manzoor karein
                                                                 </button>
                                                             )}
 
@@ -451,7 +431,7 @@ export default function InvestmentAuditPage({
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => handleOpenVoid(tx)}
-                                                                    title="Mansookh (Void) Karein"
+                                                                    title="Mansookh (Cancel) Karein"
                                                                     className="p-1 text-rose-700 hover:bg-rose-50 rounded transition-colors cursor-pointer"
                                                                 >
                                                                     <Icon name="Prohibit" className="size-4" />
@@ -462,8 +442,8 @@ export default function InvestmentAuditPage({
                                                             <button
                                                                 type="button"
                                                                 onClick={() => handleOpenVoucher(tx)}
-                                                                title="Parchi / Voucher Dekhein"
-                                                                className="p-1 text-gray-600 hover:bg-gray-100 rounded transition-colors cursor-pointer"
+                                                                title="Parchi Dekhein"
+                                                                className="p-1 text-[#374151] hover:text-black rounded transition-colors cursor-pointer"
                                                             >
                                                                 <Icon name="Printer" className="size-4" />
                                                             </button>
@@ -479,35 +459,93 @@ export default function InvestmentAuditPage({
                     </div>
                 </div>
 
+                {/* Section B.4: Small Info Dialog for Codes Information */}
+                {isLegendOpen && (
+                    <Dialog open={isLegendOpen} onOpenChange={setIsLegendOpen}>
+                        <DialogContent className="max-w-md w-full p-6 bg-white font-sans text-[#1F2937]">
+                            <DialogHeader>
+                                <DialogTitle className="text-base font-bold text-[#1F2937] flex items-center gap-2">
+                                    <Icon name="Info" className="size-5 text-[#14532d]" />
+                                    <span>Parchi Codes Ki Maloomat</span>
+                                </DialogTitle>
+                                <DialogDescription className="text-xs text-[#4B5563]">
+                                    Har code ka asaan matlab neeche diya gaya hai:
+                                </DialogDescription>
+                            </DialogHeader>
+
+                            <div className="space-y-2 py-3 text-sm">
+                                <div className="p-2.5 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-between">
+                                    <span className="font-bold text-[#14532d]">CI</span>
+                                    <span className="font-semibold text-[#1F2937]">Paisa dala (Capital In)</span>
+                                </div>
+                                <div className="p-2.5 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-between">
+                                    <span className="font-bold text-red-700">CO</span>
+                                    <span className="font-semibold text-[#1F2937]">Paisa nikala (Drawings)</span>
+                                </div>
+                                <div className="p-2.5 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-between">
+                                    <span className="font-bold text-blue-700">LN / LI</span>
+                                    <span className="font-semibold text-[#1F2937]">Qarza liya (Loan In)</span>
+                                </div>
+                                <div className="p-2.5 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-between">
+                                    <span className="font-bold text-purple-700">LR</span>
+                                    <span className="font-semibold text-[#1F2937]">Qarza wapas (Loan Return)</span>
+                                </div>
+                                <div className="p-2.5 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-between">
+                                    <span className="font-bold text-amber-700">SO</span>
+                                    <span className="font-semibold text-[#1F2937]">Faltu paisa lagaya (Surplus Out)</span>
+                                </div>
+                                <div className="p-2.5 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-between">
+                                    <span className="font-bold text-emerald-700">SI</span>
+                                    <span className="font-semibold text-[#1F2937]">Faltu paisa wapas aaya (Surplus In)</span>
+                                </div>
+                                <div className="p-2.5 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-between">
+                                    <span className="font-bold text-rose-700">REV</span>
+                                    <span className="font-semibold text-[#1F2937]">Mansookh (Cancel entry)</span>
+                                </div>
+                            </div>
+
+                            <div className="flex justify-end pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsLegendOpen(false)}
+                                    className="px-4 py-2 text-xs font-bold text-[#374151] bg-gray-100 hover:bg-gray-200 rounded-lg cursor-pointer"
+                                >
+                                    Band karein
+                                </button>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
+                )}
+
                 {/* Void Modal */}
                 {voidModalTx && (
                     <Dialog open={!!voidModalTx} onOpenChange={(open) => !open && setVoidModalTx(null)}>
-                        <DialogContent className="max-w-md w-full p-6 bg-white font-sans text-[#1a211c]">
+                        <DialogContent className="max-w-md w-full p-6 bg-white font-sans text-[#1F2937]">
                             <DialogHeader>
-                                <DialogTitle className="text-base font-bold text-gray-900">
-                                    Parchi Mansookh (Void) Karein
+                                <DialogTitle className="text-base font-bold text-[#1F2937]">
+                                    Parchi Mansookh (Cancel) Karein
                                 </DialogTitle>
-                                <DialogDescription className="text-xs text-gray-500">
-                                    Ref: {voidModalTx.ref_no} — Party: {voidModalTx.party} — Rakam: Rs. {Number(voidModalTx.amount).toLocaleString('en-US')}
+                                <DialogDescription className="text-xs text-[#4B5563]">
+                                    Parchi: {voidModalTx.ref_no} — Party: {voidModalTx.party} — Rakam: Rs. {Number(voidModalTx.amount).toLocaleString('en-US')}
                                 </DialogDescription>
                             </DialogHeader>
 
                             <form onSubmit={handleConfirmVoid} className="space-y-4 pt-2">
-                                <div className="p-3 rounded-lg bg-amber-50/70 border border-amber-300 text-xs text-amber-950">
+                                <div className="p-3 rounded-lg bg-amber-50 border border-amber-300 text-xs text-amber-950">
                                     <p className="leading-relaxed">
-                                        Yeh entry database se delete nahi hogi. Is ke muqabil ek nayi <span className="font-bold">REV-{(voidModalTx.ref_no).replace(/^[A-Z]+-/, '')}</span> reversal entry ledger mein record hogi taake audit trail mehfooz rahe.
+                                        Yeh entry ledger se delete nahi hogi. Is ke bar-aks ek nayi reversal entry ledger mein record hogi taake audit trail mehfooz rahe.
                                     </p>
                                 </div>
 
                                 <div>
-                                    <label className="text-xs font-bold text-gray-800 block mb-1">
+                                    <label className="text-xs font-bold text-[#374151] block mb-1">
                                         Mansookhi Ki Wajah (Reason) *
                                     </label>
                                     <textarea
                                         rows={3}
                                         value={voidReason}
                                         onChange={(e) => setVoidReason(e.target.value)}
-                                        placeholder="Maslan: Ghalat account select hua, Party ne cancel karwaya..."
+                                        placeholder="Wajah darj karein..."
                                         className="w-full p-3 text-xs bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-rose-600 focus:outline-none"
                                         required
                                     />
@@ -517,7 +555,7 @@ export default function InvestmentAuditPage({
                                     <button
                                         type="button"
                                         onClick={() => setVoidModalTx(null)}
-                                        className="flex-1 min-h-[40px] px-4 py-2 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors cursor-pointer"
+                                        className="flex-1 min-h-[40px] px-4 py-2 text-xs font-semibold text-[#374151] bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors cursor-pointer"
                                     >
                                         Cancel
                                     </button>
@@ -526,7 +564,7 @@ export default function InvestmentAuditPage({
                                         disabled={isVoiding}
                                         className="flex-1 min-h-[40px] px-4 py-2 text-xs font-bold text-white bg-rose-700 hover:bg-rose-800 rounded-lg shadow-xs transition-colors cursor-pointer"
                                     >
-                                        {isVoiding ? 'Mansookh Ho Raha Hai...' : 'Reversal Entry Banayein'}
+                                        {isVoiding ? 'Mansookh Ho Raha Hai...' : 'Mansookh Karein'}
                                     </button>
                                 </div>
                             </form>

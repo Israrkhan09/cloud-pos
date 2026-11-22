@@ -54,21 +54,7 @@ class InvestmentSeeder extends Seeder
             ]
         );
 
-        // 2. Loans
-        $ahmedLoan = InvestmentLoan::updateOrCreate(
-            ['lender_name' => 'Ahmed Lender'],
-            [
-                'lender_name_ur'   => 'احمد لنڈر',
-                'phone'            => '0333-5566778',
-                'principal_amount' => 180000,
-                'fee_or_interest'  => 2000,
-                'paid_amount'      => 0,
-                'due_date'         => '2026-12-01',
-                'status'           => 'active',
-                'notes'            => 'Short-term mandi working loan',
-            ]
-        );
-
+        // 2. Loans (Exactly 3 active loans totaling Rs. 202,000)
         $sohailLoan = InvestmentLoan::updateOrCreate(
             ['lender_name' => 'Sohail (Partial)'],
             [
@@ -77,11 +63,42 @@ class InvestmentSeeder extends Seeder
                 'principal_amount' => 140000,
                 'fee_or_interest'  => 0,
                 'paid_amount'      => 120000,
-                'due_date'         => '2026-11-18', // 4 days overdue
+                'due_date'         => '2026-11-18', // Overdue
                 'status'           => 'active',
                 'notes'            => 'Partial payment of Rs. 120,000 completed, Rs. 20,000 balance remaining',
             ]
         );
+
+        $tariqLoan = InvestmentLoan::updateOrCreate(
+            ['lender_name' => 'Tariq Sb'],
+            [
+                'lender_name_ur'   => 'طارق صاحب',
+                'phone'            => '0300-1122334',
+                'principal_amount' => 60000,
+                'fee_or_interest'  => 0,
+                'paid_amount'      => 0,
+                'due_date'         => '2026-11-24',
+                'status'           => 'active',
+                'notes'            => 'Short-term mandi working loan',
+            ]
+        );
+
+        $aslamLoan = InvestmentLoan::updateOrCreate(
+            ['lender_name' => 'Aslam Traders'],
+            [
+                'lender_name_ur'   => 'اسلم ٹریڈرز',
+                'phone'            => '0333-5566778',
+                'principal_amount' => 120000,
+                'fee_or_interest'  => 2000,
+                'paid_amount'      => 0,
+                'due_date'         => '2026-12-01',
+                'status'           => 'active',
+                'notes'            => 'Commission agent loan (Asal Rs. 120,000 + Fee Rs. 2,000 = Rs. 122,000)',
+            ]
+        );
+
+        // Remove old Ahmed Lender if exists
+        InvestmentLoan::where('lender_name', 'Ahmed Lender')->delete();
 
         // 3. Surplus
         $fundA = InvestmentSurplus::updateOrCreate(
@@ -164,6 +181,43 @@ class InvestmentSeeder extends Seeder
                 'approval_status'    => 'approved',
                 'approved_by'        => 'Hajji Sb (Owner)',
                 'approved_at'        => '2026-11-16 14:00:00',
+                'created_by_role'    => 'munshi',
+            ]
+        );
+
+        // LI-0002: 15 Nov, Tariq Sb, Loan In, +60,000, Approved
+        InvestmentTransaction::updateOrCreate(
+            ['ref_no' => 'LI-0002'],
+            [
+                'date'               => '2026-11-15',
+                'type'               => 'loan_in',
+                'loan_id'            => $tariqLoan->id,
+                'party_name'         => 'Tariq Sb',
+                'amount'             => 60000,
+                'payment_method'     => 'bank',
+                'bank_name'          => 'Meezan Bank Ltd',
+                'reason'             => 'Short-term mandi working loan',
+                'approval_status'    => 'approved',
+                'approved_by'        => 'Hajji Sb (Owner)',
+                'approved_at'        => '2026-11-15 11:00:00',
+                'created_by_role'    => 'owner',
+            ]
+        );
+
+        // LI-0003: 17 Nov, Aslam Traders, Loan In, +120,000, Approved
+        InvestmentTransaction::updateOrCreate(
+            ['ref_no' => 'LI-0003'],
+            [
+                'date'               => '2026-11-17',
+                'type'               => 'loan_in',
+                'loan_id'            => $aslamLoan->id,
+                'party_name'         => 'Aslam Traders',
+                'amount'             => 120000,
+                'payment_method'     => 'cash',
+                'reason'             => 'Commission agent loan',
+                'approval_status'    => 'approved',
+                'approved_by'        => 'Hajji Sb (Owner)',
+                'approved_at'        => '2026-11-17 12:00:00',
                 'created_by_role'    => 'munshi',
             ]
         );

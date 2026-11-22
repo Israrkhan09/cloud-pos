@@ -68,46 +68,33 @@ class InvestmentController extends Controller
         // Pending approvals (transactions needing owner approval)
         $pendingApprovals = InvestmentTransaction::where('approval_status', 'pending_owner')->count();
 
-        // Aaj Ka Khulasa
+        // Active totals for Aaj Ka Haal (Section B.6)
         $activeLoans = InvestmentLoan::where('status', 'active')->get();
-        $totalLoansDue = (float) $activeLoans->sum(fn($l) => $l->balance_due);
+        $totalLoansDue = (float) $activeLoans->sum(fn($l) => $l->balance_due); // 202,000
         $activeSurplusModels = InvestmentSurplus::where('status', 'active')->get();
-        $activeSurplusReturn = (float) $activeSurplusModels->sum(fn($s) => $s->total_return);
+        $activeSurplusReturn = (float) $activeSurplusModels->sum(fn($s) => $s->total_return); // 258,000
         $overdueLoansCount = $activeLoans->filter(fn($l) => $l->due_date && $l->due_date->format('Y-m-d') < '2026-11-22')->count();
         $maturedOverdueSurplusCount = InvestmentSurplus::where('status', 'matured')->where('maturity_date', '<', '2026-11-22')->count();
 
-        // Due calendar next 7 days
-        $dueCalendar = [
-            [
-                'type'      => 'loan',
-                'title'     => 'Tariq Mandi Loan',
-                'due_date'  => '24 Nov 2026',
-                'amount'    => 60000,
-                'status'    => 'Due in 2 din',
-                'party'     => 'Tariq Sb',
-                'direction' => 'out',
-            ],
-            [
-                'type'      => 'loan',
-                'title'     => 'Aslam Traders Loan',
-                'due_date'  => '01 Dec 2026',
-                'amount'    => 122000,
-                'status'    => 'Due in 9 din',
-                'party'     => 'Aslam Traders',
-                'direction' => 'out',
-            ],
-            [
-                'type'      => 'surplus',
-                'title'     => 'Fund A (15-day Term)',
-                'due_date'  => '06 Dec 2026',
-                'amount'    => 154500,
-                'status'    => 'Wapsi in 14 din',
-                'party'     => 'Al-Meezan Fund',
-                'direction' => 'in',
-            ],
+        // 3 Big numbers for Aaj Ka Haal (Section B.6)
+        $aajKaHaal = [
+            'dena_hai'      => $totalLoansDue,
+            'dena_hai_sub'  => '3 logon ka qarza wapas karna hai',
+            'lena_hai'      => $activeSurplusReturn,
+            'lena_hai_sub'  => 'Faltu paisa aur munafa wapas aana hai',
+            'kaam_count'    => ($overdueLoansCount + $maturedOverdueSurplusCount),
+            'kaam_text'     => '1 qarza overdue, 1 fund muddat poori',
+            'kaam_sub'      => 'Sohail baqaya Rs. 20,000 · Gold Savings muddat poori',
         ];
 
-        // Profit Pool (20,000 base)
+        // Section B.3: Single slim alert line
+        $singleAlert = $maturedOverdueSurplusCount > 0 ? [
+            'text'         => 'Gold Savings 38 din se wapas nahi aya.',
+            'action_label' => 'Dekhein / Wapas Lein',
+            'action_url'   => '/investment/surplus',
+        ] : null;
+
+        // Profit Pool (Rs. 20,000 base)
         $profitPool = [
             'total_pool'       => 20000,
             'owner_share'      => 17000,
@@ -125,24 +112,19 @@ class InvestmentController extends Controller
             'isOwner'               => true,
             'currentRole'           => $role,
             'pendingApprovalsCount' => $pendingApprovals,
-            'lastUpdated'           => now()->format('h:i A'),
+            'lastUpdated'           => now()->setTimezone('Asia/Karachi')->format('h:i A'),
             'partnersList'          => $partners,
             'loansList'             => $loans,
             'surplusList'           => $surplusFunds,
             'bankAccounts'          => $bankAccounts,
-            'aajKaKhulasa'          => [
-                'dena_hai'              => $totalLoansDue,
-                'lena_hai'              => $activeSurplusReturn,
-                'overdue_loans_count'   => $overdueLoansCount,
-                'matured_surplus_count' => $maturedOverdueSurplusCount,
-            ],
-            'dueCalendar'           => $dueCalendar,
+            'aajKaHaal'             => $aajKaHaal,
+            'singleAlert'           => $singleAlert,
             'profitPool'            => $profitPool,
         ];
     }
 
     /**
-     * View 1: Partners & Equity (/investment/partners)
+     * View 1: Partners & Equity (/investment/partners) - Section B.1 (Sirf 3 Numbers)
      */
     public function partners(Request $request): Response
     {
@@ -180,110 +162,60 @@ class InvestmentController extends Controller
             ];
         });
 
-        // Summary Cards Calculations
+        // 3 Numbers for Partners Page (Section B.1)
+        // 1. Kul Sarmaya (700,000)
+        // 2. Shareekon Ka Hissa (3,000)
+        // 3. Malik Ki Manzoori Baaki (1)
         $netCapital = $partnerRows->sum('net_equity'); // 700,000
-        $activeLoans = InvestmentLoan::where('status', 'active')->get();
-        $shortTermLoans = (float) $activeLoans->sum(fn($l) => $l->balance_due); // 202,000
-        $principalLoans = (float) $activeLoans->sum(fn($l) => $l->principal_amount - $l->paid_amount); // 200,000
-        $loanFees = (float) $activeLoans->sum('fee_or_interest'); // 2,000
-        $activeSurplusModels = InvestmentSurplus::where('status', 'active')->get();
-        $activeSurplus = (float) $activeSurplusModels->sum('principal_amount'); // 250,000
-        $surplusGain = (float) InvestmentSurplus::sum('profit_or_loss'); // 12,200 (4,200 realised + 8,000 unrealised)
         $partnersProfitShare = 3000; // Bilal 2,000 + Ali 1,000
-
         $pendingApprovals = InvestmentTransaction::where('approval_status', 'pending_owner')->count();
 
-        // Alerts (active/unresolved)
-        $alerts = InvestmentAlert::where('resolved', false)->latest()->get()->map(fn($a) => [
-            'id'               => $a->id,
-            'partner_name'     => $a->partner_name,
-            'attempted_amount' => $a->attempted_amount,
-            'excess_amount'    => $a->excess_amount,
-            'notes'            => $a->notes,
-        ]);
-
-        // Breakdowns for Modal
+        // Breakdowns for Detail Modal
         $breakdowns = [
             'net_capital' => [
-                'title' => 'Kul Sarmaya / Net Equity Breakdown',
+                'title' => 'Kul Sarmaya (Net Equity) Tafseel',
                 'total' => $netCapital,
                 'items' => [
-                    ['label' => 'Bilal (Approved Net Equity)', 'amount' => 400000, 'note' => 'Approved: Rs. 400,000 (Zir-e-Tawa Drawing: Rs. 100,000)'],
-                    ['label' => 'Ali Raza (Approved Net Equity)', 'amount' => 300000, 'note' => 'Approved: Rs. 300,000'],
+                    ['label' => 'Bilal (Net Approved Sarmaya)', 'amount' => 400000, 'note' => 'Approved: Rs. 400,000 (Zir-e-Tawa Drawing: Rs. 100,000)'],
+                    ['label' => 'Ali Raza (Net Approved Sarmaya)', 'amount' => 300000, 'note' => 'Approved: Rs. 300,000'],
                 ],
-                'note' => 'Pending drawings approval tak net equity se nahi kaati jati, alag Pending column mein dikhai jati hain.',
-            ],
-            'loans_payable' => [
-                'title' => 'Kul Baqaya Qarza (Fee Samet) Breakdown',
-                'total' => $shortTermLoans,
-                'items' => [
-                    ['label' => 'Sohail (Asal 140,000 - 120,000 Paid)', 'amount' => 20000, 'note' => 'Overdue 2 din pehle'],
-                    ['label' => 'Tariq Sb (Asal Qarza)', 'amount' => 60000, 'note' => 'Due 24 Nov'],
-                    ['label' => 'Aslam Traders (Asal 120,000 + Fee 2,000)', 'amount' => 122000, 'note' => 'Due 01 Dec'],
-                ],
-                'note' => 'Asal Principal: Rs. 200,000 + Muqarrar Fee: Rs. 2,000 = Kul Baqaya Rs. 202,000.',
-            ],
-            'active_surplus' => [
-                'title' => 'Active Surplus (Faltu Paisa) Breakdown',
-                'total' => $activeSurplus,
-                'items' => [
-                    ['label' => 'Fund A (15-day Term)', 'amount' => 150000, 'note' => 'Maturity: 06 Dec (15 din)'],
-                    ['label' => 'Meezan Daily Profit', 'amount' => 100000, 'note' => 'Daily rollover khata'],
-                ],
-                'note' => 'Active surplus mein sirf chalu investments shamil hain (Kul Rs. 250,000).',
-            ],
-            'surplus_gain' => [
-                'title' => 'Surplus Se Nafa Breakdown',
-                'total' => $surplusGain,
-                'items' => [
-                    ['label' => 'Realised Nafa (Gold Savings)', 'amount' => 4200, 'note' => 'Mila hua nafa (Cash mein wapas aane ke qabil)'],
-                    ['label' => 'Unrealised Nafa (Fund A)', 'amount' => 4500, 'note' => 'Kaghzi nafa (Maturity par milega)'],
-                    ['label' => 'Unrealised Nafa (Meezan Daily)', 'amount' => 3500, 'note' => 'Kaghzi nafa (Chalu hisab)'],
-                ],
-                'note' => 'Kul Surplus Nafa (+12,200) = Mila hua Realised (+4,200) + Kaghzi Unrealised (+8,000).',
+                'note' => 'Pending drawings manzoori tak sarmaya se nahi kaati jati, alag se pending column mein dikhai jati hain.',
             ],
             'partners_share' => [
-                'title' => 'Partners Ka Munafa Share Breakdown',
+                'title' => 'Shareekon Ka Munafa Hissa Tafseel',
                 'total' => $partnersProfitShare,
                 'items' => [
-                    ['label' => 'Bilal (10% Share)', 'amount' => 2000, 'note' => 'Rs. 20,000 pool ka 10%'],
-                    ['label' => 'Ali Raza (5% Share)', 'amount' => 1000, 'note' => 'Rs. 20,000 pool ka 5%'],
-                    ['label' => 'Malik Hajji Muhammad (85% Share)', 'amount' => 17000, 'note' => 'Rs. 20,000 pool ka 85%'],
+                    ['label' => 'Bilal (10% hissa)', 'amount' => 2000, 'note' => 'Rs. 20,000 monthly pool ka 10%'],
+                    ['label' => 'Ali Raza (5% hissa)', 'amount' => 1000, 'note' => 'Rs. 20,000 monthly pool ka 5%'],
+                    ['label' => 'Malik Hajji Muhammad (85% hissa)', 'amount' => 17000, 'note' => 'Rs. 20,000 monthly pool ka 85%'],
                 ],
-                'note' => 'Kul Monthly Munafa Pool Base: Rs. 20,000.',
+                'note' => 'Kul monthly munafa pool base: Rs. 20,000.',
             ],
             'pending_approvals' => [
-                'title' => 'Zir-e-Tawa Manzooriyan (Pending Approvals)',
+                'title' => 'Malik Ki Manzoori Baaki (Pending Approvals)',
                 'total' => $pendingApprovals,
                 'items' => [
-                    ['label' => 'CO-0152: Bilal Drawing Rs. 100,000', 'amount' => 100000, 'note' => 'Munshi ne darj kiya, Owner ki manzoori baqi hai'],
-                    ['label' => 'SO-0004: Surplus Fund Transfer Rs. 50,000', 'amount' => 50000, 'note' => 'Owner ki manzoori baqi hai'],
+                    ['label' => 'CO-0152: Bilal Drawing Rs. 100,000', 'amount' => 100000, 'note' => 'Munshi ne darj kiya, Malik ki manzoori baaki hai'],
                 ],
-                'note' => 'Approval ke baad hi accounts aur equity par asar parega.',
+                'note' => 'Manzoori milne par hi accounts par asar parega.',
             ],
         ];
 
         return Inertia::render('investment/partners/index', array_merge($this->getSharedData(), [
             'summary' => [
                 'net_capital'           => $netCapital,
-                'short_term_loans'      => $shortTermLoans,
-                'principal_loans'       => $principalLoans,
-                'loan_fees'             => $loanFees,
-                'active_surplus'        => $activeSurplus,
-                'surplus_gain'          => $surplusGain,
                 'partners_profit_share' => $partnersProfitShare,
-                'profit_pool_base'      => 20000,
                 'pending_approvals'     => $pendingApprovals,
+                'profit_pool_base'      => 20000,
             ],
             'owner'      => $ownerData,
             'partners'   => $partnerRows,
-            'alerts'     => $alerts,
             'breakdowns' => $breakdowns,
         ]));
     }
 
     /**
-     * View 2: Loans (/investment/loans)
+     * View 2: Loans (/investment/loans) - Section B.1 (Sirf 3 Numbers)
      */
     public function loans(Request $request): Response
     {
@@ -304,24 +236,24 @@ class InvestmentController extends Controller
             $badgeText = '';
             $badgeType = 'neutral';
             if ($l->status === 'settled') {
-                $badgeText = 'Chukta (Settled)';
+                $badgeText = 'Chukta';
                 $badgeType = 'neutral';
             } elseif ($daysDiff !== null) {
                 if ($daysDiff < 0) {
                     $badgeText = 'Overdue (' . abs((int)$daysDiff) . ' din pehle)';
                     $badgeType = 'danger';
                 } elseif ($daysDiff === 0) {
-                    $badgeText = 'Aaj Due Hai';
+                    $badgeText = 'Aaj wapsi';
                     $badgeType = 'warning';
                 } elseif ($daysDiff <= 7) {
-                    $badgeText = 'Due ' . $l->due_date->format('j M');
+                    $badgeText = 'Wapsi: ' . $l->due_date->format('j M');
                     $badgeType = 'warning';
                 } else {
-                    $badgeText = 'Due ' . $l->due_date->format('j M');
+                    $badgeText = 'Wapsi: ' . $l->due_date->format('j M');
                     $badgeType = 'neutral';
                 }
             } else {
-                $badgeText = 'Khula (Open)';
+                $badgeText = 'Khula';
             }
 
             return [
@@ -344,31 +276,24 @@ class InvestmentController extends Controller
             ];
         });
 
-        // Loans summary
-        $totalPrincipal = 200000;
+        // 3 Numbers for Loans Page (Section B.1)
+        // 1. Kul Baqaya (202,000)
+        // 2. Kis ko dena hai (3 log)
+        // 3. Overdue (1 qarza)
         $totalBalanceDue = 202000;
-        $totalFees = 2000;
+        $activeCount = $loans->where('status', '!=', 'settled')->count();
+        $overdueCount = $loans->filter(fn($l) => $l['due_badge']['type'] === 'danger')->count();
 
         $breakdowns = [
-            'total_principal' => [
-                'title' => 'Kul Asal Qarza (Principal) Breakdown',
-                'total' => $totalPrincipal,
-                'items' => [
-                    ['label' => 'Sohail (Asal 140,000 mein se 120,000 Paid)', 'amount' => 20000, 'note' => 'Baqaya asal 20,000'],
-                    ['label' => 'Tariq Sb (Asal Qarza)', 'amount' => 60000, 'note' => 'Baqaya asal 60,000'],
-                    ['label' => 'Aslam Traders (Asal Qarza)', 'amount' => 120000, 'note' => 'Baqaya asal 120,000'],
-                ],
-                'note' => 'Kul asal qarza jo dena baqi hai: Rs. 200,000.',
-            ],
             'total_balance_due' => [
-                'title' => 'Kul Baqaya Rakam (Fee Samet) Breakdown',
+                'title' => 'Kul Baqaya Qarza (Hum Ko Dena Hai) Tafseel',
                 'total' => $totalBalanceDue,
                 'items' => [
-                    ['label' => 'Sohail', 'amount' => 20000, 'note' => 'Overdue 2 din pehle'],
-                    ['label' => 'Tariq Sb', 'amount' => 60000, 'note' => 'Due 24 Nov'],
-                    ['label' => 'Aslam Traders', 'amount' => 122000, 'note' => 'Asal 120,000 + Fee 2,000'],
+                    ['label' => 'Sohail (Asal 140,000 mein se 120,000 paid)', 'amount' => 20000, 'note' => 'Overdue 2 din pehle'],
+                    ['label' => 'Tariq Sb (Asal Qarza)', 'amount' => 60000, 'note' => 'Wapsi 24 Nov'],
+                    ['label' => 'Aslam Traders (Asal 120,000 + Fee 2,000)', 'amount' => 122000, 'note' => 'Wapsi 01 Dec'],
                 ],
-                'note' => 'Asal (200,000) + Fee (2,000) = Rs. 202,000.',
+                'note' => 'Asal Principal: Rs. 200,000 + Muqarrar Fee: Rs. 2,000 = Kul Rs. 202,000.',
             ],
         ];
 
@@ -377,16 +302,15 @@ class InvestmentController extends Controller
             'search'     => $search,
             'breakdowns' => $breakdowns,
             'summary'    => [
-                'total_principal'   => $totalPrincipal,
                 'total_balance_due' => $totalBalanceDue,
-                'total_fees'        => $totalFees,
-                'active_count'      => $loans->where('status', '!=', 'settled')->count(),
+                'lenders_count'     => $activeCount,
+                'overdue_count'     => $overdueCount,
             ],
         ]));
     }
 
     /**
-     * View 3: Surplus (/investment/surplus)
+     * View 3: Surplus (/investment/surplus) - Section B.1 (Sirf 3 Numbers)
      */
     public function surplus(Request $request): Response
     {
@@ -403,7 +327,7 @@ class InvestmentController extends Controller
 
         $funds = $query->orderBy('status', 'asc')->orderBy('maturity_date', 'asc')->get()->map(function ($s) {
             $maturityStr = $s->maturity_date ? $s->maturity_date->format('j M') : 'Khula';
-            $roiWithDate = "{$s->roi_rate} " . ($s->status === 'matured' ? "Mukammal ({$maturityStr})" : "Muddat: {$maturityStr}");
+            $statusLabel = $s->status === 'matured' ? 'Muddat poori' : 'Chalu';
 
             return [
                 'id'               => $s->id,
@@ -414,106 +338,70 @@ class InvestmentController extends Controller
                 'roi_rate'         => $s->roi_rate,
                 'is_realised'      => $s->is_realised,
                 'maturity_date'    => $s->maturity_date ? $s->maturity_date->format('Y-m-d') : null,
-                'roi_maturity'     => $roiWithDate,
+                'maturity_label'   => $maturityStr,
                 'status'           => $s->status,
+                'status_label'     => $statusLabel,
                 'total_return'     => $s->total_return,
                 'notes'            => $s->notes,
             ];
         });
 
-        // Separate active vs closed funds
+        // 3 Numbers for Surplus Page (Section B.1)
+        // 1. Lagaya hua paisa (250,000)
+        // 2. Mila hua munafa (4,200)
+        // 3. Faltu paisa wapas total (258,000)
         $activeFunds = $funds->where('status', 'active')->values();
         $closedFunds = $funds->where('status', 'matured')->values();
 
-        $activePrincipal = $activeFunds->sum('principal_amount'); // 250,000
-        $activeReturn = $activeFunds->sum('total_return'); // 258,000
-        $unrealisedProfit = $activeFunds->sum('profit_or_loss'); // 8,000 (kaghzi)
-
-        $closedPrincipal = $closedFunds->sum('principal_amount'); // 120,000
-        $closedReturn = $closedFunds->sum('total_return'); // 124,200
-        $realisedProfit = $closedFunds->where('is_realised', true)->sum('profit_or_loss'); // 4,200 (mila hua)
-
-        // Gold Savings overdue alert: 15 Oct to 22 Nov = 38 days overdue
-        $goldSavingsAlert = [
-            'show'          => true,
-            'fund_name'     => 'Gold Savings (3-Month Term)',
-            'days_overdue'  => 38,
-            'maturity_date' => '15 Oct 2026',
-            'amount'        => 124200,
-            'message'       => 'Matured 38 din se wapas nahi aya',
-        ];
-
-        // Active fund for wapsi details
-        $activeFund = $activeFunds->first() ?? $funds->first();
-        $wapsiSplit = $activeFund ? [
-            'fund_name' => $activeFund['fund_name'],
-            'principal' => $activeFund['principal_amount'],
-            'munafa'    => $activeFund['profit_or_loss'],
-            'total'     => $activeFund['total_return'],
-        ] : [
-            'fund_name' => 'General Surplus',
-            'principal' => 0,
-            'munafa'    => 0,
-            'total'     => 0,
-        ];
+        $activePrincipal = (float) $activeFunds->sum('principal_amount'); // 250,000
+        $realisedProfit = (float) $closedFunds->where('is_realised', true)->sum('profit_or_loss'); // 4,200
+        $activeReturn = (float) $activeFunds->sum('total_return'); // 258,000
+        $unrealisedProfit = (float) $activeFunds->sum('profit_or_loss'); // 8,000
 
         $breakdowns = [
-            'active_surplus' => [
-                'title' => 'Active Faltu Paisa (Lagaya Gaya) Breakdown',
+            'lagaya_paisa' => [
+                'title' => 'Lagaya Hua Faltu Paisa Tafseel',
                 'total' => $activePrincipal,
                 'items' => [
-                    ['label' => 'Fund A (15-day Term)', 'amount' => 150000, 'note' => 'Muddat: 06 Dec (15 din)'],
-                    ['label' => 'Meezan Daily Profit', 'amount' => 100000, 'note' => 'Daily rollover khata'],
+                    ['label' => 'Fund A (15-day Term)', 'amount' => 150000, 'note' => 'Wapsi tareekh: 06 Dec'],
+                    ['label' => 'Meezan Daily Profit', 'amount' => 100000, 'note' => 'Daily munafa khata'],
                 ],
-                'note' => 'Active funds ka principal: Rs. 250,000.',
+                'note' => 'Active sarmaya: Rs. 250,000.',
             ],
-            'realised_profit' => [
-                'title' => 'Mila Hua Nafa (Realised) Breakdown',
+            'mila_munafa' => [
+                'title' => 'Mila Hua Munafa Tafseel',
                 'total' => $realisedProfit,
                 'items' => [
-                    ['label' => 'Gold Savings (3-Month Term)', 'amount' => 4200, 'note' => 'Matured on 15 Oct (Cash mein wapas lene ke qabil)'],
+                    ['label' => 'Gold Savings (3-Month Term)', 'amount' => 4200, 'note' => 'Muddat poori (Cash wapas lene ke qabil)'],
                 ],
-                'note' => 'Yeh nafa mature ho chuka hai aur cash mein ada hona baqi hai.',
+                'note' => 'Yeh munafa pakka ho chuka hai aur cash mein wapas aana hai.',
             ],
-            'unrealised_profit' => [
-                'title' => 'Aane Wala Kaghzi Nafa (Unrealised) Breakdown',
-                'total' => $unrealisedProfit,
-                'items' => [
-                    ['label' => 'Fund A (15-day Term)', 'amount' => 4500, 'note' => 'Muddat mukammal hone par milega'],
-                    ['label' => 'Meezan Daily Profit', 'amount' => 3500, 'note' => 'Chalu hisab'],
-                ],
-                'note' => 'Unrealised nafa cash mein nahi hota jab tak muddat mukammal na ho.',
-            ],
-            'active_wapsi' => [
-                'title' => 'Active Kul Wapsi (Asal + Kaghzi Nafa) Breakdown',
+            'wapsi_total' => [
+                'title' => 'Faltu Paisa Wapas Total Tafseel',
                 'total' => $activeReturn,
                 'items' => [
-                    ['label' => 'Fund A Wapsi', 'amount' => 154500, 'note' => 'Asal 150,000 + Nafa 4,500'],
-                    ['label' => 'Meezan Daily Wapsi', 'amount' => 103500, 'note' => 'Asal 100,000 + Nafa 3,500'],
+                    ['label' => 'Fund A Wapsi', 'amount' => 154500, 'note' => 'Asal 150,000 + Abhi tak ka munafa 4,500'],
+                    ['label' => 'Meezan Daily Wapsi', 'amount' => 103500, 'note' => 'Asal 100,000 + Abhi tak ka munafa 3,500'],
                 ],
-                'note' => 'Active Wapsi Total: Rs. 258,000. Is mein closed Gold Savings (124,200) shamil nahi hai.',
+                'note' => 'Asal Rs. 250,000 + Abhi tak ka munafa (pakka nahi) Rs. 8,000 = Kul Rs. 258,000.',
             ],
         ];
 
         return Inertia::render('investment/surplus/index', array_merge($this->getSharedData(), [
-            'funds'            => $funds,
-            'search'           => $search,
-            'wapsiSplit'       => $wapsiSplit,
-            'goldSavingsAlert' => $goldSavingsAlert,
-            'breakdowns'       => $breakdowns,
-            'summary'          => [
-                'active_principal'  => $activePrincipal,
-                'active_return'     => $activeReturn,
+            'funds'      => $funds,
+            'search'     => $search,
+            'breakdowns' => $breakdowns,
+            'summary'    => [
+                'lagaya_paisa'      => $activePrincipal,
+                'mila_munafa'       => $realisedProfit,
+                'wapsi_total'       => $activeReturn,
                 'unrealised_profit' => $unrealisedProfit,
-                'realised_profit'   => $realisedProfit,
-                'closed_return'     => $closedReturn,
-                'total_return'      => $activeReturn + $closedReturn,
             ],
         ]));
     }
 
     /**
-     * View 4: Audit & Vouchers (/investment/audit)
+     * View 4: Audit & Vouchers (/investment/audit) - Section B.4 (Simple Naam)
      */
     public function audit(Request $request): Response
     {
@@ -536,36 +424,43 @@ class InvestmentController extends Controller
         }
 
         $transactions = $query->orderBy('date', 'desc')->orderBy('id', 'desc')->get()->map(function ($tx) {
-            $status = match ($tx->approval_status) {
-                'pending_owner' => 'Pending Owner',
+            $statusLabel = match ($tx->approval_status) {
+                'pending_owner' => 'Malik ki manzoori baaki',
                 'approved'      => 'Approved',
-                'posted'        => 'Posted',
-                'reversed'      => 'Reversed',
+                'posted'        => 'Darj shuda',
+                'reversed'      => 'Mansookh',
                 'locked'        => 'Locked',
                 default         => ucfirst($tx->approval_status),
             };
 
-            $creator = $tx->createdBy?->name ?? ($tx->created_by_role === 'owner' ? 'Owner (Hajji Muhammad)' : 'Munshi Aslam');
-            $createdTime = $tx->created_at ? $tx->created_at->format('j M Y, h:i A') : ($tx->date ? $tx->date->format('j M Y') : '—');
+            $creator = $tx->createdBy?->name ?? ($tx->created_by_role === 'owner' ? 'Hajji (Owner)' : 'Munshi Aslam');
+            $createdDate = $tx->date ? $tx->date->format('j M Y') : ($tx->created_at ? $tx->created_at->format('j M Y') : '—');
+            $createdTime = $tx->created_at ? $tx->created_at->format('h:i A') : '';
+
+            $approvedName = $tx->approved_by ?: '—';
+            if ($approvedName === 'Hajji Sb (Owner)') {
+                $approvedName = 'Hajji Sb';
+            }
 
             return [
                 'id'               => $tx->id,
                 'ref_no'           => $tx->ref_no,
-                'date'             => $tx->date ? $tx->date->format('j M Y') : '—',
+                'date'             => $createdDate,
+                'created_time'     => $createdTime,
                 'raw_date'         => $tx->date ? $tx->date->format('Y-m-d') : '',
-                'created_at_label' => $createdTime,
+                'created_at_label' => $createdTime ? "{$createdDate}, {$createdTime}" : $createdDate,
                 'created_by'       => $creator,
                 'party'            => $tx->party_name,
                 'type'             => $tx->type,
-                'type_label'       => $tx->type_label,
+                'type_label'       => $tx->type_label, // Section B.4: Simple naam from accessor
                 'amount'           => $tx->amount,
                 'formatted_amount' => $tx->formatted_amount,
                 'reason'           => $tx->reason,
                 'payment_method'   => $tx->payment_method,
                 'bank_name'        => $tx->bank_name,
                 'approval_status'  => $tx->approval_status,
-                'status_standard'  => $status,
-                'approved_by'      => $tx->approved_by ?: '—',
+                'status_standard'  => $statusLabel,
+                'approved_by'      => $approvedName,
                 'is_reversed'      => $tx->is_reversed,
                 'reversal_reason'  => $tx->reversal_reason,
                 'reversal_ref_no'  => $tx->reversal_ref_no,
@@ -617,7 +512,7 @@ class InvestmentController extends Controller
                     'attempted_amount' => $amount,
                     'excess_amount'    => $excess,
                     'resolved'         => false,
-                    'notes'            => "{$partner->name} ke capital se Rs. " . number_format($excess, 0) . " zyada nikaalne ki koshish ki gayi (blocked, Drawings/Advance ke tor par record hona chahiye)",
+                    'notes'            => "{$partner->name} ke sarmaya se Rs. " . number_format($excess, 0) . " zyada nikaalne ki koshish ki gayi",
                 ]);
 
                 return response()->json([
@@ -626,7 +521,7 @@ class InvestmentController extends Controller
                     'partner_name'   => $partner->name,
                     'current_equity' => $netEquity,
                     'excess_amount'  => $excess,
-                    'message'        => "Capital se zyada nikaala ja raha hai. {$partner->name} ka capital Rs. " . number_format($netEquity, 0) . " hai. Aap Rs. " . number_format($amount, 0) . " nikaal rahe hain, yani Rs. " . number_format($excess, 0) . " zyada.",
+                    'message'        => "Sarmaya se zyada nikaala ja raha hai. {$partner->name} ka sarmaya Rs. " . number_format($netEquity, 0) . " hai.",
                 ], 422);
             }
         }
@@ -915,7 +810,7 @@ class InvestmentController extends Controller
                 'party_name'      => $loan->lender_name,
                 'amount'          => $amount,
                 'payment_method'  => 'cash',
-                'reason'          => 'Loan payment to ' . $loan->lender_name,
+                'reason'          => 'Qarza wapas: ' . $loan->lender_name,
                 'approval_status' => 'approved',
                 'created_by_role' => $this->getCurrentRole(),
             ]);
@@ -930,7 +825,7 @@ class InvestmentController extends Controller
             ]);
         });
 
-        return redirect()->back()->with('success', "Loan payment Rs. " . number_format($amount, 0) . " kamyabi se record ho gayi.");
+        return redirect()->back()->with('success', "Qarza payment Rs. " . number_format($amount, 0) . " kamyabi se record ho gayi.");
     }
 
     /**
@@ -955,7 +850,7 @@ class InvestmentController extends Controller
                 'party_name'      => $surplus->fund_name,
                 'amount'          => $surplus->total_return,
                 'payment_method'  => 'cash',
-                'reason'          => 'Surplus return (Principal + Munafa)',
+                'reason'          => 'Faltu paisa wapas (Asal + Munafa)',
                 'approval_status' => 'approved',
                 'created_by_role' => $this->getCurrentRole(),
             ]);
@@ -970,7 +865,7 @@ class InvestmentController extends Controller
             ]);
         });
 
-        return redirect()->back()->with('success', "Surplus investment wapas aa gayi.");
+        return redirect()->back()->with('success', "Faltu paisa wapas aa gaya.");
     }
 
     /**
@@ -991,17 +886,6 @@ class InvestmentController extends Controller
             'details'   => "Marked fund {$surplus->fund_name} as matured",
         ]);
 
-        return redirect()->back()->with('success', "Fund {$surplus->fund_name} matured mark ho gaya.");
-    }
-
-    /**
-     * Switch Maker-Checker Role (Kept for compatibility)
-     */
-    public function switchRole(Request $request)
-    {
-        $role = $request->input('role', 'owner');
-        session(['investment_role' => $role]);
-
-        return redirect()->back()->with('success', "Role updated.");
+        return redirect()->back()->with('success', "Fund {$surplus->fund_name} muddat poori mark ho gaya.");
     }
 }
