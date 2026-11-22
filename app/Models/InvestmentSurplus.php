@@ -15,6 +15,7 @@ class InvestmentSurplus extends Model
     protected $fillable = [
         'fund_name',
         'fund_name_ur',
+        'kaha_lagaya',
         'principal_amount',
         'profit_or_loss',
         'roi_rate',

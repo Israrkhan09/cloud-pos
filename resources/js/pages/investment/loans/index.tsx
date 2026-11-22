@@ -227,7 +227,7 @@ export default function InvestmentLoansPage({
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={isUrdu ? 'قرضہ - انویسٹمنٹ' : 'Qarza (Loans) - Investment'} />
 
-            <div className="-mt-4 -mx-4 -mb-8 pb-28 bg-[#f4f6f4] min-h-screen font-sans text-[#1F2937]">
+            <div className="-mt-4 -mx-4 -mb-4 pb-12 bg-[#f4f6f4] min-h-full font-sans text-[#1F2937]">
                 {/* Header (Section B.5 short tabs & single alert line) */}
                 <InvestmentHeader
                     currentTab="loans"
@@ -242,17 +242,10 @@ export default function InvestmentLoansPage({
                     {/* Section B.1: Har Page Par Sirf 3 Numbers (Loans Page) */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                         {/* Number 1: Kul Baqaya (Hum ko dena hai) */}
-                        <div
-                            onClick={() => setActiveBreakdown(breakdowns.total_balance_due)}
-                            className="bg-white p-4 md:p-5 rounded-xl border border-gray-200 shadow-2xs hover:border-red-400 transition-all cursor-pointer group"
-                            title="Tafseel dekhne ke liye click karein"
-                        >
-                            <div className="flex items-center justify-between">
-                                <span className="text-xs font-bold text-[#374151] uppercase tracking-wider">
-                                    {isUrdu ? 'ہم کو دینا ہے (کل بقایا)' : 'Hum Ko Dena Hai (Kul Baqaya)'}
-                                </span>
-                                <Icon name="Info" className="size-4 text-[#4B5563] group-hover:text-red-600" />
-                            </div>
+                        <div className="bg-white p-4 md:p-5 rounded-xl border border-gray-200 shadow-2xs">
+                            <span className="text-xs font-bold text-[#374151] uppercase tracking-wider block">
+                                {isUrdu ? 'ہم کو دینا ہے (کل بقایا)' : 'Hum Ko Dena Hai (Kul Baqaya)'}
+                            </span>
                             <span className="text-2xl font-black text-red-700 block mt-2">
                                 {formatRs(summary.total_balance_due)}
                             </span>
@@ -262,17 +255,10 @@ export default function InvestmentLoansPage({
                         </div>
 
                         {/* Number 2: Hum ko lena hai (Receivable Loans) */}
-                        <div
-                            onClick={() => breakdowns.total_receivable && setActiveBreakdown(breakdowns.total_receivable)}
-                            className="bg-white p-4 md:p-5 rounded-xl border border-gray-200 shadow-2xs hover:border-blue-400 transition-all cursor-pointer group"
-                            title="Tafseel dekhne ke liye click karein"
-                        >
-                            <div className="flex items-center justify-between">
-                                <span className="text-xs font-bold text-[#374151] uppercase tracking-wider">
-                                    {isUrdu ? 'ہم کو لینا ہے (دیا ہوا قرضہ)' : 'Hum Ko Lena Hai (Receivable)'}
-                                </span>
-                                <Icon name="Info" className="size-4 text-[#4B5563] group-hover:text-blue-600" />
-                            </div>
+                        <div className="bg-white p-4 md:p-5 rounded-xl border border-gray-200 shadow-2xs">
+                            <span className="text-xs font-bold text-[#374151] uppercase tracking-wider block">
+                                {isUrdu ? 'ہم کو لینا ہے (دیا ہوا قرضہ)' : 'Hum Ko Lena Hai (Receivable)'}
+                            </span>
                             <span className="text-2xl font-black text-[#1F2937] block mt-2">
                                 {formatRs(summary.total_receivable || 0)}
                             </span>

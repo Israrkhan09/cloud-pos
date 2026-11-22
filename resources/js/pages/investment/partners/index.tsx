@@ -151,7 +151,7 @@ export default function InvestmentPartnersPage({
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={isUrdu ? 'پارٹنرز - انویسٹمنٹ' : 'Partners - Investment'} />
 
-            <div className="-mt-4 -mx-4 -mb-8 pb-28 bg-[#f4f6f4] min-h-screen font-sans text-[#1F2937]">
+            <div className="-mt-4 -mx-4 -mb-4 pb-12 bg-[#f4f6f4] min-h-full font-sans text-[#1F2937]">
                 {/* Header (Section B.5 short tabs & single alert line) */}
                 <InvestmentHeader
                     currentTab="partners"
@@ -166,37 +166,23 @@ export default function InvestmentPartnersPage({
                     {/* Section B.1: Har Page Par Sirf 3 Numbers (Partners Page) */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                         {/* Number 1: Kul Sarmaya */}
-                        <div
-                            onClick={() => setActiveBreakdown(breakdowns.net_capital)}
-                            className="bg-white p-4 md:p-5 rounded-xl border border-gray-200 shadow-2xs hover:border-[#14532d] transition-all cursor-pointer group"
-                            title="Tafseel dekhne ke liye click karein"
-                        >
-                            <div className="flex items-center justify-between">
-                                <span className="text-xs font-bold text-[#374151] uppercase tracking-wider">
-                                    {isUrdu ? 'کل سرمایہ' : 'Kul Sarmaya'}
-                                </span>
-                                <Icon name="Info" className="size-4 text-[#4B5563] group-hover:text-[#14532d]" />
-                            </div>
+                        <div className="bg-white p-4 md:p-5 rounded-xl border border-gray-200 shadow-2xs">
+                            <span className="text-xs font-bold text-[#374151] uppercase tracking-wider block">
+                                {isUrdu ? 'کل سرمایہ' : 'Kul Sarmaya'}
+                            </span>
                             <span className="text-2xl font-black text-[#1F2937] block mt-2">
                                 {formatRs(summary.net_capital)}
                             </span>
                             <span className="text-xs font-medium text-[#4B5563] block mt-1">
-                                2 shareek dar · Tafseel dekhne ke liye click karein
+                                2 shareek dar (Approved Equity)
                             </span>
                         </div>
 
                         {/* Number 2: Shareekon Ka Hissa */}
-                        <div
-                            onClick={() => setActiveBreakdown(breakdowns.partners_share)}
-                            className="bg-white p-4 md:p-5 rounded-xl border border-gray-200 shadow-2xs hover:border-emerald-600 transition-all cursor-pointer group"
-                            title="Tafseel dekhne ke liye click karein"
-                        >
-                            <div className="flex items-center justify-between">
-                                <span className="text-xs font-bold text-[#374151] uppercase tracking-wider">
-                                    {isUrdu ? 'شریکوں کا حصہ' : 'Shareekon Ka Hissa'}
-                                </span>
-                                <Icon name="Info" className="size-4 text-[#4B5563] group-hover:text-emerald-700" />
-                            </div>
+                        <div className="bg-white p-4 md:p-5 rounded-xl border border-gray-200 shadow-2xs">
+                            <span className="text-xs font-bold text-[#374151] uppercase tracking-wider block">
+                                {isUrdu ? 'شریکوں کا حصہ' : 'Shareekon Ka Hissa'}
+                            </span>
                             <span className="text-2xl font-black text-[#14532d] block mt-2">
                                 {formatRs(summary.partners_profit_share)}
                             </span>
@@ -206,17 +192,10 @@ export default function InvestmentPartnersPage({
                         </div>
 
                         {/* Number 3: Malik Ki Manzoori Baaki */}
-                        <div
-                            onClick={() => setActiveBreakdown(breakdowns.pending_approvals)}
-                            className="bg-white p-4 md:p-5 rounded-xl border border-gray-200 shadow-2xs hover:border-amber-400 transition-all cursor-pointer group"
-                            title="Tafseel dekhne ke liye click karein"
-                        >
-                            <div className="flex items-center justify-between">
-                                <span className="text-xs font-bold text-[#374151] uppercase tracking-wider">
-                                    {isUrdu ? 'مالک کی منظوری باقی' : 'Malik Ki Manzoori Baaki'}
-                                </span>
-                                <Icon name="Info" className="size-4 text-[#4B5563] group-hover:text-amber-700" />
-                            </div>
+                        <div className="bg-white p-4 md:p-5 rounded-xl border border-gray-200 shadow-2xs">
+                            <span className="text-xs font-bold text-[#374151] uppercase tracking-wider block">
+                                {isUrdu ? 'مالک کی منظوری باقی' : 'Malik Ki Manzoori Baaki'}
+                            </span>
                             <div className="mt-2 flex items-center justify-between">
                                 <span className="text-2xl font-black text-amber-800">
                                     {summary.pending_approvals}
@@ -411,7 +390,18 @@ export default function InvestmentPartnersPage({
                                             <td className="py-3.5 px-4 text-center">
                                                 <button
                                                     type="button"
-                                                    onClick={() => setActiveBreakdown(breakdowns.net_capital)}
+                                                    onClick={() => setActiveBreakdown({
+                                                        title: `${partner.name} (Shareek) Khata Tafseel`,
+                                                        total: partner.net_equity,
+                                                        items: [
+                                                            { label: 'Paisa Dala (Capital In)', amount: partner.cap_in || partner.net_equity, note: 'Karobar mein lagaya hua kul sarmaya' },
+                                                            { label: 'Paisa Nikala (Drawings)', amount: partner.drawings, note: 'Ab tak nikali gayi manzoor shuda rakam' },
+                                                            { label: 'Mawjooda Approved Equity', amount: partner.net_equity, note: 'Approved active sarmaya' },
+                                                            { label: `Is Mahine Ka Munafa Share (${partner.profit_percentage}%)`, amount: partner.draw_preview || (partner.profit_percentage * 200), note: 'Monthly profit pool se hissa' },
+                                                            ...(partner.pending_drawings > 0 ? [{ label: 'Pending Drawing (Zir-e-Tawa)', amount: partner.pending_drawings, note: 'Malik ki manzoori baaki hai' }] : []),
+                                                        ],
+                                                        note: `Phone: ${partner.phone || 'N/A'} · Hissa: ${partner.profit_percentage}% · Status: ${partner.status}`,
+                                                    })}
                                                     className="px-2.5 py-1 text-xs font-bold text-[#374151] hover:text-black bg-gray-100 hover:bg-gray-200 rounded transition-colors cursor-pointer"
                                                 >
                                                     Detail

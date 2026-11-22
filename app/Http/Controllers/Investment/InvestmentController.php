@@ -367,35 +367,24 @@ class InvestmentController extends Controller
         }
 
         $funds = $query->orderBy('status', 'asc')->orderBy('id', 'asc')->get()->map(function ($s) {
-            $isGold = str_contains(strtolower($s->fund_name), 'gold');
-            $agreementType = $isGold ? 'market_linked' : 'fixed_term';
-
             $marketValue = (float) ($s->principal_amount + $s->profit_or_loss);
             $diffAmount = (float) $s->profit_or_loss;
             $diffFormatted = ($diffAmount >= 0 ? '+ ' : '- ') . 'Rs. ' . number_format(abs($diffAmount), 0);
 
-            if ($agreementType === 'market_linked') {
-                $muddatLabel = 'Market Linked (Khula)';
-                $statusLabel = 'Market Linked';
-                $profitLabel = 'Abhi tak ka munafa (Market farq)';
-            } else {
-                $muddatLabel = $s->maturity_date ? $s->maturity_date->format('j M Y') . ' (15 din)' : 'Khula';
-                $isMatured = $s->status === 'matured' || ($s->maturity_date && $s->maturity_date->format('Y-m-d') < '2026-11-22');
-                $statusLabel = $isMatured ? 'Muddat poori' : 'Chalu (Active)';
-                $profitLabel = $s->is_realised ? 'Pakka munafa' : 'Abhi tak ka munafa (pakka nahi)';
-            }
+            // Muddat: Sirf date likho
+            $muddatLabel = $s->maturity_date ? $s->maturity_date->format('j M Y') : '—';
+            $statusLabel = 'Chalu (Active)';
 
             return [
                 'id'                 => $s->id,
                 'fund_name'          => $s->fund_name,
                 'fund_name_ur'       => $s->fund_name_ur,
-                'agreement_type'     => $agreementType,
+                'kaha_lagaya'        => $s->kaha_lagaya ?: 'Meezan Bank Ltd (15-Day Term Deposit)',
                 'principal_amount'   => (float) $s->principal_amount,
                 'market_value'       => $marketValue,
                 'profit_or_loss'     => (float) $s->profit_or_loss,
                 'diff_formatted'     => $diffFormatted,
                 'is_realised'        => (bool) $s->is_realised,
-                'profit_label'       => $profitLabel,
                 'muddat_label'       => $muddatLabel,
                 'maturity_date'      => $s->maturity_date ? $s->maturity_date->format('Y-m-d') : null,
                 'status'             => $s->status,
@@ -405,41 +394,38 @@ class InvestmentController extends Controller
             ];
         });
 
-        // 3 Numbers for Surplus Page (Section B.1 & Section C)
-        // 1. Lagaya hua paisa (370,000: Fund A 250,000 + Gold 120,000)
-        // 2. Munafa (12,200: 8,000 + 4,200)
-        // 3. Wapsi Total (Abhi ki market value: 382,200)
-        $totalPrincipal = (float) $funds->sum('principal_amount'); // 370,000
-        $totalProfit = (float) $funds->sum('profit_or_loss'); // 12,200
-        $totalReturn = (float) $funds->sum('total_return'); // 382,200
+        // 3 Numbers for Surplus Page (Sirf 3 Numbers)
+        // 1. Lagaya hua paisa (Fund A 250,000)
+        // 2. Munafa (8,000)
+        // 3. Wapsi Total (258,000)
+        $totalPrincipal = (float) $funds->sum('principal_amount');
+        $totalProfit = (float) $funds->sum('profit_or_loss');
+        $totalReturn = (float) $funds->sum('total_return');
 
         $breakdowns = [
             'lagaya_paisa' => [
                 'title' => 'Lagaya Hua Sarmaya (Investments) Tafseel',
                 'total' => $totalPrincipal,
                 'items' => [
-                    ['label' => 'Fund A (15-day Term Agreement)', 'amount' => 250000, 'note' => 'Fixed term liquidity reserve'],
-                    ['label' => 'Gold Savings (Market Linked)', 'amount' => 120000, 'note' => 'Gold reserve sarmayakari'],
+                    ['label' => 'Fund A (15-day Term Agreement)', 'amount' => $totalPrincipal, 'note' => 'Fixed term liquidity reserve'],
                 ],
-                'note' => 'Kul lagaya hua sarmaya: Rs. 370,000.',
+                'note' => "Kul lagaya hua sarmaya: Rs. " . number_format($totalPrincipal, 0),
             ],
             'mila_munafa' => [
-                'title' => 'Munafa (Abhi Tak Ka / Pakka) Tafseel',
+                'title' => 'Munafa Tafseel',
                 'total' => $totalProfit,
                 'items' => [
-                    ['label' => 'Fund A (Unrealised Return)', 'amount' => 8000, 'note' => 'Abhi tak ka munafa (+3.2% ROI)'],
-                    ['label' => 'Gold Savings (Market Qeemat Farq)', 'amount' => 4200, 'note' => 'Qeemat mein izafa (+3.5%)'],
+                    ['label' => 'Fund A (Munafa Return)', 'amount' => $totalProfit, 'note' => 'Munafa (+3.2% ROI)'],
                 ],
-                'note' => 'Kul munafa: Rs. 12,200.',
+                'note' => "Kul munafa: Rs. " . number_format($totalProfit, 0),
             ],
             'wapsi_total' => [
-                'title' => 'Abhi Ki Market Value (Kul Wapsi) Tafseel',
+                'title' => 'Kul Wapsi (Asal + Munafa) Tafseel',
                 'total' => $totalReturn,
                 'items' => [
-                    ['label' => 'Fund A Kul Wapsi', 'amount' => 258000, 'note' => 'Asal 250,000 + Munafa 8,000'],
-                    ['label' => 'Gold Savings Market Qeemat', 'amount' => 124200, 'note' => 'Asal 120,000 + Qeemat farq 4,200'],
+                    ['label' => 'Fund A Wapsi', 'amount' => $totalReturn, 'note' => 'Asal Rs. 250,000 + Munafa Rs. 8,000'],
                 ],
-                'note' => 'Asal Rs. 370,000 + Munafa Rs. 12,200 = Kul Rs. 382,200.',
+                'note' => "Kul wapsi qeemat: Rs. " . number_format($totalReturn, 0),
             ],
         ];
 
@@ -539,7 +525,7 @@ class InvestmentController extends Controller
     {
         $validated = $request->validate([
             'type'           => 'required|in:capital_in,capital_out,loan_in,loan_out,loan_give,loan_recover,surplus_out,surplus_in',
-            'partner_id'     => 'nullable|required_if:type,capital_in,capital_out|exists:investment_partners,id',
+            'partner_id'     => 'nullable|exists:investment_partners,id',
             'loan_id'        => 'nullable|required_if:type,loan_out,loan_recover|exists:investment_loans,id',
             'surplus_id'     => 'nullable|required_if:type,surplus_in|exists:investment_surplus,id',
             'party_name'     => 'nullable|string|max:255',
@@ -548,13 +534,29 @@ class InvestmentController extends Controller
             'bank_name'      => 'nullable|string|max:255',
             'reason'         => 'nullable|string|max:500',
             'is_advance'     => 'nullable|boolean',
+            'profit_percentage' => 'nullable|numeric|min:0|max:100',
         ]);
 
         $role = $this->getCurrentRole();
         $amount = (float) $validated['amount'];
         $type = $validated['type'];
         $isAdvance = (bool) ($validated['is_advance'] ?? false);
-        $partner = !empty($validated['partner_id']) ? InvestmentPartner::find($validated['partner_id']) : null;
+
+        // Auto-create partner if capital_in for a new partner
+        if ($type === 'capital_in' && empty($validated['partner_id']) && !empty($validated['party_name'])) {
+            $partner = InvestmentPartner::firstOrCreate(
+                ['name' => trim($validated['party_name'])],
+                [
+                    'role' => 'partner',
+                    'profit_percentage' => (float) ($request->input('profit_percentage') ?? 10),
+                    'opening_capital' => 0,
+                    'status' => 'active',
+                ]
+            );
+            $validated['partner_id'] = $partner->id;
+        } else {
+            $partner = !empty($validated['partner_id']) ? InvestmentPartner::find($validated['partner_id']) : null;
+        }
         $partyName = $partner ? $partner->name : ($validated['party_name'] ?? 'Counterparty');
 
         // SERVER-SIDE GUARDRAIL CHECK FOR CAPITAL WITHDRAWALS

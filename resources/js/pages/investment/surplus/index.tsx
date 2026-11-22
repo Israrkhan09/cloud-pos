@@ -21,6 +21,7 @@ interface SurplusFundRow {
     id: number;
     fund_name: string;
     fund_name_ur?: string;
+    kaha_lagaya?: string;
     agreement_type?: 'market_linked' | 'fixed_term';
     principal_amount: number;
     market_value?: number;
@@ -28,10 +29,8 @@ interface SurplusFundRow {
     diff_formatted?: string;
     roi_rate?: string;
     is_realised: boolean;
-    profit_label?: string;
     maturity_date?: string;
     muddat_label?: string;
-    maturity_label?: string;
     status: string;
     status_label: string;
     total_return: number;
@@ -134,15 +133,15 @@ export default function InvestmentSurplusPage({
 
     // Export CSV
     const handleExportCSV = () => {
-        const headers = ['Fund Name', 'Lagaya Hua Sarmaya', 'Munafa', 'Qisam', 'Muddat', 'Status', 'Kul Wapsi'];
+        const headers = ['Fund Name', 'Kaha Lagaya Hai', 'Lagaya Hua Sarmaya', 'Abhi Ki Qeemat', 'Munafa', 'Wapsi Tareekh', 'Status'];
         const rows = funds.map(f => [
             `"${f.fund_name}"`,
+            `"${f.kaha_lagaya || 'Meezan Bank Ltd'}"`,
             f.principal_amount,
+            f.total_return,
             f.profit_or_loss,
-            f.is_realised ? 'Mila hua' : 'Abhi tak ka munafa (pakka nahi)',
-            `"${f.maturity_label}"`,
-            `"${f.status_label}"`,
-            f.total_return
+            `"${f.muddat_label || '—'}"`,
+            `"${f.status_label}"`
         ]);
 
         const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
@@ -159,7 +158,7 @@ export default function InvestmentSurplusPage({
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={isUrdu ? 'سرمایہ کاری - انویسٹمنٹ' : 'Sarmayakari (Investments) - Investment'} />
 
-            <div className="-mt-4 -mx-4 -mb-8 pb-28 bg-[#f4f6f4] min-h-screen font-sans text-[#1F2937]">
+            <div className="-mt-4 -mx-4 -mb-4 pb-12 bg-[#f4f6f4] min-h-full font-sans text-[#1F2937]">
                 {/* Header (Section B.5 short tabs & single alert line) */}
                 <InvestmentHeader
                     currentTab="surplus"
@@ -171,65 +170,44 @@ export default function InvestmentSurplusPage({
                 />
 
                 <div className="p-4 md:p-6 space-y-5 max-w-7xl mx-auto">
-                    {/* Section B.1: Har Page Par Sirf 3 Numbers (Sarmayakari Page) */}
+                    {/* Section B.1: Har Page Par Sirf 3 Numbers (Sarmayakari Page - No Click Details Pop up) */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                         {/* Number 1: Kul Sarmayakari */}
-                        <div
-                            onClick={() => setActiveBreakdown(breakdowns.lagaya_paisa)}
-                            className="bg-white p-4 md:p-5 rounded-xl border border-gray-200 shadow-2xs hover:border-gray-400 transition-all cursor-pointer group"
-                            title="Tafseel dekhne ke liye click karein"
-                        >
-                            <div className="flex items-center justify-between">
-                                <span className="text-xs font-bold text-[#374151] uppercase tracking-wider">
-                                    {isUrdu ? 'کل سرمایہ کاری' : 'Kul Sarmayakari'}
-                                </span>
-                                <Icon name="Info" className="size-4 text-[#4B5563] group-hover:text-gray-700" />
-                            </div>
+                        <div className="bg-white p-4 md:p-5 rounded-xl border border-gray-200 shadow-2xs">
+                            <span className="text-xs font-bold text-[#374151] uppercase tracking-wider block">
+                                {isUrdu ? 'کل سرمایہ کاری' : 'Kul Sarmayakari'}
+                            </span>
                             <span className="text-2xl font-black text-[#1F2937] block mt-2">
                                 {formatRs(summary.lagaya_paisa)}
                             </span>
                             <span className="text-xs font-medium text-[#4B5563] block mt-1">
-                                2 chalu investments · Tafseel dekhne ke liye click karein
+                                {funds.length} chalu sarmayakari fund
                             </span>
                         </div>
 
                         {/* Number 2: Mila hua munafa */}
-                        <div
-                            onClick={() => setActiveBreakdown(breakdowns.mila_munafa)}
-                            className="bg-white p-4 md:p-5 rounded-xl border border-gray-200 shadow-2xs hover:border-emerald-500 transition-all cursor-pointer group"
-                            title="Tafseel dekhne ke liye click karein"
-                        >
-                            <div className="flex items-center justify-between">
-                                <span className="text-xs font-bold text-[#374151] uppercase tracking-wider">
-                                    {isUrdu ? 'ملا ہوا منافع' : 'Mila Hua Munafa'}
-                                </span>
-                                <Icon name="Info" className="size-4 text-[#4B5563] group-hover:text-emerald-700" />
-                            </div>
+                        <div className="bg-white p-4 md:p-5 rounded-xl border border-gray-200 shadow-2xs">
+                            <span className="text-xs font-bold text-[#374151] uppercase tracking-wider block">
+                                {isUrdu ? 'منافع' : 'Munafa'}
+                            </span>
                             <span className="text-2xl font-black text-emerald-700 block mt-2">
                                 + {formatRs(summary.mila_munafa)}
                             </span>
                             <span className="text-xs font-medium text-[#4B5563] block mt-1">
-                                Gold farq +Rs. 4,200 · Fund A +Rs. 8,000
+                                Sarmayakari se haasil shuda munafa
                             </span>
                         </div>
 
                         {/* Number 3: Kul Market Value (Wapsi) */}
-                        <div
-                            onClick={() => setActiveBreakdown(breakdowns.wapsi_total)}
-                            className="bg-white p-4 md:p-5 rounded-xl border border-gray-200 shadow-2xs hover:border-[#14532d] transition-all cursor-pointer group"
-                            title="Tafseel dekhne ke liye click karein"
-                        >
-                            <div className="flex items-center justify-between">
-                                <span className="text-xs font-bold text-[#374151] uppercase tracking-wider">
-                                    {isUrdu ? 'کل مارکیٹ ویلیو (واپسی)' : 'Kul Market Value (Wapsi)'}
-                                </span>
-                                <Icon name="Info" className="size-4 text-[#4B5563] group-hover:text-[#14532d]" />
-                            </div>
+                        <div className="bg-white p-4 md:p-5 rounded-xl border border-gray-200 shadow-2xs">
+                            <span className="text-xs font-bold text-[#374151] uppercase tracking-wider block">
+                                {isUrdu ? 'کل واپسی' : 'Kul Wapsi (Asal + Munafa)'}
+                            </span>
                             <span className="text-2xl font-black text-[#14532d] block mt-2">
                                 {formatRs(summary.wapsi_total)}
                             </span>
                             <span className="text-xs font-medium text-[#4B5563] block mt-1">
-                                Asal Rs. 370,000 + Munafa Rs. 12,200
+                                Asal Rs. {formatNum(summary.lagaya_paisa)} + Munafa Rs. {formatNum(summary.mila_munafa)}
                             </span>
                         </div>
                     </div>
@@ -263,35 +241,29 @@ export default function InvestmentSurplusPage({
                                 <thead>
                                     <tr className="bg-gray-50/80 border-b border-gray-200 text-[#374151] uppercase tracking-wider text-xs font-bold">
                                         <th className="py-3 px-4 text-start">Fund Ka Naam</th>
+                                        <th className="py-3 px-4 text-start">Kaha Lagaya Hai</th>
                                         <th className="py-3 px-4 text-end">Lagaya</th>
                                         <th className="py-3 px-4 text-end">Abhi Ki Qeemat</th>
-                                        <th className="py-3 px-4 text-center">Munafa (Pakka / Abhi Tak Ka)</th>
-                                        <th className="py-3 px-4 text-center">Muddat</th>
+                                        <th className="py-3 px-4 text-center">Munafa</th>
+                                        <th className="py-3 px-4 text-center">Wapsi Tareekh</th>
                                         <th className="py-3 px-4 text-center">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100 text-[#1F2937]">
                                     {funds.map((fund) => {
-                                        const isSelected = selectedFundId === fund.id;
-                                        const isMarketLinked = fund.agreement_type === 'market_linked';
-
                                         return (
                                             <tr
                                                 key={fund.id}
-                                                onClick={() => setSelectedFundId(fund.id)}
-                                                className={cn(
-                                                    "transition-colors cursor-pointer",
-                                                    isSelected ? "bg-emerald-50/50" : "hover:bg-gray-50/70"
-                                                )}
+                                                className="hover:bg-gray-50/70 transition-colors"
                                             >
-                                                {/* Fund Name */}
+                                                {/* Fund Name (Clean without Fixed-Term / Market badges) */}
                                                 <td className="py-3.5 px-4 font-bold">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-sm font-bold text-[#1F2937]">{fund.fund_name}</span>
-                                                        <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-gray-100 text-[#374151] border border-gray-200">
-                                                            {isMarketLinked ? 'Market-Linked' : 'Fixed-Term'}
-                                                        </span>
-                                                    </div>
+                                                    <span className="text-sm font-bold text-[#1F2937]">{fund.fund_name}</span>
+                                                </td>
+
+                                                {/* Kaha Lagaya Hai */}
+                                                <td className="py-3.5 px-4 font-medium text-xs text-[#374151]">
+                                                    {fund.kaha_lagaya || 'Meezan Bank Ltd (15-Day Term Deposit)'}
                                                 </td>
 
                                                 {/* Lagaya (Principal) */}
@@ -299,50 +271,24 @@ export default function InvestmentSurplusPage({
                                                     {formatRs(fund.principal_amount)}
                                                 </td>
 
-                                                {/* Abhi Ki Qeemat (Section A: Gold Market qeemat & Asal se farq) */}
-                                                <td className="py-3.5 px-4 text-end">
-                                                    <span className="font-black text-sm text-[#1F2937] block">
-                                                        {formatRs(fund.market_value || fund.total_return)}
-                                                    </span>
-                                                    {isMarketLinked ? (
-                                                        <span className="text-[11px] text-emerald-800 font-semibold block leading-tight">
-                                                            Market qeemat: {formatRs(fund.market_value || fund.total_return)} (aaj ki)<br />
-                                                            Asal se farq: {fund.diff_formatted}
-                                                        </span>
-                                                    ) : (
-                                                        <span className="text-[11px] text-[#4B5563] block">
-                                                            Asal se farq: {fund.diff_formatted}
-                                                        </span>
-                                                    )}
+                                                {/* Abhi Ki Qeemat */}
+                                                <td className="py-3.5 px-4 text-end font-black text-sm text-[#1F2937]">
+                                                    {formatRs(fund.market_value || fund.total_return)}
                                                 </td>
 
-                                                {/* Munafa (pakka ya abhi tak ka) */}
+                                                {/* Munafa (Sirf Munafa, clean) */}
                                                 <td className="py-3.5 px-4 text-center">
                                                     <span className="text-emerald-700 font-bold text-sm block">
                                                         {fund.diff_formatted || `+ ${formatRs(fund.profit_or_loss)}`}
                                                     </span>
-                                                    <span className="text-xs text-[#4B5563] block">
-                                                        {fund.profit_label || (fund.is_realised ? 'Pakka munafa' : 'Abhi tak ka munafa (pakka nahi)')}
-                                                    </span>
                                                 </td>
 
-                                                {/* Muddat */}
-                                                <td className="py-3.5 px-4 text-center">
-                                                    <span className="font-semibold text-xs text-[#374151] block">
-                                                        {fund.muddat_label || fund.maturity_label}
-                                                    </span>
-                                                    {!isMarketLinked && fund.status_label === 'Muddat poori' ? (
-                                                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-300 mt-1">
-                                                            Muddat poori
-                                                        </span>
-                                                    ) : (
-                                                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-[#14532d] border border-emerald-200 mt-1">
-                                                            {isMarketLinked ? 'Market Linked (Khula)' : 'Chalu (Active)'}
-                                                        </span>
-                                                    )}
+                                                {/* Wapsi Tareekh (Sirf date likho) */}
+                                                <td className="py-3.5 px-4 text-center font-semibold text-xs text-[#374151]">
+                                                    {fund.muddat_label || '—'}
                                                 </td>
 
-                                                {/* Action (Section B.2 & C: Ek button "Wapas lein") */}
+                                                {/* Action: Wapas lein */}
                                                 <td className="py-3.5 px-4 text-center" onClick={(e) => e.stopPropagation()}>
                                                     <button
                                                         type="button"
@@ -361,72 +307,83 @@ export default function InvestmentSurplusPage({
                     </div>
                 </div>
 
-                {/* Return Surplus Dialog */}
+                {/* Return Surplus Dialog (Section 10: Spacious, Open, Clear & Understanding-friendly) */}
                 {returnModalFund && (
                     <Dialog open={!!returnModalFund} onOpenChange={(open) => !open && setReturnModalFund(null)}>
-                        <DialogContent className="max-w-md w-full p-6 bg-white font-sans text-[#1F2937]">
-                            <DialogHeader>
-                                <DialogTitle className="text-base font-bold text-[#1F2937]">
-                                    {isUrdu ? 'سرمایہ کاری واپس حاصل کریں' : 'Sarmayakari Wapas Hasil Karein'}
+                        <DialogContent className="max-w-lg w-full p-6 sm:p-7 bg-white font-sans text-[#1F2937] rounded-2xl shadow-2xl border border-gray-200">
+                            <DialogHeader className="space-y-1.5 pb-3 border-b border-gray-100">
+                                <DialogTitle className="text-lg font-bold text-[#1F2937] flex items-center gap-2">
+                                    <span className="p-1.5 rounded-lg bg-emerald-100 text-[#14532d]">
+                                        <Icon name="ArrowDownLeft" className="size-5" />
+                                    </span>
+                                    <span>{isUrdu ? 'سرمایہ کاری واپس حاصل کریں' : 'Sarmayakari Wapas Hasil Karein'}</span>
                                 </DialogTitle>
                                 <DialogDescription className="text-xs text-[#4B5563]">
-                                    Fund: {returnModalFund.fund_name} — Kul Wapsi (Asal + Munafa): Rs. {formatNum(returnModalFund.total_return)}
+                                    Fund: <span className="font-bold text-[#1F2937]">{returnModalFund.fund_name}</span> · {returnModalFund.kaha_lagaya || 'Meezan Bank Ltd'}
                                 </DialogDescription>
                             </DialogHeader>
 
-                            <form onSubmit={handleConfirmReturn} className="space-y-4 pt-2">
-                                <div className="p-3.5 rounded-lg bg-gray-50 border border-gray-200 text-xs space-y-1.5 text-[#374151]">
-                                    <div className="flex justify-between">
-                                        <span>Asal Rakam:</span>
+                            <form onSubmit={handleConfirmReturn} className="space-y-5 pt-3">
+                                {/* Clear breakdown card */}
+                                <div className="p-4 rounded-xl bg-gray-50 border border-gray-200 space-y-2.5">
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span className="text-[#4B5563]">Asal Lagayi Gayi Rakam:</span>
                                         <span className="font-bold text-[#1F2937]">Rs. {formatNum(returnModalFund.principal_amount)}</span>
                                     </div>
-                                    <div className="flex justify-between">
-                                        <span>Munafa ({returnModalFund.is_realised ? 'Mila hua' : 'Abhi tak ka'}):</span>
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span className="text-[#4B5563]">Haasil Shuda Munafa:</span>
                                         <span className="font-bold text-emerald-700">+ Rs. {formatNum(returnModalFund.profit_or_loss)}</span>
                                     </div>
-                                    <div className="flex justify-between pt-1.5 border-t border-gray-200 font-black text-sm text-[#14532d]">
-                                        <span>Kul Wapsi:</span>
-                                        <span>Rs. {formatNum(returnModalFund.total_return)}</span>
+                                    <div className="pt-2.5 border-t border-gray-200 flex justify-between items-center bg-emerald-50/60 -mx-4 -mb-4 p-4 rounded-b-xl">
+                                        <span className="text-sm font-bold text-[#14532d]">Kul Wapsi Rakam:</span>
+                                        <span className="text-xl font-black text-[#14532d]">Rs. {formatNum(returnModalFund.total_return)}</span>
                                     </div>
                                 </div>
 
-                                <div>
-                                    <label className="text-xs font-bold text-[#374151] block mb-1">
-                                        Wapsi Kahan Jama Karein?
+                                {/* Destination */}
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-[#1F2937] block">
+                                        Wapsi Kahan Jama Karein? (Payment Zariya)
                                     </label>
-                                    <div className="grid grid-cols-2 gap-2 p-1 bg-gray-100 rounded-lg border border-gray-200">
+                                    <div className="grid grid-cols-2 gap-3">
                                         <button
                                             type="button"
                                             onClick={() => setReturnMethod('cash')}
                                             className={cn(
-                                                "min-h-[36px] text-xs font-bold rounded-md transition-all cursor-pointer",
-                                                returnMethod === 'cash' ? "bg-[#14532d] text-white shadow-xs" : "text-[#374151]"
+                                                "min-h-[44px] px-4 py-2.5 text-xs font-bold rounded-xl border transition-all cursor-pointer flex items-center justify-center gap-2",
+                                                returnMethod === 'cash'
+                                                    ? "bg-[#14532d] text-white border-[#14532d] shadow-xs"
+                                                    : "bg-white text-[#374151] border-gray-200 hover:bg-gray-50"
                                             )}
                                         >
-                                            Cash Khata
+                                            <Icon name="Money" className="size-4" />
+                                            <span>Cash (Galla Khata)</span>
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => setReturnMethod('bank')}
                                             className={cn(
-                                                "min-h-[36px] text-xs font-bold rounded-md transition-all cursor-pointer",
-                                                returnMethod === 'bank' ? "bg-[#14532d] text-white shadow-xs" : "text-[#374151]"
+                                                "min-h-[44px] px-4 py-2.5 text-xs font-bold rounded-xl border transition-all cursor-pointer flex items-center justify-center gap-2",
+                                                returnMethod === 'bank'
+                                                    ? "bg-[#14532d] text-white border-[#14532d] shadow-xs"
+                                                    : "bg-white text-[#374151] border-gray-200 hover:bg-gray-50"
                                             )}
                                         >
-                                            Bank Khata
+                                            <Icon name="Bank" className="size-4" />
+                                            <span>Bank Account</span>
                                         </button>
                                     </div>
                                 </div>
 
                                 {returnMethod === 'bank' && (
-                                    <div>
-                                        <label className="text-xs font-bold text-[#374151] block mb-1">
-                                            Bank Account Muntakhib Karein
+                                    <div className="space-y-1.5 animate-in fade-in">
+                                        <label className="text-xs font-bold text-[#374151] block">
+                                            Bank Account Muntakhib Karein:
                                         </label>
                                         <select
                                             value={returnBankName}
                                             onChange={(e) => setReturnBankName(e.target.value)}
-                                            className="w-full h-11 px-3.5 text-xs bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#14532d] focus:outline-none"
+                                            className="w-full h-11 px-3.5 text-xs font-medium text-[#1F2937] bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14532d] focus:outline-none"
                                         >
                                             {bankAccounts.map((acc, i) => (
                                                 <option key={i} value={acc}>{acc}</option>
@@ -439,15 +396,16 @@ export default function InvestmentSurplusPage({
                                     <button
                                         type="button"
                                         onClick={() => setReturnModalFund(null)}
-                                        className="flex-1 min-h-[40px] px-4 py-2 text-xs font-semibold text-[#374151] bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors cursor-pointer"
+                                        className="flex-1 min-h-[44px] px-4 py-2.5 text-xs font-semibold text-[#374151] bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors cursor-pointer"
                                     >
-                                        Cancel
+                                        Wapas (Cancel)
                                     </button>
                                     <button
                                         type="submit"
-                                        className="flex-1 min-h-[40px] px-4 py-2 text-xs font-bold text-white bg-[#14532d] hover:bg-[#166534] rounded-lg shadow-xs transition-colors cursor-pointer"
+                                        className="flex-1 min-h-[44px] px-4 py-2.5 text-xs font-bold text-white bg-[#14532d] hover:bg-[#166534] rounded-xl shadow-xs transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                                     >
-                                        Wapsi Record Karein
+                                        <Icon name="Check" className="size-4 stroke-[3]" />
+                                        <span>Wapsi Wasool Karein</span>
                                     </button>
                                 </div>
                             </form>

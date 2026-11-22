@@ -210,7 +210,7 @@ export default function InvestmentAuditPage({
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={isUrdu ? 'ریکارڈ - انویسٹمنٹ' : 'Record (Audit) - Investment'} />
 
-            <div className="-mt-4 -mx-4 -mb-8 pb-28 bg-[#f4f6f4] min-h-screen font-sans text-[#1F2937]">
+            <div className="-mt-4 -mx-4 -mb-4 pb-12 bg-[#f4f6f4] min-h-full font-sans text-[#1F2937]">
                 {/* Header (Section B.5 short tabs & single alert line) */}
                 <InvestmentHeader
                     currentTab="audit"
@@ -302,22 +302,23 @@ export default function InvestmentAuditPage({
                         </div>
 
                         <div className="overflow-x-auto scrollbar-thin">
-                            <table className="w-full text-start text-sm border-collapse">
+                            <table className="w-full text-start text-xs border-collapse">
                                 <thead>
-                                    <tr className="bg-gray-50/80 border-b border-gray-200 text-[#374151] uppercase tracking-wider text-xs font-bold">
-                                        <th className="py-2 px-2.5 text-start whitespace-nowrap">Parchi Ka Naam</th>
-                                        <th className="py-2 px-2.5 text-start whitespace-nowrap">Tareekh</th>
-                                        <th className="py-2 px-2.5 text-start whitespace-nowrap">Kis Ke Saath</th>
-                                        <th className="py-2 px-2.5 text-end whitespace-nowrap">Rakam</th>
-                                        <th className="py-2 px-2.5 text-start whitespace-nowrap">Kisne Approve Kiya</th>
-                                        <th className="py-2 px-2.5 text-center whitespace-nowrap">Status</th>
-                                        <th className="py-2 px-2.5 text-center whitespace-nowrap">Actions</th>
+                                    <tr className="bg-gray-50/80 border-b border-gray-200 text-[#374151] uppercase tracking-wider text-[11px] font-bold">
+                                        <th className="py-2.5 px-2.5 text-start whitespace-nowrap">Parchi No.</th>
+                                        <th className="py-2.5 px-2 text-start whitespace-nowrap">Tareekh / Waqt</th>
+                                        <th className="py-2.5 px-2 text-start whitespace-nowrap">Party / Khata</th>
+                                        <th className="py-2.5 px-2 text-center whitespace-nowrap">Qisam</th>
+                                        <th className="py-2.5 px-2 text-end whitespace-nowrap">Rakam</th>
+                                        <th className="py-2.5 px-2 text-center whitespace-nowrap">Payment Zariya</th>
+                                        <th className="py-2.5 px-2 text-center whitespace-nowrap">Status</th>
+                                        <th className="py-2.5 px-2 text-center whitespace-nowrap">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100 text-[#1F2937]">
                                     {filteredTx.length === 0 ? (
                                         <tr>
-                                            <td colSpan={7} className="py-8 text-center text-[#4B5563] text-sm">
+                                            <td colSpan={8} className="py-8 text-center text-[#4B5563] text-sm">
                                                 Koi transaction record nahi mila.
                                             </td>
                                         </tr>
@@ -326,6 +327,7 @@ export default function InvestmentAuditPage({
                                             const isSelected = selectedTxId === tx.id;
                                             const isReversed = tx.is_reversed;
                                             const isIncome = tx.formatted_amount.startsWith('+');
+                                            const displayBank = tx.bank_name ? tx.bank_name.split('(')[0].trim() : 'Bank';
 
                                             return (
                                                 <tr
@@ -337,17 +339,17 @@ export default function InvestmentAuditPage({
                                                         isReversed && "opacity-60 bg-gray-50/40"
                                                     )}
                                                 >
-                                                    {/* Parchi Ka Naam */}
+                                                    {/* Parchi No. */}
                                                     <td className={cn(
-                                                        "py-2 px-2.5 font-bold whitespace-nowrap text-xs",
+                                                        "py-2.5 px-2.5 font-bold whitespace-nowrap text-xs",
                                                         isReversed && "line-through text-[#6B7280]"
                                                     )}>
                                                         {tx.ref_no}
                                                     </td>
 
-                                                    {/* Tareekh & Time */}
+                                                    {/* Tareekh / Waqt */}
                                                     <td className={cn(
-                                                        "py-2 px-2.5 text-[#374151] font-medium whitespace-nowrap text-xs",
+                                                        "py-2.5 px-2 text-[#374151] font-medium whitespace-nowrap text-xs",
                                                         isReversed && "line-through text-[#6B7280]"
                                                     )}>
                                                         <div>{tx.date}</div>
@@ -358,19 +360,30 @@ export default function InvestmentAuditPage({
                                                         )}
                                                     </td>
 
-                                                    {/* Kis Ke Saath */}
+                                                    {/* Party / Khata */}
                                                     <td className={cn(
-                                                        "py-2 px-2.5 font-bold whitespace-nowrap text-xs",
+                                                        "py-2.5 px-2 font-bold text-xs",
                                                         isReversed && "line-through text-[#6B7280]"
                                                     )}>
-                                                        <span>{tx.party}</span>
-                                                        <span className="text-[10px] text-[#4B5563] block font-normal">
+                                                        <span className="text-xs font-bold text-[#1F2937] block max-w-[140px] truncate" title={tx.party}>
+                                                            {tx.party}
+                                                        </span>
+                                                    </td>
+
+                                                    {/* Qisam */}
+                                                    <td className="py-2.5 px-2 text-center whitespace-nowrap">
+                                                        <span className={cn(
+                                                            "inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold border",
+                                                            isIncome
+                                                                ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                                                                : "bg-amber-50 text-amber-900 border-amber-200"
+                                                        )}>
                                                             {tx.type_label}
                                                         </span>
                                                     </td>
 
                                                     {/* Rakam */}
-                                                    <td className="py-2 px-2.5 text-end whitespace-nowrap">
+                                                    <td className="py-2.5 px-2 text-end whitespace-nowrap">
                                                         <span className={cn(
                                                             "font-black text-xs",
                                                             isReversed
@@ -386,13 +399,18 @@ export default function InvestmentAuditPage({
                                                         )}
                                                     </td>
 
-                                                    {/* Kisne Approve Kiya */}
-                                                    <td className="py-2 px-2.5 text-[#374151] font-medium text-xs whitespace-nowrap">
-                                                        {tx.approved_by}
+                                                    {/* Payment Zariya */}
+                                                    <td className="py-2.5 px-2 text-center whitespace-nowrap">
+                                                        <span
+                                                            title={tx.payment_method === 'bank' ? (tx.bank_name || 'Bank') : 'Cash (Galla)'}
+                                                            className="text-[11px] text-[#374151] font-medium px-2 py-0.5 rounded bg-gray-100 border border-gray-200 inline-block max-w-[130px] truncate align-middle"
+                                                        >
+                                                            {tx.payment_method === 'bank' ? displayBank : 'Cash'}
+                                                        </span>
                                                     </td>
 
                                                     {/* Status */}
-                                                    <td className="py-2 px-2.5 text-center whitespace-nowrap">
+                                                    <td className="py-2.5 px-2 text-center whitespace-nowrap">
                                                         {tx.is_reversed ? (
                                                             <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-rose-100 text-rose-900 border border-rose-300">
                                                                 Mansookh
@@ -409,7 +427,7 @@ export default function InvestmentAuditPage({
                                                     </td>
 
                                                     {/* Actions: Sirf Print aur Mansookh (+ Approve if pending owner) */}
-                                                    <td className="py-2 px-2.5 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                                                    <td className="py-2.5 px-2 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                                                         <div className="flex items-center justify-center gap-1">
                                                             {/* Approve button (Only for pending) */}
                                                             {tx.approval_status === 'pending_owner' && isOwner && (
@@ -428,7 +446,7 @@ export default function InvestmentAuditPage({
                                                                 type="button"
                                                                 onClick={() => handleOpenVoucher(tx)}
                                                                 title="Parchi Print"
-                                                                className="p-1.5 text-[#374151] hover:text-black hover:bg-gray-100 rounded transition-colors cursor-pointer"
+                                                                className="p-1 text-[#374151] hover:text-black hover:bg-gray-100 rounded transition-colors cursor-pointer"
                                                             >
                                                                 <Icon name="Printer" className="size-4" />
                                                             </button>
@@ -439,7 +457,7 @@ export default function InvestmentAuditPage({
                                                                     type="button"
                                                                     onClick={() => handleOpenVoid(tx)}
                                                                     title="Mansookh (Cancel)"
-                                                                    className="p-1.5 text-rose-700 hover:text-rose-900 hover:bg-rose-50 rounded transition-colors cursor-pointer"
+                                                                    className="p-1 text-rose-700 hover:text-rose-900 hover:bg-rose-50 rounded transition-colors cursor-pointer"
                                                                 >
                                                                     <Icon name="Prohibit" className="size-4" />
                                                                 </button>

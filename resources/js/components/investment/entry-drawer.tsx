@@ -16,6 +16,7 @@ interface PartnerOption {
     name: string;
     name_ur?: string;
     role: string;
+    profit_percentage?: number;
     net_equity: number;
 }
 
@@ -63,14 +64,14 @@ export default function EntryDrawer({
     bankAccounts,
     isUrdu = false,
 }: EntryDrawerProps) {
-    // Step 1: Type
+    // Transaction Type
     const [selectedType, setSelectedType] = useState<EntryType>(() => {
         if (category === 'loans') return 'loan_in';
         if (category === 'surplus') return 'surplus_out';
         return 'capital_in';
     });
 
-    // Reset default type when category or isOpen changes
+    // Reset default type when category or drawer opens
     useEffect(() => {
         if (category === 'loans') {
             setSelectedType('loan_in');
@@ -81,23 +82,33 @@ export default function EntryDrawer({
         }
     }, [category, isOpen]);
 
-    // Step 2: Party
+    // Partner Selection & New Partner Toggle (Point 4)
+    const [isNewPartner, setIsNewPartner] = useState(false);
     const [selectedPartnerId, setSelectedPartnerId] = useState<number | ''>('');
-    const [selectedLoanId, setSelectedLoanId] = useState<number | ''>('');
-    const [selectedSurplusId, setSelectedSurplusId] = useState<number | ''>('');
-    const [partyNameInput, setPartyNameInput] = useState<string>('');
+    const [newPartnerName, setNewPartnerName] = useState<string>('');
+    const [newPartnerProfitPct, setNewPartnerProfitPct] = useState<string>('10');
 
-    // Step 3: Amount & Payment Method
+    // Loan Selection & Input (Point 7)
+    const [selectedLoanId, setSelectedLoanId] = useState<number | ''>('');
+    const [loanPartyName, setLoanPartyName] = useState<string>('');
+
+    // Surplus Selection & Input
+    const [selectedSurplusId, setSelectedSurplusId] = useState<number | ''>('');
+    const [surplusPartyName, setSurplusPartyName] = useState<string>('');
+
+    // Amount & Payment Method
     const [amount, setAmount] = useState<string>('');
     const [paymentMethod, setPaymentMethod] = useState<'cash' | 'bank'>('cash');
     const [bankName, setBankName] = useState<string>(bankAccounts[0] || 'Meezan Bank Ltd');
 
-    // Step 4: Note
-    const [reason, setReason] = useState<string>('');
-
     // Guardrail state
     const [isAdvanceConfirmed, setIsAdvanceConfirmed] = useState<boolean>(false);
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
+    // Filter receivable loans (people who owe us money - Point 7)
+    const receivableLoans = useMemo(() => {
+        return loans.filter(l => l.direction === 'receivable');
+    }, [loans]);
 
     // Auto-select first partner if not chosen
     useEffect(() => {
@@ -106,12 +117,14 @@ export default function EntryDrawer({
         }
     }, [partners, selectedPartnerId]);
 
-    // Auto-select first loan if not chosen
+    // Auto-select first receivable loan when in loan_out mode
     useEffect(() => {
-        if (loans.length > 0 && selectedLoanId === '') {
-            setSelectedLoanId(loans[0].id);
+        if (selectedType === 'loan_out') {
+            if (receivableLoans.length > 0 && (selectedLoanId === '' || !receivableLoans.some(r => r.id === selectedLoanId))) {
+                setSelectedLoanId(receivableLoans[0].id);
+            }
         }
-    }, [loans, selectedLoanId]);
+    }, [selectedType, receivableLoans, selectedLoanId]);
 
     // Auto-select first surplus fund if not chosen
     useEffect(() => {
@@ -124,6 +137,13 @@ export default function EntryDrawer({
     useEffect(() => {
         setIsAdvanceConfirmed(false);
     }, [selectedType, selectedPartnerId, amount]);
+
+    // When switching to capital_out, force existing partner
+    useEffect(() => {
+        if (selectedType === 'capital_out') {
+            setIsNewPartner(false);
+        }
+    }, [selectedType]);
 
     // Parse amount to number
     const numericAmount = useMemo(() => {
@@ -139,11 +159,11 @@ export default function EntryDrawer({
 
     // Guardrail evaluation
     const isExceedingCapital = useMemo(() => {
-        if (selectedType === 'capital_out' && activePartner) {
+        if (selectedType === 'capital_out' && activePartner && !isNewPartner) {
             return numericAmount > activePartner.net_equity;
         }
         return false;
-    }, [selectedType, activePartner, numericAmount]);
+    }, [selectedType, activePartner, isNewPartner, numericAmount]);
 
     const excessAmount = useMemo(() => {
         if (!activePartner || !isExceedingCapital) return 0;
@@ -159,41 +179,36 @@ export default function EntryDrawer({
 
         switch (selectedType) {
             case 'capital_in': {
-                const partnerName = activePartner?.name || 'Partner';
-                const currentEq = activePartner?.net_equity || 0;
+                const partnerName = isNewPartner ? (newPartnerName.trim() || 'Naya Partner') : (activePartner?.name || 'Partner');
+                const currentEq = isNewPartner ? 0 : (activePartner?.net_equity || 0);
                 const newEq = currentEq + numericAmount;
-                return `${methodStr} mein ${formattedAmt} jama honge. ${partnerName} ka capital Rs. ${currentEq.toLocaleString('en-US')} se barh kar Rs. ${newEq.toLocaleString('en-US')} ho jayega.`;
+                return `${methodStr} mein ${formattedAmt} jama honge. ${partnerName} ka sarmaya Rs. ${currentEq.toLocaleString('en-US')} se barh kar Rs. ${newEq.toLocaleString('en-US')} ho jayega.`;
             }
             case 'capital_out': {
                 const partnerName = activePartner?.name || 'Partner';
                 const currentEq = activePartner?.net_equity || 0;
                 if (numericAmount <= currentEq) {
                     const newEq = currentEq - numericAmount;
-                    return `${methodStr} se ${formattedAmt} nikaale jayenge. ${partnerName} ka capital Rs. ${currentEq.toLocaleString('en-US')} se kam ho kar Rs. ${newEq.toLocaleString('en-US')} reh jayega.`;
+                    return `${methodStr} se ${formattedAmt} nikaale jayenge. ${partnerName} ka sarmaya Rs. ${currentEq.toLocaleString('en-US')} se kam ho kar Rs. ${newEq.toLocaleString('en-US')} reh jayega.`;
                 } else {
-                    return `${methodStr} se ${formattedAmt} kam honge. ${partnerName} ka capital Rs. ${currentEq.toLocaleString('en-US')} se 0 ho jayega, aur Rs. ${excessAmount.toLocaleString('en-US')} unke zimme (Advance) baaqi rahenge.`;
+                    return `${methodStr} se ${formattedAmt} kam honge. ${partnerName} ka sarmaya 0 ho jayega aur Rs. ${excessAmount.toLocaleString('en-US')} unke zimme Advance baaqi rahega.`;
                 }
             }
             case 'loan_in': {
-                const party = partyNameInput || 'Lender';
-                return `${methodStr} mein ${formattedAmt} qarza aayega. Mandi account par ${party} ka qarza واجب الادا (Hum ko wapas dena hai) record hoga.`;
+                const party = loanPartyName.trim() || 'Lender';
+                return `${methodStr} mein ${formattedAmt} qarza aayega. ${party} ka qarza hum ko wapas dena hai.`;
             }
             case 'loan_give': {
-                const party = partyNameInput || 'Borrower';
-                return `${methodStr} se ${formattedAmt} qarza diya jayega. ${party} ke zimme واجب الوصول (Hum ko wapas lena hai) record hoga.`;
+                const party = loanPartyName.trim() || 'Borrower';
+                return `${methodStr} se ${formattedAmt} qarza diya jayega. ${party} se wapas lena record hoga.`;
             }
             case 'loan_out': {
                 const chosenLoan = loans.find(l => l.id === Number(selectedLoanId));
-                const party = chosenLoan?.lender_name || partyNameInput || 'Loan Account';
-                const isReceivable = chosenLoan?.direction === 'receivable';
-                if (isReceivable) {
-                    return `${methodStr} mein ${formattedAmt} qarza wapas wasool hoga. ${party} ka baqaya qarza kam ho jayega.`;
-                } else {
-                    return `${methodStr} se ${formattedAmt} qarza wapas ada kiya jayega. ${party} ka baqaya qarza kam ho jayega.`;
-                }
+                const party = chosenLoan?.lender_name || loanPartyName.trim() || 'Khata';
+                return `${methodStr} mein ${party} se ${formattedAmt} qarza wapas wasool hoga.`;
             }
             case 'surplus_out': {
-                const party = partyNameInput || 'Investment Scheme';
+                const party = surplusPartyName.trim() || 'Investment Scheme';
                 return `${methodStr} se ${formattedAmt} sarmayakari ${party} mein invest ki jayegi.`;
             }
             case 'surplus_in': {
@@ -203,7 +218,7 @@ export default function EntryDrawer({
             default:
                 return null;
         }
-    }, [selectedType, numericAmount, paymentMethod, bankName, activePartner, excessAmount, partyNameInput, loans, selectedLoanId, surplusFunds, selectedSurplusId]);
+    }, [selectedType, numericAmount, paymentMethod, bankName, activePartner, excessAmount, isNewPartner, newPartnerName, loanPartyName, surplusPartyName, loans, selectedLoanId, surplusFunds, selectedSurplusId]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -213,13 +228,38 @@ export default function EntryDrawer({
             return;
         }
 
+        // Validate Partner
+        if (category === 'partners') {
+            if (selectedType === 'capital_in' && isNewPartner) {
+                if (!newPartnerName.trim()) {
+                    toast.error('Naye partner ka naam likhna lazmi hai.');
+                    return;
+                }
+            } else if (!selectedPartnerId) {
+                toast.error('Partner muntakhib karein.');
+                return;
+            }
+        }
+
+        // Validate Loan Party
+        if (category === 'loans') {
+            if (selectedType === 'loan_in' && !loanPartyName.trim()) {
+                toast.error('Qarza dene wale ka naam enter karein.');
+                return;
+            }
+            if (selectedType === 'loan_give' && !loanPartyName.trim()) {
+                toast.error('Qarza lene wale ka naam enter karein.');
+                return;
+            }
+            if (selectedType === 'loan_out' && !selectedLoanId && !loanPartyName.trim()) {
+                toast.error('Wapas karne wale ka khata chunein.');
+                return;
+            }
+        }
+
         // Guardrail block check
         if (isExceedingCapital && !isAdvanceConfirmed) {
-            toast.error(
-                isUrdu
-                    ? 'کیپیٹل سے زیادہ رقم نکالنے کے لیے ایڈوانس کنفرم کریں یا رقم کم کریں'
-                    : 'Capital se zyada nikaal rahe hain! Haan, Advance banayein par click karein ya rakam kam karein.'
-            );
+            toast.error('Capital se zyada nikaal rahe hain! Advance manzoor karein ya rakam kam karein.');
             return;
         }
 
@@ -229,28 +269,40 @@ export default function EntryDrawer({
             amount: numericAmount,
             payment_method: paymentMethod,
             bank_name: paymentMethod === 'bank' ? bankName : null,
-            reason: reason.trim() || null,
             is_advance: isAdvanceConfirmed,
         };
 
-        if (selectedType === 'capital_in' || selectedType === 'capital_out') {
-            payload.type = selectedType;
+        if (selectedType === 'capital_in') {
+            payload.type = 'capital_in';
+            if (isNewPartner) {
+                payload.party_name = newPartnerName.trim();
+                payload.profit_percentage = parseFloat(newPartnerProfitPct) || 10;
+            } else {
+                payload.partner_id = selectedPartnerId;
+                payload.party_name = activePartner?.name || 'Partner';
+            }
+        } else if (selectedType === 'capital_out') {
+            payload.type = 'capital_out';
             payload.partner_id = selectedPartnerId;
             payload.party_name = activePartner?.name || 'Partner';
         } else if (selectedType === 'loan_in') {
             payload.type = 'loan_in';
-            payload.party_name = partyNameInput.trim() || 'Mandi Lender';
+            payload.party_name = loanPartyName.trim();
         } else if (selectedType === 'loan_give') {
             payload.type = 'loan_give';
-            payload.party_name = partyNameInput.trim() || 'Borrower';
+            payload.party_name = loanPartyName.trim();
         } else if (selectedType === 'loan_out') {
-            const chosenLoan = loans.find(l => l.id === Number(selectedLoanId));
-            payload.type = chosenLoan?.direction === 'receivable' ? 'loan_recover' : 'loan_out';
-            payload.loan_id = selectedLoanId || (loans[0]?.id ?? null);
-            payload.party_name = chosenLoan?.lender_name || partyNameInput || 'Lender';
+            payload.type = 'loan_recover';
+            if (selectedLoanId) {
+                payload.loan_id = selectedLoanId;
+                const chosenLoan = loans.find(l => l.id === Number(selectedLoanId));
+                payload.party_name = chosenLoan?.lender_name || 'Borrower';
+            } else {
+                payload.party_name = loanPartyName.trim();
+            }
         } else if (selectedType === 'surplus_out') {
             payload.type = 'surplus_out';
-            payload.party_name = partyNameInput.trim() || 'Investment Fund';
+            payload.party_name = surplusPartyName.trim() || 'Investment Fund';
         } else if (selectedType === 'surplus_in') {
             payload.type = 'surplus_in';
             payload.surplus_id = selectedSurplusId || (surplusFunds[0]?.id ?? null);
@@ -263,7 +315,7 @@ export default function EntryDrawer({
                 const flash = page?.props?.flash;
                 const lastEntry = flash?.last_entry;
                 const toastMsg = flash?.success || (lastEntry
-                    ? `Entry ${lastEntry.ref_no} save ho gayi. ${lastEntry.party} ka baaki update ho gaya.`
+                    ? `Entry ${lastEntry.ref_no} save ho gayi. ${lastEntry.party} ka record update ho gaya.`
                     : 'Entry save ho gayi.');
 
                 toast.success(toastMsg, {
@@ -274,7 +326,7 @@ export default function EntryDrawer({
                             router.post(`/investment/undo/${lastEntry.id}`, {}, {
                                 preserveScroll: true,
                                 onSuccess: () => {
-                                    toast.success(`Entry ${lastEntry.ref_no} undo (mansookh) kardi gayi.`);
+                                    toast.success(`Entry ${lastEntry.ref_no} mansookh kardi gayi.`);
                                 },
                             });
                         },
@@ -283,15 +335,17 @@ export default function EntryDrawer({
 
                 setIsSubmitting(false);
                 setAmount('');
-                setReason('');
-                setPartyNameInput('');
+                setLoanPartyName('');
+                setSurplusPartyName('');
+                setNewPartnerName('');
+                setIsNewPartner(false);
                 setIsAdvanceConfirmed(false);
                 onClose();
             },
             onError: (errs) => {
                 setIsSubmitting(false);
                 const firstMsg = Object.values(errs)[0];
-                toast.error(firstMsg || (isUrdu ? 'اینٹری محفوظ نہیں ہو سکی' : 'Entry save nahi ho saki. Check details.'));
+                toast.error(firstMsg || 'Entry save nahi ho saki. Details check karein.');
             },
         });
     };
@@ -300,330 +354,393 @@ export default function EntryDrawer({
         <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <SheetContent
                 side="right"
-                className="w-full sm:max-w-xl overflow-y-auto p-0 bg-white font-sans text-[#1F2937] shadow-2xl"
+                className="w-full sm:max-w-xl overflow-y-auto p-0 bg-white font-sans text-[#1F2937] shadow-2xl [&>button]:text-white [&>button]:hover:text-emerald-100 [&>button]:hover:bg-emerald-800/60 [&>button]:p-1.5 [&>button]:rounded-lg [&>button]:top-4 [&>button]:right-4"
             >
-                {/* Header */}
-                <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 z-10">
+                {/* Greenish Header (Point 12) */}
+                <div className="sticky top-0 bg-[#14532d] text-white border-b border-emerald-800 px-6 py-4.5 z-10 shadow-sm">
                     <SheetHeader>
-                        <SheetTitle className="text-xl font-bold text-[#1F2937] flex items-center gap-2">
-                            <span className="p-1.5 rounded-lg bg-emerald-100 text-[#14532d]">
+                        <SheetTitle className="text-xl font-bold text-white flex items-center gap-2.5">
+                            <span className="p-1.5 rounded-lg bg-emerald-800/80 text-emerald-200">
                                 <Icon name="Plus" className="size-4 stroke-[3]" />
                             </span>
                             <span>
-                                {isUrdu
-                                    ? (category === 'loans' ? 'نئی قرضہ اینٹری' : category === 'surplus' ? 'نئی سرمایہ کاری اینٹری' : 'نئی پارٹنر اینٹری')
-                                    : (category === 'loans' ? 'Nayi Qarza Entry' : category === 'surplus' ? 'Nayi Sarmayakari Entry' : 'Nayi Partner Entry')}
+                                {category === 'loans'
+                                    ? 'Nayi Qarza Entry'
+                                    : category === 'surplus'
+                                        ? 'Nayi Sarmayakari Entry'
+                                        : 'Nayi Partner Entry'}
                             </span>
                         </SheetTitle>
-                        <SheetDescription className="text-xs text-[#4B5563]">
-                            {isUrdu ? 'صرف ضروری معلومات درج کریں، کھاتہ خود بخود اپ ڈیٹ ہو جائے گا۔' : 'Sirf zaroori maloomat darj karein, khata khud ba khud update ho jayega.'}
+                        <SheetDescription className="text-xs text-emerald-100/90 mt-0.5">
+                            Sirf zaroori maloomat darj karein, khata khud ba khud update ho jayega.
                         </SheetDescription>
                     </SheetHeader>
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-6">
-                    {/* Step 1: Kya hua? (Clean Categorized Sections) */}
-                    <div className="space-y-3">
+                    {/* Section 1: Transaction Qisam (Point 4: Clean label without number) */}
+                    <div className="space-y-2.5">
                         <div className="flex items-center justify-between">
                             <label className="text-sm font-bold text-[#1F2937]">
-                                {isUrdu ? '1. کیا ہوا؟ (اینٹری کی قسم)' : '1. Kya hua? (Transaction Qisam)'}
+                                Transaction Qisam
                             </label>
                             <span className="text-xs text-[#4B5563]">Ek option chunein</span>
                         </div>
 
-                        {/* Category A: Partners / Sarmaya - Only shown on Partners page */}
+                        {/* Partners Category: 2 simple options (Point 4) */}
                         {category === 'partners' && (
-                            <div className="space-y-1.5">
-                                <span className="text-[11px] font-bold text-[#374151] tracking-wider uppercase block">
-                                    Partners / Hissedar (Sarmaya)
-                                </span>
-                                <div className="grid grid-cols-2 gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setSelectedType('capital_in')}
-                                        className={cn(
-                                            "p-3 text-start rounded-xl border transition-all cursor-pointer flex flex-col justify-center",
-                                            selectedType === 'capital_in'
-                                                ? "border-[#14532d] bg-emerald-50 ring-1 ring-[#14532d]"
-                                                : "border-gray-200 bg-white hover:bg-gray-50"
-                                        )}
-                                    >
-                                        <span className="text-xs font-bold text-[#1F2937] block">
-                                            Paisa Lagaya (Capital In)
-                                        </span>
-                                        <span className="text-[11px] text-[#4B5563] mt-0.5 leading-tight">
-                                            Partner ne karobar mein cash dala
-                                        </span>
-                                    </button>
+                            <div className="grid grid-cols-2 gap-2.5">
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedType('capital_in')}
+                                    className={cn(
+                                        "p-3.5 text-start rounded-xl border transition-all cursor-pointer flex flex-col justify-center",
+                                        selectedType === 'capital_in'
+                                            ? "border-[#14532d] bg-emerald-50 ring-1 ring-[#14532d]"
+                                            : "border-gray-200 bg-white hover:bg-gray-50"
+                                    )}
+                                >
+                                    <span className="text-xs font-bold text-[#1F2937] block">
+                                        Paisa Lagaya (Capital In)
+                                    </span>
+                                    <span className="text-[11px] text-[#4B5563] mt-0.5 leading-tight">
+                                        Karobar mein cash dala
+                                    </span>
+                                </button>
 
-                                    <button
-                                        type="button"
-                                        onClick={() => setSelectedType('capital_out')}
-                                        className={cn(
-                                            "p-3 text-start rounded-xl border transition-all cursor-pointer flex flex-col justify-center",
-                                            selectedType === 'capital_out'
-                                                ? "border-[#14532d] bg-emerald-50 ring-1 ring-[#14532d]"
-                                                : "border-gray-200 bg-white hover:bg-gray-50"
-                                        )}
-                                    >
-                                        <span className="text-xs font-bold text-[#1F2937] block">
-                                            Paisa Nikala (Drawings)
-                                        </span>
-                                        <span className="text-[11px] text-[#4B5563] mt-0.5 leading-tight">
-                                            Ghar ya zaati kharch ke liye liya
-                                        </span>
-                                    </button>
-                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedType('capital_out')}
+                                    className={cn(
+                                        "p-3.5 text-start rounded-xl border transition-all cursor-pointer flex flex-col justify-center",
+                                        selectedType === 'capital_out'
+                                            ? "border-[#14532d] bg-emerald-50 ring-1 ring-[#14532d]"
+                                            : "border-gray-200 bg-white hover:bg-gray-50"
+                                    )}
+                                >
+                                    <span className="text-xs font-bold text-[#1F2937] block">
+                                        Paisa Nikala (Drawings)
+                                    </span>
+                                    <span className="text-[11px] text-[#4B5563] mt-0.5 leading-tight">
+                                        Ghar ya zaati kharch ke liye
+                                    </span>
+                                </button>
                             </div>
                         )}
 
-                        {/* Category B: Qarza (Loans) - Only shown on Loans page */}
+                        {/* Loans Category: 3 simple options (Points 6 & 7) */}
                         {category === 'loans' && (
-                            <div className="space-y-1.5 pt-1">
-                                <span className="text-[11px] font-bold text-[#374151] tracking-wider uppercase block">
-                                    Qarza (Loans)
-                                </span>
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setSelectedType('loan_in')}
-                                        className={cn(
-                                            "p-2.5 text-start rounded-xl border transition-all cursor-pointer flex flex-col justify-center",
-                                            selectedType === 'loan_in'
-                                                ? "border-[#14532d] bg-emerald-50 ring-1 ring-[#14532d]"
-                                                : "border-gray-200 bg-white hover:bg-gray-50"
-                                        )}
-                                    >
-                                        <span className="text-xs font-bold text-[#1F2937] block">
-                                            Qarza Liya (Dena Hai)
-                                        </span>
-                                        <span className="text-[11px] text-[#4B5563] mt-0.5 leading-tight">
-                                            Bahar se udhaar liya
-                                        </span>
-                                    </button>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedType('loan_in')}
+                                    className={cn(
+                                        "p-3 text-start rounded-xl border transition-all cursor-pointer flex flex-col justify-center",
+                                        selectedType === 'loan_in'
+                                            ? "border-[#14532d] bg-emerald-50 ring-1 ring-[#14532d]"
+                                            : "border-gray-200 bg-white hover:bg-gray-50"
+                                    )}
+                                >
+                                    <span className="text-xs font-bold text-[#1F2937] block">
+                                        Qarza Liya (Dena Hai)
+                                    </span>
+                                    <span className="text-[11px] text-[#4B5563] mt-0.5 leading-tight">
+                                        Bahar se udhaar liya
+                                    </span>
+                                </button>
 
-                                    <button
-                                        type="button"
-                                        onClick={() => setSelectedType('loan_give')}
-                                        className={cn(
-                                            "p-2.5 text-start rounded-xl border transition-all cursor-pointer flex flex-col justify-center",
-                                            selectedType === 'loan_give'
-                                                ? "border-[#14532d] bg-emerald-50 ring-1 ring-[#14532d]"
-                                                : "border-gray-200 bg-white hover:bg-gray-50"
-                                        )}
-                                    >
-                                        <span className="text-xs font-bold text-[#1F2937] block">
-                                            Qarza Diya (Lena Hai)
-                                        </span>
-                                        <span className="text-[11px] text-[#4B5563] mt-0.5 leading-tight">
-                                            Kisi ko udhaar diya
-                                        </span>
-                                    </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedType('loan_give')}
+                                    className={cn(
+                                        "p-3 text-start rounded-xl border transition-all cursor-pointer flex flex-col justify-center",
+                                        selectedType === 'loan_give'
+                                            ? "border-[#14532d] bg-emerald-50 ring-1 ring-[#14532d]"
+                                            : "border-gray-200 bg-white hover:bg-gray-50"
+                                    )}
+                                >
+                                    <span className="text-xs font-bold text-[#1F2937] block">
+                                        Qarza Diya (Lena Hai)
+                                    </span>
+                                    <span className="text-[11px] text-[#4B5563] mt-0.5 leading-tight">
+                                        Kisi ko udhaar diya
+                                    </span>
+                                </button>
 
-                                    <button
-                                        type="button"
-                                        onClick={() => setSelectedType('loan_out')}
-                                        className={cn(
-                                            "p-2.5 text-start rounded-xl border transition-all cursor-pointer flex flex-col justify-center",
-                                            selectedType === 'loan_out'
-                                                ? "border-[#14532d] bg-emerald-50 ring-1 ring-[#14532d]"
-                                                : "border-gray-200 bg-white hover:bg-gray-50"
-                                        )}
-                                    >
-                                        <span className="text-xs font-bold text-[#1F2937] block">
-                                            Qarza Wapas (Return)
-                                        </span>
-                                        <span className="text-[11px] text-[#4B5563] mt-0.5 leading-tight">
-                                            Liya hua diya / Wasool kiya
-                                        </span>
-                                    </button>
-                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedType('loan_out')}
+                                    className={cn(
+                                        "p-3 text-start rounded-xl border transition-all cursor-pointer flex flex-col justify-center",
+                                        selectedType === 'loan_out'
+                                            ? "border-[#14532d] bg-emerald-50 ring-1 ring-[#14532d]"
+                                            : "border-gray-200 bg-white hover:bg-gray-50"
+                                    )}
+                                >
+                                    <span className="text-xs font-bold text-[#1F2937] block">
+                                        Qarza Wapis
+                                    </span>
+                                    <span className="text-[11px] text-[#4B5563] mt-0.5 leading-tight">
+                                        Wasool kiya
+                                    </span>
+                                </button>
                             </div>
                         )}
 
-                        {/* Category C: Sarmayakari (Investments) - Only shown on Surplus page */}
+                        {/* Surplus Category: 2 simple options */}
                         {category === 'surplus' && (
-                            <div className="space-y-1.5 pt-1">
-                                <span className="text-[11px] font-bold text-[#374151] tracking-wider uppercase block">
-                                    Sarmayakari (Investments & Funds)
-                                </span>
-                                <div className="grid grid-cols-2 gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setSelectedType('surplus_out')}
-                                        className={cn(
-                                            "p-3 text-start rounded-xl border transition-all cursor-pointer flex flex-col justify-center",
-                                            selectedType === 'surplus_out'
-                                                ? "border-[#14532d] bg-emerald-50 ring-1 ring-[#14532d]"
-                                                : "border-gray-200 bg-white hover:bg-gray-50"
-                                        )}
-                                    >
-                                        <span className="text-xs font-bold text-[#1F2937] block">
-                                            Sarmayakari Mein Lagaya
-                                        </span>
-                                        <span className="text-[11px] text-[#4B5563] mt-0.5 leading-tight">
-                                            Fund ya bachat mein lagaya
-                                        </span>
-                                    </button>
+                            <div className="grid grid-cols-2 gap-2.5">
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedType('surplus_out')}
+                                    className={cn(
+                                        "p-3.5 text-start rounded-xl border transition-all cursor-pointer flex flex-col justify-center",
+                                        selectedType === 'surplus_out'
+                                            ? "border-[#14532d] bg-emerald-50 ring-1 ring-[#14532d]"
+                                            : "border-gray-200 bg-white hover:bg-gray-50"
+                                    )}
+                                >
+                                    <span className="text-xs font-bold text-[#1F2937] block">
+                                        Sarmayakari Mein Lagaya
+                                    </span>
+                                    <span className="text-[11px] text-[#4B5563] mt-0.5 leading-tight">
+                                        Bank Term / Fund mein invest
+                                    </span>
+                                </button>
 
-                                    <button
-                                        type="button"
-                                        onClick={() => setSelectedType('surplus_in')}
-                                        className={cn(
-                                            "p-3 text-start rounded-xl border transition-all cursor-pointer flex flex-col justify-center",
-                                            selectedType === 'surplus_in'
-                                                ? "border-[#14532d] bg-emerald-50 ring-1 ring-[#14532d]"
-                                                : "border-gray-200 bg-white hover:bg-gray-50"
-                                        )}
-                                    >
-                                        <span className="text-xs font-bold text-[#1F2937] block">
-                                            Sarmayakari Se Wapsi
-                                        </span>
-                                        <span className="text-[11px] text-[#4B5563] mt-0.5 leading-tight">
-                                            Asal sarmaya + munafa mila
-                                        </span>
-                                    </button>
-                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedType('surplus_in')}
+                                    className={cn(
+                                        "p-3.5 text-start rounded-xl border transition-all cursor-pointer flex flex-col justify-center",
+                                        selectedType === 'surplus_in'
+                                            ? "border-[#14532d] bg-emerald-50 ring-1 ring-[#14532d]"
+                                            : "border-gray-200 bg-white hover:bg-gray-50"
+                                    )}
+                                >
+                                    <span className="text-xs font-bold text-[#1F2937] block">
+                                        Sarmayakari Se Wapsi
+                                    </span>
+                                    <span className="text-[11px] text-[#4B5563] mt-0.5 leading-tight">
+                                        Asal sarmaya + munafa mila
+                                    </span>
+                                </button>
                             </div>
                         )}
                     </div>
 
-                    {/* Step 2: Kis ke saath? */}
-                    <div className="space-y-2">
-                        <label className="text-sm font-bold text-[#1F2937] block">
-                            {isUrdu ? '2. کس کے ساتھ؟ (پارٹی / کھاتہ)' : '2. Kis ke saath? (Party / Khata)'}
-                        </label>
+                    {/* Section 2: Partner / Party Selection (Clean labels without numbers - Point 4 & 7) */}
+                    <div className="space-y-2.5">
+                        {/* Partners Category */}
+                        {category === 'partners' && (
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <label className="text-sm font-bold text-[#1F2937]">
+                                        Partner / Shareek Ka Naam
+                                    </label>
+                                    {selectedType === 'capital_in' && (
+                                        <div className="flex items-center gap-1.5 p-0.5 bg-gray-100 rounded-lg text-xs font-semibold">
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsNewPartner(false)}
+                                                className={cn(
+                                                    "px-2.5 py-1 rounded-md transition-all cursor-pointer",
+                                                    !isNewPartner
+                                                        ? "bg-[#14532d] text-white shadow-2xs font-bold"
+                                                        : "text-[#4B5563] hover:text-[#1F2937]"
+                                                )}
+                                            >
+                                                Mawjooda
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsNewPartner(true)}
+                                                className={cn(
+                                                    "px-2.5 py-1 rounded-md transition-all cursor-pointer",
+                                                    isNewPartner
+                                                        ? "bg-[#14532d] text-white shadow-2xs font-bold"
+                                                        : "text-[#4B5563] hover:text-[#1F2937]"
+                                                )}
+                                            >
+                                                Naya Partner
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
 
-                        {/* Capital In / Out: Select Partner */}
-                        {(selectedType === 'capital_in' || selectedType === 'capital_out') && (
-                            <div className="space-y-1.5">
-                                <select
-                                    value={selectedPartnerId}
-                                    onChange={(e) => setSelectedPartnerId(Number(e.target.value))}
-                                    className="w-full h-11 px-3.5 text-sm font-medium text-[#1F2937] bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] focus:bg-white transition-all cursor-pointer"
-                                >
-                                    {partners.map((p) => (
-                                        <option key={p.id} value={p.id}>
-                                            {p.name} ({p.role === 'owner' ? 'Owner / Malik' : 'Partner / Shareek'}) — Net Equity: Rs. {p.net_equity.toLocaleString('en-US')}
-                                        </option>
-                                    ))}
-                                </select>
-                                {activePartner && (
-                                    <p className="text-xs text-[#374151]">
-                                        Mawjooda Capital (Net Equity): <span className="font-bold text-[#1F2937]">Rs. {activePartner.net_equity.toLocaleString('en-US')}</span>
-                                    </p>
+                                {!isNewPartner ? (
+                                    <div className="space-y-1.5">
+                                        <select
+                                            value={selectedPartnerId}
+                                            onChange={(e) => setSelectedPartnerId(Number(e.target.value))}
+                                            className="w-full h-11 px-3.5 text-sm font-medium text-[#1F2937] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] transition-all cursor-pointer"
+                                        >
+                                            {partners.map((p) => (
+                                                <option key={p.id} value={p.id}>
+                                                    {p.name} ({p.role === 'owner' ? 'Owner / Malik' : 'Partner / Shareek'}) — Net Equity: Rs. {p.net_equity.toLocaleString('en-US')}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {activePartner && (
+                                            <p className="text-xs text-[#4B5563]">
+                                                Mawjooda Approved Equity: <span className="font-bold text-[#14532d]">Rs. {activePartner.net_equity.toLocaleString('en-US')}</span>
+                                            </p>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                                        <div className="sm:col-span-2">
+                                            <input
+                                                type="text"
+                                                value={newPartnerName}
+                                                onChange={(e) => setNewPartnerName(e.target.value)}
+                                                placeholder="Naye partner ka naam (e.g. Kamran Sb)"
+                                                className="w-full h-11 px-3.5 text-sm font-medium text-[#1F2937] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] transition-all"
+                                            />
+                                        </div>
+                                        <div>
+                                            <div className="relative">
+                                                <input
+                                                    type="number"
+                                                    value={newPartnerProfitPct}
+                                                    onChange={(e) => setNewPartnerProfitPct(e.target.value)}
+                                                    placeholder="Hissa %"
+                                                    min="0"
+                                                    max="100"
+                                                    className="w-full h-11 px-3.5 pe-8 text-sm font-bold text-[#1F2937] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] transition-all"
+                                                />
+                                                <span className="absolute end-3 top-3 text-xs font-bold text-gray-500">%</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 )}
                             </div>
                         )}
 
-                        {/* Loan In (Qarza Liya - Dena hai): Enter lender name */}
-                        {selectedType === 'loan_in' && (
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-semibold text-[#374151] block">
-                                    Qarza dene wale ka naam (Mandi Lender):
-                                </label>
-                                <input
-                                    type="text"
-                                    value={partyNameInput}
-                                    onChange={(e) => setPartyNameInput(e.target.value)}
-                                    placeholder="Maslan: Tariq Sb, Haji Aslam, Bank Alfalah..."
-                                    className="w-full h-11 px-3.5 text-sm font-medium text-[#1F2937] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] transition-all"
-                                />
-                                <p className="text-xs text-[#4B5563]">
-                                    Yeh qarza aap par wajib-ul-ada (Hum ko wapas dena hai) record hoga.
-                                </p>
+                        {/* Loans Category (Point 7) */}
+                        {category === 'loans' && (
+                            <div className="space-y-2">
+                                {selectedType === 'loan_in' && (
+                                    <div>
+                                        <label className="text-sm font-bold text-[#1F2937] block mb-1.5">
+                                            Kis se Liya? (Qarza Dene Wale Ka Naam)
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={loanPartyName}
+                                            onChange={(e) => setLoanPartyName(e.target.value)}
+                                            placeholder="Maslan: Tariq Sb, Haji Aslam, Bank Alfalah..."
+                                            className="w-full h-11 px-3.5 text-sm font-medium text-[#1F2937] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] transition-all"
+                                        />
+                                        <p className="text-xs text-[#4B5563] mt-1">
+                                            Yeh qarza hum ko wapas dena hai (Payable) ke tor par record hoga.
+                                        </p>
+                                    </div>
+                                )}
+
+                                {selectedType === 'loan_give' && (
+                                    <div>
+                                        <label className="text-sm font-bold text-[#1F2937] block mb-1.5">
+                                            Kis ko Diya? (Qarza Lene Wale Ka Naam)
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={loanPartyName}
+                                            onChange={(e) => setLoanPartyName(e.target.value)}
+                                            placeholder="Maslan: Rashid Merchant, Farooq Farmer..."
+                                            className="w-full h-11 px-3.5 text-sm font-medium text-[#1F2937] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] transition-all"
+                                        />
+                                        <p className="text-xs text-[#4B5563] mt-1">
+                                            Yeh qarza party se hum ko wapas lena hai (Receivable) ke tor par record hoga.
+                                        </p>
+                                    </div>
+                                )}
+
+                                {selectedType === 'loan_out' && (
+                                    <div>
+                                        <label className="text-sm font-bold text-[#1F2937] block mb-1.5">
+                                            Kis ne Wapas Kiya? (Khata Chunein)
+                                        </label>
+                                        {receivableLoans.length > 0 ? (
+                                            <select
+                                                value={selectedLoanId}
+                                                onChange={(e) => setSelectedLoanId(Number(e.target.value))}
+                                                className="w-full h-11 px-3.5 text-sm font-medium text-[#1F2937] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] transition-all cursor-pointer"
+                                            >
+                                                {receivableLoans.map((l) => (
+                                                    <option key={l.id} value={l.id}>
+                                                        {l.lender_name} — Baqaya: Rs. {l.balance_due.toLocaleString('en-US')}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        ) : (
+                                            <div className="space-y-1.5">
+                                                <input
+                                                    type="text"
+                                                    value={loanPartyName}
+                                                    onChange={(e) => setLoanPartyName(e.target.value)}
+                                                    placeholder="Wapas karne wale ka naam (e.g. Rashid Merchant)"
+                                                    className="w-full h-11 px-3.5 text-sm font-medium text-[#1F2937] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] transition-all"
+                                                />
+                                                <p className="text-xs text-[#4B5563]">
+                                                    Abhi koi aisa qarza registered nahi jo hum ne diya ho. Aap seedha naam likh sakte hain.
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         )}
 
-                        {/* Loan Give (Qarza Diya - Lena hai): Enter borrower name */}
-                        {selectedType === 'loan_give' && (
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-semibold text-[#374151] block">
-                                    Qarza lene wale ka naam (Borrower):
-                                </label>
-                                <input
-                                    type="text"
-                                    value={partyNameInput}
-                                    onChange={(e) => setPartyNameInput(e.target.value)}
-                                    placeholder="Maslan: Rashid Bhai (Merchant), Farooq Farmer..."
-                                    className="w-full h-11 px-3.5 text-sm font-medium text-[#1F2937] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] transition-all"
-                                />
-                                <p className="text-xs text-[#4B5563]">
-                                    Yeh qarza party ke zimme واجب الوصول (Hum ko wapas lena hai) record hoga.
-                                </p>
-                            </div>
-                        )}
-
-                        {/* Loan Out / Repayment: Choose from active loans */}
-                        {selectedType === 'loan_out' && (
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-semibold text-[#374151] block">
-                                    Wapas karne ya wasool karne wala qarza chunein:
-                                </label>
-                                <select
-                                    value={selectedLoanId}
-                                    onChange={(e) => setSelectedLoanId(Number(e.target.value))}
-                                    className="w-full h-11 px-3.5 text-sm font-medium text-[#1F2937] bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] focus:bg-white transition-all cursor-pointer"
-                                >
-                                    <option value="">Qarza account muntakhib karein...</option>
-                                    {loans.map((l) => (
-                                        <option key={l.id} value={l.id}>
-                                            {l.lender_name} — {l.direction === 'receivable' ? '[Hum ko Lena Hai]' : '[Hum ko Dena Hai]'} — Baqaya Due: Rs. {l.balance_due.toLocaleString('en-US')}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                        )}
-
-                        {/* Surplus Out: Enter fund name */}
-                        {selectedType === 'surplus_out' && (
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-semibold text-[#374151] block">
-                                    Fund / Scheme ka naam:
-                                </label>
-                                <input
-                                    type="text"
-                                    value={partyNameInput}
-                                    onChange={(e) => setPartyNameInput(e.target.value)}
-                                    placeholder="Maslan: Meezan 15-day Term, Gold Savings, National Savings..."
-                                    className="w-full h-11 px-3.5 text-sm font-medium text-[#1F2937] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] transition-all"
-                                />
-                            </div>
-                        )}
-
-                        {/* Surplus In: Choose from active funds */}
-                        {selectedType === 'surplus_in' && (
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-semibold text-[#374151] block">
-                                    Active Fund muntakhib karein:
-                                </label>
-                                <select
-                                    value={selectedSurplusId}
-                                    onChange={(e) => setSelectedSurplusId(Number(e.target.value))}
-                                    className="w-full h-11 px-3.5 text-sm font-medium text-[#1F2937] bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] focus:bg-white transition-all cursor-pointer"
-                                >
-                                    <option value="">Active Fund chunein...</option>
-                                    {surplusFunds.map((s) => (
-                                        <option key={s.id} value={s.id}>
-                                            {s.fund_name} — Asal: Rs. {s.principal_amount.toLocaleString('en-US')} (Kul Wapsi: Rs. {s.total_return.toLocaleString('en-US')})
-                                        </option>
-                                    ))}
-                                </select>
+                        {/* Surplus Category */}
+                        {category === 'surplus' && (
+                            <div className="space-y-2">
+                                {selectedType === 'surplus_out' ? (
+                                    <div>
+                                        <label className="text-sm font-bold text-[#1F2937] block mb-1.5">
+                                            Kaha Lagaya? (Bank / Fund Ka Naam)
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={surplusPartyName}
+                                            onChange={(e) => setSurplusPartyName(e.target.value)}
+                                            placeholder="Maslan: Meezan Bank Ltd (15-Day Term Deposit)"
+                                            className="w-full h-11 px-3.5 text-sm font-medium text-[#1F2937] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] transition-all"
+                                        />
+                                    </div>
+                                ) : (
+                                    <div>
+                                        <label className="text-sm font-bold text-[#1F2937] block mb-1.5">
+                                            Fund Muntakhib Karein
+                                        </label>
+                                        <select
+                                            value={selectedSurplusId}
+                                            onChange={(e) => setSelectedSurplusId(Number(e.target.value))}
+                                            className="w-full h-11 px-3.5 text-sm font-medium text-[#1F2937] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] transition-all cursor-pointer"
+                                        >
+                                            {surplusFunds.map((s) => (
+                                                <option key={s.id} value={s.id}>
+                                                    {s.fund_name} — Asal: Rs. {s.principal_amount.toLocaleString('en-US')}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
 
-                    {/* Step 3: Kitna aur kaise? */}
+                    {/* Section 3: Rakam aur Adayegi (Point 4: Clean label without numbers) */}
                     <div className="space-y-3">
                         <label className="text-sm font-bold text-[#1F2937] block">
-                            {isUrdu ? '3. کتنا اور کیسے؟ (رقم اور ادائیگی)' : '3. Kitna aur kaise? (Rakam & Payment)'}
+                            Rakam aur Adayegi
                         </label>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
                             {/* Amount input */}
                             <div>
                                 <label className="text-xs font-semibold text-[#374151] block mb-1">
-                                    {isUrdu ? 'رقم (روپے)' : 'Rakam (Rs.)'}
+                                    Rakam (Rs.)
                                 </label>
                                 <input
                                     type="text"
@@ -648,7 +765,7 @@ export default function EntryDrawer({
                             {/* Cash / Bank Toggle */}
                             <div>
                                 <label className="text-xs font-semibold text-[#374151] block mb-1">
-                                    {isUrdu ? 'کہاں سے / کہاں' : 'Kahan se / kahan'}
+                                    Kahan Se / Kahan
                                 </label>
                                 <div className="grid grid-cols-2 gap-1.5 p-1 bg-gray-100 rounded-lg border border-gray-300">
                                     <button
@@ -683,12 +800,12 @@ export default function EntryDrawer({
                         {paymentMethod === 'bank' && (
                             <div className="pt-1">
                                 <label className="text-xs font-semibold text-[#374151] block mb-1">
-                                    {isUrdu ? 'بینک اکاؤنٹ منتخب کریں' : 'Bank Account chunein'}
+                                    Bank Account Chunein
                                 </label>
                                 <select
                                     value={bankName}
                                     onChange={(e) => setBankName(e.target.value)}
-                                    className="w-full h-11 px-3.5 text-xs font-medium text-[#1F2937] bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] focus:bg-white transition-all cursor-pointer"
+                                    className="w-full h-11 px-3.5 text-xs font-medium text-[#1F2937] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] transition-all cursor-pointer"
                                 >
                                     {bankAccounts.map((b) => (
                                         <option key={b} value={b}>
@@ -700,21 +817,7 @@ export default function EntryDrawer({
                         )}
                     </div>
 
-                    {/* Step 4: Note (optional) */}
-                    <div className="space-y-1.5">
-                        <label className="text-sm font-bold text-[#1F2937] block">
-                            {isUrdu ? '4. نوٹ / وجہ (اختیاری)' : '4. Note / Wajah (Ikhtiyari)'}
-                        </label>
-                        <input
-                            type="text"
-                            value={reason}
-                            onChange={(e) => setReason(e.target.value)}
-                            placeholder="Maslan: Ghar ka kharch, Season ka stock, Mandi loan, etc."
-                            className="w-full h-11 px-3.5 text-sm font-medium text-[#1F2937] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] transition-all"
-                        />
-                    </div>
-
-                    {/* GUARDRAIL ALERT BANNER: Capital se zyada nikaala ja raha hai */}
+                    {/* Guardrail Alert: Capital se zyada drawing */}
                     {isExceedingCapital && (
                         <div className={cn(
                             "p-4 rounded-xl border space-y-3 transition-all",
@@ -743,13 +846,12 @@ export default function EntryDrawer({
                                 </div>
                             </div>
 
-                            {/* Guardrail Choice Buttons */}
                             {!isAdvanceConfirmed ? (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                                     <button
                                         type="button"
                                         onClick={() => setIsAdvanceConfirmed(true)}
-                                        className="min-h-[44px] px-3.5 py-2 text-xs font-bold rounded-lg bg-white border border-gray-300 hover:bg-gray-50 text-[#1F2937] shadow-xs cursor-pointer text-center"
+                                        className="min-h-[40px] px-3.5 py-2 text-xs font-bold rounded-lg bg-white border border-gray-300 hover:bg-gray-50 text-[#1F2937] shadow-2xs cursor-pointer text-center"
                                     >
                                         Haan, Advance banayein
                                     </button>
@@ -760,7 +862,7 @@ export default function EntryDrawer({
                                                 setAmount(activePartner.net_equity.toString());
                                             }
                                         }}
-                                        className="min-h-[44px] px-3.5 py-2 text-xs font-medium rounded-lg bg-white border border-gray-300 hover:bg-gray-50 text-[#374151] shadow-xs cursor-pointer text-center"
+                                        className="min-h-[40px] px-3.5 py-2 text-xs font-medium rounded-lg bg-white border border-gray-300 hover:bg-gray-50 text-[#374151] shadow-2xs cursor-pointer text-center"
                                     >
                                         Nahi, rakam kam karein
                                     </button>
@@ -780,11 +882,11 @@ export default function EntryDrawer({
                         </div>
                     )}
 
-                    {/* LIVE PREVIEW BOX */}
+                    {/* Live Preview Box */}
                     {livePreview && (
                         <div className="p-3.5 rounded-xl bg-gray-50 border border-gray-200 text-xs text-[#374151] space-y-1">
                             <span className="font-bold text-[#1F2937] block text-[11px] uppercase tracking-wide">
-                                {isUrdu ? 'کھاتہ پر اثر (Live Preview)' : 'Khata Par Asar (Live Preview):'}
+                                Khata Par Asar (Live Preview):
                             </span>
                             <p className="leading-relaxed font-medium">
                                 {livePreview}
@@ -792,29 +894,29 @@ export default function EntryDrawer({
                         </div>
                     )}
 
-                    {/* Submit and Cancel Buttons */}
-                    <div className="flex items-center gap-3 pt-2 border-t border-gray-200">
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-3 pt-3 border-t border-gray-200">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 min-h-[44px] px-4 py-2 text-sm font-semibold text-[#374151] bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer"
+                            className="flex-1 min-h-[44px] px-4 py-2 text-sm font-semibold text-[#374151] bg-white border border-gray-300 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer"
                         >
-                            {isUrdu ? 'منسوخ' : 'Mansookh (Cancel)'}
+                            Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={isSubmitting || (isExceedingCapital && !isAdvanceConfirmed)}
                             className={cn(
-                                "flex-1 min-h-[44px] px-4 py-2 text-sm font-bold text-white rounded-lg shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer",
+                                "flex-1 min-h-[44px] px-4 py-2 text-sm font-bold text-white rounded-xl shadow-md transition-colors flex items-center justify-center gap-2 cursor-pointer",
                                 isSubmitting || (isExceedingCapital && !isAdvanceConfirmed)
                                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                                     : "bg-[#14532d] hover:bg-[#166534] active:bg-[#0f3d21]"
                             )}
                         >
                             {isSubmitting ? (
-                                <span>{isUrdu ? 'محفوظ ہو رہا ہے...' : 'Save ho raha hai...'}</span>
+                                <span>Save ho raha hai...</span>
                             ) : (
-                                <span>{isUrdu ? 'اینٹری محفوظ کریں' : 'Entry Save Karein'}</span>
+                                <span>Entry Save Karein</span>
                             )}
                         </button>
                     </div>
