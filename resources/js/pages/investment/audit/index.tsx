@@ -489,11 +489,11 @@ export default function InvestmentAuditPage({
                                 </div>
                                 <div className="p-2.5 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-between">
                                     <span className="font-bold text-amber-700">SO</span>
-                                    <span className="font-semibold text-[#1F2937]">Faltu paisa lagaya (Surplus Out)</span>
+                                    <span className="font-semibold text-[#1F2937]">Sarmayakari mein lagaya (Investment)</span>
                                 </div>
                                 <div className="p-2.5 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-between">
                                     <span className="font-bold text-emerald-700">SI</span>
-                                    <span className="font-semibold text-[#1F2937]">Faltu paisa wapas aaya (Surplus In)</span>
+                                    <span className="font-semibold text-[#1F2937]">Sarmayakari se wapsi (Return)</span>
                                 </div>
                                 <div className="p-2.5 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-between">
                                     <span className="font-bold text-rose-700">REV</span>

@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import InvestmentHeader from '@/components/investment/investment-header';
-import AajKaHaal from '@/components/investment/aaj-ka-haal';
 import EntryDrawer from '@/components/investment/entry-drawer';
 import BreakdownModal, { BreakdownData } from '@/components/investment/breakdown-modal';
 import Icon from '@/components/ui/icon';
@@ -157,9 +156,6 @@ export default function InvestmentPartnersPage({
                 />
 
                 <div className="p-4 md:p-6 space-y-5 max-w-7xl mx-auto">
-                    {/* Section B.6: Aaj Ka Haal (Exactly 3 Big Clickable Cards) */}
-                    <AajKaHaal data={aajKaHaal} isUrdu={isUrdu} />
-
                     {/* Section B.1: Har Page Par Sirf 3 Numbers (Partners Page) */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                         {/* Number 1: Kul Sarmaya */}

@@ -70,19 +70,21 @@ class InvestmentTransaction extends Model
         }
 
         return match ($this->type) {
-            'capital_in'  => 'Paisa dala',
-            'capital_out' => 'Paisa nikala',
-            'loan_in'     => 'Qarza liya',
-            'loan_out'    => 'Qarza wapas',
-            'surplus_out' => 'Faltu paisa lagaya',
-            'surplus_in'  => 'Faltu paisa wapas aaya',
-            default       => $this->type,
+            'capital_in'   => 'Paisa dala',
+            'capital_out'  => 'Paisa nikala',
+            'loan_in'      => 'Qarza liya (dena hai)',
+            'loan_out'     => 'Qarza wapas kiya',
+            'loan_give'    => 'Qarza diya (lena hai)',
+            'loan_recover' => 'Qarza wasool hua',
+            'surplus_out'  => 'Sarmayakari mein lagaya',
+            'surplus_in'   => 'Sarmayakari se wapsi',
+            default        => $this->type,
         };
     }
 
     public function getFormattedAmountAttribute(): string
     {
-        $sign = in_array($this->type, ['capital_in', 'loan_in', 'surplus_in']) ? '+ ' : '- ';
+        $sign = in_array($this->type, ['capital_in', 'loan_in', 'surplus_in', 'loan_recover']) ? '+ ' : '- ';
         return $sign . number_format($this->amount, 0);
     }
 }

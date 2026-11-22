@@ -22,6 +22,7 @@ interface PartnerOption {
 interface LoanOption {
     id: number;
     lender_name: string;
+    direction?: 'payable' | 'receivable';
     balance_due: number;
 }
 
@@ -46,6 +47,7 @@ type EntryType =
     | 'capital_in'
     | 'capital_out'
     | 'loan_in'
+    | 'loan_give'
     | 'loan_out'
     | 'surplus_out'
     | 'surplus_in';
@@ -87,6 +89,20 @@ export default function EntryDrawer({
         }
     }, [partners, selectedPartnerId]);
 
+    // Auto-select first loan if not chosen
+    useEffect(() => {
+        if (loans.length > 0 && selectedLoanId === '') {
+            setSelectedLoanId(loans[0].id);
+        }
+    }, [loans, selectedLoanId]);
+
+    // Auto-select first surplus fund if not chosen
+    useEffect(() => {
+        if (surplusFunds.length > 0 && selectedSurplusId === '') {
+            setSelectedSurplusId(surplusFunds[0].id);
+        }
+    }, [surplusFunds, selectedSurplusId]);
+
     // Reset advance confirmation whenever type, partner, or amount changes
     useEffect(() => {
         setIsAdvanceConfirmed(false);
@@ -122,7 +138,7 @@ export default function EntryDrawer({
         if (numericAmount <= 0) return null;
 
         const formattedAmt = 'Rs. ' + numericAmount.toLocaleString('en-US');
-        const methodStr = paymentMethod === 'cash' ? 'Cash' : `Bank (${bankName})`;
+        const methodStr = paymentMethod === 'cash' ? 'Cash (Galla)' : `Bank (${bankName})`;
 
         switch (selectedType) {
             case 'capital_in': {
@@ -143,63 +159,34 @@ export default function EntryDrawer({
             }
             case 'loan_in': {
                 const party = partyNameInput || 'Lender';
-                return `${methodStr} mein ${formattedAmt} qarza aayega. Mandi account par ${party} ka qarza wajib-ul-ada (Payable) record hoga.`;
+                return `${methodStr} mein ${formattedAmt} qarza aayega. Mandi account par ${party} ka qarza واجب الادا (Hum ko wapas dena hai) record hoga.`;
+            }
+            case 'loan_give': {
+                const party = partyNameInput || 'Borrower';
+                return `${methodStr} se ${formattedAmt} qarza diya jayega. ${party} ke zimme واجب الوصول (Hum ko wapas lena hai) record hoga.`;
             }
             case 'loan_out': {
-                const party = loans.find(l => l.id === Number(selectedLoanId))?.lender_name || partyNameInput || 'Lender';
-                return `${methodStr} se ${formattedAmt} ada kiye jayenge. ${party} ka qarza balance kam ho jayega.`;
+                const chosenLoan = loans.find(l => l.id === Number(selectedLoanId));
+                const party = chosenLoan?.lender_name || partyNameInput || 'Loan Account';
+                const isReceivable = chosenLoan?.direction === 'receivable';
+                if (isReceivable) {
+                    return `${methodStr} mein ${formattedAmt} qarza wapas wasool hoga. ${party} ka baqaya qarza kam ho jayega.`;
+                } else {
+                    return `${methodStr} se ${formattedAmt} qarza wapas ada kiya jayega. ${party} ka baqaya qarza kam ho jayega.`;
+                }
             }
             case 'surplus_out': {
-                const party = partyNameInput || surplusFunds.find(s => s.id === Number(selectedSurplusId))?.fund_name || 'Surplus Fund';
-                return `${methodStr} se ${formattedAmt} faltu rakam ${party} mein invest ki jayegi.`;
+                const party = partyNameInput || 'Investment Scheme';
+                return `${methodStr} se ${formattedAmt} sarmayakari ${party} mein invest ki jayegi.`;
             }
             case 'surplus_in': {
-                const party = surplusFunds.find(s => s.id === Number(selectedSurplusId))?.fund_name || 'Surplus Fund';
-                return `${party} se ${formattedAmt} wapas ${methodStr} mein jama kiye jayenge.`;
+                const party = surplusFunds.find(s => s.id === Number(selectedSurplusId))?.fund_name || 'Investment Scheme';
+                return `${party} se ${formattedAmt} sarmaya wapas ${methodStr} mein jama kiya jayega.`;
             }
             default:
                 return null;
         }
     }, [selectedType, numericAmount, paymentMethod, bankName, activePartner, excessAmount, partyNameInput, loans, selectedLoanId, surplusFunds, selectedSurplusId]);
-
-    const entryTypeOptions: { type: EntryType; title: string; subtitle: string; icon: string }[] = [
-        {
-            type: 'capital_in',
-            title: isUrdu ? 'پیسہ لگایا' : 'Paisa Lagaya (Capital In)',
-            subtitle: isUrdu ? 'پارٹنر نے کیش دیا' : 'Partner ne karobar mein cash lagaya',
-            icon: 'ArrowDownLeft',
-        },
-        {
-            type: 'capital_out',
-            title: isUrdu ? 'پیسہ نکالا' : 'Paisa Nikala (Drawings)',
-            subtitle: isUrdu ? 'گھر یا ذاتی خرچ' : 'Ghar ya zaati kharch ke liye liya',
-            icon: 'ArrowUpRight',
-        },
-        {
-            type: 'loan_in',
-            title: isUrdu ? 'قرضہ لیا' : 'Qarza Liya (Short-Term Loan)',
-            subtitle: isUrdu ? 'منڈی کے لیے ادھار' : 'Mandi ke liye bahar se qarza liya',
-            icon: 'HandCoins',
-        },
-        {
-            type: 'loan_out',
-            title: isUrdu ? 'قرضہ واپس کیا' : 'Qarza Wapas Kiya (Loan Return)',
-            subtitle: isUrdu ? 'لیا ہوا پیسہ لوٹایا' : 'Lender ko qarza wapas lauta diya',
-            icon: 'Handshake',
-        },
-        {
-            type: 'surplus_out',
-            title: isUrdu ? 'فالتو پیسہ لگایا' : 'Faltu Paisa Lagaya (Surplus In)',
-            subtitle: isUrdu ? 'فنڈ یا بچت میں' : 'Faltu paisa kisi fund ya bachath mein lagaya',
-            icon: 'TrendUp',
-        },
-        {
-            type: 'surplus_in',
-            title: isUrdu ? 'انویسٹمنٹ واپس آیا' : 'Investment Wapas Aaya (Return)',
-            subtitle: isUrdu ? 'اصل رقم + منافع' : 'Asal sarmaya aur munafa wapas mila',
-            icon: 'Vault',
-        },
-    ];
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -222,7 +209,6 @@ export default function EntryDrawer({
         setIsSubmitting(true);
 
         const payload: Record<string, any> = {
-            type: selectedType,
             amount: numericAmount,
             payment_method: paymentMethod,
             bank_name: paymentMethod === 'bank' ? bankName : null,
@@ -231,18 +217,27 @@ export default function EntryDrawer({
         };
 
         if (selectedType === 'capital_in' || selectedType === 'capital_out') {
+            payload.type = selectedType;
             payload.partner_id = selectedPartnerId;
             payload.party_name = activePartner?.name || 'Partner';
         } else if (selectedType === 'loan_in') {
-            payload.party_name = partyNameInput || 'Ahmed Lender';
+            payload.type = 'loan_in';
+            payload.party_name = partyNameInput.trim() || 'Mandi Lender';
+        } else if (selectedType === 'loan_give') {
+            payload.type = 'loan_give';
+            payload.party_name = partyNameInput.trim() || 'Borrower';
         } else if (selectedType === 'loan_out') {
+            const chosenLoan = loans.find(l => l.id === Number(selectedLoanId));
+            payload.type = chosenLoan?.direction === 'receivable' ? 'loan_recover' : 'loan_out';
             payload.loan_id = selectedLoanId || (loans[0]?.id ?? null);
-            payload.party_name = loans.find(l => l.id === Number(selectedLoanId))?.lender_name || partyNameInput || 'Lender';
+            payload.party_name = chosenLoan?.lender_name || partyNameInput || 'Lender';
         } else if (selectedType === 'surplus_out') {
-            payload.party_name = partyNameInput || 'General Fund';
+            payload.type = 'surplus_out';
+            payload.party_name = partyNameInput.trim() || 'Investment Fund';
         } else if (selectedType === 'surplus_in') {
+            payload.type = 'surplus_in';
             payload.surplus_id = selectedSurplusId || (surplusFunds[0]?.id ?? null);
-            payload.party_name = surplusFunds.find(s => s.id === Number(selectedSurplusId))?.fund_name || 'Surplus Fund';
+            payload.party_name = surplusFunds.find(s => s.id === Number(selectedSurplusId))?.fund_name || 'Investment Fund';
         }
 
         router.post('/investment/entry', payload, {
@@ -272,6 +267,7 @@ export default function EntryDrawer({
                 setIsSubmitting(false);
                 setAmount('');
                 setReason('');
+                setPartyNameInput('');
                 setIsAdvanceConfirmed(false);
                 onClose();
             },
@@ -287,69 +283,197 @@ export default function EntryDrawer({
         <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <SheetContent
                 side="right"
-                className="w-full sm:max-w-lg overflow-y-auto p-0 bg-white font-sans text-[#1a211c]"
+                className="w-full sm:max-w-xl overflow-y-auto p-0 bg-white font-sans text-[#1F2937] shadow-2xl"
             >
                 {/* Header */}
-                <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4.5 z-10">
+                <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 z-10">
                     <SheetHeader>
-                        <SheetTitle className="text-xl font-bold text-gray-900">
-                            {isUrdu ? 'نئی اینٹری' : '+ Nayi Entry'}
+                        <SheetTitle className="text-xl font-bold text-[#1F2937] flex items-center gap-2">
+                            <span className="p-1.5 rounded-lg bg-emerald-100 text-[#14532d]">
+                                <Icon name="Plus" className="size-4 stroke-[3]" />
+                            </span>
+                            <span>{isUrdu ? 'نئی اینٹری' : 'Nayi Entry'}</span>
                         </SheetTitle>
-                        <SheetDescription className="text-xs text-gray-500">
-                            {isUrdu ? 'صرف 4 چیزیں بھریں، بس۔' : 'Sirf 4 asaan marhale mukammal karein.'}
+                        <SheetDescription className="text-xs text-[#4B5563]">
+                            {isUrdu ? 'صرف ضروری معلومات درج کریں، کھاتہ خود بخود اپ ڈیٹ ہو جائے گا۔' : 'Sirf zaroori maloomat darj karein, khata khud ba khud update ho jayega.'}
                         </SheetDescription>
                     </SheetHeader>
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-6">
-                    {/* Step 1: Kya hua? (6 options) */}
-                    <div className="space-y-2.5">
-                        <label className="text-sm font-bold text-gray-900 block">
-                            {isUrdu ? '1. کیا ہوا؟' : '1. Kya hua?'}
-                        </label>
-                        <div className="grid grid-cols-2 gap-2.5">
-                            {entryTypeOptions.map((opt) => {
-                                const isSelected = selectedType === opt.type;
-                                return (
-                                    <button
-                                        key={opt.type}
-                                        type="button"
-                                        onClick={() => setSelectedType(opt.type)}
-                                        className={cn(
-                                            "min-h-[56px] p-3 text-start rounded-xl border transition-all cursor-pointer flex flex-col justify-center",
-                                            isSelected
-                                                ? "border-[#14532d] bg-[#ecf5ee] ring-1 ring-[#14532d]"
-                                                : "border-gray-200 bg-white hover:bg-gray-50"
-                                        )}
-                                    >
-                                        <span className={cn(
-                                            "text-xs font-bold leading-tight",
-                                            isSelected ? "text-[#14532d]" : "text-gray-900"
-                                        )}>
-                                            {opt.title}
-                                        </span>
-                                        <span className="text-[11px] text-gray-500 mt-0.5 leading-tight">
-                                            {opt.subtitle}
-                                        </span>
-                                    </button>
-                                );
-                            })}
+                    {/* Step 1: Kya hua? (Clean Categorized Sections) */}
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                            <label className="text-sm font-bold text-[#1F2937]">
+                                {isUrdu ? '1. کیا ہوا؟ (اینٹری کی قسم)' : '1. Kya hua? (Transaction Qisam)'}
+                            </label>
+                            <span className="text-xs text-[#4B5563]">Ek option chunein</span>
+                        </div>
+
+                        {/* Category A: Partners / Sarmaya */}
+                        <div className="space-y-1.5">
+                            <span className="text-[11px] font-bold text-[#374151] tracking-wider uppercase block">
+                                Partners / Hissedar (Sarmaya)
+                            </span>
+                            <div className="grid grid-cols-2 gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedType('capital_in')}
+                                    className={cn(
+                                        "p-3 text-start rounded-xl border transition-all cursor-pointer flex flex-col justify-center",
+                                        selectedType === 'capital_in'
+                                            ? "border-[#14532d] bg-emerald-50 ring-1 ring-[#14532d]"
+                                            : "border-gray-200 bg-white hover:bg-gray-50"
+                                    )}
+                                >
+                                    <span className="text-xs font-bold text-[#1F2937] block">
+                                        Paisa Lagaya (Capital In)
+                                    </span>
+                                    <span className="text-[11px] text-[#4B5563] mt-0.5 leading-tight">
+                                        Partner ne karobar mein cash dala
+                                    </span>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedType('capital_out')}
+                                    className={cn(
+                                        "p-3 text-start rounded-xl border transition-all cursor-pointer flex flex-col justify-center",
+                                        selectedType === 'capital_out'
+                                            ? "border-[#14532d] bg-emerald-50 ring-1 ring-[#14532d]"
+                                            : "border-gray-200 bg-white hover:bg-gray-50"
+                                    )}
+                                >
+                                    <span className="text-xs font-bold text-[#1F2937] block">
+                                        Paisa Nikala (Drawings)
+                                    </span>
+                                    <span className="text-[11px] text-[#4B5563] mt-0.5 leading-tight">
+                                        Ghar ya zaati kharch ke liye liya
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Category B: Qarza (Loans) */}
+                        <div className="space-y-1.5 pt-1">
+                            <span className="text-[11px] font-bold text-[#374151] tracking-wider uppercase block">
+                                Qarza (Loans)
+                            </span>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedType('loan_in')}
+                                    className={cn(
+                                        "p-2.5 text-start rounded-xl border transition-all cursor-pointer flex flex-col justify-center",
+                                        selectedType === 'loan_in'
+                                            ? "border-[#14532d] bg-emerald-50 ring-1 ring-[#14532d]"
+                                            : "border-gray-200 bg-white hover:bg-gray-50"
+                                    )}
+                                >
+                                    <span className="text-xs font-bold text-[#1F2937] block">
+                                        Qarza Liya (Dena Hai)
+                                    </span>
+                                    <span className="text-[11px] text-[#4B5563] mt-0.5 leading-tight">
+                                        Bahar se udhaar liya
+                                    </span>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedType('loan_give')}
+                                    className={cn(
+                                        "p-2.5 text-start rounded-xl border transition-all cursor-pointer flex flex-col justify-center",
+                                        selectedType === 'loan_give'
+                                            ? "border-[#14532d] bg-emerald-50 ring-1 ring-[#14532d]"
+                                            : "border-gray-200 bg-white hover:bg-gray-50"
+                                    )}
+                                >
+                                    <span className="text-xs font-bold text-[#1F2937] block">
+                                        Qarza Diya (Lena Hai)
+                                    </span>
+                                    <span className="text-[11px] text-[#4B5563] mt-0.5 leading-tight">
+                                        Kisi ko udhaar diya
+                                    </span>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedType('loan_out')}
+                                    className={cn(
+                                        "p-2.5 text-start rounded-xl border transition-all cursor-pointer flex flex-col justify-center",
+                                        selectedType === 'loan_out'
+                                            ? "border-[#14532d] bg-emerald-50 ring-1 ring-[#14532d]"
+                                            : "border-gray-200 bg-white hover:bg-gray-50"
+                                    )}
+                                >
+                                    <span className="text-xs font-bold text-[#1F2937] block">
+                                        Qarza Wapas (Return)
+                                    </span>
+                                    <span className="text-[11px] text-[#4B5563] mt-0.5 leading-tight">
+                                        Liya hua diya / Wasool kiya
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Category C: Sarmayakari (Investments) */}
+                        <div className="space-y-1.5 pt-1">
+                            <span className="text-[11px] font-bold text-[#374151] tracking-wider uppercase block">
+                                Sarmayakari (Investments & Funds)
+                            </span>
+                            <div className="grid grid-cols-2 gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedType('surplus_out')}
+                                    className={cn(
+                                        "p-3 text-start rounded-xl border transition-all cursor-pointer flex flex-col justify-center",
+                                        selectedType === 'surplus_out'
+                                            ? "border-[#14532d] bg-emerald-50 ring-1 ring-[#14532d]"
+                                            : "border-gray-200 bg-white hover:bg-gray-50"
+                                    )}
+                                >
+                                    <span className="text-xs font-bold text-[#1F2937] block">
+                                        Sarmayakari Mein Lagaya
+                                    </span>
+                                    <span className="text-[11px] text-[#4B5563] mt-0.5 leading-tight">
+                                        Fund ya bachat mein lagaya
+                                    </span>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedType('surplus_in')}
+                                    className={cn(
+                                        "p-3 text-start rounded-xl border transition-all cursor-pointer flex flex-col justify-center",
+                                        selectedType === 'surplus_in'
+                                            ? "border-[#14532d] bg-emerald-50 ring-1 ring-[#14532d]"
+                                            : "border-gray-200 bg-white hover:bg-gray-50"
+                                    )}
+                                >
+                                    <span className="text-xs font-bold text-[#1F2937] block">
+                                        Sarmayakari Se Wapsi
+                                    </span>
+                                    <span className="text-[11px] text-[#4B5563] mt-0.5 leading-tight">
+                                        Asal sarmaya + munafa mila
+                                    </span>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
                     {/* Step 2: Kis ke saath? */}
                     <div className="space-y-2">
-                        <label className="text-sm font-bold text-gray-900 block">
-                            {isUrdu ? '2. کس کے ساتھ؟' : '2. Kis ke saath?'}
+                        <label className="text-sm font-bold text-[#1F2937] block">
+                            {isUrdu ? '2. کس کے ساتھ؟ (پارٹی / کھاتہ)' : '2. Kis ke saath? (Party / Khata)'}
                         </label>
 
-                        {/* If capital in / out: choose partner */}
+                        {/* Capital In / Out: Select Partner */}
                         {(selectedType === 'capital_in' || selectedType === 'capital_out') && (
-                            <div>
+                            <div className="space-y-1.5">
                                 <select
                                     value={selectedPartnerId}
                                     onChange={(e) => setSelectedPartnerId(Number(e.target.value))}
-                                    className="w-full h-11 px-3.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] focus:bg-white transition-all cursor-pointer"
+                                    className="w-full h-11 px-3.5 text-sm font-medium text-[#1F2937] bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] focus:bg-white transition-all cursor-pointer"
                                 >
                                     {partners.map((p) => (
                                         <option key={p.id} value={p.id}>
@@ -358,60 +482,98 @@ export default function EntryDrawer({
                                     ))}
                                 </select>
                                 {activePartner && (
-                                    <p className="text-[11px] text-gray-500 mt-1">
-                                        Mawjooda Capital (Net Equity): <span className="font-semibold text-gray-800">Rs. {activePartner.net_equity.toLocaleString('en-US')}</span>
+                                    <p className="text-xs text-[#374151]">
+                                        Mawjooda Capital (Net Equity): <span className="font-bold text-[#1F2937]">Rs. {activePartner.net_equity.toLocaleString('en-US')}</span>
                                     </p>
                                 )}
                             </div>
                         )}
 
-                        {/* If loan in: enter lender name */}
+                        {/* Loan In (Qarza Liya - Dena hai): Enter lender name */}
                         {selectedType === 'loan_in' && (
-                            <input
-                                type="text"
-                                value={partyNameInput}
-                                onChange={(e) => setPartyNameInput(e.target.value)}
-                                placeholder="Qarza dene wale ka naam (e.g. Haji sb, Lender, Bank)"
-                                className="w-full h-11 px-3.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] focus:bg-white transition-all"
-                            />
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-[#374151] block">
+                                    Qarza dene wale ka naam (Mandi Lender):
+                                </label>
+                                <input
+                                    type="text"
+                                    value={partyNameInput}
+                                    onChange={(e) => setPartyNameInput(e.target.value)}
+                                    placeholder="Maslan: Tariq Sb, Haji Aslam, Bank Alfalah..."
+                                    className="w-full h-11 px-3.5 text-sm font-medium text-[#1F2937] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] transition-all"
+                                />
+                                <p className="text-xs text-[#4B5563]">
+                                    Yeh qarza aap par wajib-ul-ada (Hum ko wapas dena hai) record hoga.
+                                </p>
+                            </div>
                         )}
 
-                        {/* If loan out: choose from existing active loans */}
+                        {/* Loan Give (Qarza Diya - Lena hai): Enter borrower name */}
+                        {selectedType === 'loan_give' && (
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-[#374151] block">
+                                    Qarza lene wale ka naam (Borrower):
+                                </label>
+                                <input
+                                    type="text"
+                                    value={partyNameInput}
+                                    onChange={(e) => setPartyNameInput(e.target.value)}
+                                    placeholder="Maslan: Rashid Bhai (Merchant), Farooq Farmer..."
+                                    className="w-full h-11 px-3.5 text-sm font-medium text-[#1F2937] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] transition-all"
+                                />
+                                <p className="text-xs text-[#4B5563]">
+                                    Yeh qarza party ke zimme واجب الوصول (Hum ko wapas lena hai) record hoga.
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Loan Out / Repayment: Choose from active loans */}
                         {selectedType === 'loan_out' && (
-                            <div>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-[#374151] block">
+                                    Wapas karne ya wasool karne wala qarza chunein:
+                                </label>
                                 <select
                                     value={selectedLoanId}
                                     onChange={(e) => setSelectedLoanId(Number(e.target.value))}
-                                    className="w-full h-11 px-3.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] focus:bg-white transition-all cursor-pointer"
+                                    className="w-full h-11 px-3.5 text-sm font-medium text-[#1F2937] bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] focus:bg-white transition-all cursor-pointer"
                                 >
-                                    <option value="">Wapas karne wala qarza chunein...</option>
+                                    <option value="">Qarza account muntakhib karein...</option>
                                     {loans.map((l) => (
                                         <option key={l.id} value={l.id}>
-                                            {l.lender_name} — Baqaya Due: Rs. {l.balance_due.toLocaleString('en-US')}
+                                            {l.lender_name} — {l.direction === 'receivable' ? '[Hum ko Lena Hai]' : '[Hum ko Dena Hai]'} — Baqaya Due: Rs. {l.balance_due.toLocaleString('en-US')}
                                         </option>
                                     ))}
                                 </select>
                             </div>
                         )}
 
-                        {/* If surplus out: enter or pick fund name */}
+                        {/* Surplus Out: Enter fund name */}
                         {selectedType === 'surplus_out' && (
-                            <input
-                                type="text"
-                                value={partyNameInput}
-                                onChange={(e) => setPartyNameInput(e.target.value)}
-                                placeholder="Fund / Scheme ka naam (e.g. Meezan 15-day, Gold Savings)"
-                                className="w-full h-11 px-3.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] focus:bg-white transition-all"
-                            />
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-[#374151] block">
+                                    Fund / Scheme ka naam:
+                                </label>
+                                <input
+                                    type="text"
+                                    value={partyNameInput}
+                                    onChange={(e) => setPartyNameInput(e.target.value)}
+                                    placeholder="Maslan: Meezan 15-day Term, Gold Savings, National Savings..."
+                                    className="w-full h-11 px-3.5 text-sm font-medium text-[#1F2937] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] transition-all"
+                                />
+                            </div>
                         )}
 
-                        {/* If surplus in: choose from active funds */}
+                        {/* Surplus In: Choose from active funds */}
                         {selectedType === 'surplus_in' && (
-                            <div>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-[#374151] block">
+                                    Active Fund muntakhib karein:
+                                </label>
                                 <select
                                     value={selectedSurplusId}
                                     onChange={(e) => setSelectedSurplusId(Number(e.target.value))}
-                                    className="w-full h-11 px-3.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] focus:bg-white transition-all cursor-pointer"
+                                    className="w-full h-11 px-3.5 text-sm font-medium text-[#1F2937] bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] focus:bg-white transition-all cursor-pointer"
                                 >
                                     <option value="">Active Fund chunein...</option>
                                     {surplusFunds.map((s) => (
@@ -426,14 +588,14 @@ export default function EntryDrawer({
 
                     {/* Step 3: Kitna aur kaise? */}
                     <div className="space-y-3">
-                        <label className="text-sm font-bold text-gray-900 block">
-                            {isUrdu ? '3. کتنا اور کیسے؟' : '3. Kitna aur kaise?'}
+                        <label className="text-sm font-bold text-[#1F2937] block">
+                            {isUrdu ? '3. کتنا اور کیسے؟ (رقم اور ادائیگی)' : '3. Kitna aur kaise? (Rakam & Payment)'}
                         </label>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
                             {/* Amount input */}
                             <div>
-                                <label className="text-xs text-gray-600 block mb-1">
+                                <label className="text-xs font-semibold text-[#374151] block mb-1">
                                     {isUrdu ? 'رقم (روپے)' : 'Rakam (Rs.)'}
                                 </label>
                                 <input
@@ -443,14 +605,14 @@ export default function EntryDrawer({
                                     onChange={(e) => setAmount(e.target.value)}
                                     placeholder="Maslan: 350,000"
                                     className={cn(
-                                        "w-full h-11 px-3.5 text-base font-bold text-gray-900 bg-white border rounded-lg focus:outline-none focus:ring-2 transition-all",
+                                        "w-full h-11 px-3.5 text-base font-bold text-[#1F2937] bg-white border rounded-lg focus:outline-none focus:ring-2 transition-all",
                                         isExceedingCapital && !isAdvanceConfirmed
                                             ? "border-red-500 focus:ring-red-500 text-red-900"
-                                            : "border-gray-200 focus:ring-[#14532d]"
+                                            : "border-gray-300 focus:ring-[#14532d] focus:border-[#14532d]"
                                     )}
                                 />
                                 {numericAmount > 0 && (
-                                    <p className="text-[11px] text-gray-500 mt-1">
+                                    <p className="text-xs font-bold text-[#14532d] mt-1">
                                         Rs. {numericAmount.toLocaleString('en-US')}
                                     </p>
                                 )}
@@ -458,10 +620,10 @@ export default function EntryDrawer({
 
                             {/* Cash / Bank Toggle */}
                             <div>
-                                <label className="text-xs text-gray-600 block mb-1">
+                                <label className="text-xs font-semibold text-[#374151] block mb-1">
                                     {isUrdu ? 'کہاں سے / کہاں' : 'Kahan se / kahan'}
                                 </label>
-                                <div className="grid grid-cols-2 gap-1.5 p-1 bg-gray-100 rounded-lg border border-gray-200">
+                                <div className="grid grid-cols-2 gap-1.5 p-1 bg-gray-100 rounded-lg border border-gray-300">
                                     <button
                                         type="button"
                                         onClick={() => setPaymentMethod('cash')}
@@ -469,7 +631,7 @@ export default function EntryDrawer({
                                             "min-h-[36px] text-xs font-bold rounded-md transition-all cursor-pointer",
                                             paymentMethod === 'cash'
                                                 ? "bg-[#14532d] text-white shadow-xs"
-                                                : "text-gray-700 hover:text-black"
+                                                : "text-[#374151] hover:text-[#1F2937]"
                                         )}
                                     >
                                         Cash (Galla)
@@ -481,7 +643,7 @@ export default function EntryDrawer({
                                             "min-h-[36px] text-xs font-bold rounded-md transition-all cursor-pointer",
                                             paymentMethod === 'bank'
                                                 ? "bg-[#14532d] text-white shadow-xs"
-                                                : "text-gray-700 hover:text-black"
+                                                : "text-[#374151] hover:text-[#1F2937]"
                                         )}
                                     >
                                         Bank Account
@@ -493,13 +655,13 @@ export default function EntryDrawer({
                         {/* Bank selector when bank is chosen */}
                         {paymentMethod === 'bank' && (
                             <div className="pt-1">
-                                <label className="text-xs text-gray-600 block mb-1">
+                                <label className="text-xs font-semibold text-[#374151] block mb-1">
                                     {isUrdu ? 'بینک اکاؤنٹ منتخب کریں' : 'Bank Account chunein'}
                                 </label>
                                 <select
                                     value={bankName}
                                     onChange={(e) => setBankName(e.target.value)}
-                                    className="w-full h-11 px-3.5 text-xs bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] focus:bg-white transition-all cursor-pointer"
+                                    className="w-full h-11 px-3.5 text-xs font-medium text-[#1F2937] bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] focus:bg-white transition-all cursor-pointer"
                                 >
                                     {bankAccounts.map((b) => (
                                         <option key={b} value={b}>
@@ -513,15 +675,15 @@ export default function EntryDrawer({
 
                     {/* Step 4: Note (optional) */}
                     <div className="space-y-1.5">
-                        <label className="text-sm font-bold text-gray-900 block">
-                            {isUrdu ? '4. نوٹ (اختیاری)' : '4. Note / Wajah (Ikhtiyari)'}
+                        <label className="text-sm font-bold text-[#1F2937] block">
+                            {isUrdu ? '4. نوٹ / وجہ (اختیاری)' : '4. Note / Wajah (Ikhtiyari)'}
                         </label>
                         <input
                             type="text"
                             value={reason}
                             onChange={(e) => setReason(e.target.value)}
-                            placeholder="Maslan: Ghar ka kharch, Season ka stock, Mandi loan..."
-                            className="w-full h-11 px-3.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] focus:bg-white transition-all"
+                            placeholder="Maslan: Ghar ka kharch, Season ka stock, Mandi loan, etc."
+                            className="w-full h-11 px-3.5 text-sm font-medium text-[#1F2937] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] transition-all"
                         />
                     </div>
 
@@ -530,8 +692,8 @@ export default function EntryDrawer({
                         <div className={cn(
                             "p-4 rounded-xl border space-y-3 transition-all",
                             isAdvanceConfirmed
-                                ? "bg-emerald-50/70 border-emerald-300"
-                                : "bg-amber-50/80 border-amber-300 text-amber-950"
+                                ? "bg-emerald-50 border-emerald-300"
+                                : "bg-amber-50 border-amber-300 text-amber-950"
                         )}>
                             <div className="flex items-start gap-2.5">
                                 <Icon
@@ -542,13 +704,13 @@ export default function EntryDrawer({
                                     )}
                                 />
                                 <div className="space-y-1">
-                                    <h4 className="text-xs font-bold text-gray-900">
+                                    <h4 className="text-xs font-bold text-[#1F2937]">
                                         {isAdvanceConfirmed
                                             ? 'Advance Payment Manzoor Kar Li Gai Hai'
                                             : 'Capital se zyada nikaala ja raha hai!'}
                                     </h4>
-                                    <p className="text-xs text-gray-700 leading-relaxed">
-                                        {activePartner?.name} ka capital <span className="font-semibold">Rs. {activePartner?.net_equity.toLocaleString('en-US')}</span> hai. Aap <span className="font-semibold">Rs. {numericAmount.toLocaleString('en-US')}</span> nikaal rahe hain, yani <span className="font-bold text-red-700">Rs. {excessAmount.toLocaleString('en-US')}</span> zyada.
+                                    <p className="text-xs text-[#374151] leading-relaxed">
+                                        {activePartner?.name} ka capital <span className="font-bold text-[#1F2937]">Rs. {activePartner?.net_equity.toLocaleString('en-US')}</span> hai. Aap <span className="font-bold text-[#1F2937]">Rs. {numericAmount.toLocaleString('en-US')}</span> nikaal rahe hain, yani <span className="font-black text-red-700">Rs. {excessAmount.toLocaleString('en-US')}</span> zyada.
                                         {!isAdvanceConfirmed && ` Ye Rs. ${excessAmount.toLocaleString('en-US')} ${activePartner?.name} par udhaar (Advance) likhein?`}
                                     </p>
                                 </div>
@@ -560,7 +722,7 @@ export default function EntryDrawer({
                                     <button
                                         type="button"
                                         onClick={() => setIsAdvanceConfirmed(true)}
-                                        className="min-h-[44px] px-3.5 py-2 text-xs font-bold rounded-lg bg-white border border-gray-300 hover:bg-gray-50 text-gray-900 shadow-xs cursor-pointer text-center"
+                                        className="min-h-[44px] px-3.5 py-2 text-xs font-bold rounded-lg bg-white border border-gray-300 hover:bg-gray-50 text-[#1F2937] shadow-xs cursor-pointer text-center"
                                     >
                                         Haan, Advance banayein
                                     </button>
@@ -571,18 +733,18 @@ export default function EntryDrawer({
                                                 setAmount(activePartner.net_equity.toString());
                                             }
                                         }}
-                                        className="min-h-[44px] px-3.5 py-2 text-xs font-medium rounded-lg bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 shadow-xs cursor-pointer text-center"
+                                        className="min-h-[44px] px-3.5 py-2 text-xs font-medium rounded-lg bg-white border border-gray-300 hover:bg-gray-50 text-[#374151] shadow-xs cursor-pointer text-center"
                                     >
                                         Nahi, rakam kam karein
                                     </button>
                                 </div>
                             ) : (
-                                <div className="flex items-center justify-between text-xs text-emerald-800 pt-1">
+                                <div className="flex items-center justify-between text-xs text-emerald-900 pt-1 font-semibold">
                                     <span>Rs. {excessAmount.toLocaleString('en-US')} Advance record kiya jayega.</span>
                                     <button
                                         type="button"
                                         onClick={() => setIsAdvanceConfirmed(false)}
-                                        className="underline text-gray-600 hover:text-black cursor-pointer text-[11px]"
+                                        className="underline text-[#4B5563] hover:text-[#1F2937] cursor-pointer text-[11px]"
                                     >
                                         Advance cancel karein
                                     </button>
@@ -593,22 +755,22 @@ export default function EntryDrawer({
 
                     {/* LIVE PREVIEW BOX */}
                     {livePreview && (
-                        <div className="p-3.5 rounded-xl bg-gray-50 border border-gray-200 text-xs text-gray-700 space-y-1">
-                            <span className="font-bold text-gray-900 block text-[11px] uppercase tracking-wide">
+                        <div className="p-3.5 rounded-xl bg-gray-50 border border-gray-200 text-xs text-[#374151] space-y-1">
+                            <span className="font-bold text-[#1F2937] block text-[11px] uppercase tracking-wide">
                                 {isUrdu ? 'کھاتہ پر اثر (Live Preview)' : 'Khata Par Asar (Live Preview):'}
                             </span>
-                            <p className="leading-relaxed">
+                            <p className="leading-relaxed font-medium">
                                 {livePreview}
                             </p>
                         </div>
                     )}
 
                     {/* Submit and Cancel Buttons */}
-                    <div className="flex items-center gap-3 pt-2">
+                    <div className="flex items-center gap-3 pt-2 border-t border-gray-200">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 min-h-[44px] px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer"
+                            className="flex-1 min-h-[44px] px-4 py-2 text-sm font-semibold text-[#374151] bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer"
                         >
                             {isUrdu ? 'منسوخ' : 'Mansookh (Cancel)'}
                         </button>

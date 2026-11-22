@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Link } from '@inertiajs/react';
 import Icon from '@/components/ui/icon';
 import { cn } from '@/lib/utils';
@@ -26,20 +26,6 @@ export default function InvestmentHeader({
     onOpenEntry,
     isUrdu = false,
 }: InvestmentHeaderProps) {
-    // Client wall-clock time in local browser timezone (e.g. 12:45 PM)
-    const getLocalTime = () =>
-        new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-
-    const [currentTime, setCurrentTime] = useState<string>(getLocalTime());
-
-    // Update time every 10 seconds so clock stays accurate
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setCurrentTime(getLocalTime());
-        }, 10000);
-        return () => clearInterval(timer);
-    }, []);
-
     // Keyboard shortcut: Ctrl+N for new entry
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -68,7 +54,7 @@ export default function InvestmentHeader({
         {
             id: 'surplus',
             href: '/investment/surplus',
-            title: isUrdu ? 'فالتو پیسہ (Surplus)' : 'Faltu Paisa (Surplus)',
+            title: isUrdu ? 'سرمایہ کاری (Investments)' : 'Sarmayakari (Investments)',
         },
         {
             id: 'audit',
@@ -79,16 +65,11 @@ export default function InvestmentHeader({
 
     return (
         <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-3.5 space-y-3 shadow-xs">
-            {/* Top row: Live indicator, User Name pill, Pending Approvals badge, and ONE main button */}
+            {/* Top row: Pending Approvals badge (if any) and ONE main action button */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                {/* Left side: Live Clock with pulsating green dot & Pending badge */}
-                <div className="flex items-center gap-3 flex-wrap">
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-300 text-sm font-semibold text-[#1F2937] select-none">
-                        <span className="size-2.5 rounded-full bg-emerald-600 animate-pulse" />
-                        <span>Live · {currentTime}</span>
-                    </div>
-
-                    {pendingApprovalsCount > 0 && (
+                {/* Left side: Pending badge (if any) */}
+                <div className="flex items-center gap-3 flex-wrap min-h-[36px]">
+                    {pendingApprovalsCount > 0 ? (
                         <Link
                             href="/investment/audit?filter=pending"
                             title="Pending approvals list dekhne ke liye click karein"
@@ -98,19 +79,15 @@ export default function InvestmentHeader({
                             <span>{pendingApprovalsCount} {isUrdu ? 'منظوریاں باقی' : 'Approval Baqi'}</span>
                             <Icon name="ArrowRight" className="size-3.5 text-[#374151]" />
                         </Link>
+                    ) : (
+                        <span className="text-xs font-semibold text-[#4B5563] hidden sm:inline">
+                            Vegetable POS · Investment & Capital Ledger
+                        </span>
                     )}
                 </div>
 
-                {/* Right side: Sleek profile icon & ONE main action button (No bulky Test User button) */}
+                {/* Right side: ONE main action button */}
                 <div className="flex items-center gap-3 justify-end">
-                    <div
-                        title={userName}
-                        className="size-10 rounded-lg bg-gray-100 hover:bg-gray-200 text-[#374151] border border-gray-200 flex items-center justify-center transition-colors select-none"
-                    >
-                        <Icon name="User" className="size-5 text-[#1F2937]" />
-                    </div>
-
-                    {/* ONE main button on page (Section B.2) */}
                     <button
                         type="button"
                         onClick={onOpenEntry}

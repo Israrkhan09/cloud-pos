@@ -37,53 +37,76 @@ export default function BreakdownModal({ isOpen, onClose, data }: BreakdownModal
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="max-w-md w-full p-6 bg-white font-sans text-[#1a211c]">
-                <DialogHeader className="border-b border-gray-100 pb-3">
-                    <DialogTitle className="text-base font-bold text-gray-900 flex items-center gap-2">
-                        <Icon name="Calculator" className="size-5 text-[#14532d]" />
+            <DialogContent className="max-w-md w-full p-6 bg-white font-sans text-[#1F2937] shadow-xl border border-gray-200 rounded-2xl">
+                {/* Header */}
+                <DialogHeader className="border-b border-gray-200 pb-3.5 space-y-2">
+                    <DialogTitle className="text-base font-bold text-[#1F2937] flex items-center gap-2.5">
+                        <span className="p-1.5 rounded-lg bg-emerald-100 text-[#14532d]">
+                            <Icon name="Calculator" className="size-4" />
+                        </span>
                         <span>{data.title}</span>
                     </DialogTitle>
                     {data.total !== undefined && (
-                        <DialogDescription className="text-sm font-black text-[#14532d] pt-1">
-                            Kul Total: {formatRs(data.total)}
-                        </DialogDescription>
+                        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 flex items-center justify-between">
+                            <span className="text-xs font-bold text-[#374151]">
+                                Kul Total Rakam:
+                            </span>
+                            <span className="text-lg font-black text-[#14532d]">
+                                {formatRs(data.total)}
+                            </span>
+                        </div>
                     )}
                 </DialogHeader>
 
+                {/* Body Content */}
                 <div className="py-3 space-y-3">
-                    <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider block">
-                        Tafseel (Breakdown Hisab):
+                    <span className="text-xs font-bold text-[#374151] tracking-wide uppercase block">
+                        Tafseel (Hisab Kitab):
                     </span>
 
-                    <div className="divide-y divide-gray-100 border border-gray-200 rounded-lg overflow-hidden">
+                    {/* Breakdown Items List */}
+                    <div className="space-y-2.5">
                         {data.items.map((item, idx) => (
-                            <div key={idx} className="p-3 bg-gray-50/50 flex flex-col gap-1">
-                                <div className="flex items-center justify-between text-xs font-semibold text-gray-900">
-                                    <span>{item.label}</span>
+                            <div
+                                key={idx}
+                                className="p-3.5 bg-gray-50/70 border border-gray-200 rounded-xl space-y-1 hover:bg-gray-50 transition-colors"
+                            >
+                                <div className="flex items-center justify-between gap-2">
+                                    <span className="text-sm font-bold text-[#1F2937]">
+                                        {item.label}
+                                    </span>
                                     {item.amount !== undefined && (
-                                        <span className="font-bold text-[#14532d]">{formatRs(item.amount)}</span>
+                                        <span className="text-sm font-black text-[#14532d] shrink-0">
+                                            {formatRs(item.amount)}
+                                        </span>
                                     )}
                                 </div>
                                 {item.note && (
-                                    <span className="text-[11px] text-gray-500">{item.note}</span>
+                                    <p className="text-xs font-medium text-[#374151] leading-relaxed">
+                                        {item.note}
+                                    </p>
                                 )}
                             </div>
                         ))}
                     </div>
 
+                    {/* Note / Explainer Callout */}
                     {data.note && (
-                        <div className="p-2.5 rounded-lg bg-emerald-50/70 border border-emerald-200/80 text-[11px] text-emerald-950 flex items-start gap-2">
-                            <Icon name="Info" className="size-4 text-emerald-700 shrink-0 mt-0.5" />
-                            <span>{data.note}</span>
+                        <div className="p-3 rounded-xl bg-blue-50/70 border border-blue-200 text-xs flex items-start gap-2.5 mt-2">
+                            <Icon name="Info" className="size-4 text-blue-700 shrink-0 mt-0.5" />
+                            <p className="text-xs font-medium text-[#1F2937] leading-relaxed">
+                                {data.note}
+                            </p>
                         </div>
                     )}
                 </div>
 
-                <div className="pt-2 flex justify-end">
+                {/* Footer Action */}
+                <div className="pt-2 flex justify-end border-t border-gray-100">
                     <button
                         type="button"
                         onClick={onClose}
-                        className="px-4 py-2 text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors cursor-pointer"
+                        className="min-h-[38px] px-5 py-2 text-xs font-bold text-white bg-[#14532d] hover:bg-[#166534] rounded-lg shadow-xs transition-colors cursor-pointer"
                     >
                         Band Karein
                     </button>

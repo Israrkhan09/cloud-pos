@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import InvestmentHeader from '@/components/investment/investment-header';
-import AajKaHaal from '@/components/investment/aaj-ka-haal';
 import EntryDrawer from '@/components/investment/entry-drawer';
 import BreakdownModal, { BreakdownData } from '@/components/investment/breakdown-modal';
 import {
@@ -99,7 +98,7 @@ export default function InvestmentSurplusPage({
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: isUrdu ? 'انویسٹمنٹ' : 'Investment', href: '/investment/partners' },
-        { title: isUrdu ? 'فالتو پیسہ (Surplus)' : 'Faltu Paisa', href: '/investment/surplus' },
+        { title: isUrdu ? 'سرمایہ کاری (Investments)' : 'Sarmayakari (Investments)', href: '/investment/surplus' },
     ];
 
     const formatRs = (val: number) => 'Rs. ' + Number(val || 0).toLocaleString('en-US');
@@ -124,18 +123,18 @@ export default function InvestmentSurplusPage({
         }, {
             preserveScroll: true,
             onSuccess: () => {
-                toast.success(`Faltu paisa wapsi Rs. ${formatNum(returnModalFund.total_return)} kamyabi se record ho gayi.`);
+                toast.success(`Sarmayakari wapsi Rs. ${formatNum(returnModalFund.total_return)} kamyabi se record ho gayi.`);
                 setReturnModalFund(null);
             },
             onError: (errs) => {
-                toast.error(Object.values(errs)[0] || 'Error recording surplus return.');
+                toast.error(Object.values(errs)[0] || 'Error recording investment return.');
             },
         });
     };
 
     // Export CSV
     const handleExportCSV = () => {
-        const headers = ['Fund Name', 'Lagaya Hua Paisa', 'Munafa', 'Qisam', 'Muddat', 'Status', 'Kul Wapsi'];
+        const headers = ['Fund Name', 'Lagaya Hua Sarmaya', 'Munafa', 'Qisam', 'Muddat', 'Status', 'Kul Wapsi'];
         const rows = funds.map(f => [
             `"${f.fund_name}"`,
             f.principal_amount,
@@ -150,7 +149,7 @@ export default function InvestmentSurplusPage({
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement('a');
         link.setAttribute('href', encodedUri);
-        link.setAttribute('download', `Faltu_Paisa_${new Date().toISOString().slice(0, 10)}.csv`);
+        link.setAttribute('download', `Sarmayakari_Register_${new Date().toISOString().slice(0, 10)}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -158,7 +157,7 @@ export default function InvestmentSurplusPage({
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={isUrdu ? 'فالتو پیسہ - انویسٹمنٹ' : 'Faltu Paisa (Surplus) - Investment'} />
+            <Head title={isUrdu ? 'سرمایہ کاری - انویسٹمنٹ' : 'Sarmayakari (Investments) - Investment'} />
 
             <div className="-mt-4 -mx-4 -mb-8 pb-28 bg-[#f4f6f4] min-h-screen font-sans text-[#1F2937]">
                 {/* Header (Section B.5 short tabs & single alert line) */}
@@ -172,12 +171,9 @@ export default function InvestmentSurplusPage({
                 />
 
                 <div className="p-4 md:p-6 space-y-5 max-w-7xl mx-auto">
-                    {/* Section B.6: Aaj Ka Haal */}
-                    <AajKaHaal data={aajKaHaal} isUrdu={isUrdu} />
-
-                    {/* Section B.1: Har Page Par Sirf 3 Numbers (Surplus Page) */}
+                    {/* Section B.1: Har Page Par Sirf 3 Numbers (Sarmayakari Page) */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                        {/* Number 1: Lagaya hua paisa */}
+                        {/* Number 1: Kul Sarmayakari */}
                         <div
                             onClick={() => setActiveBreakdown(breakdowns.lagaya_paisa)}
                             className="bg-white p-4 md:p-5 rounded-xl border border-gray-200 shadow-2xs hover:border-gray-400 transition-all cursor-pointer group"
@@ -185,7 +181,7 @@ export default function InvestmentSurplusPage({
                         >
                             <div className="flex items-center justify-between">
                                 <span className="text-xs font-bold text-[#374151] uppercase tracking-wider">
-                                    {isUrdu ? 'لگایا ہوا پیسہ' : 'Lagaya Hua Paisa'}
+                                    {isUrdu ? 'کل سرمایہ کاری' : 'Kul Sarmayakari'}
                                 </span>
                                 <Icon name="Info" className="size-4 text-[#4B5563] group-hover:text-gray-700" />
                             </div>
@@ -217,7 +213,7 @@ export default function InvestmentSurplusPage({
                             </span>
                         </div>
 
-                        {/* Number 3: Faltu paisa wapas total */}
+                        {/* Number 3: Kul Market Value (Wapsi) */}
                         <div
                             onClick={() => setActiveBreakdown(breakdowns.wapsi_total)}
                             className="bg-white p-4 md:p-5 rounded-xl border border-gray-200 shadow-2xs hover:border-[#14532d] transition-all cursor-pointer group"
@@ -225,7 +221,7 @@ export default function InvestmentSurplusPage({
                         >
                             <div className="flex items-center justify-between">
                                 <span className="text-xs font-bold text-[#374151] uppercase tracking-wider">
-                                    {isUrdu ? 'فالتو پیسہ واپس (کل)' : 'Faltu Paisa Wapas (Kul)'}
+                                    {isUrdu ? 'کل مارکیٹ ویلیو (واپسی)' : 'Kul Market Value (Wapsi)'}
                                 </span>
                                 <Icon name="Info" className="size-4 text-[#4B5563] group-hover:text-[#14532d]" />
                             </div>
@@ -244,7 +240,7 @@ export default function InvestmentSurplusPage({
                             <div className="flex items-center gap-2">
                                 <Icon name="TrendUp" className="size-5 text-[#14532d]" />
                                 <h3 className="text-sm font-bold text-[#1F2937]">
-                                    {isUrdu ? 'فالتو پیسہ کھاتہ' : 'Faltu Paisa Khata (Surplus Register)'}
+                                    {isUrdu ? 'سرمایہ کاری کھاتہ' : 'Sarmayakari Register (Investment Funds)'}
                                 </h3>
                             </div>
                             <div className="flex items-center gap-2">
@@ -371,7 +367,7 @@ export default function InvestmentSurplusPage({
                         <DialogContent className="max-w-md w-full p-6 bg-white font-sans text-[#1F2937]">
                             <DialogHeader>
                                 <DialogTitle className="text-base font-bold text-[#1F2937]">
-                                    Faltu Paisa Wapas Hasil Karein
+                                    {isUrdu ? 'سرمایہ کاری واپس حاصل کریں' : 'Sarmayakari Wapas Hasil Karein'}
                                 </DialogTitle>
                                 <DialogDescription className="text-xs text-[#4B5563]">
                                     Fund: {returnModalFund.fund_name} — Kul Wapsi (Asal + Munafa): Rs. {formatNum(returnModalFund.total_return)}

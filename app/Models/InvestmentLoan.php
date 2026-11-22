@@ -14,6 +14,7 @@ class InvestmentLoan extends Model
         'lender_name',
         'lender_name_ur',
         'phone',
+        'direction',
         'principal_amount',
         'fee_or_interest',
         'paid_amount',

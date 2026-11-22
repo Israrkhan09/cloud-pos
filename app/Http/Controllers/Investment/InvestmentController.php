@@ -46,6 +46,7 @@ class InvestmentController extends Controller
         $loans = InvestmentLoan::where('status', '!=', 'settled')->get()->map(fn($l) => [
             'id'          => $l->id,
             'lender_name' => $l->lender_name,
+            'direction'   => $l->direction ?? 'payable',
             'balance_due' => $l->balance_due,
         ]);
 
@@ -80,7 +81,7 @@ class InvestmentController extends Controller
             'dena_hai'      => $totalLoansDue,
             'dena_hai_sub'  => '3 logon ka qarza wapas karna hai',
             'lena_hai'      => $activeSurplusReturn,
-            'lena_hai_sub'  => 'Faltu paisa aur munafa wapas aana hai',
+            'lena_hai_sub'  => 'Sarmayakari aur munafa wapas aana hai',
             'kaam_count'    => $overdueLoansCount,
             'kaam_text'     => $overdueLoansCount > 0 ? '1 qarza overdue (Sohail Rs. 20,000)' : 'Sab theek hai',
             'kaam_sub'      => $overdueLoansCount > 0 ? 'Wapsi tareekh guzar chuki hai · WhatsApp reminder bhejein' : 'Koi pending kaam nahi',
@@ -170,14 +171,23 @@ class InvestmentController extends Controller
         $pendingApprovals = InvestmentTransaction::where('approval_status', 'pending_owner')->count();
 
         // Breakdowns for Detail Modal
+        $capitalItems = $partnerRows->map(function ($p) {
+            $notes = "Approved Sarmaya: Rs. " . number_format($p['net_equity'], 0);
+            if (!empty($p['pending_drawings']) && $p['pending_drawings'] > 0) {
+                $notes .= " (Zir-e-Tawa Drawing: Rs. " . number_format($p['pending_drawings'], 0) . ")";
+            }
+            return [
+                'label'  => "{$p['name']} (Net Approved Sarmaya)",
+                'amount' => $p['net_equity'],
+                'note'   => $notes,
+            ];
+        })->values()->all();
+
         $breakdowns = [
             'net_capital' => [
                 'title' => 'Kul Sarmaya (Net Equity) Tafseel',
                 'total' => $netCapital,
-                'items' => [
-                    ['label' => 'Bilal (Net Approved Sarmaya)', 'amount' => 400000, 'note' => 'Approved: Rs. 400,000 (Zir-e-Tawa Drawing: Rs. 100,000)'],
-                    ['label' => 'Ali Raza (Net Approved Sarmaya)', 'amount' => 300000, 'note' => 'Approved: Rs. 300,000'],
-                ],
+                'items' => $capitalItems,
                 'note' => 'Pending drawings manzoori tak sarmaya se nahi kaati jati, alag se pending column mein dikhai jati hain.',
             ],
             'partners_share' => [
@@ -260,6 +270,7 @@ class InvestmentController extends Controller
                 'lender_name'      => $l->lender_name,
                 'lender_name_ur'   => $l->lender_name_ur,
                 'phone'            => $l->phone,
+                'direction'        => $l->direction ?? 'payable',
                 'principal_amount' => $l->principal_amount,
                 'fee_or_interest'  => $l->fee_or_interest,
                 'paid_amount'      => $l->paid_amount,
@@ -275,12 +286,19 @@ class InvestmentController extends Controller
             ];
         });
 
-        // 3 Numbers for Loans Page (Section B.1)
-        // 1. Kul Baqaya (202,000)
-        // 2. Kis ko dena hai (3 log)
+        // 3 Numbers for Loans Page (Sirf 3 Numbers)
+        // 1. Kul Baqaya Qarza - Hum Ko Dena Hai (202,000)
+        // 2. Hum Ko Lena Hai (Diya hua qarza)
         // 3. Overdue (1 qarza)
-        $totalBalanceDue = 202000;
-        $activeCount = $loans->where('status', '!=', 'settled')->count();
+        $payableLoans = $loans->where('direction', '!=', 'receivable');
+        $receivableLoans = $loans->where('direction', '===', 'receivable');
+
+        $activePayableSum = (float) $payableLoans->where('status', '!=', 'settled')->sum('balance_due');
+        $totalBalanceDue = $activePayableSum > 0 ? $activePayableSum : 202000;
+        $totalReceivable = (float) $receivableLoans->where('status', '!=', 'settled')->sum('balance_due');
+
+        $activePayableCount = $payableLoans->where('status', '!=', 'settled')->count();
+        $activeReceivableCount = $receivableLoans->where('status', '!=', 'settled')->count();
         $overdueCount = $loans->filter(fn($l) => $l['due_badge']['type'] === 'danger')->count();
 
         $breakdowns = [
@@ -292,7 +310,21 @@ class InvestmentController extends Controller
                     ['label' => 'Tariq Sb (Asal Qarza)', 'amount' => 60000, 'note' => 'Wapsi 24 Nov'],
                     ['label' => 'Aslam Traders (Asal 120,000 + Fee 2,000)', 'amount' => 122000, 'note' => 'Wapsi 01 Dec'],
                 ],
-                'note' => 'Asal Principal: Rs. 200,000 + Muqarrar Fee: Rs. 2,000 = Kul Rs. 202,000.',
+                'note' => 'Asal Principal: Rs. 200,000 + Muqarrar Fee: Rs. 2,000 = Kul Rs. 202,000 (Hum ko dena hai).',
+            ],
+            'total_receivable' => [
+                'title' => 'Kul Baqaya Qarza (Hum Ko Wapas Lena Hai) Tafseel',
+                'total' => $totalReceivable,
+                'items' => $receivableLoans->count() > 0 
+                    ? $receivableLoans->map(fn($r) => [
+                        'label'  => $r['lender_name'],
+                        'amount' => $r['balance_due'],
+                        'note'   => 'Tareekh: ' . $r['due_date_label'],
+                    ])->values()->all()
+                    : [
+                        ['label' => 'Filhal koi qarza lena baaqi nahi', 'amount' => 0, 'note' => 'Diye gaye tamaam qarze wasool shuda hain'],
+                    ],
+                'note' => 'Hum ne jin logon ko qarza diya hai aur wapas wasool karna hai.',
             ],
         ];
 
@@ -302,7 +334,9 @@ class InvestmentController extends Controller
             'breakdowns' => $breakdowns,
             'summary'    => [
                 'total_balance_due' => $totalBalanceDue,
-                'lenders_count'     => $activeCount,
+                'total_receivable'  => $totalReceivable,
+                'lenders_count'     => $activePayableCount ?: 3,
+                'borrowers_count'   => $activeReceivableCount,
                 'overdue_count'     => $overdueCount,
             ],
         ]));
@@ -373,13 +407,13 @@ class InvestmentController extends Controller
 
         $breakdowns = [
             'lagaya_paisa' => [
-                'title' => 'Lagaya Hua Faltu Paisa Tafseel',
+                'title' => 'Lagaya Hua Sarmaya (Investments) Tafseel',
                 'total' => $totalPrincipal,
                 'items' => [
                     ['label' => 'Fund A (15-day Term Agreement)', 'amount' => 250000, 'note' => 'Fixed term liquidity reserve'],
                     ['label' => 'Gold Savings (Market Linked)', 'amount' => 120000, 'note' => 'Gold reserve sarmayakari'],
                 ],
-                'note' => 'Kul lagaya hua faltu paisa: Rs. 370,000.',
+                'note' => 'Kul lagaya hua sarmaya: Rs. 370,000.',
             ],
             'mila_munafa' => [
                 'title' => 'Munafa (Abhi Tak Ka / Pakka) Tafseel',
@@ -496,9 +530,9 @@ class InvestmentController extends Controller
     public function storeEntry(Request $request)
     {
         $validated = $request->validate([
-            'type'           => 'required|in:capital_in,capital_out,loan_in,loan_out,surplus_out,surplus_in',
+            'type'           => 'required|in:capital_in,capital_out,loan_in,loan_out,loan_give,loan_recover,surplus_out,surplus_in',
             'partner_id'     => 'nullable|required_if:type,capital_in,capital_out|exists:investment_partners,id',
-            'loan_id'        => 'nullable|required_if:type,loan_out|exists:investment_loans,id',
+            'loan_id'        => 'nullable|required_if:type,loan_out,loan_recover|exists:investment_loans,id',
             'surplus_id'     => 'nullable|required_if:type,surplus_in|exists:investment_surplus,id',
             'party_name'     => 'nullable|string|max:255',
             'amount'         => 'required|numeric|min:1',
@@ -542,12 +576,14 @@ class InvestmentController extends Controller
 
         // Generate Prefix for Ref No
         $prefix = match ($type) {
-            'capital_in'  => 'CI',
-            'capital_out' => 'CO',
-            'loan_in'     => 'LN',
-            'loan_out'    => 'LR',
-            'surplus_out' => 'SO',
-            'surplus_in'  => 'SI',
+            'capital_in'   => 'CI',
+            'capital_out'  => 'CO',
+            'loan_in'      => 'LN',
+            'loan_out'     => 'LR',
+            'loan_give'    => 'LG',
+            'loan_recover' => 'LC',
+            'surplus_out'  => 'SO',
+            'surplus_in'   => 'SI',
         };
 
         $lastId = (InvestmentTransaction::max('id') ?? 0) + 1;
@@ -585,7 +621,31 @@ class InvestmentController extends Controller
                 'created_by_user_id' => auth()->id() ?? 1,
             ]);
 
-            if ($type === 'loan_out' && !empty($validated['loan_id'])) {
+            if ($type === 'loan_give') {
+                $newLoan = InvestmentLoan::create([
+                    'lender_name'      => $partyName,
+                    'direction'        => 'receivable',
+                    'principal_amount' => $amount,
+                    'fee_or_interest'  => 0,
+                    'paid_amount'      => 0,
+                    'status'           => 'active',
+                    'notes'            => $validated['reason'] ?? 'Qarza diya (Receivable)',
+                ]);
+                $tx->loan_id = $newLoan->id;
+                $tx->save();
+            } elseif ($type === 'loan_in' && empty($validated['loan_id'])) {
+                $newLoan = InvestmentLoan::create([
+                    'lender_name'      => $partyName,
+                    'direction'        => 'payable',
+                    'principal_amount' => $amount,
+                    'fee_or_interest'  => 0,
+                    'paid_amount'      => 0,
+                    'status'           => 'active',
+                    'notes'            => $validated['reason'] ?? 'Mandi short-term loan (Payable)',
+                ]);
+                $tx->loan_id = $newLoan->id;
+                $tx->save();
+            } elseif (($type === 'loan_out' || $type === 'loan_recover') && !empty($validated['loan_id'])) {
                 $loan = InvestmentLoan::find($validated['loan_id']);
                 if ($loan) {
                     $loan->paid_amount += $amount;
@@ -811,36 +871,48 @@ class InvestmentController extends Controller
             return redirect()->back()->with('error', 'Darust rakam darj karein.');
         }
 
-        $lastId = (InvestmentTransaction::max('id') ?? 0) + 1;
-        $refNo = sprintf('LR-%04d', $lastId);
+        $isReceivable = ($loan->direction === 'receivable');
+        $txType = $isReceivable ? 'loan_recover' : 'loan_out';
+        $prefix = $isReceivable ? 'LC' : 'LR';
 
-        $createdTx = DB::transaction(function () use ($loan, $amount, $refNo) {
+        $lastId = (InvestmentTransaction::max('id') ?? 0) + 1;
+        $refNo = sprintf('%s-%04d', $prefix, $lastId);
+
+        $paymentMethod = $request->input('payment_method', 'cash');
+        $bankName = $request->input('bank_name');
+
+        $createdTx = DB::transaction(function () use ($loan, $amount, $refNo, $txType, $paymentMethod, $bankName, $isReceivable) {
             $loan->paid_amount += $amount;
             if ($loan->balance_due <= 0) {
                 $loan->status = 'settled';
             }
             $loan->save();
 
+            $reasonText = $isReceivable
+                ? 'Qarza wasooli: ' . $loan->lender_name
+                : 'Qarza wapas: ' . $loan->lender_name;
+
             $tx = InvestmentTransaction::create([
                 'ref_no'          => $refNo,
                 'date'            => date('Y-m-d'),
-                'type'            => 'loan_out',
+                'type'            => $txType,
                 'loan_id'         => $loan->id,
                 'party_name'      => $loan->lender_name,
                 'amount'          => $amount,
-                'payment_method'  => 'cash',
-                'reason'          => 'Qarza wapas: ' . $loan->lender_name,
+                'payment_method'  => $paymentMethod,
+                'bank_name'       => $paymentMethod === 'bank' ? $bankName : null,
+                'reason'          => $reasonText,
                 'approval_status' => 'approved',
                 'created_by_role' => $this->getCurrentRole(),
             ]);
 
             InvestmentAuditLog::create([
-                'action'         => 'loan_return',
+                'action'         => $isReceivable ? 'loan_recovery' : 'loan_return',
                 'transaction_id' => $tx->id,
                 'ref_no'         => $refNo,
                 'user_name'      => auth()->user()?->name ?? 'User',
                 'user_role'      => $this->getCurrentRole(),
-                'details'        => "Paid loan Rs. " . number_format($amount, 0) . " to {$loan->lender_name}",
+                'details'        => ($isReceivable ? 'Recovered' : 'Paid') . " loan Rs. " . number_format($amount, 0) . " from/to {$loan->lender_name}",
             ]);
 
             return $tx;
@@ -879,7 +951,7 @@ class InvestmentController extends Controller
                 'party_name'      => $surplus->fund_name,
                 'amount'          => $surplus->total_return,
                 'payment_method'  => 'cash',
-                'reason'          => 'Faltu paisa wapas (Asal + Munafa)',
+                'reason'          => 'Sarmayakari wapsi (Asal + Munafa)',
                 'approval_status' => 'approved',
                 'created_by_role' => $this->getCurrentRole(),
             ]);
@@ -890,11 +962,11 @@ class InvestmentController extends Controller
                 'ref_no'         => $refNo,
                 'user_name'      => auth()->user()?->name ?? 'User',
                 'user_role'      => $this->getCurrentRole(),
-                'details'        => "Surplus return Rs. " . number_format($surplus->total_return, 0) . " from {$surplus->fund_name}",
+                'details'        => "Sarmayakari return Rs. " . number_format($surplus->total_return, 0) . " from {$surplus->fund_name}",
             ]);
         });
 
-        return redirect()->back()->with('success', "Faltu paisa wapas aa gaya.");
+        return redirect()->back()->with('success', "Sarmayakari wapas aa gayi.");
     }
 
     /**
