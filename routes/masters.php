@@ -23,6 +23,9 @@ Route::middleware(['auth', 'verified'])->prefix('masters')->name('masters.')->gr
     // Items
     Route::get('items/search', [ItemController::class, 'search'])->name('items.search');
     Route::post('items/{id}/discount', [ItemController::class, 'applyDiscount'])->name('items.discount');
+    Route::post('items/{id}/stock-add', [ItemController::class, 'stockAdd'])->name('items.stock-add');
+    Route::post('items/{id}/stock-adjust', [ItemController::class, 'stockAdjust'])->name('items.stock-adjust');
+    Route::post('items/{id}/purchase', [ItemController::class, 'purchase'])->name('items.purchase');
     Route::resource('items', ItemController::class)->except(['create', 'edit', 'show']);
 
     // Areas

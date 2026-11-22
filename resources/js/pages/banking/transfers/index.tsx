@@ -16,6 +16,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 type TransferTab = 'deposit' | 'withdraw' | 'transfer';
 
@@ -42,41 +43,24 @@ export default function DepositTransferPage() {
         };
     }, []);
 
-    // Form inputs: Dynamic bank selection
-    const [selectedBank, setSelectedBank] = useState<string>(() => {
-        const accs = getStoredBankAccounts();
-        return accs.length > 0 ? accs[0].name : '';
-    });
+    // Form inputs: initially empty strings (no account pre-selected)
+    const [selectedBank, setSelectedBank] = useState<string>('');
+    const [fromBank, setFromBank] = useState<string>('');
+    const [toBank, setToBank] = useState<string>('');
 
-    const [fromBank, setFromBank] = useState<string>(() => {
-        const accs = getStoredBankAccounts();
-        return accs.length > 0 ? accs[0].name : '';
-    });
+    // Tab switcher handler - resets selected accounts and amount
+    const handleTabChange = (tab: TransferTab) => {
+        setActiveTab(tab);
+        setSelectedBank('');
+        setFromBank('');
+        setToBank('');
+        setAmountStr('');
+    };
 
-    const [toBank, setToBank] = useState<string>(() => {
-        const accs = getStoredBankAccounts();
-        return accs.length > 1 ? accs[1].name : (accs[0]?.name || '');
-    });
-
-    // Synchronize default selection if accounts load or change
-    useEffect(() => {
-        if (accounts.length > 0) {
-            if (!accounts.some((a) => a.name === selectedBank)) {
-                setSelectedBank(accounts[0].name);
-            }
-            if (!accounts.some((a) => a.name === fromBank)) {
-                setFromBank(accounts[0].name);
-            }
-            if (!accounts.some((a) => a.name === toBank)) {
-                setToBank(accounts[1]?.name || accounts[0].name);
-            }
-        }
-    }, [accounts]);
-
-    // Amount - empty by default as requested
+    // Amount - empty by default
     const [amountStr, setAmountStr] = useState('');
 
-    // Date picker state - proper date sheet
+    // Date picker state
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
     const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
@@ -87,48 +71,20 @@ export default function DepositTransferPage() {
     // Previous entries list from store
     const [entries, setEntries] = useState<TransferEntry[]>(() => getStoredTransfers());
 
-    // Parse amount for live calculations
+    // Parse amount for calculations
     const numericAmount = parseFloat(amountStr.replace(/,/g, '').trim()) || 0;
 
     const formatCurrency = (val: number) => {
         return 'Rs. ' + Math.abs(Number(val) || 0).toLocaleString('en-US');
     };
 
-    // Base Galla (Cash drawer) balance
-    const baseGallaBalance = 92000;
-
-    // Helper to find account balance
-    const getAccountCurrentBal = (name: string): number => {
-        const found = accounts.find((a) => a.name.trim().toLowerCase() === name.trim().toLowerCase());
-        return found ? Number(found.current_balance) || 0 : 0;
-    };
-
-    // Calculate source and destination ledger balances based on active accounts
-    let sourceTitle = 'Cash Drawer (Galla)';
-    let sourceBefore = baseGallaBalance;
-    let sourceAfter = Math.max(0, baseGallaBalance - numericAmount);
-
-    let destTitle = selectedBank || (isUrdu ? 'بینک اکاؤنٹ منتخب کریں' : 'Select Bank Account');
-    let destBefore = getAccountCurrentBal(selectedBank);
-    let destAfter = destBefore + numericAmount;
-
-    if (activeTab === 'withdraw') {
-        sourceTitle = selectedBank || (isUrdu ? 'بینک اکاؤنٹ منتخب کریں' : 'Select Bank Account');
-        sourceBefore = getAccountCurrentBal(selectedBank);
-        sourceAfter = Math.max(0, sourceBefore - numericAmount);
-
-        destTitle = 'Cash Drawer (Galla)';
-        destBefore = baseGallaBalance;
-        destAfter = baseGallaBalance + numericAmount;
-    } else if (activeTab === 'transfer') {
-        sourceTitle = fromBank || (isUrdu ? 'بینک اکاؤنٹ (From)' : 'From Bank Account');
-        sourceBefore = getAccountCurrentBal(fromBank);
-        sourceAfter = Math.max(0, sourceBefore - numericAmount);
-
-        destTitle = toBank || (isUrdu ? 'بینک اکاؤنٹ (To)' : 'To Bank Account');
-        destBefore = getAccountCurrentBal(toBank);
-        destAfter = destBefore + numericAmount;
-    }
+    // Disabled state calculation
+    const isSaveDisabled =
+        accounts.length === 0 ||
+        numericAmount <= 0 ||
+        (activeTab === 'deposit' && !selectedBank) ||
+        (activeTab === 'withdraw' && !selectedBank) ||
+        (activeTab === 'transfer' && (!fromBank || !toBank || fromBank === toBank));
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -142,17 +98,33 @@ export default function DepositTransferPage() {
             return;
         }
 
-        if (numericAmount <= 0) {
-            toast.error(isUrdu ? 'برائے مہربانی درست رقم درج کریں' : 'Please enter a valid amount');
+        if (activeTab === 'deposit' && !selectedBank) {
+            toast.error(isUrdu ? 'برائے مہربانی بینک اکاؤنٹ منتخب کریں' : 'Barahe karam bank account select karein');
             return;
         }
 
-        if (activeTab === 'transfer' && fromBank === toBank) {
-            toast.error(
-                isUrdu
-                    ? 'دونوں بینک اکاؤنٹس ایک جیسے نہیں ہو سکتے'
-                    : 'Source and destination bank accounts cannot be the same'
-            );
+        if (activeTab === 'withdraw' && !selectedBank) {
+            toast.error(isUrdu ? 'برائے مہربانی بینک اکاؤنٹ منتخب کریں' : 'Barahe karam bank account select karein');
+            return;
+        }
+
+        if (activeTab === 'transfer') {
+            if (!fromBank || !toBank) {
+                toast.error(isUrdu ? 'دونوں بینک اکاؤنٹس منتخب کریں' : 'Dono bank accounts select karein');
+                return;
+            }
+            if (fromBank === toBank) {
+                toast.error(
+                    isUrdu
+                        ? 'دونوں بینک اکاؤنٹس ایک جیسے نہیں ہو سکتے'
+                        : 'Source and destination bank accounts cannot be the same'
+                );
+                return;
+            }
+        }
+
+        if (numericAmount <= 0) {
+            toast.error(isUrdu ? 'برائے مہربانی درست رقم درج کریں' : 'Please enter a valid amount');
             return;
         }
 
@@ -182,7 +154,7 @@ export default function DepositTransferPage() {
             subtext: `${formattedDate} · ${referenceNo.trim() ? `Slip ${referenceNo.trim()}` : 'Transfer entry'}`,
             amount: numericAmount,
             date: formattedDate,
-            bankName: selectedBank,
+            bankName: selectedBank || fromBank,
             type: activeTab,
         };
 
@@ -198,6 +170,9 @@ export default function DepositTransferPage() {
         setAmountStr('');
         setReferenceNo('');
         setRemark('');
+        setSelectedBank('');
+        setFromBank('');
+        setToBank('');
     };
 
     const breadcrumbs: BreadcrumbItem[] = [
@@ -219,7 +194,7 @@ export default function DepositTransferPage() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={isUrdu ? 'ڈپازٹ / ٹرانسفر - ویجیٹیبل پی او ایس' : 'Deposit / Transfer - Vegetable POS'} />
 
-            <div className="max-w-7xl mx-auto w-full space-y-6 pb-12">
+            <div className="max-w-6xl mx-auto w-full space-y-6 pb-12">
                 {/* Header Section */}
                 <div>
                     <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
@@ -256,374 +231,342 @@ export default function DepositTransferPage() {
                     </div>
                 )}
 
-                {/* Main 2 Columns Layout */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                    {/* Left Column: Transfer Form Card */}
-                    <div className="lg:col-span-7 xl:col-span-8 bg-white dark:bg-card border border-gray-200/90 dark:border-border rounded-xl shadow-xs p-6">
-                        {/* 3 Tabs Switcher */}
-                        <div className="inline-flex p-1 bg-gray-100 dark:bg-muted rounded-xl mb-6 flex-wrap gap-1">
-                            <button
-                                type="button"
-                                onClick={() => setActiveTab('deposit')}
-                                className={`px-4 py-2 text-xs sm:text-sm rounded-lg font-medium transition-all cursor-pointer ${
-                                    activeTab === 'deposit'
-                                        ? 'bg-white dark:bg-card text-gray-900 dark:text-white shadow-xs font-semibold'
-                                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                                }`}
-                            >
-                                {isUrdu ? 'کیش ڈپازٹ (گلہ ← بینک)' : 'Cash Deposit (Galla → Bank)'}
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setActiveTab('withdraw')}
-                                className={`px-4 py-2 text-xs sm:text-sm rounded-lg font-medium transition-all cursor-pointer ${
-                                    activeTab === 'withdraw'
-                                        ? 'bg-white dark:bg-card text-gray-900 dark:text-white shadow-xs font-semibold'
-                                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                                }`}
-                            >
-                                {isUrdu ? 'بینک ← کیش' : 'Bank → Cash'}
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setActiveTab('transfer')}
-                                className={`px-4 py-2 text-xs sm:text-sm rounded-lg font-medium transition-all cursor-pointer ${
-                                    activeTab === 'transfer'
-                                        ? 'bg-white dark:bg-card text-gray-900 dark:text-white shadow-xs font-semibold'
-                                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                                }`}
-                            >
-                                {isUrdu ? 'بینک ← بینک' : 'Bank → Bank'}
-                            </button>
-                        </div>
-
-                        {/* Form */}
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            {/* Source and Destination Fields */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                {activeTab === 'deposit' && (
-                                    <>
-                                        {/* Kahan se */}
-                                        <div>
-                                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                                                {isUrdu ? 'کہاں سے' : 'Kahan se'}
-                                            </label>
-                                            <div className="w-full px-3 py-2.5 text-sm bg-gray-50 dark:bg-muted/40 border border-gray-200 dark:border-border rounded-lg text-gray-800 dark:text-gray-200 font-medium">
-                                                {isUrdu ? 'کیش ڈراور (گلہ)' : 'Cash Drawer (Galla)'}
-                                            </div>
-                                        </div>
-
-                                        {/* Kis bank account mein - Dynamically populated from added Bank Accounts */}
-                                        <div>
-                                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                                                {isUrdu ? 'کس بینک اکاؤنٹ میں' : 'Kis bank account mein'}
-                                            </label>
-                                            <select
-                                                value={selectedBank}
-                                                onChange={(e) => setSelectedBank(e.target.value)}
-                                                className="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-border rounded-lg bg-white dark:bg-background text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#166534] focus:border-[#166534] transition-all cursor-pointer font-medium"
-                                            >
-                                                {accounts.length === 0 ? (
-                                                    <option value="" disabled>
-                                                        {isUrdu ? '-- کوئی اکاؤنٹ دستیاب نہیں --' : '-- No accounts available --'}
-                                                    </option>
-                                                ) : (
-                                                    accounts.map((acc) => (
-                                                        <option key={acc.id} value={acc.name}>
-                                                            {acc.name} ({acc.type} · {formatCurrency(acc.current_balance)})
-                                                        </option>
-                                                    ))
-                                                )}
-                                            </select>
-                                        </div>
-                                    </>
-                                )}
-
-                                {activeTab === 'withdraw' && (
-                                    <>
-                                        {/* Kis bank account se */}
-                                        <div>
-                                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                                                {isUrdu ? 'کس بینک اکاؤنٹ سے' : 'Kis bank account se'}
-                                            </label>
-                                            <select
-                                                value={selectedBank}
-                                                onChange={(e) => setSelectedBank(e.target.value)}
-                                                className="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-border rounded-lg bg-white dark:bg-background text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#166534] focus:border-[#166534] transition-all cursor-pointer font-medium"
-                                            >
-                                                {accounts.length === 0 ? (
-                                                    <option value="" disabled>
-                                                        {isUrdu ? '-- کوئی اکاؤنٹ دستیاب نہیں --' : '-- No accounts available --'}
-                                                    </option>
-                                                ) : (
-                                                    accounts.map((acc) => (
-                                                        <option key={acc.id} value={acc.name}>
-                                                            {acc.name} ({acc.type} · {formatCurrency(acc.current_balance)})
-                                                        </option>
-                                                    ))
-                                                )}
-                                            </select>
-                                        </div>
-
-                                        {/* Kahan jama hoga */}
-                                        <div>
-                                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                                                {isUrdu ? 'کہاں جمع ہوگا' : 'Kahan jama hoga'}
-                                            </label>
-                                            <div className="w-full px-3 py-2.5 text-sm bg-gray-50 dark:bg-muted/40 border border-gray-200 dark:border-border rounded-lg text-gray-800 dark:text-gray-200 font-medium">
-                                                {isUrdu ? 'کیش ڈراور (گلہ)' : 'Cash Drawer (Galla)'}
-                                            </div>
-                                        </div>
-                                    </>
-                                )}
-
-                                {activeTab === 'transfer' && (
-                                    <>
-                                        {/* From bank */}
-                                        <div>
-                                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                                                {isUrdu ? 'کس بینک اکاؤنٹ سے (From)' : 'Kis bank account se (From)'}
-                                            </label>
-                                            <select
-                                                value={fromBank}
-                                                onChange={(e) => setFromBank(e.target.value)}
-                                                className="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-border rounded-lg bg-white dark:bg-background text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#166534] focus:border-[#166534] transition-all cursor-pointer font-medium"
-                                            >
-                                                {accounts.length === 0 ? (
-                                                    <option value="" disabled>
-                                                        {isUrdu ? '-- کوئی اکاؤنٹ دستیاب نہیں --' : '-- No accounts available --'}
-                                                    </option>
-                                                ) : (
-                                                    accounts.map((acc) => (
-                                                        <option key={acc.id} value={acc.name}>
-                                                            {acc.name} ({acc.type} · {formatCurrency(acc.current_balance)})
-                                                        </option>
-                                                    ))
-                                                )}
-                                            </select>
-                                        </div>
-
-                                        {/* To bank */}
-                                        <div>
-                                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                                                {isUrdu ? 'کس بینک اکاؤنٹ میں (To)' : 'Kis bank account mein (To)'}
-                                            </label>
-                                            <select
-                                                value={toBank}
-                                                onChange={(e) => setToBank(e.target.value)}
-                                                className="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-border rounded-lg bg-white dark:bg-background text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#166534] focus:border-[#166534] transition-all cursor-pointer font-medium"
-                                            >
-                                                {accounts.length === 0 ? (
-                                                    <option value="" disabled>
-                                                        {isUrdu ? '-- کوئی اکاؤنٹ دستیاب نہیں --' : '-- No accounts available --'}
-                                                    </option>
-                                                ) : (
-                                                    accounts.map((acc) => (
-                                                        <option key={acc.id} value={acc.name}>
-                                                            {acc.name} ({acc.type} · {formatCurrency(acc.current_balance)})
-                                                        </option>
-                                                    ))
-                                                )}
-                                            </select>
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-
-                            {/* Amount (Rs.) - Empty by default as requested */}
-                            <div>
-                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                                    {isUrdu ? 'رقم (روپے)' : 'Amount (Rs.)'}
-                                </label>
-                                <input
-                                    type="text"
-                                    value={amountStr}
-                                    onChange={(e) => setAmountStr(e.target.value)}
-                                    placeholder="0"
-                                    className="w-full px-4 py-3 text-end text-xl sm:text-2xl font-bold border border-gray-200 dark:border-border rounded-lg bg-white dark:bg-background text-gray-900 dark:text-white placeholder-gray-300 focus:outline-none focus:ring-1 focus:ring-[#166534] focus:border-[#166534] transition-all"
-                                />
-                            </div>
-
-                            {/* Date Picker (Proper Date Sheet Popover) and Reference No */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-                                {/* Tareekh with Interactive Calendar Popover */}
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                                        {isUrdu ? 'تاریخ' : 'Tareekh'}
-                                    </label>
-                                    <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                                        <PopoverTrigger asChild>
-                                            <button
-                                                type="button"
-                                                className="w-full flex items-center justify-between px-3 py-2 text-sm border border-gray-200 dark:border-border rounded-lg bg-white dark:bg-background text-gray-900 dark:text-white hover:border-[#166534] focus:outline-none focus:ring-1 focus:ring-[#166534] focus:border-[#166534] transition-all cursor-pointer"
-                                            >
-                                                <span className="font-medium text-gray-800 dark:text-gray-200">
-                                                    {format(selectedDate, 'dd MMM yyyy')}
-                                                </span>
-                                                <svg className="w-4 h-4 text-gray-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                                                    <line x1="16" y1="2" x2="16" y2="6" />
-                                                    <line x1="8" y1="2" x2="8" y2="6" />
-                                                    <line x1="3" y1="10" x2="21" y2="10" />
-                                                </svg>
-                                            </button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-auto p-0 bg-white dark:bg-card border border-gray-200 dark:border-border rounded-xl shadow-xl z-50" align="start">
-                                            <Calendar
-                                                mode="single"
-                                                selected={selectedDate}
-                                                onSelect={(date) => {
-                                                    if (date) {
-                                                        setSelectedDate(date);
-                                                    }
-                                                    setIsCalendarOpen(false);
-                                                }}
-                                                initialFocus
-                                            />
-                                        </PopoverContent>
-                                    </Popover>
-                                </div>
-
-                                {/* Deposit slip / Reference no */}
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                                        {isUrdu ? 'ڈپازٹ سلپ / ریفرنس نمبر' : 'Deposit slip / Reference no.'}
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={referenceNo}
-                                        onChange={(e) => setReferenceNo(e.target.value)}
-                                        placeholder="e.g. SLP-20451"
-                                        className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-border rounded-lg bg-white dark:bg-background text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#166534] focus:border-[#166534] transition-all"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Remark (optional) */}
-                            <div>
-                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                                    {isUrdu ? 'ریمارک (اختیاری)' : 'Remark (optional)'}
-                                </label>
-                                <input
-                                    type="text"
-                                    value={remark}
-                                    onChange={(e) => setRemark(e.target.value)}
-                                    placeholder="e.g. Din ka cash galla se jama"
-                                    className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-border rounded-lg bg-white dark:bg-background text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#166534] focus:border-[#166534] transition-all"
-                                />
-                            </div>
-
-                            {/* Buttons */}
-                            <div className="flex items-center gap-3 pt-3">
-                                <button
-                                    type="submit"
-                                    className="py-2.5 px-6 bg-[#166534] hover:bg-[#14532d] text-white text-sm font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
-                                >
-                                    {isUrdu
-                                        ? (activeTab === 'deposit' ? 'ڈپازٹ محفوظ کریں' : activeTab === 'withdraw' ? 'کیش نکالنا محفوظ کریں' : 'ٹرانسفر محفوظ کریں')
-                                        : (activeTab === 'deposit' ? 'Deposit Save karein' : activeTab === 'withdraw' ? 'Withdrawal Save karein' : 'Transfer Save karein')}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setAmountStr('');
-                                        setReferenceNo('');
-                                        setRemark('');
-                                    }}
-                                    className="py-2.5 px-5 border border-gray-200 dark:border-border hover:bg-gray-50 dark:hover:bg-muted text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg transition-colors cursor-pointer"
-                                >
-                                    {isUrdu ? 'منسوخ' : 'Cancel'}
-                                </button>
-                            </div>
-                        </form>
+                {/* Full-width Form Card */}
+                <div className="bg-white dark:bg-card border border-gray-200/90 dark:border-border rounded-xl shadow-xs p-6 w-full">
+                    {/* Full-width Tabs Switcher with 3 equally wide buttons */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 p-1.5 bg-gray-100 dark:bg-muted rounded-xl mb-6 gap-1 w-full">
+                        <button
+                            type="button"
+                            onClick={() => handleTabChange('deposit')}
+                            className={cn(
+                                "w-full py-2.5 px-4 text-xs sm:text-sm rounded-lg font-medium transition-all cursor-pointer text-center",
+                                activeTab === 'deposit'
+                                    ? 'bg-white dark:bg-card text-gray-900 dark:text-white shadow-xs font-bold'
+                                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                            )}
+                        >
+                            {isUrdu ? 'کیش ڈپازٹ (گلہ ← بینک)' : 'Cash Deposit (Galla → Bank)'}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => handleTabChange('withdraw')}
+                            className={cn(
+                                "w-full py-2.5 px-4 text-xs sm:text-sm rounded-lg font-medium transition-all cursor-pointer text-center",
+                                activeTab === 'withdraw'
+                                    ? 'bg-white dark:bg-card text-gray-900 dark:text-white shadow-xs font-bold'
+                                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                            )}
+                        >
+                            {isUrdu ? 'بینک ← کیش' : 'Bank → Cash'}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => handleTabChange('transfer')}
+                            className={cn(
+                                "w-full py-2.5 px-4 text-xs sm:text-sm rounded-lg font-medium transition-all cursor-pointer text-center",
+                                activeTab === 'transfer'
+                                    ? 'bg-white dark:bg-card text-gray-900 dark:text-white shadow-xs font-bold'
+                                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                            )}
+                        >
+                            {isUrdu ? 'بینک ← بینک' : 'Bank → Bank'}
+                        </button>
                     </div>
 
-                    {/* Right Column: Ledger par asar & Pichli entries */}
-                    <div className="lg:col-span-5 xl:col-span-4 space-y-4">
-                        {/* Card 1: Ledger par asar */}
-                        <div className="bg-[#f0f9f3] dark:bg-[#13281c] border border-[#d2ead8] dark:border-[#1e422c] rounded-xl p-5 shadow-xs">
-                            <h3 className="text-sm font-semibold text-[#166534] dark:text-[#4ade80] mb-4">
-                                {isUrdu ? 'لیجر پر اثر' : 'Ledger par asar'}
-                            </h3>
-
-                            <div className="space-y-4">
-                                {/* Source line */}
-                                <div className="flex items-start justify-between gap-2">
+                    {/* Form */}
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        {/* Source and Destination Fields */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {activeTab === 'deposit' && (
+                                <>
+                                    {/* Kahan se */}
                                     <div>
-                                        <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                            {sourceTitle}
-                                        </div>
-                                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                                            {numericAmount > 0 ? (
-                                                <>{formatCurrency(sourceBefore)} → {formatCurrency(sourceAfter)}</>
-                                            ) : (
-                                                <>{isUrdu ? 'موجودہ بیلنس:' : 'Mawjooda balance:'} {formatCurrency(sourceBefore)}</>
-                                            )}
+                                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                            {isUrdu ? 'کہاں سے' : 'Kahan se'}
+                                        </label>
+                                        <div className="w-full px-3.5 py-2.5 text-sm bg-gray-50 dark:bg-muted/40 border border-gray-200 dark:border-border rounded-lg text-gray-800 dark:text-gray-200 font-medium">
+                                            {isUrdu ? 'کیش ڈراور (گلہ)' : 'Cash Drawer (Galla)'}
                                         </div>
                                     </div>
-                                    <div className="text-sm font-bold text-[#b91c1c] dark:text-red-400">
-                                        {numericAmount > 0 ? `- ${formatCurrency(numericAmount)}` : 'Rs. 0'}
-                                    </div>
-                                </div>
 
-                                {/* Destination line */}
-                                <div className="flex items-start justify-between gap-2 pt-2 border-t border-[#d2ead8]/60 dark:border-[#1e422c]/60">
+                                    {/* Kis bank account mein */}
                                     <div>
-                                        <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                            {destTitle}
-                                        </div>
-                                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                                            {numericAmount > 0 ? (
-                                                <>{formatCurrency(destBefore)} → {formatCurrency(destAfter)}</>
-                                            ) : (
-                                                <>{isUrdu ? 'موجودہ بیلنس:' : 'Mawjooda balance:'} {formatCurrency(destBefore)}</>
-                                            )}
-                                        </div>
+                                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                            {isUrdu ? 'کس بینک اکاؤنٹ میں' : 'Kis bank account mein'}
+                                        </label>
+                                        <select
+                                            value={selectedBank}
+                                            onChange={(e) => setSelectedBank(e.target.value)}
+                                            className="w-full px-3.5 py-2.5 text-sm border border-gray-200 dark:border-border rounded-lg bg-white dark:bg-background text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#166534] focus:border-[#166534] transition-all cursor-pointer font-medium"
+                                        >
+                                            <option value="" disabled>
+                                                {isUrdu ? 'اکاؤنٹ منتخب کریں' : 'Account select karein'}
+                                            </option>
+                                            {accounts.map((acc) => (
+                                                <option key={acc.id} value={acc.name}>
+                                                    {acc.name} ({acc.type} · {formatCurrency(acc.current_balance)})
+                                                </option>
+                                            ))}
+                                        </select>
                                     </div>
-                                    <div className="text-sm font-bold text-[#166534] dark:text-[#4ade80]">
-                                        {numericAmount > 0 ? `+ ${formatCurrency(numericAmount)}` : 'Rs. 0'}
-                                    </div>
-                                </div>
-                            </div>
+                                </>
+                            )}
 
-                            {/* Informational Note */}
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-5 leading-relaxed">
-                                {isUrdu
-                                    ? 'اس انٹری سے سیل یا ماشاخور کھاتہ پر کوئی فرق نہیں پڑتا۔ صرف کیش اور بینک کا بیلنس بدلتا ہے۔'
-                                    : 'Is entry se sale ya merchant khata par koi farq nahi parta. Sirf cash aur bank ka balance badalta hai.'}
-                            </p>
+                            {activeTab === 'withdraw' && (
+                                <>
+                                    {/* Kis bank account se */}
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                            {isUrdu ? 'کس بینک اکاؤنٹ سے' : 'Kis bank account se'}
+                                        </label>
+                                        <select
+                                            value={selectedBank}
+                                            onChange={(e) => setSelectedBank(e.target.value)}
+                                            className="w-full px-3.5 py-2.5 text-sm border border-gray-200 dark:border-border rounded-lg bg-white dark:bg-background text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#166534] focus:border-[#166534] transition-all cursor-pointer font-medium"
+                                        >
+                                            <option value="" disabled>
+                                                {isUrdu ? 'اکاؤنٹ منتخب کریں' : 'Account select karein'}
+                                            </option>
+                                            {accounts.map((acc) => (
+                                                <option key={acc.id} value={acc.name}>
+                                                    {acc.name} ({acc.type} · {formatCurrency(acc.current_balance)})
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    {/* Kahan jama hoga */}
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                            {isUrdu ? 'کہاں جمع ہوگا' : 'Kahan jama hoga'}
+                                        </label>
+                                        <div className="w-full px-3.5 py-2.5 text-sm bg-gray-50 dark:bg-muted/40 border border-gray-200 dark:border-border rounded-lg text-gray-800 dark:text-gray-200 font-medium">
+                                            {isUrdu ? 'کیش ڈراور (گلہ)' : 'Cash Drawer (Galla)'}
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+
+                            {activeTab === 'transfer' && (
+                                <>
+                                    {/* From bank */}
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                            {isUrdu ? 'کس بینک اکاؤنٹ سے (From)' : 'Kis bank account se (From)'}
+                                        </label>
+                                        <select
+                                            value={fromBank}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                setFromBank(val);
+                                                if (toBank === val) {
+                                                    setToBank('');
+                                                }
+                                            }}
+                                            className="w-full px-3.5 py-2.5 text-sm border border-gray-200 dark:border-border rounded-lg bg-white dark:bg-background text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#166534] focus:border-[#166534] transition-all cursor-pointer font-medium"
+                                        >
+                                            <option value="" disabled>
+                                                {isUrdu ? 'اکاؤنٹ منتخب کریں' : 'Account select karein'}
+                                            </option>
+                                            {accounts.map((acc) => (
+                                                <option key={acc.id} value={acc.name}>
+                                                    {acc.name} ({acc.type} · {formatCurrency(acc.current_balance)})
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    {/* To bank: exclude selected fromBank */}
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                            {isUrdu ? 'کس بینک اکاؤنٹ میں (To)' : 'Kis bank account mein (To)'}
+                                        </label>
+                                        <select
+                                            value={toBank}
+                                            onChange={(e) => setToBank(e.target.value)}
+                                            className="w-full px-3.5 py-2.5 text-sm border border-gray-200 dark:border-border rounded-lg bg-white dark:bg-background text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#166534] focus:border-[#166534] transition-all cursor-pointer font-medium"
+                                        >
+                                            <option value="" disabled>
+                                                {isUrdu ? 'اکاؤنٹ منتخب کریں' : 'Account select karein'}
+                                            </option>
+                                            {accounts
+                                                .filter((acc) => acc.name !== fromBank)
+                                                .map((acc) => (
+                                                    <option key={acc.id} value={acc.name}>
+                                                        {acc.name} ({acc.type} · {formatCurrency(acc.current_balance)})
+                                                    </option>
+                                                ))}
+                                        </select>
+                                    </div>
+                                </>
+                            )}
                         </div>
 
-                        {/* Card 2: Pichli entries */}
-                        <div className="bg-white dark:bg-card border border-gray-200/90 dark:border-border rounded-xl p-5 shadow-xs">
-                            <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-4">
-                                {isUrdu ? 'پچھلی انٹریز' : 'Pichli entries'}
-                            </h3>
+                        {/* Amount (Rs.) */}
+                        <div>
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                {isUrdu ? 'رقم (روپے)' : 'Amount (Rs.)'}
+                            </label>
+                            <input
+                                type="text"
+                                value={amountStr}
+                                onChange={(e) => setAmountStr(e.target.value)}
+                                placeholder="0"
+                                className="w-full px-4 py-3 text-end text-xl sm:text-2xl font-bold border border-gray-200 dark:border-border rounded-lg bg-white dark:bg-background text-gray-900 dark:text-white placeholder-gray-300 focus:outline-none focus:ring-1 focus:ring-[#166534] focus:border-[#166534] transition-all"
+                            />
+                        </div>
 
-                            <div className="divide-y divide-gray-100 dark:divide-border">
+                        {/* Date Picker and Reference No */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                            {/* Tareekh with Popover */}
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                    {isUrdu ? 'تاریخ' : 'Tareekh'}
+                                </label>
+                                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                                    <PopoverTrigger asChild>
+                                        <button
+                                            type="button"
+                                            className="w-full flex items-center justify-between px-3.5 py-2.5 text-sm border border-gray-200 dark:border-border rounded-lg bg-white dark:bg-background text-gray-900 dark:text-white hover:border-[#166534] focus:outline-none focus:ring-1 focus:ring-[#166534] focus:border-[#166534] transition-all cursor-pointer"
+                                        >
+                                            <span className="font-medium text-gray-800 dark:text-gray-200">
+                                                {format(selectedDate, 'dd MMM yyyy')}
+                                            </span>
+                                            <svg className="w-4 h-4 text-gray-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                                                <line x1="16" y1="2" x2="16" y2="6" />
+                                                <line x1="8" y1="2" x2="8" y2="6" />
+                                                <line x1="3" y1="10" x2="21" y2="10" />
+                                            </svg>
+                                        </button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0 bg-white dark:bg-card border border-gray-200 dark:border-border rounded-xl shadow-xl z-50" align="start">
+                                        <Calendar
+                                            mode="single"
+                                            selected={selectedDate}
+                                            onSelect={(date) => {
+                                                if (date) {
+                                                    setSelectedDate(date);
+                                                }
+                                                setIsCalendarOpen(false);
+                                            }}
+                                            initialFocus
+                                        />
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
+
+                            {/* Deposit slip / Reference no */}
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                    {isUrdu ? 'ڈپازٹ سلپ / ریفرنس نمبر' : 'Deposit slip / Reference no.'}
+                                </label>
+                                <input
+                                    type="text"
+                                    value={referenceNo}
+                                    onChange={(e) => setReferenceNo(e.target.value)}
+                                    placeholder="e.g. SLP-20451"
+                                    className="w-full px-3.5 py-2.5 text-sm border border-gray-200 dark:border-border rounded-lg bg-white dark:bg-background text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#166534] focus:border-[#166534] transition-all"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Remark (optional) */}
+                        <div>
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                {isUrdu ? 'ریمارک (اختیاری)' : 'Remark (optional)'}
+                            </label>
+                            <input
+                                type="text"
+                                value={remark}
+                                onChange={(e) => setRemark(e.target.value)}
+                                placeholder="e.g. Din ka cash galla se jama"
+                                className="w-full px-3.5 py-2.5 text-sm border border-gray-200 dark:border-border rounded-lg bg-white dark:bg-background text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#166534] focus:border-[#166534] transition-all"
+                            />
+                        </div>
+
+                        {/* Action Buttons: Disabled when account is not selected or amount is invalid */}
+                        <div className="flex items-center gap-3 pt-3">
+                            <button
+                                type="submit"
+                                disabled={isSaveDisabled}
+                                className={cn(
+                                    "py-2.5 px-6 text-sm font-semibold rounded-lg shadow-xs transition-colors",
+                                    isSaveDisabled
+                                        ? "bg-gray-200 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed border border-gray-200 dark:border-gray-700"
+                                        : "bg-[#166534] hover:bg-[#14532d] text-white cursor-pointer"
+                                )}
+                            >
+                                {isUrdu
+                                    ? (activeTab === 'deposit' ? 'ڈپازٹ محفوظ کریں' : activeTab === 'withdraw' ? 'کیش نکالنا محفوظ کریں' : 'ٹرانسفر محفوظ کریں')
+                                    : (activeTab === 'deposit' ? 'Deposit Save karein' : activeTab === 'withdraw' ? 'Withdrawal Save karein' : 'Transfer Save karein')}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setAmountStr('');
+                                    setReferenceNo('');
+                                    setRemark('');
+                                    setSelectedBank('');
+                                    setFromBank('');
+                                    setToBank('');
+                                }}
+                                className="py-2.5 px-5 border border-gray-200 dark:border-border hover:bg-gray-50 dark:hover:bg-muted text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg transition-colors cursor-pointer"
+                            >
+                                {isUrdu ? 'منسوخ' : 'Cancel'}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                {/* Pichli entries: Now below the form and FULL WIDTH */}
+                <div className="bg-white dark:bg-card border border-gray-200/90 dark:border-border rounded-xl p-6 shadow-xs w-full">
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-base font-bold text-gray-900 dark:text-white">
+                            {isUrdu ? 'پچھلی انٹریز' : 'Pichli entries'}
+                        </h3>
+                        <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                            {entries.length} {isUrdu ? 'کل انٹریز' : 'kul entries'}
+                        </span>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-start text-sm border-collapse">
+                            <thead>
+                                <tr className="bg-gray-50 dark:bg-muted/50 border-b border-gray-200 dark:border-border text-[#4B5563] dark:text-gray-300 uppercase tracking-wider text-[11px] font-bold">
+                                    <th className="py-3 px-4 text-start">QISAM / DETAIL</th>
+                                    <th className="py-3 px-4 text-start">BANK ACCOUNT</th>
+                                    <th className="py-3 px-4 text-start">TAREEKH / SLIP</th>
+                                    <th className="py-3 px-4 text-end">RAQAM (RS.)</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100 dark:divide-border text-[#111827] dark:text-gray-100 font-medium">
                                 {entries.length === 0 ? (
-                                    <div className="py-4 text-center text-xs text-gray-400">
-                                        {isUrdu ? 'کوئی پچھلی انٹری نہیں' : 'No previous entries'}
-                                    </div>
+                                    <tr>
+                                        <td colSpan={4} className="py-6 text-center text-sm text-gray-400">
+                                            {isUrdu ? 'کوئی پچھلی انٹری نہیں' : 'No previous entries'}
+                                        </td>
+                                    </tr>
                                 ) : (
-                                    entries.slice(0, 5).map((item) => (
-                                        <div key={item.id} className="py-3 first:pt-0 last:pb-0">
-                                            <div className="flex items-center justify-between gap-2">
-                                                <span className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                                                    {item.title}
-                                                </span>
-                                                <span className="text-sm font-bold text-gray-900 dark:text-white whitespace-nowrap">
-                                                    {formatCurrency(item.amount)}
-                                                </span>
-                                            </div>
-                                            <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                                    entries.slice(0, 10).map((item) => (
+                                        <tr key={item.id} className="hover:bg-gray-50/60 dark:hover:bg-muted/30 transition-colors">
+                                            <td className="py-3 px-4 font-bold text-[#111827] dark:text-white">
+                                                {item.title}
+                                            </td>
+                                            <td className="py-3 px-4 text-gray-700 dark:text-gray-300">
+                                                {item.bankName || '—'}
+                                            </td>
+                                            <td className="py-3 px-4 text-xs text-gray-500 dark:text-gray-400">
                                                 {item.subtext}
-                                            </div>
-                                        </div>
+                                            </td>
+                                            <td className="py-3 px-4 text-end font-bold text-sm text-[#111827] dark:text-white">
+                                                {formatCurrency(item.amount)}
+                                            </td>
+                                        </tr>
                                     ))
                                 )}
-                            </div>
-                        </div>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>

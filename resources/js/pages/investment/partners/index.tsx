@@ -22,6 +22,7 @@ interface PartnerRow {
     net_equity: number;
     available_equity: number;
     draw_preview: number;
+    is_new_partner?: boolean;
     status: string;
     phone?: string;
 }
@@ -382,8 +383,16 @@ export default function InvestmentPartnersPage({
                                             </td>
 
                                             {/* Is Mahine Ka Munafa Share */}
-                                            <td className="py-3.5 px-4 text-center font-bold text-[#14532d] text-sm">
-                                                + {formatRs(partner.draw_preview || (partner.profit_percentage * 200))}
+                                            <td className="py-3.5 px-4 text-center font-bold text-sm">
+                                                {(partner.is_new_partner || partner.draw_preview === 0) ? (
+                                                    <span className="text-gray-500 font-semibold text-xs inline-flex items-center gap-1 justify-center">
+                                                        Rs. 0 <span className="text-[11px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/60 font-medium">(1 mahine baad)</span>
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-[#14532d]">
+                                                        + {formatRs(partner.draw_preview)}
+                                                    </span>
+                                                )}
                                             </td>
 
                                             {/* Detail Button */}

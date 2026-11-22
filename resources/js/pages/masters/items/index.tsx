@@ -88,6 +88,11 @@ export default function ItemsIndex({
     const [activeTab, setActiveTab] = useState<'items' | 'areas'>(initialTab);
     const [search, setSearch] = useState(filters.search || '');
 
+    useEffect(() => {
+        const tab = (filters.tab === 'areas' || currentTab === 'areas') ? 'areas' : 'items';
+        setActiveTab(tab);
+    }, [filters.tab, currentTab]);
+
     // Sub-filters: 'all' | 'low_stock' | 'expiring_24h' | 'expired' | 'khatam'
     const [itemFilter, setItemFilter] = useState<ItemFilterType>('all');
 
@@ -112,9 +117,33 @@ export default function ItemsIndex({
     const [discountModalItem, setDiscountModalItem] = useState<Item | null>(null);
     const [discountValue, setDiscountValue] = useState<string>('');
 
+    // Stock Add Modal state
+    const [stockAddModalOpen, setStockAddModalOpen] = useState(false);
+    const [stockAddModalItem, setStockAddModalItem] = useState<Item | null>(null);
+    const [stockAddQuantity, setStockAddQuantity] = useState('');
+    const [stockAddNote, setStockAddNote] = useState('');
+
+    // Stock Adjust Modal state
+    const [stockAdjustModalOpen, setStockAdjustModalOpen] = useState(false);
+    const [stockAdjustModalItem, setStockAdjustModalItem] = useState<Item | null>(null);
+    const [stockAdjustNewStock, setStockAdjustNewStock] = useState('');
+    const [stockAdjustReason, setStockAdjustReason] = useState('Ginti me farq (Count error)');
+
+    // Purchase Modal state
+    const [purchaseModalOpen, setPurchaseModalOpen] = useState(false);
+    const [purchaseModalItem, setPurchaseModalItem] = useState<Item | null>(null);
+    const [purchaseQuantity, setPurchaseQuantity] = useState('');
+    const [purchaseRate, setPurchaseRate] = useState('');
+    const [purchaseFarmerName, setPurchaseFarmerName] = useState('');
+
+    const cleanItemName = (name?: string): string => {
+        if (!name) return '—';
+        return name.replace(/\s*\([^)]*\)/g, '').trim();
+    };
+
     const breadcrumbs: BreadcrumbItem[] = [
         { title: isUrdu ? 'سیٹ اپ' : 'Setup', href: '#' },
-        { title: isUrdu ? 'اجناس و اسٹاک' : 'Items & Stock', href: '/masters/items' },
+        { title: isUrdu ? 'پروڈکٹس اور اسٹاک' : 'Products and Stocks', href: '/masters/items' },
     ];
 
     // Item Form
@@ -346,7 +375,91 @@ export default function ItemsIndex({
     };
 
     const handleWastage = (it: Item) => {
-        toast.info(`${it.name_en} Wastage record create ho gaya (Sale band).`);
+        toast.info(`${cleanItemName(it.name_en)} Wastage record create ho gaya (Sale band).`);
+    };
+
+    // --- QUICK ACTION MODAL HANDLERS ---
+    const openStockAddModal = (it: Item) => {
+        setStockAddModalItem(it);
+        setStockAddQuantity('');
+        setStockAddNote('');
+        setStockAddModalOpen(true);
+    };
+
+    const handleStockAddSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!stockAddModalItem) return;
+        const qty = parseFloat(stockAddQuantity);
+        if (isNaN(qty) || qty <= 0) {
+            toast.error(isUrdu ? 'براہ کرم درست تعداد درج کریں' : 'Barae meherbani durust tadaad enter karein');
+            return;
+        }
+        router.post(`/masters/items/${stockAddModalItem.id}/stock-add`, {
+            quantity: qty,
+            note: stockAddNote,
+        }, {
+            preserveScroll: true,
+            onSuccess: () => {
+                toast.success(`${cleanItemName(stockAddModalItem.name_en)} me ${qty} ${stockAddModalItem.unit || 'Bori'} stock add ho gaya`);
+                setStockAddModalOpen(false);
+            },
+        });
+    };
+
+    const openStockAdjustModal = (it: Item) => {
+        setStockAdjustModalItem(it);
+        setStockAdjustNewStock(String(it.current_stock ?? it.opening_stock ?? 0));
+        setStockAdjustReason('Ginti me farq (Count error)');
+        setStockAdjustModalOpen(true);
+    };
+
+    const handleStockAdjustSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!stockAdjustModalItem) return;
+        const nStock = parseFloat(stockAdjustNewStock);
+        if (isNaN(nStock) || nStock < 0) {
+            toast.error(isUrdu ? 'براہ کرم درست اسٹاک درج کریں' : 'Barae meherbani durust stock enter karein');
+            return;
+        }
+        router.post(`/masters/items/${stockAdjustModalItem.id}/stock-adjust`, {
+            new_stock: nStock,
+            reason: stockAdjustReason,
+        }, {
+            preserveScroll: true,
+            onSuccess: () => {
+                toast.success(`${cleanItemName(stockAdjustModalItem.name_en)} stock ${nStock} adjust ho gaya`);
+                setStockAdjustModalOpen(false);
+            },
+        });
+    };
+
+    const openPurchaseModal = (it: Item) => {
+        setPurchaseModalItem(it);
+        setPurchaseQuantity('');
+        setPurchaseRate(String(it.default_rate || ''));
+        setPurchaseFarmerName('');
+        setPurchaseModalOpen(true);
+    };
+
+    const handlePurchaseSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!purchaseModalItem) return;
+        const qty = parseFloat(purchaseQuantity);
+        if (isNaN(qty) || qty <= 0) {
+            toast.error(isUrdu ? 'براہ کرم خریداری تعداد درج کریں' : 'Barae meherbani purchase quantity enter karein');
+            return;
+        }
+        router.post(`/masters/items/${purchaseModalItem.id}/purchase`, {
+            quantity: qty,
+            rate: parseFloat(purchaseRate) || 0,
+            farmer_name: purchaseFarmerName,
+        }, {
+            preserveScroll: true,
+            onSuccess: () => {
+                toast.success(`${cleanItemName(purchaseModalItem.name_en)} ki purchase save ho gayi aur stock add ho gaya`);
+                setPurchaseModalOpen(false);
+            },
+        });
     };
 
     // --- AREA ACTIONS ---
@@ -438,14 +551,14 @@ export default function ItemsIndex({
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={isUrdu ? 'اجناس و اسٹاک' : 'Items & Stock'} />
+            <Head title={isUrdu ? 'پروڈکٹس اور اسٹاک' : 'Products and Stocks'} />
 
             <div className="-mt-4 -mx-4 -mb-8 pb-28 bg-[#f4f6f4] min-h-screen font-sans text-[#1a211c] print:hidden" dir={isUrdu ? 'rtl' : 'ltr'}>
                 
                 {/* 1. Dark Green Top Header Banner */}
                 <MandiPageHeader
-                    title={isUrdu ? 'اجناس اور اسٹاک' : 'Items & Stock'}
-                    subtitle={isUrdu ? 'سبزی اجناس، اسٹاک یونٹس، شیلف لائف اور علاقہ جات' : 'Items, Stock Units, Shelf Life & Areas'}
+                    title={isUrdu ? 'پروڈکٹس اور اسٹاک' : 'Products and Stocks'}
+                    subtitle={isUrdu ? 'سبزی اجناس، اسٹاک، ریٹس اور شیلف لائف' : 'Products, Stock Units, Shelf Life & Rates'}
                     isUrdu={isUrdu}
                 >
                     <button
@@ -458,8 +571,8 @@ export default function ItemsIndex({
                     >
                         <Icon name="Plus" className="size-4 text-emerald-800" weight="bold" />
                         <span>
-                            {activeTab === 'items' && '+ Nayi Jins'}
-                            {activeTab === 'areas' && '+ Naya Area'}
+                            {activeTab === 'items' && (isUrdu ? 'نیا پروڈکٹ' : 'New Product')}
+                            {activeTab === 'areas' && (isUrdu ? 'نیا علاقہ' : 'New Area')}
                         </span>
                     </button>
                 </MandiPageHeader>
@@ -503,9 +616,9 @@ export default function ItemsIndex({
                         );
                     })()}
 
-                    {/* Tab Bar & Search Card */}
-                    <div className="bg-white rounded-xl border border-gray-200/90 shadow-xs p-3.5 flex flex-wrap items-center justify-between gap-3">
-                        {/* 2 Tabs: Items and Areas */}
+                    {/* Tab Bar Card */}
+                    <div className="bg-white rounded-xl border border-gray-200/90 shadow-xs p-3 flex flex-wrap items-center justify-between gap-3">
+                        {/* 2 Tabs: Products and Areas */}
                         <div className="flex items-center gap-1.5 p-1 bg-gray-100/90 rounded-lg max-w-full overflow-x-auto">
                             <button
                                 type="button"
@@ -516,7 +629,7 @@ export default function ItemsIndex({
                                         : 'text-gray-600 hover:text-gray-900'
                                 }`}
                             >
-                                <span>Items (Jins)</span>
+                                <span>{isUrdu ? 'پروڈکٹس (جنس)' : 'Products (Jins)'}</span>
                                 <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold ${
                                     activeTab === 'items' ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-700'
                                 }`}>
@@ -533,7 +646,7 @@ export default function ItemsIndex({
                                         : 'text-gray-600 hover:text-gray-900'
                                 }`}
                             >
-                                <span>Areas (Ilaqa)</span>
+                                <span>{isUrdu ? 'علاقہ (Ilaqa)' : 'Areas (Ilaqa)'}</span>
                                 <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold ${
                                     activeTab === 'areas' ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-700'
                                 }`}>
@@ -541,144 +654,120 @@ export default function ItemsIndex({
                                 </span>
                             </button>
                         </div>
-
-                        {/* Search Bar */}
-                        <form onSubmit={handleSearch} className="flex items-center gap-2 w-full sm:w-auto">
-                            <div className="relative flex-1 sm:w-64">
-                                <Icon name="MagnifyingGlass" className="absolute start-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
-                                <input
-                                    type="text"
-                                    value={search}
-                                    onChange={e => setSearch(e.target.value)}
-                                    placeholder={
-                                        activeTab === 'items'
-                                            ? 'Search item...'
-                                            : 'Search area...'
-                                    }
-                                    className="w-full h-9 ps-9 pe-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-900 focus:bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none"
-                                />
-                            </div>
-                            <button
-                                type="submit"
-                                className="h-9 px-3.5 rounded-lg bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-semibold cursor-pointer"
-                            >
-                                Search
-                            </button>
-                        </form>
                     </div>
 
-                    {/* Filter Chips Bar (Items 7, Low Stock 1, 24h expiry 1, Expired 1, Khatam 1) */}
+                    {/* Filter Chips Bar (Products 8, Low Stock 0, 24h expiry 0, Expired 1, Khatam 6 - Card Style with Borders) */}
                     {activeTab === 'items' && (
-                        <div className="bg-white rounded-xl border border-gray-200/90 shadow-2xs px-4 py-2.5 flex items-center gap-2 overflow-x-auto">
-                            {/* All Items */}
+                        <div className="flex items-center gap-2.5 overflow-x-auto pb-1">
+                            {/* All Products */}
                             <button
                                 type="button"
                                 onClick={() => setItemFilter('all')}
                                 className={cn(
-                                    "px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5",
+                                    "px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 border shadow-2xs",
                                     itemFilter === 'all'
-                                        ? "bg-gray-100 text-gray-900 border border-gray-300"
-                                        : "text-gray-500 hover:bg-gray-50"
+                                        ? "bg-white text-emerald-950 border-emerald-600 ring-2 ring-emerald-600/30 shadow-xs"
+                                        : "bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50/50"
                                 )}
                             >
-                                <span>Items</span>
-                                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-gray-200 text-gray-700 font-bold">
+                                <span>{isUrdu ? 'پروڈکٹس' : 'Products'}</span>
+                                <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-extrabold">
                                     {stats.total}
                                 </span>
                             </button>
 
-                            {/* Low Stock: 1 */}
+                            {/* Low Stock */}
                             <button
                                 type="button"
                                 onClick={() => setItemFilter('low_stock')}
                                 className={cn(
-                                    "px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5",
+                                    "px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 border shadow-2xs",
                                     itemFilter === 'low_stock'
-                                        ? "bg-amber-100 text-amber-900 border border-amber-300 ring-1 ring-amber-300"
-                                        : "bg-amber-50/70 text-amber-800 hover:bg-amber-100/70 border border-amber-200/60"
+                                        ? "bg-amber-50 text-amber-950 border-amber-500 ring-2 ring-amber-500/30 shadow-xs"
+                                        : "bg-white text-amber-900 border-amber-200/80 hover:border-amber-300 hover:bg-amber-50/40"
                                 )}
                             >
                                 <span>Low Stock</span>
-                                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-200 text-amber-900 font-bold">
+                                <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-200 text-amber-950 font-extrabold">
                                     {stats.lowStock}
                                 </span>
                             </button>
 
-                            {/* 24h expiry: 1 */}
+                            {/* 24h expiry */}
                             <button
                                 type="button"
                                 onClick={() => setItemFilter('expiring_24h')}
                                 className={cn(
-                                    "px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5",
+                                    "px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 border shadow-2xs",
                                     itemFilter === 'expiring_24h'
-                                        ? "bg-amber-100 text-amber-900 border border-amber-300 ring-1 ring-amber-300"
-                                        : "bg-amber-50/70 text-amber-800 hover:bg-amber-100/70 border border-amber-200/60"
+                                        ? "bg-amber-50 text-amber-950 border-amber-500 ring-2 ring-amber-500/30 shadow-xs"
+                                        : "bg-white text-amber-900 border-amber-200/80 hover:border-amber-300 hover:bg-amber-50/40"
                                 )}
                             >
                                 <span>24h expiry</span>
-                                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-200 text-amber-900 font-bold">
+                                <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-200 text-amber-950 font-extrabold">
                                     {stats.expiring}
                                 </span>
                             </button>
 
-                            {/* Expired: 1 */}
+                            {/* Expired */}
                             <button
                                 type="button"
                                 onClick={() => setItemFilter('expired')}
                                 className={cn(
-                                    "px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5",
+                                    "px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 border shadow-2xs",
                                     itemFilter === 'expired'
-                                        ? "bg-red-100 text-red-900 border border-red-300 ring-1 ring-red-300"
-                                        : "bg-red-50/70 text-red-800 hover:bg-red-100/70 border border-red-200/60"
+                                        ? "bg-red-50 text-red-950 border-red-500 ring-2 ring-red-500/30 shadow-xs"
+                                        : "bg-white text-red-900 border-red-200/80 hover:border-red-300 hover:bg-red-50/40"
                                 )}
                             >
                                 <span>Expired</span>
-                                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-red-200 text-red-900 font-bold">
+                                <span className="text-[11px] px-2 py-0.5 rounded-full bg-red-200 text-red-950 font-extrabold">
                                     {stats.expired}
                                 </span>
                             </button>
 
-                            {/* Khatam: 1 */}
+                            {/* Khatam */}
                             <button
                                 type="button"
                                 onClick={() => setItemFilter('khatam')}
                                 className={cn(
-                                    "px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5",
+                                    "px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 border shadow-2xs",
                                     itemFilter === 'khatam'
-                                        ? "bg-gray-200 text-gray-900 border border-gray-400 ring-1 ring-gray-400"
-                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-300"
+                                        ? "bg-gray-100 text-gray-900 border-gray-500 ring-2 ring-gray-400/30 shadow-xs"
+                                        : "bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50/50"
                                 )}
                             >
                                 <span>Khatam</span>
-                                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-gray-300 text-gray-800 font-bold">
+                                <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-200 text-gray-800 font-extrabold">
                                     {stats.khatam}
                                 </span>
                             </button>
                         </div>
                     )}
 
-                    {/* TAB 1: ITEMS TABLE (Exact Image 1 Layout) */}
+                    {/* TAB 1: ITEMS TABLE */}
                     {activeTab === 'items' && (
                         <div className="bg-white rounded-xl border border-gray-200/90 shadow-xs overflow-hidden">
                             <div className="overflow-x-auto">
-                                <table className="w-full text-xs font-sans">
+                                <table className="w-full text-sm font-sans">
                                     <thead>
-                                        <tr className="bg-[#14532d] text-white font-bold select-none">
-                                            <th className="px-3.5 py-2.5 text-start w-12">Code</th>
-                                            <th className="px-3.5 py-2.5 text-start">Name</th>
-                                            <th className="px-3.5 py-2.5 text-start w-16">Unit</th>
-                                            <th className="px-3.5 py-2.5 text-start min-w-[170px]">Stock (baaki)</th>
-                                            <th className="px-3.5 py-2.5 text-start min-w-[100px]">Rate</th>
-                                            <th className="px-3.5 py-2.5 text-start min-w-[85px]">Shelf Life</th>
-                                            <th className="px-3.5 py-2.5 text-center min-w-[90px]">Status</th>
-                                            <th className="px-3.5 py-2.5 text-start min-w-[170px]">Expiry (lot-wise)</th>
-                                            <th className="px-3.5 py-2.5 text-center w-24">Actions</th>
+                                        <tr className="bg-[#14532d] text-white font-bold select-none text-xs md:text-sm">
+                                            <th className="px-3 py-3 text-start w-14">Code</th>
+                                            <th className="px-3 py-3 text-start w-36">Name</th>
+                                            <th className="px-3 py-3 text-start w-20">Unit</th>
+                                            <th className="px-3 py-3 text-center w-24">Stock (baaki)</th>
+                                            <th className="px-3 py-3 text-start w-28">Rate</th>
+                                            <th className="px-3 py-3 text-start w-24">Shelf Life</th>
+                                            <th className="px-3 py-3 text-center w-24">Status</th>
+                                            <th className="px-3 py-3 text-start w-36">Expiry (lot-wise)</th>
+                                            <th className="px-4 py-3 text-center min-w-[180px]">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100">
                                         {filteredItems.length === 0 ? (
-                                            <tr>
-                                                <td colSpan={9} className="px-3 py-8 text-center text-gray-400 text-xs">
+                                             <tr>
+                                                <td colSpan={9} className="px-4 py-8 text-center text-gray-400 text-sm">
                                                     No items found in this view
                                                 </td>
                                             </tr>
@@ -691,11 +780,7 @@ export default function ItemsIndex({
                                                 const isExpiringSoon = !isKhatam && !isExpired && (it.computed_status === 'expiring_soon');
 
                                                 const unitName = it.unit || 'Bori';
-
-                                                // Dynamic progress bar calculation
-                                                const opening = (it.opening_stock && it.opening_stock > 0) ? it.opening_stock : (currentStock > 0 ? currentStock : 100);
-                                                const progressPercent = Math.min(100, Math.max(0, Math.round((currentStock / opening) * 100)));
-                                                const showProgressBar = currentStock > 0 && !isExpired && !isKhatam;
+                                                const displayName = cleanItemName(it.name_en || it.name || it.name_ur);
 
                                                 return (
                                                     <tr
@@ -708,64 +793,27 @@ export default function ItemsIndex({
                                                         )}
                                                     >
                                                         {/* Code */}
-                                                        <td className="px-3.5 py-3 font-bold text-gray-900 whitespace-nowrap">
+                                                        <td className="px-3 py-3 font-bold text-gray-900 whitespace-nowrap text-xs md:text-sm w-14">
                                                             #{it.id}
                                                         </td>
 
-                                                        {/* Name (English only) */}
-                                                        <td className="px-3.5 py-3 text-gray-900 font-bold whitespace-nowrap">
-                                                            {it.name_en || it.name || it.name_ur || '—'}
+                                                        {/* Name (Clean simple name without parentheses) */}
+                                                        <td className="px-3 py-3 text-gray-900 font-bold whitespace-nowrap text-xs md:text-sm w-36">
+                                                            {displayName}
                                                         </td>
 
                                                         {/* Unit */}
-                                                        <td className="px-3.5 py-3 text-gray-700 whitespace-nowrap">
+                                                        <td className="px-3 py-3 text-gray-700 whitespace-nowrap text-xs md:text-sm font-medium w-20">
                                                             {unitName}
                                                         </td>
 
-                                                        {/* Stock (baaki) with Dynamic Progress Bar & Notes */}
-                                                        <td className="px-3.5 py-3 whitespace-nowrap">
-                                                            <div className="space-y-0.5">
-                                                                <div className="font-bold text-gray-900">
-                                                                    {currentStock} {unitName}
-                                                                </div>
-
-                                                                {/* Secondary note */}
-                                                                {isKhatam ? (
-                                                                    <div className="text-[11px] text-gray-400">
-                                                                        Stock khatam
-                                                                    </div>
-                                                                ) : isExpired ? (
-                                                                    <div className="text-[11px] text-red-600">
-                                                                        Sale band
-                                                                    </div>
-                                                                ) : isLowStock ? (
-                                                                    <div className="text-[11px] text-amber-800">
-                                                                        Sirf {currentStock} bache
-                                                                    </div>
-                                                                ) : it.stock_note ? (
-                                                                    <div className="text-[11px] text-gray-500">
-                                                                        {it.stock_note}
-                                                                    </div>
-                                                                ) : it.kg_per_unit ? (
-                                                                    <div className="text-[11px] text-gray-500">
-                                                                        {(currentStock * it.kg_per_unit).toLocaleString()} kg · 1 {unitName} = {it.kg_per_unit} kg
-                                                                    </div>
-                                                                ) : null}
-
-                                                                {/* Progress bar */}
-                                                                {showProgressBar && (
-                                                                    <div className="w-24 h-1.5 bg-gray-200 rounded-full overflow-hidden mt-1">
-                                                                        <div
-                                                                            className="h-full bg-emerald-700 rounded-full"
-                                                                            style={{ width: `${progressPercent}%` }}
-                                                                        />
-                                                                    </div>
-                                                                )}
-                                                            </div>
+                                                        {/* Stock (baaki) - STRICTLY ONLY NUMBERS */}
+                                                        <td className="px-3 py-3 text-center font-bold text-gray-900 whitespace-nowrap text-xs md:text-sm w-24">
+                                                            {currentStock}
                                                         </td>
 
-                                                        {/* Rate (e.g. Rs. 850 → 720 if discounted) */}
-                                                        <td className="px-3.5 py-3 text-gray-900 font-medium whitespace-nowrap">
+                                                        {/* Rate */}
+                                                        <td className="px-3 py-3 text-gray-900 font-semibold whitespace-nowrap text-xs md:text-sm w-28">
                                                             {it.discount_rate && !isKhatam ? (
                                                                 <span className="flex items-center gap-1.5">
                                                                     <span className="text-gray-500">Rs. {formatNum(it.default_rate)}</span>
@@ -778,53 +826,53 @@ export default function ItemsIndex({
                                                         </td>
 
                                                         {/* Shelf Life */}
-                                                        <td className="px-3.5 py-3 text-gray-700 whitespace-nowrap">
+                                                        <td className="px-3 py-3 text-gray-700 whitespace-nowrap text-xs md:text-sm font-medium w-24">
                                                             {it.shelf_life || (it.shelf_life_days ? `${it.shelf_life_days} din` : '4-5 din')}
                                                         </td>
 
                                                         {/* Status */}
-                                                        <td className="px-3.5 py-3 text-center whitespace-nowrap">
+                                                        <td className="px-3 py-3 text-center whitespace-nowrap w-24">
                                                             {isKhatam ? (
-                                                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-700 border border-gray-300">
+                                                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-800 border border-rose-200">
                                                                     Khatam
                                                                 </span>
                                                             ) : isExpired ? (
-                                                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-red-100 text-red-800 border border-red-200">
+                                                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800 border border-red-200">
                                                                     Expired
                                                                 </span>
                                                             ) : isLowStock ? (
-                                                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-900 border border-amber-300">
-                                                                    Low Stock
+                                                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-200">
+                                                                    Kam
                                                                 </span>
                                                             ) : (
-                                                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                                                                    Active
+                                                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                                                    Theek
                                                                 </span>
                                                             )}
                                                         </td>
 
                                                         {/* Expiry (lot-wise) */}
-                                                        <td className="px-3.5 py-3 whitespace-nowrap">
+                                                        <td className="px-3 py-3 whitespace-nowrap text-xs md:text-sm w-36">
                                                             {isKhatam ? (
                                                                 <span className="text-gray-500 font-medium">Timer band (stock 0)</span>
                                                             ) : isExpired ? (
-                                                                <div className="flex items-center gap-2">
+                                                                <div className="flex items-center gap-1.5">
                                                                     <span className="text-red-700 font-medium">3h pehle</span>
                                                                     <button
                                                                         type="button"
                                                                         onClick={() => handleWastage(it)}
-                                                                        className="px-2.5 py-0.5 rounded text-[11px] font-bold bg-[#991b1b] hover:bg-[#7f1d1d] text-white shadow-2xs transition-colors cursor-pointer"
+                                                                        className="px-2 py-0.5 rounded text-[11px] font-bold bg-[#991b1b] hover:bg-[#7f1d1d] text-white shadow-2xs transition-colors cursor-pointer"
                                                                     >
                                                                         Wastage
                                                                     </button>
                                                                 </div>
                                                             ) : isExpiringSoon ? (
-                                                                <div className="flex items-center gap-2">
+                                                                <div className="flex items-center gap-1.5">
                                                                     <span className="text-amber-900 font-medium">{it.expiry_countdown?.text || '23h 40m baaki'}</span>
                                                                     <button
                                                                         type="button"
                                                                         onClick={() => handleOpenDiscount(it)}
-                                                                        className="px-2.5 py-0.5 rounded text-[11px] font-bold bg-[#854d0e] hover:bg-[#713f12] text-white shadow-2xs transition-colors cursor-pointer"
+                                                                        className="px-2 py-0.5 rounded text-[11px] font-bold bg-[#854d0e] hover:bg-[#713f12] text-white shadow-2xs transition-colors cursor-pointer"
                                                                     >
                                                                         Discount
                                                                     </button>
@@ -843,23 +891,35 @@ export default function ItemsIndex({
                                                             )}
                                                         </td>
 
-                                                        {/* Actions */}
-                                                        <td className="px-3.5 py-3 text-center whitespace-nowrap">
+                                                        {/* Action (Stock add, Adjust, Purchase banayein) */}
+                                                        <td className="px-4 py-3 text-center whitespace-nowrap">
                                                             <div className="flex items-center justify-center gap-2">
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => openEditItem(it)}
-                                                                    className="text-xs font-semibold text-gray-700 hover:text-black cursor-pointer"
-                                                                >
-                                                                    Edit
-                                                                </button>
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => deleteItem(it)}
-                                                                    className="text-xs font-semibold text-red-600 hover:text-red-700 cursor-pointer"
-                                                                >
-                                                                    Delete
-                                                                </button>
+                                                                {isKhatam ? (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => openPurchaseModal(it)}
+                                                                        className="px-3 py-1 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-gray-900 text-xs font-semibold transition-all shadow-2xs cursor-pointer"
+                                                                    >
+                                                                        Purchase banayein
+                                                                    </button>
+                                                                ) : (
+                                                                    <>
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => openStockAddModal(it)}
+                                                                            className="px-3 py-1 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-gray-900 text-xs font-semibold transition-all shadow-2xs cursor-pointer"
+                                                                        >
+                                                                            Stock add
+                                                                        </button>
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => openStockAdjustModal(it)}
+                                                                            className="px-3 py-1 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-gray-900 text-xs font-semibold transition-all shadow-2xs cursor-pointer"
+                                                                        >
+                                                                            Adjust
+                                                                        </button>
+                                                                    </>
+                                                                )}
                                                             </div>
                                                         </td>
                                                     </tr>
@@ -907,57 +967,57 @@ export default function ItemsIndex({
                     {activeTab === 'areas' && (
                         <div className="bg-white rounded-xl border border-gray-200/90 shadow-xs overflow-hidden">
                             <div className="overflow-x-auto">
-                                <table className="w-full text-xs font-sans">
+                                <table className="w-full text-sm font-sans">
                                     <thead>
-                                        <tr className="bg-[#14532d] text-white font-bold select-none">
-                                            <th className="px-4 py-3 text-start w-20">Code</th>
-                                            <th className="px-4 py-3 text-start">Area</th>
-                                            <th className="px-4 py-3 text-center w-24">Status</th>
-                                            <th className="px-4 py-3 text-center w-24">Actions</th>
+                                        <tr className="bg-[#14532d] text-white font-bold select-none text-xs md:text-sm">
+                                            <th className="px-4 py-3.5 text-start w-24">Code</th>
+                                            <th className="px-4 py-3.5 text-start">Area</th>
+                                            <th className="px-4 py-3.5 text-center w-28">Status</th>
+                                            <th className="px-4 py-3.5 text-center w-32">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100">
                                         {areas.data.length === 0 ? (
                                             <tr>
-                                                <td colSpan={4} className="px-4 py-8 text-center text-gray-400 text-xs">
+                                                <td colSpan={4} className="px-4 py-8 text-center text-gray-400 text-sm">
                                                     No areas found
                                                 </td>
                                             </tr>
                                         ) : (
                                             areas.data.map(a => (
                                                 <tr key={a.id} className="hover:bg-gray-50/70 transition-colors">
-                                                    <td className="px-4 py-3 font-bold text-gray-900">
+                                                    <td className="px-4 py-3.5 font-bold text-gray-900 text-sm">
                                                         #{a.code || a.id}
                                                     </td>
-                                                    <td className="px-4 py-3 text-gray-900 font-bold">
+                                                    <td className="px-4 py-3.5 text-gray-900 font-bold text-sm">
                                                         {a.name_en || a.name || a.name_ur || '—'}
                                                     </td>
-                                                    <td className="px-4 py-3 text-center">
+                                                    <td className="px-4 py-3.5 text-center">
                                                         <button
                                                             type="button"
                                                             onClick={() => toggleAreaStatus(a)}
-                                                            className={`px-2 py-0.5 rounded-full text-[11px] font-semibold cursor-pointer transition-all ${
+                                                            className={`px-3 py-1 rounded-full text-xs font-bold cursor-pointer transition-all ${
                                                                 a.status === 'active'
                                                                     ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
                                                                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                                            }`}
+                                                                }`}
                                                         >
                                                             {a.status === 'active' ? 'Active' : 'Inactive'}
                                                         </button>
                                                     </td>
-                                                    <td className="px-4 py-3 text-center">
+                                                    <td className="px-4 py-3.5 text-center">
                                                         <div className="flex items-center justify-center gap-2.5">
                                                             <button
                                                                 type="button"
                                                                 onClick={() => openEditArea(a)}
-                                                                className="text-xs font-semibold text-gray-700 hover:text-black cursor-pointer"
+                                                                className="text-xs font-semibold text-gray-700 hover:text-black cursor-pointer px-2 py-1 rounded hover:bg-gray-100"
                                                             >
                                                                 Edit
                                                             </button>
                                                             <button
                                                                 type="button"
                                                                 onClick={() => deleteArea(a)}
-                                                                className="text-xs font-semibold text-red-600 hover:text-red-700 cursor-pointer"
+                                                                className="text-xs font-semibold text-red-600 hover:text-red-700 cursor-pointer px-2 py-1 rounded hover:bg-red-50"
                                                             >
                                                                 Delete
                                                             </button>
@@ -974,7 +1034,7 @@ export default function ItemsIndex({
                 </div>
             </div>
 
-            {/* Item Add/Edit Modal (Matching Image 2 EXACTLY) */}
+            {/* Item Add/Edit Modal */}
             <Dialog open={itemModalOpen} onOpenChange={setItemModalOpen}>
                 <DialogContent className="max-w-lg font-sans p-6 bg-white rounded-2xl">
                     <DialogHeader>
@@ -1005,12 +1065,15 @@ export default function ItemsIndex({
                             </div>
                             <div>
                                 <Label className="text-xs font-semibold text-gray-700 block mb-1">Unit</Label>
-                                <Input
-                                    value={itemForm.data.unit}
+                                <select
+                                    value={itemForm.data.unit || 'Bori'}
                                     onChange={e => itemForm.setData('unit', e.target.value)}
-                                    placeholder="Bori"
-                                    className="h-9.5 text-sm border-gray-200 rounded-lg focus:border-[#14532d]"
-                                />
+                                    className="w-full h-9.5 px-3 text-sm border border-gray-200 rounded-lg focus:border-[#14532d] bg-white font-medium cursor-pointer"
+                                >
+                                    <option value="Bori">Bori</option>
+                                    <option value="Nag">Nag</option>
+                                    <option value="Peti">Peti</option>
+                                </select>
                             </div>
                         </div>
 
@@ -1228,6 +1291,238 @@ export default function ItemsIndex({
                     </form>
                 </DialogContent>
             </Dialog>
+            {/* Stock Add Modal */}
+            {stockAddModalItem && (
+                <Dialog open={stockAddModalOpen} onOpenChange={setStockAddModalOpen}>
+                    <DialogContent className="max-w-md font-sans p-6 bg-white rounded-2xl">
+                        <DialogHeader>
+                            <DialogTitle className="text-base font-bold text-gray-900">
+                                Stock Add Karein · {cleanItemName(stockAddModalItem.name_en)}
+                            </DialogTitle>
+                        </DialogHeader>
+
+                        <form onSubmit={handleStockAddSubmit} className="space-y-4 pt-2">
+                            <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200/80 flex items-center justify-between text-xs">
+                                <span className="text-emerald-900 font-semibold">Mojooda Stock:</span>
+                                <span className="font-extrabold text-emerald-950 text-sm">
+                                    {stockAddModalItem.current_stock ?? stockAddModalItem.opening_stock ?? 0} {stockAddModalItem.unit || 'Bori'}
+                                </span>
+                            </div>
+
+                            <div>
+                                <Label className="text-xs font-semibold text-gray-700 block mb-1">
+                                    Kitna Stock Add Karna Hai? ({stockAddModalItem.unit || 'Bori'}) *
+                                </Label>
+                                <Input
+                                    type="number"
+                                    min="1"
+                                    step="any"
+                                    required
+                                    value={stockAddQuantity}
+                                    onChange={e => setStockAddQuantity(e.target.value)}
+                                    placeholder="e.g. 50"
+                                    className="h-10 text-sm font-bold text-gray-900 border-gray-200 rounded-lg focus:border-[#14532d]"
+                                    autoFocus
+                                />
+                            </div>
+
+                            {Number(stockAddQuantity) > 0 && (
+                                <div className="p-2.5 bg-gray-50 rounded-lg text-xs flex justify-between items-center text-gray-700">
+                                    <span>Naya Kul Stock Hoga:</span>
+                                    <span className="font-bold text-emerald-900 text-sm">
+                                        {(stockAddModalItem.current_stock ?? 0) + Number(stockAddQuantity)} {stockAddModalItem.unit || 'Bori'}
+                                    </span>
+                                </div>
+                            )}
+
+                            <div>
+                                <Label className="text-xs font-semibold text-gray-700 block mb-1">
+                                    Wajah / Note (Optional)
+                                </Label>
+                                <Input
+                                    value={stockAddNote}
+                                    onChange={e => setStockAddNote(e.target.value)}
+                                    placeholder="e.g. Mandi gaari aamad, Warehouse stock"
+                                    className="h-9 text-xs border-gray-200 rounded-lg focus:border-[#14532d]"
+                                />
+                            </div>
+
+                            <DialogFooter className="pt-2 gap-2">
+                                <Button type="button" variant="outline" onClick={() => setStockAddModalOpen(false)} className="text-xs">
+                                    Cancel
+                                </Button>
+                                <Button type="submit" className="bg-[#14532d] hover:bg-[#0e3b20] text-white text-xs font-bold px-4">
+                                    Stock Add Karein
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    </DialogContent>
+                </Dialog>
+            )}
+
+            {/* Stock Adjust Modal */}
+            {stockAdjustModalItem && (
+                <Dialog open={stockAdjustModalOpen} onOpenChange={setStockAdjustModalOpen}>
+                    <DialogContent className="max-w-md font-sans p-6 bg-white rounded-2xl">
+                        <DialogHeader>
+                            <DialogTitle className="text-base font-bold text-gray-900">
+                                Stock Adjust Karein · {cleanItemName(stockAdjustModalItem.name_en)}
+                            </DialogTitle>
+                        </DialogHeader>
+
+                        <form onSubmit={handleStockAdjustSubmit} className="space-y-4 pt-2">
+                            <div className="p-3 bg-amber-50 rounded-xl border border-amber-200/80 flex items-center justify-between text-xs">
+                                <span className="text-amber-900 font-semibold">System Stock:</span>
+                                <span className="font-extrabold text-amber-950 text-sm">
+                                    {stockAdjustModalItem.current_stock ?? stockAdjustModalItem.opening_stock ?? 0} {stockAdjustModalItem.unit || 'Bori'}
+                                </span>
+                            </div>
+
+                            <div>
+                                <Label className="text-xs font-semibold text-gray-700 block mb-1">
+                                    Naya Asal Stock (Physical Count) *
+                                </Label>
+                                <Input
+                                    type="number"
+                                    min="0"
+                                    step="any"
+                                    required
+                                    value={stockAdjustNewStock}
+                                    onChange={e => setStockAdjustNewStock(e.target.value)}
+                                    placeholder="0"
+                                    className="h-10 text-sm font-bold text-gray-900 border-gray-200 rounded-lg focus:border-[#14532d]"
+                                    autoFocus
+                                />
+                            </div>
+
+                            {stockAdjustNewStock !== '' && (
+                                <div className="p-2.5 bg-gray-50 rounded-lg text-xs flex justify-between items-center text-gray-700">
+                                    <span>Stock Me Farq:</span>
+                                    <span className={cn(
+                                        "font-bold text-sm",
+                                        Number(stockAdjustNewStock) - (stockAdjustModalItem.current_stock ?? 0) >= 0
+                                            ? "text-emerald-800"
+                                            : "text-rose-800"
+                                    )}>
+                                        {Number(stockAdjustNewStock) - (stockAdjustModalItem.current_stock ?? 0) > 0 ? '+' : ''}
+                                        {Number(stockAdjustNewStock) - (stockAdjustModalItem.current_stock ?? 0)} {stockAdjustModalItem.unit || 'Bori'}
+                                    </span>
+                                </div>
+                            )}
+
+                            <div>
+                                <Label className="text-xs font-semibold text-gray-700 block mb-1">
+                                    Wajah (Reason) *
+                                </Label>
+                                <select
+                                    value={stockAdjustReason}
+                                    onChange={e => setStockAdjustReason(e.target.value)}
+                                    className="w-full h-9.5 px-3 text-xs border border-gray-200 rounded-lg bg-white font-medium focus:border-[#14532d] cursor-pointer"
+                                >
+                                    <option value="Ginti me farq (Count error)">Ginti me farq (Count error)</option>
+                                    <option value="Kharab maal / Wastage">Kharab maal / Wastage</option>
+                                    <option value="Wazan kam nikla">Wazan kam nikla</option>
+                                    <option value="Digar (Other)">Digar (Other)</option>
+                                </select>
+                            </div>
+
+                            <DialogFooter className="pt-2 gap-2">
+                                <Button type="button" variant="outline" onClick={() => setStockAdjustModalOpen(false)} className="text-xs">
+                                    Cancel
+                                </Button>
+                                <Button type="submit" className="bg-[#14532d] hover:bg-[#0e3b20] text-white text-xs font-bold px-4">
+                                    Stock Adjust Karein
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    </DialogContent>
+                </Dialog>
+            )}
+
+            {/* Purchase Modal */}
+            {purchaseModalItem && (
+                <Dialog open={purchaseModalOpen} onOpenChange={setPurchaseModalOpen}>
+                    <DialogContent className="max-w-md font-sans p-6 bg-white rounded-2xl">
+                        <DialogHeader>
+                            <DialogTitle className="text-base font-bold text-gray-900">
+                                Nayi Purchase (Bijak) · {cleanItemName(purchaseModalItem.name_en)}
+                            </DialogTitle>
+                        </DialogHeader>
+
+                        <form onSubmit={handlePurchaseSubmit} className="space-y-4 pt-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <Label className="text-xs font-semibold text-gray-700 block mb-1">Jins (Item)</Label>
+                                    <Input
+                                        disabled
+                                        value={`${cleanItemName(purchaseModalItem.name_en)} (${purchaseModalItem.unit || 'Bori'})`}
+                                        className="h-9.5 text-xs bg-gray-50 border-gray-200 rounded-lg text-gray-900 font-bold"
+                                    />
+                                </div>
+                                <div>
+                                    <Label className="text-xs font-semibold text-gray-700 block mb-1">Kisan / Supplier</Label>
+                                    <Input
+                                        value={purchaseFarmerName}
+                                        onChange={e => setPurchaseFarmerName(e.target.value)}
+                                        placeholder="e.g. Aslam Khan (Kisan)"
+                                        className="h-9.5 text-xs border-gray-200 rounded-lg focus:border-[#14532d]"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <Label className="text-xs font-semibold text-gray-700 block mb-1">
+                                        Tadaad ({purchaseModalItem.unit || 'Bori'}) *
+                                    </Label>
+                                    <Input
+                                        type="number"
+                                        min="1"
+                                        step="any"
+                                        required
+                                        value={purchaseQuantity}
+                                        onChange={e => setPurchaseQuantity(e.target.value)}
+                                        placeholder="100"
+                                        className="h-9.5 text-sm font-bold text-gray-900 border-gray-200 rounded-lg focus:border-[#14532d]"
+                                        autoFocus
+                                    />
+                                </div>
+                                <div>
+                                    <Label className="text-xs font-semibold text-gray-700 block mb-1">
+                                        Rate per {purchaseModalItem.unit || 'Bori'} (Rs.)
+                                    </Label>
+                                    <Input
+                                        type="number"
+                                        step="any"
+                                        value={purchaseRate}
+                                        onChange={e => setPurchaseRate(e.target.value)}
+                                        placeholder="1200"
+                                        className="h-9.5 text-sm font-bold text-gray-900 border-gray-200 rounded-lg focus:border-[#14532d]"
+                                    />
+                                </div>
+                            </div>
+
+                            {Number(purchaseQuantity) > 0 && (
+                                <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200/80 flex items-center justify-between text-xs">
+                                    <span className="text-emerald-900 font-semibold">Kul Purchase Rakam:</span>
+                                    <span className="font-extrabold text-emerald-950 text-base">
+                                        Rs. {(Number(purchaseQuantity || 0) * (Number(purchaseRate) || 0)).toLocaleString()}
+                                    </span>
+                                </div>
+                            )}
+
+                            <DialogFooter className="pt-2 gap-2">
+                                <Button type="button" variant="outline" onClick={() => setPurchaseModalOpen(false)} className="text-xs">
+                                    Cancel
+                                </Button>
+                                <Button type="submit" className="bg-[#14532d] hover:bg-[#0e3b20] text-white text-xs font-bold px-4">
+                                    Purchase Save Karein
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    </DialogContent>
+                </Dialog>
+            )}
         </AppLayout>
     );
 }

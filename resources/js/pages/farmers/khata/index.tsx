@@ -65,6 +65,14 @@ export default function FarmerKhataIndex({
     const [toDate, setToDate] = useState(filters.to_date || new Date().toISOString().split('T')[0]);
     const [infoOpen, setInfoOpen] = useState(false);
 
+    // 30-second background polling for real-time updates
+    React.useEffect(() => {
+        const interval = setInterval(() => {
+            router.reload({ preserveScroll: true, preserveState: true });
+        }, 30000);
+        return () => clearInterval(interval);
+    }, []);
+
     const breadcrumbs: BreadcrumbItem[] = [
         { title: isUrdu ? 'کھاتہ' : 'Khata', href: '#' },
         { title: isUrdu ? 'کسان کھاتہ' : 'Farmer Khata', href: '/khata' },
@@ -129,7 +137,7 @@ export default function FarmerKhataIndex({
                     <div className="bg-white rounded-xl border border-gray-200/90 shadow-2xs p-3.5 md:p-4">
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div>
-                                <label className="block text-[11px] font-semibold text-gray-500 mb-1">
+                                <label className="block text-xs font-bold text-[#374151] mb-1">
                                     Farmer
                                 </label>
                                 <select
@@ -145,7 +153,7 @@ export default function FarmerKhataIndex({
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-[11px] font-semibold text-gray-500 mb-1">
+                                <label className="block text-xs font-bold text-[#374151] mb-1">
                                     Se
                                 </label>
                                 <input
@@ -156,7 +164,7 @@ export default function FarmerKhataIndex({
                                 />
                             </div>
                             <div>
-                                <label className="block text-[11px] font-semibold text-gray-500 mb-1">
+                                <label className="block text-xs font-bold text-[#374151] mb-1">
                                     Tak
                                 </label>
                                 <input
@@ -173,54 +181,54 @@ export default function FarmerKhataIndex({
                     <div className="bg-white rounded-xl border border-gray-200/90 shadow-2xs p-4 md:p-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-5 items-center divide-y md:divide-y-0 md:divide-x md:divide-gray-100">
                         {/* 1. Baqaya */}
                         <div className="space-y-0.5">
-                            <span className="text-[10px] font-semibold text-gray-400 block">
+                            <span className="text-xs font-bold text-[#4B5563] block">
                                 Baqaya
                             </span>
-                            <div className={`text-xl md:text-2xl font-black ${isNegative ? 'text-red-600' : 'text-gray-900'}`}>
+                            <div className="text-xl md:text-2xl font-black text-[#1F2937]">
                                 {isNegative ? `- Rs. ${absBaqaya.toLocaleString()}` : `Rs. ${absBaqaya.toLocaleString()}`}
                             </div>
-                            <span className="text-[11px] text-gray-400 block pt-0.5 truncate">
+                            <span className="text-xs font-semibold text-[#374151] block pt-0.5 truncate">
                                 {farmerDisplayName}
                             </span>
                         </div>
 
                         {/* 2. Total nag */}
                         <div className="md:ps-5 pt-3 md:pt-0 space-y-0.5">
-                            <span className="text-[10px] font-semibold text-gray-400 block">
+                            <span className="text-xs font-bold text-[#4B5563] block">
                                 Total nag
                             </span>
-                            <div className="text-lg md:text-xl font-bold text-gray-900">
+                            <div className="text-lg md:text-xl font-black text-[#1F2937]">
                                 {summary.total_nag}
                             </div>
                         </div>
 
                         {/* 3. Jama */}
                         <div className="md:ps-5 pt-3 md:pt-0 space-y-0.5">
-                            <span className="text-[10px] font-semibold text-gray-400 block">
+                            <span className="text-xs font-bold text-[#4B5563] block">
                                 Jama
                             </span>
-                            <div className="text-lg md:text-xl font-bold text-gray-900">
+                            <div className="text-lg md:text-xl font-black text-[#1F2937]">
                                 Rs. {Number(summary.total_jama).toLocaleString()}
                             </div>
                         </div>
 
                         {/* 4. Banam */}
                         <div className="md:ps-5 pt-3 md:pt-0 space-y-0.5">
-                            <span className="text-[10px] font-semibold text-gray-400 block">
+                            <span className="text-xs font-bold text-[#4B5563] block">
                                 Banam
                             </span>
-                            <div className="text-lg md:text-xl font-bold text-gray-900">
+                            <div className="text-lg md:text-xl font-black text-[#1F2937]">
                                 Rs. {Number(summary.total_banam).toLocaleString()}
                             </div>
                         </div>
                     </div>
 
-                    {/* Table Card: Pure white, clean muted headers, simple borders */}
+                    {/* Table Card: Pure white, clean dark headers, simple borders */}
                     <div className="bg-white rounded-xl border border-gray-200/90 shadow-2xs overflow-hidden">
                         <div className="overflow-x-auto">
-                            <table className="w-full text-xs font-sans">
+                            <table className="w-full text-sm font-sans">
                                 <thead>
-                                    <tr className="text-gray-400 border-b border-gray-200 font-semibold bg-gray-50/50">
+                                    <tr className="text-[#374151] border-b border-gray-200 font-bold bg-gray-50/80 text-xs md:text-sm">
                                         <th className="px-4 py-3 text-start">Mark</th>
                                         <th className="px-4 py-3 text-end">Nag</th>
                                         <th className="px-4 py-3 text-end">Jama</th>
@@ -230,23 +238,23 @@ export default function FarmerKhataIndex({
                                 <tbody className="divide-y divide-gray-100">
                                     {marksData.length === 0 ? (
                                         <tr>
-                                            <td colSpan={4} className="px-4 py-8 text-center text-gray-400 text-xs">
+                                            <td colSpan={4} className="px-4 py-8 text-center text-gray-500 font-medium text-sm">
                                                 No records found for this period
                                             </td>
                                         </tr>
                                     ) : (
                                         marksData.map(m => (
-                                            <tr key={m.mark_id} className="hover:bg-gray-50/60 transition-colors">
-                                                <td className="px-4 py-3 font-semibold text-gray-900">
+                                            <tr key={m.mark_id} className="hover:bg-gray-50/60 transition-colors text-sm">
+                                                <td className="px-4 py-3.5 font-bold text-[#1F2937] text-sm md:text-[15px]">
                                                     {m.name_en || m.name_ur}
                                                 </td>
-                                                <td className="px-4 py-3 text-end text-gray-700">
+                                                <td className="px-4 py-3.5 text-end font-bold text-[#1F2937] text-sm md:text-[15px]">
                                                     {m.nag}
                                                 </td>
-                                                <td className="px-4 py-3 text-end text-gray-900 font-medium">
+                                                <td className="px-4 py-3.5 text-end font-bold text-[#1F2937] text-sm md:text-[15px]">
                                                     {m.jama > 0 ? Number(m.jama).toLocaleString() : '0'}
                                                 </td>
-                                                <td className="px-4 py-3 text-end text-gray-900 font-medium">
+                                                <td className="px-4 py-3.5 text-end font-bold text-[#1F2937] text-sm md:text-[15px]">
                                                     {m.banam > 0 ? Number(m.banam).toLocaleString() : '0'}
                                                 </td>
                                             </tr>
@@ -254,13 +262,13 @@ export default function FarmerKhataIndex({
                                     )}
                                 </tbody>
                                 <tfoot>
-                                    <tr className="border-t-2 border-gray-900 bg-gray-50/80 font-bold text-gray-900">
-                                        <td className="px-4 py-3">Total</td>
-                                        <td className="px-4 py-3 text-end">{summary.total_nag}</td>
-                                        <td className="px-4 py-3 text-end">
+                                    <tr className="border-t-2 border-gray-900 bg-gray-50/80 font-bold text-[#1F2937] text-sm md:text-[15px]">
+                                        <td className="px-4 py-3.5">Total</td>
+                                        <td className="px-4 py-3.5 text-end">{summary.total_nag}</td>
+                                        <td className="px-4 py-3.5 text-end">
                                             {Number(summary.total_jama).toLocaleString()}
                                         </td>
-                                        <td className="px-4 py-3 text-end">
+                                        <td className="px-4 py-3.5 text-end">
                                             {Number(summary.total_banam).toLocaleString()}
                                         </td>
                                     </tr>
@@ -306,7 +314,7 @@ export default function FarmerKhataIndex({
                 {/* Baqaya Box */}
                 <div className="border border-black rounded p-2 mb-3 text-center bg-gray-50">
                     <span className="text-[10px] text-gray-600 uppercase font-bold block">Baqaya (بقایا)</span>
-                    <strong className={`text-base font-black ${isNegative ? 'text-red-700' : 'text-gray-900'}`}>
+                    <strong className="text-base font-black text-gray-900">
                         {isNegative ? `– Rs. ${absBaqaya.toLocaleString()}` : `Rs. ${absBaqaya.toLocaleString()}`}
                     </strong>
                 </div>

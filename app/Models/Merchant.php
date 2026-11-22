@@ -42,13 +42,24 @@ class Merchant extends Model
 
     /**
      * Sabiqa (previous balance before a given date)
-     * Calculation: Opening + Sales before date - Receipts before date
+     * Calculation: Opening + Udhaar Sales before date - Receipts before date
+     * Cash and Bank sales do not affect merchant balance / dukaan baqaya.
      */
     public function getSabiqaBalance(string $date): float
     {
-        $priorSales = $this->sales()->where('date', '<', $date)->sum('gross_amount');
+        $priorSales = $this->sales()
+            ->where('date', '<', $date)
+            ->where(function ($q) {
+                $q->where('payment_type', 'udhaar')
+                  ->orWhereNull('payment_type');
+            })
+            ->sum('gross_amount');
+        $priorSplitSales = $this->sales()
+            ->where('date', '<', $date)
+            ->where('payment_type', 'split')
+            ->sum('udhaar_amount');
         $priorReceipts = $this->receipts()->where('date', '<', $date)->sum('amount');
-        return round(($this->opening_balance ?? 0) + $priorSales - $priorReceipts, 2);
+        return round(($this->opening_balance ?? 0) + $priorSales + $priorSplitSales - $priorReceipts, 2);
     }
 
     /**
@@ -57,9 +68,19 @@ class Merchant extends Model
     public function getBalanceOn(string $date): float
     {
         $sabiqa = $this->getSabiqaBalance($date);
-        $daySales = $this->sales()->where('date', $date)->sum('gross_amount');
+        $daySales = $this->sales()
+            ->where('date', $date)
+            ->where(function ($q) {
+                $q->where('payment_type', 'udhaar')
+                  ->orWhereNull('payment_type');
+            })
+            ->sum('gross_amount');
+        $daySplitSales = $this->sales()
+            ->where('date', $date)
+            ->where('payment_type', 'split')
+            ->sum('udhaar_amount');
         $dayReceipts = $this->receipts()->where('date', $date)->sum('amount');
-        return round($sabiqa + $daySales - $dayReceipts, 2);
+        return round($sabiqa + $daySales + $daySplitSales - $dayReceipts, 2);
     }
 
     public function getNameAttribute(): string
@@ -83,16 +104,10 @@ class Merchant extends Model
                 $merchant->current_balance = $merchant->opening_balance ?? 0;
             }
         });
-
-        static::deleting(function ($merchant) {
-            if ((int)$merchant->code === 1) {
-                throw new \Exception('Merchant code 1 (Naqdi) is a protected system record and cannot be deleted.');
-            }
-        });
     }
 
     public function isNaqdi(): bool
     {
-        return (int)$this->code === 1;
+        return false;
     }
 }

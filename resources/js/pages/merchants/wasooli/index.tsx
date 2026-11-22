@@ -68,6 +68,14 @@ export default function WasooliIndex({ rows, totals, filters }: Props) {
         };
     }, []);
 
+    // 30-second background polling for real-time updates
+    useEffect(() => {
+        const interval = setInterval(() => {
+            router.reload({ preserveScroll: true, preserveState: true });
+        }, 30000);
+        return () => clearInterval(interval);
+    }, []);
+
     // Filtered merchants for left side list
     const filteredRows = useMemo(() => {
         const q = searchQuery.toLowerCase().trim();
@@ -94,12 +102,15 @@ export default function WasooliIndex({ rows, totals, filters }: Props) {
         return found || (filteredRows.length > 0 ? filteredRows[0] : null);
     }, [rows, filteredRows, selectedMerchantId]);
 
-    // Form inputs: Payment method, bank account, amount
-    const [paymentMethod, setPaymentMethod] = useState<'' | 'cash' | 'bank' | 'credit'>('');
+    // Form inputs: Payment method (Cash or Bank/Wallet only), bank account, amount
+    const [paymentMethod, setPaymentMethod] = useState<'' | 'cash' | 'bank'>('');
     const [selectedBankAccount, setSelectedBankAccount] = useState<string>('');
     const [amount, setAmount] = useState<string>('');
     const [saving, setSaving] = useState(false);
     const amountInputRef = useRef<HTMLInputElement>(null);
+
+    // Dynamic step number: if Bank, amount is step 3; if Cash, amount is step 2
+    const amountStepNumber = paymentMethod === 'bank' ? 3 : 2;
 
     // Rule 17: Dukaan badalne par payment, account aur amount reset ho jayein
     function handleSelectMerchant(m: WasooliRow) {
@@ -156,8 +167,8 @@ export default function WasooliIndex({ rows, totals, filters }: Props) {
         if (!paymentMethod) {
             toast.error(
                 isUrdu
-                    ? 'براہ کرم ادائیگی کا طریقہ (Cash, Bank / Wallet, یا Credit) منتخب کریں۔'
-                    : 'Baraye meherbani payment ka zariya (Cash, Bank / Wallet, ya Credit) muntakhib karein.'
+                    ? 'براہ کرم ادائیگی کا طریقہ (Cash یا Bank / Wallet) منتخب کریں۔'
+                    : 'Baraye meherbani payment ka zariya (Cash ya Bank / Wallet) muntakhib karein.'
             );
             return;
         }
@@ -198,7 +209,7 @@ export default function WasooliIndex({ rows, totals, filters }: Props) {
             amount: numAmount,
             payment_type: paymentMethod,
             bank_account: selectedBankAccount,
-            note: `Wasooli via ${paymentMethod === 'bank' ? `Bank (${selectedBankAccount})` : paymentMethod === 'cash' ? 'Cash' : 'Credit'}`,
+            note: `Wasooli via ${paymentMethod === 'bank' ? `Bank (${selectedBankAccount})` : 'Cash'}`,
         }, {
             preserveScroll: true,
             preserveState: false,
@@ -259,30 +270,7 @@ export default function WasooliIndex({ rows, totals, filters }: Props) {
                     title={isUrdu ? 'وصولی اینٹری' : 'Wasooli Entry'}
                     subtitle={isUrdu ? 'لیفٹ سے دکان چنیں، رائٹ پر 3 سٹیپس پورے کریں' : 'Left se dukaan chunein, right par 3 steps poore karein'}
                     isUrdu={isUrdu}
-                >
-                    <button
-                        type="button"
-                        onClick={() => setQuickDate(0)}
-                        className={`min-h-[36px] h-9 px-4 rounded-xl text-xs md:text-sm font-semibold bg-[#20693e] hover:bg-[#287d4a] text-white border border-emerald-600/50 shadow-xs transition-colors cursor-pointer ${isUrdu ? 'font-nastaliq' : ''}`}
-                    >
-                        {isUrdu ? 'آج' : 'Today'}
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setQuickDate(-1)}
-                        className={`min-h-[36px] h-9 px-4 rounded-xl text-xs md:text-sm font-semibold bg-[#20693e] hover:bg-[#287d4a] text-white border border-emerald-600/50 shadow-xs transition-colors cursor-pointer ${isUrdu ? 'font-nastaliq' : ''}`}
-                    >
-                        {isUrdu ? 'گزشتہ کل' : 'Yesterday'}
-                    </button>
-                    <div className="relative flex items-center">
-                        <input
-                            type="date"
-                            value={selectedDate}
-                            onChange={e => handleDateChange(e.target.value)}
-                            className="min-h-[36px] h-9 w-32 md:w-36 rounded-xl bg-white text-gray-900 font-bold text-xs md:text-sm cursor-pointer shadow-xs px-2.5 text-center border-0 outline-none"
-                        />
-                    </div>
-                </MandiPageHeader>
+                />
 
                 {/* Main Two-Column Desk */}
                 <div className="max-w-7xl mx-auto px-3 md:px-6 -mt-6 md:-mt-8">
@@ -361,7 +349,7 @@ export default function WasooliIndex({ rows, totals, filters }: Props) {
                         </div>
 
                         {/* RIGHT COLUMN: WASOOLI FORM */}
-                        <div className="lg:col-span-8 space-y-3.5">
+                        <div className="lg:col-span-8 space-y-3">
                             {/* 1. Dukaan Header Card */}
                             <div className="bg-white rounded-2xl border border-gray-200/90 shadow-xs p-4 md:p-5 flex items-center justify-between gap-3">
                                 <div>
@@ -439,7 +427,7 @@ export default function WasooliIndex({ rows, totals, filters }: Props) {
                                 <h3 className="text-sm md:text-base font-bold text-gray-900">
                                     {isUrdu ? '1 پیسے کیسے ملے؟' : '1 Paise kaise mile?'}
                                 </h3>
-                                <div className="grid grid-cols-3 gap-3">
+                                <div className="grid grid-cols-2 gap-3">
                                     <button
                                         type="button"
                                         onClick={() => setPaymentMethod('cash')}
@@ -462,18 +450,6 @@ export default function WasooliIndex({ rows, totals, filters }: Props) {
                                         }`}
                                     >
                                         Bank / Wallet
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        onClick={() => setPaymentMethod('credit')}
-                                        className={`min-h-[44px] h-11 rounded-xl text-xs md:text-sm font-semibold flex items-center justify-center transition-all cursor-pointer ${
-                                            paymentMethod === 'credit'
-                                                ? 'border-2 border-[#1e713e] bg-[#eef7f0] text-gray-900 font-bold'
-                                                : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
-                                        }`}
-                                    >
-                                        Credit
                                     </button>
                                 </div>
                             </div>
@@ -510,10 +486,10 @@ export default function WasooliIndex({ rows, totals, filters }: Props) {
                                 </div>
                             )}
 
-                            {/* 6. Step 3: Kitni wasooli hui? */}
+                            {/* 6. Step: Kitni wasooli hui? (Step 2 if Cash, Step 3 if Bank) */}
                             <div className="bg-white rounded-2xl border border-gray-200/90 border-l-4 border-l-[#1e713e] shadow-xs p-4 md:p-5 space-y-3">
                                 <h3 className="text-sm md:text-base font-bold text-gray-900">
-                                    {isUrdu ? '3 کتنی وصولی ہوئی؟' : '3 Kitni wasooli hui?'}
+                                    {isUrdu ? `${amountStepNumber} کتنی وصولی ہوئی؟` : `${amountStepNumber} Kitni wasooli hui?`}
                                 </h3>
 
                                 <div className="relative">
@@ -595,9 +571,9 @@ export default function WasooliIndex({ rows, totals, filters }: Props) {
 
                                     <button
                                         type="button"
-                                        disabled={saving || isOverLimit}
+                                        disabled={saving || isOverLimit || !selectedMerchant || !paymentMethod || numAmount <= 0 || (paymentMethod === 'bank' && !selectedBankAccount)}
                                         onClick={handleSave}
-                                        className="min-h-[44px] h-11 px-6 rounded-xl bg-[#1e713e] hover:bg-[#165a31] text-white font-bold text-xs md:text-sm shadow-xs cursor-pointer transition-colors disabled:opacity-50"
+                                        className="min-h-[44px] h-11 px-6 rounded-xl bg-[#1e713e] hover:bg-[#165a31] text-white font-bold text-xs md:text-sm shadow-xs cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         {saving ? (isUrdu ? 'محفوظ ہو رہا ہے...' : 'Saving...') : 'Save Karein'}
                                     </button>

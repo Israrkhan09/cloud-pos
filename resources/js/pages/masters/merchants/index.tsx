@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Head, useForm, router } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/layouts/app-layout';
@@ -90,6 +90,14 @@ export default function MerchantsIndex({
     const [activeTab, setActiveTab] = useState<'merchants' | 'farmers'>(
         (filters.tab as 'merchants' | 'farmers') || currentTab || 'merchants'
     );
+
+    useEffect(() => {
+        if (filters.tab === 'farmers' || filters.tab === 'merchants') {
+            setActiveTab(filters.tab);
+        } else if (currentTab === 'farmers' || currentTab === 'merchants') {
+            setActiveTab(currentTab);
+        }
+    }, [filters.tab, currentTab]);
     const [search, setSearch] = useState(filters.search || '');
 
     // Merchant Modal State
@@ -154,10 +162,11 @@ export default function MerchantsIndex({
 
     const openEditMerchant = (m: Merchant) => {
         setEditingMerchant(m);
+        const nameVal = m.name_en || m.name || m.name_ur || '';
         merchantForm.setData({
             code: String(m.code),
-            name_ur: m.name_ur || '',
-            name_en: m.name_en || '',
+            name_ur: nameVal,
+            name_en: nameVal,
             phone: m.phone || '',
             opening_balance: m.opening_balance || 0,
             status: m.status || 'active',
@@ -233,10 +242,11 @@ export default function MerchantsIndex({
 
     const openEditFarmer = (f: Farmer) => {
         setEditingFarmer(f);
+        const nameVal = f.name_en || f.name || f.name_ur || '';
         farmerForm.setData({
             code: String(f.code),
-            name_ur: f.name_ur || '',
-            name_en: f.name_en || '',
+            name_ur: nameVal,
+            name_en: nameVal,
             phone: f.phone || '',
             area_id: f.area_id ? String(f.area_id) : '',
             opening_balance: f.opening_balance || 0,
@@ -312,8 +322,8 @@ export default function MerchantsIndex({
                         <Icon name="Plus" className="size-4 text-emerald-800" weight="bold" />
                         <span>
                             {activeTab === 'merchants'
-                                ? (isUrdu ? 'نیا مرچنٹ' : '+ Naya Merchant')
-                                : (isUrdu ? 'نیا کسان' : '+ Naya Farmer')}
+                                ? (isUrdu ? 'نیا مرچنٹ' : 'Naya Merchant')
+                                : (isUrdu ? 'نیا کسان' : 'Naya Farmer')}
                         </span>
                     </button>
                 </MandiPageHeader>
@@ -321,8 +331,8 @@ export default function MerchantsIndex({
                 {/* 2. Floating Content Area */}
                 <div className="max-w-7xl mx-auto px-3 md:px-6 -mt-6 md:-mt-8 space-y-4">
                     
-                    {/* Tab Bar & Search Card */}
-                    <div className="bg-white rounded-xl border border-gray-200/90 shadow-sm p-3.5 flex flex-wrap items-center justify-between gap-3">
+                    {/* Tab Bar Card */}
+                    <div className="bg-white rounded-xl border border-gray-200/90 shadow-sm p-3 flex flex-wrap items-center justify-between gap-3">
                         {/* 2 Tabs */}
                         <div className="flex items-center gap-1.5 p-1 bg-gray-100/90 rounded-lg max-w-full overflow-x-auto">
                             <button
@@ -361,30 +371,6 @@ export default function MerchantsIndex({
                                 </span>
                             </button>
                         </div>
-
-                        {/* Search Bar */}
-                        <form onSubmit={handleSearch} className="flex items-center gap-2 w-full sm:w-auto">
-                            <div className="relative flex-1 sm:w-64">
-                                <Icon name="MagnifyingGlass" className="absolute start-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
-                                <input
-                                    type="text"
-                                    value={search}
-                                    onChange={e => setSearch(e.target.value)}
-                                    placeholder={
-                                        activeTab === 'merchants'
-                                            ? (isUrdu ? 'مرچنٹ تلاش کریں...' : 'Search merchant...')
-                                            : (isUrdu ? 'کسان تلاش کریں...' : 'Search farmer...')
-                                    }
-                                    className="w-full h-9 ps-9 pe-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-900 focus:bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none"
-                                />
-                            </div>
-                            <button
-                                type="submit"
-                                className="h-9 px-3 rounded-lg bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-semibold cursor-pointer"
-                            >
-                                {isUrdu ? 'تلاش' : 'Search'}
-                            </button>
-                        </form>
                     </div>
 
                     {/* TAB 1: MERCHANTS TABLE */}
@@ -395,8 +381,7 @@ export default function MerchantsIndex({
                                     <thead>
                                         <tr className="bg-[#14532d] text-white font-bold select-none">
                                             <th className="px-4 py-3 text-start w-20">{isUrdu ? 'کوڈ' : 'Code'}</th>
-                                            <th className="px-4 py-3 text-start">{isUrdu ? 'نام (اردو)' : 'Naam (Urdu)'}</th>
-                                            <th className="px-4 py-3 text-start">{isUrdu ? 'نام (انگلش)' : 'Name (English)'}</th>
+                                            <th className="px-4 py-3 text-start">{isUrdu ? 'نام' : 'Name'}</th>
                                             <th className="px-4 py-3 text-start">{isUrdu ? 'فون' : 'Phone'}</th>
                                             <th className="px-4 py-3 text-end">{isUrdu ? 'سابقہ (Rs.)' : 'Opening (Rs.)'}</th>
                                             <th className="px-4 py-3 text-end">{isUrdu ? 'بقایا (Rs.)' : 'Current Baqaya'}</th>
@@ -407,7 +392,7 @@ export default function MerchantsIndex({
                                     <tbody className="divide-y divide-gray-100">
                                         {merchants.data.length === 0 ? (
                                             <tr>
-                                                <td colSpan={8} className="px-4 py-8 text-center text-gray-400 text-xs">
+                                                <td colSpan={7} className="px-4 py-8 text-center text-gray-400 text-xs">
                                                     {isUrdu ? 'کوئی مرچنٹ موجود نہیں ہے' : 'No merchants found'}
                                                 </td>
                                             </tr>
@@ -422,11 +407,8 @@ export default function MerchantsIndex({
                                                             </span>
                                                         )}
                                                     </td>
-                                                    <td className="px-4 py-3 font-nastaliq font-bold text-gray-900 text-sm">
-                                                        {m.name_ur || '—'}
-                                                    </td>
-                                                    <td className="px-4 py-3 text-gray-700 font-medium">
-                                                        {m.name_en || '—'}
+                                                    <td className="px-4 py-3 text-gray-900 font-bold text-sm">
+                                                        {m.name_en || m.name_ur || m.name || '—'}
                                                     </td>
                                                     <td className="px-4 py-3 text-gray-600">
                                                         {m.phone || '—'}
@@ -513,8 +495,7 @@ export default function MerchantsIndex({
                                     <thead>
                                         <tr className="bg-[#14532d] text-white font-bold select-none">
                                             <th className="px-4 py-3 text-start w-20">{isUrdu ? 'کوڈ' : 'Code'}</th>
-                                            <th className="px-4 py-3 text-start">{isUrdu ? 'نام (اردو)' : 'Naam (Urdu)'}</th>
-                                            <th className="px-4 py-3 text-start">{isUrdu ? 'نام (انگلش)' : 'Name (English)'}</th>
+                                            <th className="px-4 py-3 text-start">{isUrdu ? 'نام' : 'Name'}</th>
                                             <th className="px-4 py-3 text-start">{isUrdu ? 'علاقہ' : 'Area (Ilaqa)'}</th>
                                             <th className="px-4 py-3 text-start">{isUrdu ? 'فون' : 'Phone'}</th>
                                             <th className="px-4 py-3 text-end">{isUrdu ? 'سابقہ (Rs.)' : 'Opening (Rs.)'}</th>
@@ -526,7 +507,7 @@ export default function MerchantsIndex({
                                     <tbody className="divide-y divide-gray-100">
                                         {farmers.data.length === 0 ? (
                                             <tr>
-                                                <td colSpan={9} className="px-4 py-8 text-center text-gray-400 text-xs">
+                                                <td colSpan={8} className="px-4 py-8 text-center text-gray-400 text-xs">
                                                     {isUrdu ? 'کوئی کسان موجود نہیں ہے' : 'No farmers found'}
                                                 </td>
                                             </tr>
@@ -538,11 +519,8 @@ export default function MerchantsIndex({
                                                         <td className="px-4 py-3 font-bold text-gray-900">
                                                             #{f.code}
                                                         </td>
-                                                        <td className="px-4 py-3 font-nastaliq font-bold text-gray-900 text-sm">
-                                                            {f.name_ur || '—'}
-                                                        </td>
-                                                        <td className="px-4 py-3 text-gray-700 font-medium">
-                                                            {f.name_en || '—'}
+                                                        <td className="px-4 py-3 text-gray-900 font-bold text-sm">
+                                                            {f.name_en || f.name_ur || f.name || '—'}
                                                         </td>
                                                         <td className="px-4 py-3 text-gray-600">
                                                             {f.area ? (isUrdu ? (f.area.name_ur || f.area.name_en) : (f.area.name_en || f.area.name_ur)) : '—'}
@@ -659,23 +637,19 @@ export default function MerchantsIndex({
                         </div>
 
                         <div>
-                            <Label className="text-xs font-semibold">{isUrdu ? 'نام (اردو)' : 'Name (Urdu)'} *</Label>
+                            <Label className="text-xs font-semibold">{isUrdu ? 'نام' : 'Name'} *</Label>
                             <Input
-                                value={merchantForm.data.name_ur}
-                                onChange={e => merchantForm.setData('name_ur', e.target.value)}
-                                placeholder="مثلاً: حاجی نور محمد"
-                                className="h-9 text-xs font-nastaliq"
-                                dir="rtl"
-                            />
-                        </div>
-
-                        <div>
-                            <Label className="text-xs font-semibold">{isUrdu ? 'نام (انگلش)' : 'Name (English)'}</Label>
-                            <Input
+                                required
                                 value={merchantForm.data.name_en}
-                                onChange={e => merchantForm.setData('name_en', e.target.value)}
+                                onChange={e => {
+                                    merchantForm.setData({
+                                        ...merchantForm.data,
+                                        name_en: e.target.value,
+                                        name_ur: e.target.value,
+                                    });
+                                }}
                                 placeholder="e.g. Haji Noor Muhammad"
-                                className="h-9 text-xs"
+                                className="h-9 text-xs font-medium"
                             />
                         </div>
 
@@ -737,23 +711,19 @@ export default function MerchantsIndex({
                         </div>
 
                         <div>
-                            <Label className="text-xs font-semibold">{isUrdu ? 'نام (اردو)' : 'Name (Urdu)'} *</Label>
+                            <Label className="text-xs font-semibold">{isUrdu ? 'نام' : 'Name'} *</Label>
                             <Input
-                                value={farmerForm.data.name_ur}
-                                onChange={e => farmerForm.setData('name_ur', e.target.value)}
-                                placeholder="مثلاً: وڈیرہ علی محمد"
-                                className="h-9 text-xs font-nastaliq"
-                                dir="rtl"
-                            />
-                        </div>
-
-                        <div>
-                            <Label className="text-xs font-semibold">{isUrdu ? 'نام (انگلش)' : 'Name (English)'}</Label>
-                            <Input
+                                required
                                 value={farmerForm.data.name_en}
-                                onChange={e => farmerForm.setData('name_en', e.target.value)}
+                                onChange={e => {
+                                    farmerForm.setData({
+                                        ...farmerForm.data,
+                                        name_en: e.target.value,
+                                        name_ur: e.target.value,
+                                    });
+                                }}
                                 placeholder="e.g. Wadera Ali Muhammad"
-                                className="h-9 text-xs"
+                                className="h-9 text-xs font-medium"
                             />
                         </div>
 

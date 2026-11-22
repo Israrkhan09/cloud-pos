@@ -57,6 +57,14 @@ export default function MerchantKhataIndex({
     const [fromDate, setFromDate] = useState(filters.from_date || new Date().toISOString().split('T')[0]);
     const [toDate, setToDate] = useState(filters.to_date || new Date().toISOString().split('T')[0]);
 
+    // 30-second background polling for real-time updates
+    React.useEffect(() => {
+        const interval = setInterval(() => {
+            router.reload({ preserveScroll: true, preserveState: true });
+        }, 30000);
+        return () => clearInterval(interval);
+    }, []);
+
     const breadcrumbs: BreadcrumbItem[] = [
         { title: isUrdu ? 'کھاتہ' : 'Khata', href: '#' },
         { title: isUrdu ? 'مرچنٹ کھاتہ' : 'Merchant Khata', href: '/merchant-khata' },
@@ -117,7 +125,7 @@ export default function MerchantKhataIndex({
                     <div className="bg-white rounded-xl border border-gray-200/90 shadow-2xs p-3.5 md:p-4">
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div>
-                                <label className="block text-[11px] font-semibold text-gray-500 mb-1">
+                                <label className="block text-xs font-bold text-[#374151] mb-1">
                                     Merchant
                                 </label>
                                 <select
@@ -133,7 +141,7 @@ export default function MerchantKhataIndex({
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-[11px] font-semibold text-gray-500 mb-1">
+                                <label className="block text-xs font-bold text-[#374151] mb-1">
                                     Se
                                 </label>
                                 <input
@@ -144,7 +152,7 @@ export default function MerchantKhataIndex({
                                 />
                             </div>
                             <div>
-                                <label className="block text-[11px] font-semibold text-gray-500 mb-1">
+                                <label className="block text-xs font-bold text-[#374151] mb-1">
                                     Tak
                                 </label>
                                 <input
@@ -161,54 +169,54 @@ export default function MerchantKhataIndex({
                     <div className="bg-white rounded-xl border border-gray-200/90 shadow-2xs p-4 md:p-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-5 items-center divide-y md:divide-y-0 md:divide-x md:divide-gray-100">
                         {/* 1. Baqaya (aakhri) */}
                         <div className="space-y-0.5">
-                            <span className="text-[10px] font-semibold text-gray-400 block">
+                            <span className="text-xs font-bold text-[#4B5563] block">
                                 Baqaya (aakhri)
                             </span>
-                            <div className="text-xl md:text-2xl font-black text-gray-900">
+                            <div className="text-xl md:text-2xl font-black text-[#1F2937]">
                                 Rs. {Number(summary.baqaya).toLocaleString()}
                             </div>
-                            <span className="text-[11px] text-gray-400 block pt-0.5 truncate">
+                            <span className="text-xs font-semibold text-[#374151] block pt-0.5 truncate">
                                 {merchantDisplayName}
                             </span>
                         </div>
 
                         {/* 2. Sabqa (shuru ka) */}
                         <div className="md:ps-5 pt-3 md:pt-0 space-y-0.5">
-                            <span className="text-[10px] font-semibold text-gray-400 block">
+                            <span className="text-xs font-bold text-[#4B5563] block">
                                 Sabqa (shuru ka)
                             </span>
-                            <div className="text-lg md:text-xl font-bold text-gray-900">
+                            <div className="text-lg md:text-xl font-black text-[#1F2937]">
                                 Rs. {Number(summary.sabqa).toLocaleString()}
                             </div>
                         </div>
 
                         {/* 3. Total sale */}
                         <div className="md:ps-5 pt-3 md:pt-0 space-y-0.5">
-                            <span className="text-[10px] font-semibold text-gray-400 block">
+                            <span className="text-xs font-bold text-[#4B5563] block">
                                 Total sale
                             </span>
-                            <div className="text-lg md:text-xl font-bold text-gray-900">
+                            <div className="text-lg md:text-xl font-black text-[#1F2937]">
                                 Rs. {Number(summary.total_sale).toLocaleString()}
                             </div>
                         </div>
 
                         {/* 4. Total wasooli */}
                         <div className="md:ps-5 pt-3 md:pt-0 space-y-0.5">
-                            <span className="text-[10px] font-semibold text-gray-400 block">
+                            <span className="text-xs font-bold text-[#4B5563] block">
                                 Total wasooli
                             </span>
-                            <div className="text-lg md:text-xl font-bold text-gray-900">
+                            <div className="text-lg md:text-xl font-black text-[#1F2937]">
                                 Rs. {Number(summary.total_wasooli).toLocaleString()}
                             </div>
                         </div>
                     </div>
 
-                    {/* Table Card: Pure white, clean muted headers, simple borders */}
+                    {/* Table Card: Pure white, clean dark headers, simple borders */}
                     <div className="bg-white rounded-xl border border-gray-200/90 shadow-2xs overflow-hidden">
                         <div className="overflow-x-auto">
-                            <table className="w-full text-xs font-sans">
+                            <table className="w-full text-sm font-sans">
                                 <thead>
-                                    <tr className="text-gray-400 border-b border-gray-200 font-semibold bg-gray-50/50">
+                                    <tr className="text-[#374151] border-b border-gray-200 font-bold bg-gray-50/80 text-xs md:text-sm">
                                         <th className="px-4 py-3 text-start w-32">Date</th>
                                         <th className="px-4 py-3 text-end">Sabqa</th>
                                         <th className="px-4 py-3 text-end">Sale</th>
@@ -219,26 +227,26 @@ export default function MerchantKhataIndex({
                                 <tbody className="divide-y divide-gray-100">
                                     {rows.length === 0 ? (
                                         <tr>
-                                            <td colSpan={5} className="px-4 py-8 text-center text-gray-400 text-xs">
+                                            <td colSpan={5} className="px-4 py-8 text-center text-gray-500 font-medium text-sm">
                                                 No records found for this period
                                             </td>
                                         </tr>
                                     ) : (
                                         rows.map((row, idx) => (
-                                            <tr key={idx} className="hover:bg-gray-50/60 transition-colors">
-                                                <td className="px-4 py-3 text-gray-600">
+                                            <tr key={idx} className="hover:bg-gray-50/60 transition-colors text-sm">
+                                                <td className="px-4 py-3.5 font-semibold text-[#1F2937] text-sm">
                                                     {row.date}
                                                 </td>
-                                                <td className="px-4 py-3 text-end text-gray-800">
+                                                <td className="px-4 py-3.5 text-end font-semibold text-[#1F2937] text-sm md:text-[15px]">
                                                     {Number(row.sabqa).toLocaleString()}
                                                 </td>
-                                                <td className="px-4 py-3 text-end text-gray-900 font-medium">
+                                                <td className="px-4 py-3.5 text-end font-bold text-[#1F2937] text-sm md:text-[15px]">
                                                     {row.sale > 0 ? Number(row.sale).toLocaleString() : '–'}
                                                 </td>
-                                                <td className="px-4 py-3 text-end text-gray-900 font-medium">
+                                                <td className="px-4 py-3.5 text-end font-bold text-[#1F2937] text-sm md:text-[15px]">
                                                     {row.wasooli > 0 ? Number(row.wasooli).toLocaleString() : '–'}
                                                 </td>
-                                                <td className="px-4 py-3 text-end font-bold text-gray-900">
+                                                <td className="px-4 py-3.5 text-end font-black text-[#1F2937] text-sm md:text-[15px]">
                                                     {Number(row.baqaya).toLocaleString()}
                                                 </td>
                                             </tr>
@@ -246,16 +254,16 @@ export default function MerchantKhataIndex({
                                     )}
                                 </tbody>
                                 <tfoot>
-                                    <tr className="border-t-2 border-gray-900 bg-gray-50/80 font-bold text-gray-900">
-                                        <td className="px-4 py-3">Total</td>
-                                        <td className="px-4 py-3"></td>
-                                        <td className="px-4 py-3 text-end">
+                                    <tr className="border-t-2 border-gray-900 bg-gray-50/80 font-bold text-[#1F2937] text-sm md:text-[15px]">
+                                        <td className="px-4 py-3.5">Total</td>
+                                        <td className="px-4 py-3.5"></td>
+                                        <td className="px-4 py-3.5 text-end">
                                             Rs. {Number(summary.total_sale).toLocaleString()}
                                         </td>
-                                        <td className="px-4 py-3 text-end">
+                                        <td className="px-4 py-3.5 text-end">
                                             Rs. {Number(summary.total_wasooli).toLocaleString()}
                                         </td>
-                                        <td className="px-4 py-3 text-end">
+                                        <td className="px-4 py-3.5 text-end">
                                             Rs. {Number(summary.baqaya).toLocaleString()}
                                         </td>
                                     </tr>

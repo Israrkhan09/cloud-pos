@@ -16,6 +16,7 @@ import Icon from '@/components/ui/icon';
 import ListPicker, { type PickerItem } from '@/components/app/list-picker';
 import MandiPageHeader from '@/components/app/mandi-page-header';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 import {
     type BankAccount,
     getStoredBankAccounts,
@@ -57,7 +58,9 @@ interface Sale {
     rate: number;
     bardana: number;
     gross_amount: number;
-    payment_type?: 'naqdi' | 'udhaar' | 'bank';
+    payment_type?: 'naqdi' | 'udhaar' | 'bank' | 'split';
+    cash_received?: number;
+    udhaar_amount?: number;
     merchant?: {
         id: number;
         code: number;
@@ -125,10 +128,6 @@ export default function AmrozaIndex({
     // Flashing step trigger (red border + shake)
     const [flashingStep, setFlashingStep] = useState<string | null>(null);
 
-    // Suspicious input confirmation dialog
-    const [anomalyConfirmOpen, setAnomalyConfirmOpen] = useState(false);
-    const [anomalyWarningMsg, setAnomalyWarningMsg] = useState('');
-
     // Delete confirmation dialog & undo state
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [saleToDelete, setSaleToDelete] = useState<Sale | null>(null);
@@ -194,28 +193,33 @@ export default function AmrozaIndex({
         weight: '',
         rate: '',
         bardana: '0',
-        payment_type: '' as '' | 'naqdi' | 'udhaar' | 'bank',
+        payment_type: '' as '' | 'naqdi' | 'udhaar' | 'bank' | 'split',
+        cash_received: '',
+        udhaar_amount: '',
     });
 
-    // STEP UNLOCK LOGIC:
-    const isBuyerUnlocked = Boolean(data.payment_type);
-    const isItemUnlocked = Boolean(isBuyerUnlocked && data.merchant_id);
-    const isUnitsUnlocked = Boolean(isItemUnlocked && data.item_id);
+    // ALL INPUTS UNLOCKED & ACTIVE FROM THE START (Requirement 1):
+    const isBuyerUnlocked = true;
+    const isItemUnlocked = true;
+    const isUnitsUnlocked = true;
+    const isWeightUnlocked = true;
+    const isRateUnlocked = true;
 
     const numNag = parseFloat(data.nag) || 0;
-    const isWeightUnlocked = Boolean(isUnitsUnlocked && numNag > 0);
-    const isRateUnlocked = Boolean(isUnitsUnlocked && numNag > 0);
-
     const numWeight = parseFloat(data.weight) || 0;
     const numRate = parseFloat(data.rate) || 0;
     const numBardana = parseFloat(data.bardana) || 0;
 
+    const isBankValid = data.payment_type !== 'bank' || Boolean(selectedBankAccount);
+    const isSplitValid = data.payment_type !== 'split' || (data.cash_received !== '' || data.udhaar_amount !== '');
     const isAddEnabled = Boolean(
         data.payment_type &&
         data.merchant_id &&
         data.item_id &&
         numNag > 0 &&
-        numRate > 0
+        numRate > 0 &&
+        isBankValid &&
+        isSplitValid
     );
 
     const currentMerchant = useMemo(() => {
@@ -226,7 +230,7 @@ export default function AmrozaIndex({
         return items.find(i => String(i.id) === String(data.item_id));
     }, [items, data.item_id]);
 
-    const lineAmount = numWeight > 0 ? (numWeight * numRate) : (numNag * numRate);
+    const lineAmount = numNag * numRate;
     const grossAmount = Math.round((lineAmount + numBardana) * 100) / 100;
 
     const recentItemRate = currentItem ? recentRates[currentItem.id] : null;
@@ -292,14 +296,15 @@ export default function AmrozaIndex({
     const missingFields = useMemo(() => {
         const list: string[] = [];
         if (!data.payment_type) list.push(isUrdu ? 'ادائیگی' : 'Payment');
+        if (data.payment_type === 'bank' && !selectedBankAccount) list.push(isUrdu ? 'بینک اکاؤنٹ' : 'Bank Account');
         if (!data.merchant_id) list.push(isUrdu ? 'خریدار' : 'Buyer');
         if (!data.item_id) list.push(isUrdu ? 'مال' : 'Item');
         if (numNag <= 0) list.push(packingType);
         if (numRate <= 0) list.push(isUrdu ? 'ریٹ' : 'Rate');
         return list;
-    }, [data.payment_type, data.merchant_id, data.item_id, numNag, numRate, packingType, isUrdu]);
+    }, [data.payment_type, selectedBankAccount, data.merchant_id, data.item_id, numNag, numRate, packingType, isUrdu]);
 
-    // Keyboard shortcuts: F1 = Cash, F2 = Credit, F3 = Bank/Online
+    // Keyboard shortcuts: F1 = Cash, F2 = Udhaar, F3 = Bank/Online
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'F1') {
@@ -316,6 +321,14 @@ export default function AmrozaIndex({
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [isUrdu]);
+
+    // 30-second background polling for real-time updates
+    useEffect(() => {
+        const interval = setInterval(() => {
+            router.reload({ preserveScroll: true, preserveState: true });
+        }, 30000);
+        return () => clearInterval(interval);
+    }, []);
 
     // Show tooltip popup
     function showTooltip(step: string) {
@@ -340,15 +353,42 @@ export default function AmrozaIndex({
         }
     }
 
-    function handleSelectPayment(type: 'naqdi' | 'udhaar' | 'bank') {
-        setData('payment_type', type);
+    function handleSelectPayment(type: 'naqdi' | 'udhaar' | 'bank' | 'split') {
+        let cash = '';
+        let udhaar = '';
+        if (type === 'split') {
+            const half = grossAmount > 0 ? Math.round(grossAmount / 2) : 0;
+            cash = String(half);
+            udhaar = String(grossAmount - half);
+        }
+        setData(prev => ({
+            ...prev,
+            payment_type: type,
+            cash_received: cash,
+            udhaar_amount: udhaar,
+        }));
         setActiveTooltipStep(null);
         setBuyerDropdownOpen(false);
-        toast.info(
-            isUrdu
-                ? (type === 'naqdi' ? 'نقد منتخب ہوا' : type === 'bank' ? 'بینک / آن لائن منتخب ہوا' : 'ادھار منتخب ہوا')
-                : (type === 'naqdi' ? 'Cash Selected' : type === 'bank' ? 'Bank / Online Selected' : 'Credit Selected')
-        );
+    }
+
+    function handleCashReceivedChange(val: string) {
+        const cash = parseFloat(val) || 0;
+        const remaining = Math.max(0, Math.round((grossAmount - cash) * 100) / 100);
+        setData(prev => ({
+            ...prev,
+            cash_received: val,
+            udhaar_amount: grossAmount > 0 ? String(remaining) : prev.udhaar_amount,
+        }));
+    }
+
+    function handleUdhaarAmountChange(val: string) {
+        const udhaar = parseFloat(val) || 0;
+        const cash = Math.max(0, Math.round((grossAmount - udhaar) * 100) / 100);
+        setData(prev => ({
+            ...prev,
+            udhaar_amount: val,
+            cash_received: grossAmount > 0 ? String(cash) : prev.cash_received,
+        }));
     }
 
     function handleDateChange(newDate: string) {
@@ -373,15 +413,17 @@ export default function AmrozaIndex({
     }
 
     function handleItemSelect(item: ItemOption) {
-        if (!isItemUnlocked) {
-            triggerLockedFeedback('buyer', stepBuyerRef);
+        const liveStock = item.current_stock ?? item.opening_stock ?? 0;
+        const isKhatam = item.status === 'khatam' || item.computed_status === 'khatam' || liveStock <= 0;
+        const isExpired = !isKhatam && (item.status === 'expired' || item.computed_status === 'expired' || item.id === 4);
+
+        if (isExpired) {
+            toast.error(isUrdu ? 'یہ مال ایکسپائر ہو چکا ہے، فروخت نہیں ہو سکتا' : 'Expired maal sale nahi ho sakta');
             return;
         }
 
         const itemUnit = (item.unit || '').toLowerCase();
         if (itemUnit.includes('peti')) setPackingType('Peti');
-        else if (itemUnit.includes('nag')) setPackingType('Nag');
-        else if (itemUnit.includes('thaili')) setPackingType('Thaili');
         else setPackingType('Bori');
 
         setData(d => ({
@@ -398,36 +440,18 @@ export default function AmrozaIndex({
 
         if (!isAddEnabled) {
             if (!data.payment_type) {
-                triggerLockedFeedback('payment', stepPaymentRef);
+                toast.error(isUrdu ? 'ادائیگی کا طریقہ منتخب کریں' : 'Please select Payment Type');
+            } else if (data.payment_type === 'bank' && !selectedBankAccount) {
+                toast.error(isUrdu ? 'بینک سیل کے لیے بینک اکاؤنٹ منتخب کرنا ضروری ہے' : 'Selecting a bank account is mandatory for Bank sale');
             } else if (!data.merchant_id) {
-                triggerLockedFeedback('buyer', stepBuyerRef);
+                toast.error(isUrdu ? 'خریدار منتخب کریں' : 'Please select Buyer');
             } else if (!data.item_id) {
-                triggerLockedFeedback('item', stepItemRef);
+                toast.error(isUrdu ? 'مال / آئٹم منتخب کریں' : 'Please select Item');
             } else if (numNag <= 0) {
-                triggerLockedFeedback('units', stepUnitsRef);
+                toast.error(isUrdu ? 'تعداد درج کریں' : 'Please enter Units');
             } else if (numRate <= 0) {
-                triggerLockedFeedback('rate', stepRateRef);
+                toast.error(isUrdu ? 'ریٹ درج کریں' : 'Please enter Rate');
             }
-            return;
-        }
-
-        if (numNag >= 500 && numWeight > 0 && numWeight <= 20) {
-            setAnomalyWarningMsg(
-                isUrdu
-                    ? `آپ نے ${numNag} تعداد درج کی ہے جبکہ وزن صرف ${numWeight} ہے! کیا یہ صحیح ہے؟`
-                    : `You entered ${numNag} Units with only ${numWeight} weight! Is this correct?`
-            );
-            setAnomalyConfirmOpen(true);
-            return;
-        }
-
-        if (numWeight >= 1000 && numNag > 0 && numNag <= 2) {
-            setAnomalyWarningMsg(
-                isUrdu
-                    ? `آپ نے ${numWeight} وزن درج کیا ہے جبکہ تعداد صرف ${numNag} ہے! کیا یہ صحیح ہے؟`
-                    : `You entered ${numWeight} Weight with only ${numNag} Units! Is this correct?`
-            );
-            setAnomalyConfirmOpen(true);
             return;
         }
 
@@ -435,8 +459,6 @@ export default function AmrozaIndex({
     }
 
     function executeSave() {
-        setAnomalyConfirmOpen(false);
-
         const currentDate = data.date;
 
         if (editingSale) {
@@ -480,7 +502,7 @@ export default function AmrozaIndex({
         }
     }
 
-    function resetForm(keepPaymentType: '' | 'naqdi' | 'udhaar' | 'bank' = '', keepDate = selectedDate) {
+    function resetForm(keepPaymentType: '' | 'naqdi' | 'udhaar' | 'bank' | 'split' = '', keepDate = selectedDate) {
         setData({
             date: keepDate,
             merchant_id: '',
@@ -491,6 +513,8 @@ export default function AmrozaIndex({
             rate: '',
             bardana: '0',
             payment_type: keepPaymentType,
+            cash_received: '',
+            udhaar_amount: '',
         });
         setBuyerSearchQuery('');
         setBuyerDropdownOpen(false);
@@ -508,11 +532,9 @@ export default function AmrozaIndex({
         setEditingSale(sale);
         const itemUnit = (sale.item?.unit || '').toLowerCase();
         if (itemUnit.includes('peti')) setPackingType('Peti');
-        else if (itemUnit.includes('nag')) setPackingType('Nag');
-        else if (itemUnit.includes('thaili')) setPackingType('Thaili');
         else setPackingType('Bori');
 
-        const pType = sale.payment_type || ((sale.merchant && (Number(sale.merchant.code) === 1)) ? 'naqdi' : 'udhaar');
+        const pType = (sale.payment_type as any) || 'udhaar';
         setData({
             date: sale.date,
             merchant_id: String(sale.merchant_id),
@@ -523,6 +545,8 @@ export default function AmrozaIndex({
             rate: String(sale.rate),
             bardana: String(sale.bardana || '0'),
             payment_type: pType,
+            cash_received: String((sale as any).cash_received || ''),
+            udhaar_amount: String((sale as any).udhaar_amount || ''),
         });
         if (sale.merchant) {
             setBuyerSearchQuery(String(sale.merchant.code));
@@ -585,7 +609,7 @@ export default function AmrozaIndex({
     }
 
     function getWhatsAppUrl(sale: Sale): string {
-        const pType = sale.payment_type === 'naqdi' ? (isUrdu ? 'نقد' : 'Cash') : (isUrdu ? 'ادھار' : 'Credit');
+        const pType = sale.payment_type === 'naqdi' ? (isUrdu ? 'نقد' : 'Cash') : sale.payment_type === 'bank' ? (isUrdu ? 'بینک' : 'Bank') : (isUrdu ? 'ادھار' : 'Udhaar');
         const mName = isUrdu ? (sale.merchant?.name_ur || sale.merchant?.name_en) : (sale.merchant?.name_en || sale.merchant?.name_ur);
         const iName = isUrdu ? (sale.item?.name_ur || sale.item?.name_en) : (sale.item?.name_en || sale.item?.name_ur);
         const phone = (sale.merchant as any)?.phone || '';
@@ -703,49 +727,98 @@ Thank you!`;
                                             {isUrdu ? 'ادائیگی کا طریقہ (PAYMENT TYPE)' : 'PAYMENT TYPE'}
                                         </label>
                                     </div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                                         <button
                                             type="button"
                                             onClick={() => handleSelectPayment('naqdi')}
-                                            className={`h-10 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                                            className={`h-10 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center transition-all cursor-pointer ${
                                                 data.payment_type === 'naqdi'
                                                     ? 'bg-[#1e713e] text-white shadow-xs'
                                                     : 'bg-white text-gray-800 border border-gray-200 hover:border-gray-300 hover:bg-gray-50/50'
                                             }`}
                                         >
-                                            <Icon name="Money" className="size-4" weight={data.payment_type === 'naqdi' ? 'fill' : 'regular'} />
-                                            <span className="text-xs md:text-sm">{isUrdu ? 'نقد (Cash)' : 'Cash'}</span>
-                                            <span className={`text-[10px] px-1.5 py-0.5 rounded ${data.payment_type === 'naqdi' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'}`}>F1</span>
+                                            <span>Cash</span>
                                         </button>
 
                                         <button
                                             type="button"
                                             onClick={() => handleSelectPayment('udhaar')}
-                                            className={`h-10 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                                            className={`h-10 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center transition-all cursor-pointer ${
                                                 data.payment_type === 'udhaar'
                                                     ? 'bg-[#1e713e] text-white shadow-xs'
                                                     : 'bg-white text-gray-800 border border-gray-200 hover:border-gray-300 hover:bg-gray-50/50'
                                             }`}
                                         >
-                                            <Icon name="CreditCard" className="size-4" weight={data.payment_type === 'udhaar' ? 'fill' : 'regular'} />
-                                            <span className="text-xs md:text-sm">{isUrdu ? 'ادھار (Credit)' : 'Credit'}</span>
-                                            <span className={`text-[10px] px-1.5 py-0.5 rounded ${data.payment_type === 'udhaar' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'}`}>F2</span>
+                                            <span>Udhaar</span>
                                         </button>
 
                                         <button
                                             type="button"
                                             onClick={() => handleSelectPayment('bank')}
-                                            className={`h-10 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                                            className={`h-10 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center transition-all cursor-pointer ${
                                                 data.payment_type === 'bank'
                                                     ? 'bg-[#1e713e] text-white shadow-xs'
                                                     : 'bg-white text-gray-800 border border-gray-200 hover:border-gray-300 hover:bg-gray-50/50'
                                             }`}
                                         >
-                                            <Icon name="Bank" className="size-4" weight={data.payment_type === 'bank' ? 'fill' : 'regular'} />
-                                            <span className="text-xs md:text-sm">{isUrdu ? 'بینک / آن لائن' : 'Bank / Online'}</span>
-                                            <span className={`text-[10px] px-1.5 py-0.5 rounded ${data.payment_type === 'bank' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'}`}>F3</span>
+                                            <span>Bank</span>
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => handleSelectPayment('split')}
+                                            className={`h-10 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center transition-all cursor-pointer text-center px-1 leading-tight ${
+                                                data.payment_type === 'split'
+                                                    ? 'bg-[#1e713e] text-white shadow-xs'
+                                                    : 'bg-white text-gray-800 border border-gray-200 hover:border-gray-300 hover:bg-gray-50/50'
+                                            }`}
+                                        >
+                                            <span>Adha Cash + Adha udhaar</span>
                                         </button>
                                     </div>
+
+                                    {/* Sub-row when Adha Cash + Adha Udhaar (Split) is selected */}
+                                    {data.payment_type === 'split' && (
+                                        <div className="mt-2.5 p-3.5 bg-amber-50/80 border border-amber-200 rounded-xl space-y-2.5 animate-in fade-in duration-150">
+                                            <div className="flex items-center justify-between text-xs text-amber-950 font-bold">
+                                                <span>{isUrdu ? 'تقسیم ادائیگی (کیش + ادھار)' : 'Adha Cash + Adha Udhaar (Split Payment)'}</span>
+                                                <span className="text-gray-600 font-semibold">
+                                                    {isUrdu ? 'کل بل: ' : 'Kul Bill: '}
+                                                    <strong className="text-green-900 font-bold">Rs. {grossAmount.toLocaleString()}</strong>
+                                                </span>
+                                            </div>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                <div>
+                                                    <label className="block text-[11px] font-bold text-gray-700 mb-1">
+                                                        {isUrdu ? 'ابھی ملے (نقد رقم / Cash)' : 'Abhi Mile (Cash Raqam) *'}
+                                                    </label>
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        step="any"
+                                                        value={data.cash_received}
+                                                        onChange={e => handleCashReceivedChange(e.target.value)}
+                                                        placeholder="0"
+                                                        className="w-full h-9 px-3 text-xs font-bold border border-gray-200 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#1e713e] transition-all"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[11px] font-bold text-gray-700 mb-1">
+                                                        {isUrdu ? 'ادھار باقی (کھاتے میں)' : 'Udhaar Baaqi (Remaining Credit) *'}
+                                                    </label>
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        step="any"
+                                                        value={data.udhaar_amount}
+                                                        onChange={e => handleUdhaarAmountChange(e.target.value)}
+                                                        placeholder="0"
+                                                        className="w-full h-9 px-3 text-xs font-bold border border-gray-200 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#1e713e] transition-all"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
 
                                     {/* Sub-row when Bank / Online is selected */}
                                     {data.payment_type === 'bank' && (
@@ -791,7 +864,7 @@ Thank you!`;
                                 </div>
 
                                 {/* 2. BUYER */}
-                                <div ref={stepBuyerRef} className={`transition-all ${flashingStep === 'buyer' ? 'shake-error rounded-2xl p-2 bg-red-50/80' : ''}`}>
+                                <div ref={stepBuyerRef} className="transition-all">
                                     <div className="flex items-center gap-2 mb-2">
                                         <span className="w-5 h-5 rounded-full bg-[#1e713e] text-white text-[11px] font-bold flex items-center justify-center shrink-0">2</span>
                                         <label className={`text-xs font-bold text-gray-700 uppercase tracking-wider ${isUrdu ? 'font-nastaliq text-sm' : ''}`}>
@@ -799,30 +872,18 @@ Thank you!`;
                                         </label>
                                     </div>
                                     <div ref={buyerContainerRef} className="relative">
-                                        {!isBuyerUnlocked && (
-                                            <div
-                                                onClick={() => triggerLockedFeedback('payment', stepPaymentRef)}
-                                                onMouseEnter={() => showTooltip('payment-lock')}
-                                                onMouseLeave={() => setActiveTooltipStep(null)}
-                                                className="absolute inset-0 z-20 cursor-not-allowed bg-transparent"
-                                            />
-                                        )}
                                         <Input
                                             ref={buyerInputRef}
-                                            disabled={!isBuyerUnlocked}
-                                            tabIndex={!isBuyerUnlocked ? -1 : 0}
                                             value={buyerSearchQuery}
                                             onChange={e => {
                                                 const val = e.target.value;
                                                 setBuyerSearchQuery(val);
-                                                if (isBuyerUnlocked) setBuyerDropdownOpen(true);
+                                                setBuyerDropdownOpen(true);
                                                 if (!val.trim()) {
                                                     setData(d => ({ ...d, merchant_id: '', merchant_code: '' }));
                                                 }
                                             }}
-                                            onClick={() => {
-                                                if (isBuyerUnlocked) setBuyerDropdownOpen(true);
-                                            }}
+                                            onClick={() => setBuyerDropdownOpen(true)}
                                             onKeyDown={e => {
                                                 if (e.key === 'Enter') {
                                                     e.preventDefault();
@@ -841,12 +902,12 @@ Thank you!`;
                                                 }
                                             }}
                                             placeholder={isUrdu ? 'کوڈ یا نام لکھیں...' : 'Code ya naam likhein...'}
-                                            className={`h-10 rounded-xl border-gray-200 px-3 pe-10 text-xs md:text-sm bg-white text-gray-900 placeholder:text-gray-400 focus:border-[#1e713e] shadow-xs ${!isBuyerUnlocked ? 'opacity-40 cursor-not-allowed bg-gray-50' : ''}`}
+                                            className="h-10 rounded-xl border-gray-200 px-3 pe-10 text-xs md:text-sm bg-white text-gray-900 placeholder:text-gray-400 focus:border-[#1e713e] shadow-xs"
                                         />
                                         <Icon name="MagnifyingGlass" className="size-4 text-gray-400 absolute end-3 top-1/2 -translate-y-1/2 pointer-events-none" />
 
                                         {/* Dropdown list */}
-                                        {isBuyerUnlocked && buyerDropdownOpen && (
+                                        {buyerDropdownOpen && (
                                             <div className="absolute z-50 start-0 end-0 mt-1 max-h-56 overflow-y-auto bg-white rounded-2xl border border-gray-200 shadow-xl divide-y divide-gray-100">
                                                 {filteredMerchants.length === 0 ? (
                                                     <div className="p-3 text-xs text-gray-500 text-center">
@@ -898,21 +959,7 @@ Thank you!`;
                                 </div>
 
                                 {/* 3. ITEM */}
-                                <div
-                                    ref={stepItemRef}
-                                    className={`relative transition-all ${
-                                        flashingStep === 'item' ? 'shake-error rounded-2xl p-2 bg-red-50/80' : ''
-                                    }`}
-                                >
-                                    {!isItemUnlocked && (
-                                        <div
-                                            onClick={() => triggerLockedFeedback('buyer', stepBuyerRef)}
-                                            onMouseEnter={() => showTooltip('item-lock')}
-                                            onMouseLeave={() => setActiveTooltipStep(null)}
-                                            className="absolute inset-0 z-20 cursor-not-allowed bg-transparent"
-                                        />
-                                    )}
-
+                                <div ref={stepItemRef} className="relative transition-all">
                                     <div className="flex items-center gap-2 mb-2.5">
                                         <span className="w-5 h-5 rounded-full bg-[#1e713e] text-white text-[11px] font-bold flex items-center justify-center shrink-0">3</span>
                                         <label className={`text-xs font-bold text-gray-700 uppercase tracking-wider ${isUrdu ? 'font-nastaliq text-sm' : ''}`}>
@@ -920,7 +967,7 @@ Thank you!`;
                                         </label>
                                     </div>
 
-                                    <div className={`grid grid-cols-2 md:grid-cols-3 gap-2.5 ${!isItemUnlocked ? 'opacity-40' : ''}`}>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5">
                                         {quickItems.map(item => {
                                             const isSelected = String(data.item_id) === String(item.id);
                                             const initial = (item.name_en || item.name_ur || 'I')[0].toUpperCase();
@@ -946,35 +993,44 @@ Thank you!`;
                                                 <button
                                                     key={item.id}
                                                     type="button"
-                                                    disabled={!isItemUnlocked}
-                                                    tabIndex={!isItemUnlocked ? -1 : 0}
+                                                    disabled={isExpired}
+                                                    tabIndex={0}
                                                     onClick={() => handleItemSelect(item)}
-                                                    className={`min-h-[40px] px-2 py-1 rounded-xl border transition-all flex items-center gap-1.5 cursor-pointer ${
+                                                    className={cn(
+                                                        "min-h-[40px] px-2 py-1.5 rounded-xl border transition-all flex items-center gap-1.5 cursor-pointer",
                                                         isSelected
                                                             ? isExpired
                                                                 ? 'bg-red-600 text-white border-red-700 shadow-xs font-bold'
-                                                                : isKhatam
-                                                                ? 'bg-gray-700 text-white border-gray-800 shadow-xs font-bold'
                                                                 : 'bg-[#1e713e] text-white border-[#1e713e] shadow-xs font-bold'
                                                             : isExpired
-                                                            ? 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100/90'
+                                                            ? 'bg-red-50 text-red-600 border-red-200 cursor-not-allowed font-bold'
                                                             : isKhatam
-                                                            ? 'bg-gray-100 text-gray-500 border-gray-300 hover:bg-gray-200/90'
-                                                            : 'bg-white text-gray-800 border-gray-200 hover:border-gray-300 hover:bg-gray-50/50'
-                                                    }`}
+                                                            ? 'opacity-50 bg-gray-50 text-gray-400 border-gray-200 hover:opacity-75 font-medium'
+                                                            : 'bg-white text-gray-800 border-gray-200 hover:border-gray-300 hover:bg-gray-50/50 font-semibold'
+                                                    )}
                                                 >
                                                     <span className={`w-5.5 h-5.5 rounded-md text-[10px] font-black flex items-center justify-center shrink-0 ${
                                                         isSelected
-                                                            ? 'bg-white/20 text-white'
+                                                            ? 'bg-white text-[#1e713e] shadow-xs'
                                                             : isExpired
                                                             ? 'bg-red-200 text-red-800'
                                                             : isKhatam
-                                                            ? 'bg-gray-200 text-gray-600'
+                                                            ? 'bg-gray-200 text-gray-500'
                                                             : 'bg-emerald-100/70 text-emerald-800'
                                                     }`}>
                                                         {initial}
                                                     </span>
-                                                    <span className={`text-[11px] font-semibold leading-tight ${isUrdu ? 'font-nastaliq font-bold' : ''}`}>
+                                                    <span className={cn(
+                                                        "text-[11px] leading-tight",
+                                                        isUrdu && "font-nastaliq",
+                                                        isSelected
+                                                            ? "text-white font-extrabold"
+                                                            : isExpired
+                                                            ? "text-red-600 font-bold"
+                                                            : isKhatam
+                                                            ? "text-gray-400 font-medium"
+                                                            : "text-gray-900 font-semibold"
+                                                    )}>
                                                         {isUrdu ? (item.name_ur || labelText) : labelText}
                                                     </span>
                                                 </button>
@@ -988,8 +1044,7 @@ Thank you!`;
                                                 {isUrdu ? 'دیگر آئٹم:' : 'Other:'}
                                             </span>
                                             <select
-                                                disabled={!isItemUnlocked}
-                                                tabIndex={!isItemUnlocked ? -1 : 0}
+                                                tabIndex={0}
                                                 value={data.item_id}
                                                 onChange={e => {
                                                     const it = items.find(i => String(i.id) === e.target.value);
@@ -1017,17 +1072,6 @@ Thank you!`;
 
                                 {/* 4. QUANTITY */}
                                 <div className="relative">
-                                    {!isUnitsUnlocked && (
-                                        <div
-                                            onClick={() => {
-                                                if (!data.payment_type) triggerLockedFeedback('payment', stepPaymentRef);
-                                                else if (!data.merchant_id) triggerLockedFeedback('buyer', stepBuyerRef);
-                                                else if (!data.item_id) triggerLockedFeedback('item', stepItemRef);
-                                            }}
-                                            className="absolute inset-0 z-20 cursor-not-allowed bg-transparent"
-                                        />
-                                    )}
-
                                     <div className="flex flex-wrap items-center justify-between gap-2 mb-2.5">
                                         <div className="flex items-center gap-2">
                                             <span className="w-5 h-5 rounded-full bg-[#1e713e] text-white text-[11px] font-bold flex items-center justify-center shrink-0">4</span>
@@ -1036,18 +1080,17 @@ Thank you!`;
                                             </label>
                                         </div>
 
-                                        {/* Packaging / Unit Option (Peti, Bori, Nag, Thaili) */}
-                                        <div className="flex items-center gap-1 bg-gray-100 p-0.5 rounded-lg">
-                                            {(['Bori', 'Peti', 'Nag', 'Thaili'] as const).map((unitOpt) => (
+                                        {/* Packaging / Unit Option (Only Bori, Peti) */}
+                                        <div className="flex items-center gap-1.5 bg-gray-100 p-1 rounded-xl">
+                                            {(['Bori', 'Peti'] as const).map((unitOpt) => (
                                                 <button
                                                     key={unitOpt}
                                                     type="button"
-                                                    disabled={!isUnitsUnlocked}
                                                     onClick={() => setPackingType(unitOpt)}
-                                                    className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
+                                                    className={`px-4 py-1 rounded-lg text-xs sm:text-[13px] font-extrabold transition-all cursor-pointer ${
                                                         packingType === unitOpt
                                                             ? 'bg-[#14532d] text-white shadow-xs'
-                                                            : 'text-gray-600 hover:text-gray-900'
+                                                            : 'text-gray-700 hover:text-black hover:bg-gray-200/60'
                                                     }`}
                                                 >
                                                     {unitOpt}
@@ -1056,21 +1099,17 @@ Thank you!`;
                                         </div>
                                     </div>
 
-                                    <div className={`grid grid-cols-1 sm:grid-cols-3 gap-3 ${!isUnitsUnlocked ? 'opacity-40' : ''}`}>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         {/* UNITS / TADAAD */}
                                         <div
                                             ref={stepUnitsRef}
-                                            className={`h-10 rounded-xl border bg-white flex items-center justify-between px-3 transition-all focus-within:border-[#1e713e] focus-within:ring-2 focus-within:ring-[#1e713e]/20 ${
-                                                flashingStep === 'units' ? 'shake-error border-red-500 bg-red-50/50' : 'border-gray-200'
-                                            }`}
+                                            className="h-10 rounded-xl border border-gray-200 bg-white flex items-center justify-between px-3 transition-all focus-within:border-[#1e713e] focus-within:ring-2 focus-within:ring-[#1e713e]/20"
                                         >
                                             <span className={`text-xs font-semibold text-gray-700 shrink-0 ${isUrdu ? 'font-nastaliq' : ''}`}>
                                                 {packingType} {isUrdu ? 'تعداد' : '(Tadaad)'}
                                             </span>
                                             <input
                                                 ref={nagRef}
-                                                disabled={!isUnitsUnlocked}
-                                                tabIndex={!isUnitsUnlocked ? -1 : 0}
                                                 type="number"
                                                 min="0"
                                                 step="1"
@@ -1079,7 +1118,7 @@ Thank you!`;
                                                 onKeyDown={e => {
                                                     if (e.key === 'Enter') {
                                                         e.preventDefault();
-                                                        weightRef.current?.focus();
+                                                        rateRef.current?.focus();
                                                     }
                                                 }}
                                                 placeholder="0"
@@ -1088,65 +1127,27 @@ Thank you!`;
                                             />
                                         </div>
 
-                                        {/* WEIGHT */}
-                                        <div
-                                            ref={stepWeightRef}
-                                            className={`h-10 rounded-xl border bg-white flex items-center justify-between px-3 transition-all focus-within:border-[#1e713e] focus-within:ring-2 focus-within:ring-[#1e713e]/20 ${
-                                                flashingStep === 'weight' ? 'shake-error border-red-500 bg-red-50/50' : 'border-gray-200'
-                                            }`}
-                                        >
-                                            <span className={`text-xs font-semibold text-gray-500 shrink-0 ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                                {isUrdu ? 'وزن (کلو)' : 'Weight (kg)'}
-                                            </span>
-                                            <input
-                                                ref={weightRef}
-                                                disabled={!isWeightUnlocked}
-                                                tabIndex={!isWeightUnlocked ? -1 : 0}
-                                                type="number"
-                                                min="0"
-                                                step="0.01"
-                                                value={data.weight}
-                                                onChange={e => setData('weight', e.target.value)}
-                                                onKeyDown={e => {
-                                                    if (e.key === 'Enter') {
-                                                        e.preventDefault();
-                                                        rateRef.current?.focus();
-                                                    }
-                                                }}
-                                                placeholder="0.00"
-                                                className="w-20 text-end font-bold text-gray-900 bg-transparent text-sm tabular-nums focus:outline-none placeholder:text-gray-400"
-                                            />
-                                        </div>
-
                                         {/* RATE */}
                                         <div
                                             ref={stepRateRef}
-                                            className={`h-10 rounded-xl border bg-white flex items-center justify-between px-3 transition-all focus-within:border-[#1e713e] focus-within:ring-2 focus-within:ring-[#1e713e]/20 ${
-                                                flashingStep === 'rate'
-                                                    ? 'shake-error border-red-500 bg-red-50/50'
-                                                    : isRateUnusual
-                                                    ? 'border-yellow-400 bg-yellow-50/30'
-                                                    : 'border-gray-200'
-                                            }`}
+                                            className="h-10 rounded-xl border border-gray-200 bg-white flex items-center justify-between px-3 transition-all focus-within:border-[#1e713e] focus-within:ring-2 focus-within:ring-[#1e713e]/20"
                                         >
-                                            <span className={`text-xs font-semibold text-gray-500 shrink-0 ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                                {isUrdu ? 'ریٹ' : 'Rate'} {numWeight > 0 ? '/ kg' : `/ ${packingType.toLowerCase()}`}
+                                            <span className={`text-xs font-semibold text-gray-700 shrink-0 ${isUrdu ? 'font-nastaliq' : ''}`}>
+                                                {isUrdu ? 'ریٹ' : 'Rate'} / {packingType.toLowerCase()}
                                             </span>
                                             <div className="flex items-center gap-1 font-bold text-gray-900">
                                                 <span className="text-xs text-gray-400">Rs.</span>
                                                 <input
                                                     ref={rateRef}
-                                                    disabled={!isRateUnlocked}
-                                                    tabIndex={!isRateUnlocked ? -1 : 0}
                                                     type="number"
                                                     min="0"
-                                                    step="0.01"
+                                                    step="any"
                                                     value={data.rate}
                                                     onChange={e => setData('rate', e.target.value)}
                                                     onKeyDown={e => {
                                                         if (e.key === 'Enter') {
                                                             e.preventDefault();
-                                                            bardanaRef.current?.focus();
+                                                            if (isAddEnabled) attemptSubmit();
                                                         }
                                                     }}
                                                     placeholder="0"
@@ -1155,31 +1156,6 @@ Thank you!`;
                                                 />
                                             </div>
                                         </div>
-                                    </div>
-
-                                    {/* Optional Packing Charges Row */}
-                                    <div className="mt-2.5 flex items-center justify-end gap-2 text-xs text-gray-500">
-                                        <label className={isUrdu ? 'font-nastaliq' : ''}>
-                                            {isUrdu ? 'بوری خرچہ (اختیاری):' : 'Packing (optional):'}
-                                        </label>
-                                        <Input
-                                            ref={bardanaRef}
-                                            disabled={!isRateUnlocked}
-                                            tabIndex={!isRateUnlocked ? -1 : 0}
-                                            type="number"
-                                            min="0"
-                                            step="0.01"
-                                            value={data.bardana}
-                                            onChange={e => setData('bardana', e.target.value)}
-                                            onKeyDown={e => {
-                                                if (e.key === 'Enter') {
-                                                    e.preventDefault();
-                                                    if (isAddEnabled) attemptSubmit();
-                                                }
-                                            }}
-                                            placeholder="0"
-                                            className="h-8 w-24 text-center text-xs rounded-lg border-gray-200 bg-white"
-                                        />
                                     </div>
                                 </div>
                             </div>
@@ -1203,7 +1179,9 @@ Thank you!`;
                                                         ? (isUrdu ? 'نقد (Cash)' : 'Cash')
                                                         : data.payment_type === 'bank'
                                                         ? (isUrdu ? `آن لائن (${selectedBankAccount || 'Bank'})` : `Online (${selectedBankAccount || 'Bank'})`)
-                                                        : (isUrdu ? 'ادھار (Credit)' : 'Credit'))
+                                                        : data.payment_type === 'split'
+                                                        ? (isUrdu ? `آدھا نقد + آدھا ادھار (نقد: ${Number(data.cash_received || 0).toLocaleString()} · ادھار: ${Number(data.udhaar_amount || 0).toLocaleString()})` : `Adha Cash + Adha Udhaar (Cash: ${Number(data.cash_received || 0).toLocaleString()} · Udhaar: ${Number(data.udhaar_amount || 0).toLocaleString()})`)
+                                                        : (isUrdu ? 'ادھار' : 'Udhaar'))
                                                     : '-'}
                                             </span>
                                         </div>
@@ -1231,12 +1209,10 @@ Thank you!`;
 
                                         <div className="flex justify-between items-center text-gray-600">
                                             <span className={isUrdu ? 'font-nastaliq' : 'font-medium'}>
-                                                {numWeight > 0 ? (isUrdu ? 'وزن x ریٹ' : 'Weight x Rate') : `${packingType} x Rate`}
+                                                {`${packingType} x Rate`}
                                             </span>
                                             <span className="font-bold text-gray-900 tabular-nums" dir="ltr">
-                                                {numWeight > 0 && numRate > 0
-                                                    ? `${numWeight} kg x ${numRate.toLocaleString()} = Rs. ${(numWeight * numRate).toLocaleString()}`
-                                                    : numNag > 0 && numRate > 0
+                                                {numNag > 0 && numRate > 0
                                                     ? `${numNag} ${packingType} x ${numRate.toLocaleString()} = Rs. ${(numNag * numRate).toLocaleString()}`
                                                     : `0 ${packingType} x 0 = Rs. 0`}
                                             </span>
@@ -1345,33 +1321,32 @@ Thank you!`;
                 {/* 5. Entries Table */}
                 <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-xs">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-xs">
+                        <table className="w-full text-[13px] font-semibold">
                             <thead className="bg-[#14532d] text-white select-none">
                                 <tr>
-                                    <th className={`p-2 text-center w-8 ${isUrdu ? 'font-nastaliq' : ''}`}>#</th>
-                                    <th className={`p-2 text-start w-16 ${isUrdu ? 'font-nastaliq' : ''}`}>{isUrdu ? 'طریقہ' : 'Payment'}</th>
-                                    <th className={`p-2 text-start w-14 ${isUrdu ? 'font-nastaliq' : ''}`}>{isUrdu ? 'کوڈ' : 'Code'}</th>
-                                    <th className={`p-2 text-start ${isUrdu ? 'font-nastaliq' : ''}`}>{isUrdu ? 'خریدار' : 'Buyer'}</th>
-                                    <th className={`p-2 text-start ${isUrdu ? 'font-nastaliq' : ''}`}>{isUrdu ? 'آئٹم' : 'Item'}</th>
-                                    <th className={`p-2 text-end w-16 ${isUrdu ? 'font-nastaliq' : ''}`}>{isUrdu ? 'تعداد' : 'Units'}</th>
-                                    <th className={`p-2 text-end w-20 ${isUrdu ? 'font-nastaliq' : ''}`}>{isUrdu ? 'وزن' : 'Weight'}</th>
-                                    <th className={`p-2 text-end w-20 ${isUrdu ? 'font-nastaliq' : ''}`}>{isUrdu ? 'ریٹ' : 'Rate'}</th>
-                                    <th className={`p-2 text-end w-20 ${isUrdu ? 'font-nastaliq' : ''}`}>{isUrdu ? 'بوری خرچہ' : 'Packing'}</th>
-                                    <th className={`p-2 text-end w-24 ${isUrdu ? 'font-nastaliq' : ''}`}>{isUrdu ? 'کل رقم' : 'Total'}</th>
-                                    <th className={`p-2 text-center w-28 ${isUrdu ? 'font-nastaliq' : ''}`}>{isUrdu ? 'کارروائی' : 'Actions'}</th>
+                                    <th className={`p-2.5 text-center w-10 text-xs sm:text-sm ${isUrdu ? 'font-nastaliq' : ''}`}>#</th>
+                                    <th className={`p-2.5 text-start w-24 text-xs sm:text-sm ${isUrdu ? 'font-nastaliq' : ''}`}>{isUrdu ? 'طریقہ' : 'Payment'}</th>
+                                    <th className={`p-2.5 text-start w-16 text-xs sm:text-sm ${isUrdu ? 'font-nastaliq' : ''}`}>{isUrdu ? 'کوڈ' : 'Code'}</th>
+                                    <th className={`p-2.5 text-start text-xs sm:text-sm ${isUrdu ? 'font-nastaliq' : ''}`}>{isUrdu ? 'خریدار' : 'Buyer'}</th>
+                                    <th className={`p-2.5 text-start text-xs sm:text-sm ${isUrdu ? 'font-nastaliq' : ''}`}>{isUrdu ? 'آئٹم' : 'Item'}</th>
+                                    <th className={`p-2.5 text-end w-28 text-xs sm:text-sm ${isUrdu ? 'font-nastaliq' : ''}`}>{isUrdu ? 'تعداد' : 'Units'}</th>
+                                    <th className={`p-2.5 text-end w-24 text-xs sm:text-sm ${isUrdu ? 'font-nastaliq' : ''}`}>{isUrdu ? 'ریٹ' : 'Rate'}</th>
+                                    <th className={`p-2.5 text-end w-28 text-xs sm:text-sm ${isUrdu ? 'font-nastaliq' : ''}`}>{isUrdu ? 'کل رقم' : 'Total'}</th>
+                                    <th className={`p-2.5 text-center w-28 text-xs sm:text-sm ${isUrdu ? 'font-nastaliq' : ''}`}>{isUrdu ? 'کارروائی' : 'Actions'}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
                                 {sales.length === 0 ? (
                                     <tr>
-                                        <td colSpan={11} className={`p-6 text-center text-muted-foreground text-xs ${isUrdu ? 'font-nastaliq' : ''}`}>
+                                        <td colSpan={9} className={`p-6 text-center text-muted-foreground text-sm ${isUrdu ? 'font-nastaliq' : ''}`}>
                                             {isUrdu ? 'آج کا کوئی اندراج نہیں ہے۔' : 'No records found for today.'}
                                         </td>
                                     </tr>
                                 ) : (
                                     sales.map((sale, idx) => {
-                                        const isNaqdi = sale.payment_type === 'naqdi' || (sale.merchant && Number(sale.merchant.code) === 1);
+                                        const isNaqdi = sale.payment_type === 'naqdi';
                                         const isLastAdded = lastAddedId === sale.id;
+                                        const unitName = (sale.item?.unit && sale.item.unit.toLowerCase().includes('peti')) ? 'peti' : 'bori';
 
                                         return (
                                             <tr
@@ -1384,73 +1359,58 @@ Thank you!`;
                                                         : 'bg-green-50/20 hover:bg-green-50/50'
                                                 }`}
                                             >
-                                                <td className="p-2 text-center text-gray-500 text-[11px]">{idx + 1}</td>
+                                                <td className="p-2.5 text-center text-gray-500 text-xs">{idx + 1}</td>
 
-                                                <td className="p-2">
+                                                <td className="p-2.5">
                                                     {sale.payment_type === 'bank' ? (
-                                                        <span className={`inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-semibold bg-indigo-100 text-indigo-900 border border-indigo-300 ${isUrdu ? 'font-nastaliq' : ''}`}>
+                                                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-indigo-100 text-indigo-900 border border-indigo-300 ${isUrdu ? 'font-nastaliq' : ''}`}>
                                                             {isUrdu ? 'آن لائن' : 'Online'}
                                                         </span>
+                                                    ) : sale.payment_type === 'split' ? (
+                                                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-100 text-amber-900 border border-amber-300 ${isUrdu ? 'font-nastaliq' : ''}`}>
+                                                            {isUrdu ? 'نقد + ادھار' : 'Cash + Udhaar'}
+                                                        </span>
                                                     ) : isNaqdi ? (
-                                                        <span className={`inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-semibold bg-green-100 text-green-900 border border-green-300 ${isUrdu ? 'font-nastaliq' : ''}`}>
+                                                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-green-100 text-green-900 border border-green-300 ${isUrdu ? 'font-nastaliq' : ''}`}>
                                                             {isUrdu ? 'نقد' : 'Cash'}
                                                         </span>
                                                     ) : (
-                                                        <span className={`inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-semibold bg-blue-100 text-blue-900 border border-blue-300 ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                                            {isUrdu ? 'ادھار' : 'Credit'}
+                                                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-900 border border-blue-300 ${isUrdu ? 'font-nastaliq' : ''}`}>
+                                                            {isUrdu ? 'ادھار' : 'Udhaar'}
                                                         </span>
                                                     )}
                                                 </td>
 
-                                                <td className="p-2 font-bold text-green-900">{sale.merchant?.code}</td>
+                                                <td className="p-2.5 font-bold text-green-900">{sale.merchant?.code}</td>
 
-                                                <td className={`p-2 font-semibold text-gray-900 text-xs ${isUrdu ? 'font-nastaliq' : ''}`}>
+                                                <td className={`p-2.5 font-semibold text-gray-900 text-[13px] ${isUrdu ? 'font-nastaliq' : ''}`}>
                                                     {isUrdu ? (sale.merchant?.name_ur || sale.merchant?.name_en) : (sale.merchant?.name_en || sale.merchant?.name_ur)}
                                                 </td>
 
-                                                <td className="p-2 text-xs">
-                                                    <span className={`font-medium text-gray-900 ${isUrdu ? 'font-nastaliq' : ''}`}>
+                                                <td className="p-2.5 text-[13px]">
+                                                    <span className={`font-semibold text-gray-900 ${isUrdu ? 'font-nastaliq' : ''}`}>
                                                         {isUrdu ? (sale.item?.name_ur || sale.item?.name_en) : (sale.item?.name_en || sale.item?.name_ur)}
                                                     </span>
                                                 </td>
 
-                                                <td className="p-2 text-end tabular-nums font-bold text-xs">{sale.nag}</td>
-
-                                                <td className="p-2 text-end tabular-nums text-xs">
-                                                    {Number(sale.weight) > 0 && !sale.item?.unit?.toLowerCase().includes('bori') && !sale.item?.unit?.toLowerCase().includes('peti') && !sale.item?.unit?.toLowerCase().includes('nag') ? (
-                                                        <span>
-                                                            <strong>{Number(sale.weight).toFixed(2)}</strong>{' '}
-                                                            <span className="text-[10px] text-gray-500">kg</span>
-                                                        </span>
-                                                    ) : (
-                                                        <span className="text-[11px] text-gray-600 font-medium">
-                                                            {sale.item?.unit?.toLowerCase().includes('peti')
-                                                                ? 'per peti'
-                                                                : sale.item?.unit?.toLowerCase().includes('nag')
-                                                                ? 'per nag'
-                                                                : 'per bori'}
-                                                        </span>
-                                                    )}
+                                                <td className="p-2.5 text-end tabular-nums font-bold text-[13px] text-gray-900">
+                                                    {sale.nag} {unitName}
                                                 </td>
 
-                                                <td className="p-2 text-end tabular-nums text-xs">
+                                                <td className="p-2.5 text-end tabular-nums text-[13px] font-medium text-gray-900">
                                                     {Number(sale.rate).toLocaleString()}
                                                 </td>
 
-                                                <td className="p-2 text-end tabular-nums text-xs text-gray-600">
-                                                    {Number(sale.bardana) > 0 ? Number(sale.bardana).toLocaleString() : '-'}
-                                                </td>
-
-                                                <td className="p-2 text-end tabular-nums font-bold text-green-900 text-xs">
+                                                <td className="p-2.5 text-end tabular-nums font-bold text-green-900 text-[13px]">
                                                     {Number(sale.gross_amount).toLocaleString()}
                                                 </td>
 
-                                                <td className="p-2 text-center">
-                                                    <div className="flex items-center justify-center gap-1">
+                                                <td className="p-2.5 text-center">
+                                                    <div className="flex items-center justify-center gap-1.5">
                                                         <button
                                                             type="button"
                                                             onClick={() => openSlip(sale)}
-                                                            className={`px-1.5 py-0.5 bg-green-100 hover:bg-green-200 text-green-900 rounded text-[11px] font-semibold flex items-center gap-0.5 cursor-pointer ${isUrdu ? 'font-nastaliq' : ''}`}
+                                                            className={`px-2 py-1 bg-green-100 hover:bg-green-200 text-green-900 rounded-lg text-xs font-semibold flex items-center gap-1 cursor-pointer ${isUrdu ? 'font-nastaliq' : ''}`}
                                                             title={isUrdu ? 'پرچی' : 'Slip'}
                                                         >
                                                             <span>{isUrdu ? 'پرچی' : 'Slip'}</span>
@@ -1459,19 +1419,19 @@ Thank you!`;
                                                         <button
                                                             type="button"
                                                             onClick={() => startEdit(sale)}
-                                                            className="p-1 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded transition-colors cursor-pointer"
+                                                            className="p-1.5 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-lg transition-colors cursor-pointer"
                                                             title={isUrdu ? 'ترمیم' : 'Edit'}
                                                         >
-                                                            <Icon name="PencilSimple" className="size-3" />
+                                                            <Icon name="PencilSimple" className="size-3.5" />
                                                         </button>
 
                                                         <button
                                                             type="button"
                                                             onClick={() => confirmDelete(sale)}
-                                                            className="p-1 bg-red-100 hover:bg-red-200 text-red-700 rounded transition-colors cursor-pointer"
+                                                            className="p-1.5 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors cursor-pointer"
                                                             title={isUrdu ? 'حذف' : 'Delete'}
                                                         >
-                                                            <Icon name="Trash" className="size-3" />
+                                                            <Icon name="Trash" className="size-3.5" />
                                                         </button>
                                                     </div>
                                                 </td>
@@ -1484,86 +1444,7 @@ Thank you!`;
                     </div>
                 </div>
                 </div>
-
-                {/* 6. Sticky Live Footer */}
-                <div className="fixed bottom-0 start-0 end-0 bg-green-950 text-white px-3 py-1.5 shadow-xl border-t border-green-700 z-30 flex flex-wrap items-center justify-between gap-2 text-xs">
-                    <div className="flex items-center gap-2">
-                        <span className={`text-gray-300 ${isUrdu ? 'font-nastaliq' : ''}`}>
-                            {isUrdu ? 'کل تعداد:' : 'Total Nag / Qty:'}{' '}
-                            <strong className="text-white text-sm">{summary.total_nag}</strong>
-                        </span>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-2 text-xs">
-                        <div className="bg-emerald-800/90 border border-emerald-600 px-2 py-0.5 rounded flex items-center gap-1">
-                            <span className={`font-semibold text-emerald-200 text-[11px] ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                {isUrdu ? 'نقد:' : 'Cash:'}
-                            </span>
-                            <span className="text-white">{summary.cash_nag}</span>
-                            <span className="text-emerald-400">|</span>
-                            <span className="font-bold text-emerald-100">Rs. {Number(summary.cash_amount).toLocaleString()}</span>
-                        </div>
-
-                        <div className="bg-blue-900/90 border border-blue-600 px-2 py-0.5 rounded flex items-center gap-1">
-                            <span className={`font-semibold text-blue-200 text-[11px] ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                {isUrdu ? 'ادھار:' : 'Credit:'}
-                            </span>
-                            <span className="text-white">{summary.credit_nag}</span>
-                            <span className="text-blue-400">|</span>
-                            <span className="font-bold text-blue-100">Rs. {Number(summary.credit_amount).toLocaleString()}</span>
-                        </div>
-
-                        <div className="bg-indigo-900/90 border border-indigo-600 px-2 py-0.5 rounded flex items-center gap-1">
-                            <span className={`font-semibold text-indigo-200 text-[11px] ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                {isUrdu ? 'بینک/آن لائن:' : 'Bank/Online:'}
-                            </span>
-                            <span className="text-white">{summary.bank_nag || 0}</span>
-                            <span className="text-indigo-400">|</span>
-                            <span className="font-bold text-indigo-100">Rs. {Number(summary.bank_amount || 0).toLocaleString()}</span>
-                        </div>
-
-                        <div className="bg-amber-600 text-white px-2.5 py-0.5 rounded flex items-center gap-1.5 font-bold shadow-xs">
-                            <span className={`text-amber-100 text-[11px] ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                {isUrdu ? 'کل بکری:' : 'Total:'}
-                            </span>
-                            <span>Rs. {Number(summary.total_gross).toLocaleString()}</span>
-                        </div>
-                    </div>
-                </div>
             </div>
-
-            {/* Suspicious Value Confirm Dialog */}
-            <Dialog open={anomalyConfirmOpen} onOpenChange={setAnomalyConfirmOpen}>
-                <DialogContent className="max-w-md p-4 text-xs" dir={isUrdu ? 'rtl' : 'ltr'}>
-                    <DialogHeader>
-                        <DialogTitle className={`text-sm font-bold text-amber-900 flex items-center gap-1.5 ${isUrdu ? 'font-nastaliq' : ''}`}>
-                            <span>⚠️ {isUrdu ? 'کیا یہ اندراج صحیح ہے؟' : 'Is this entry correct?'}</span>
-                        </DialogTitle>
-                    </DialogHeader>
-                    <p className={`text-xs text-gray-700 leading-relaxed py-2 ${isUrdu ? 'font-nastaliq' : ''}`}>
-                        {anomalyWarningMsg}
-                    </p>
-                    <DialogFooter className="gap-1.5">
-                        <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setAnomalyConfirmOpen(false)}
-                            className={isUrdu ? 'font-nastaliq text-xs' : 'text-xs'}
-                        >
-                            {isUrdu ? 'دوبارہ چیک کریں' : 'Check Again'}
-                        </Button>
-                        <Button
-                            type="button"
-                            size="sm"
-                            onClick={executeSave}
-                            className={`bg-green-700 hover:bg-green-800 text-white text-xs ${isUrdu ? 'font-nastaliq' : ''}`}
-                        >
-                            {isUrdu ? 'ہاں، بالکل صحیح ہے' : 'Yes, Proceed'}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
 
             {/* Delete Confirmation Dialog */}
             <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
@@ -1598,83 +1479,85 @@ Thank you!`;
                 </DialogContent>
             </Dialog>
 
-            {/* Thermal Receipt Slip Modal */}
+                        {/* Record Sale Slip Modal */}
             <Dialog open={slipModalOpen} onOpenChange={setSlipModalOpen}>
-                <DialogContent className="max-w-md p-4 font-sans text-xs bg-white text-black" dir={isUrdu ? 'rtl' : 'ltr'}>
+                <DialogContent className="max-w-md p-6 font-sans text-xs bg-white text-black rounded-2xl shadow-2xl border border-gray-200" dir={isUrdu ? 'rtl' : 'ltr'}>
                     {slipSale && (
-                        <div className="space-y-3">
-                            <div id="printable-sale-slip" className="bg-white text-black p-3 rounded-lg border border-gray-200">
+                        <div className="space-y-4">
+                            <div id="printable-sale-slip" className="bg-white text-black p-4 rounded-xl border border-gray-200 shadow-2xs space-y-3">
                                 {/* Header */}
-                                <div className="text-center border-b border-gray-300 pb-2 mb-2">
-                                    <div className="flex items-center justify-center gap-1.5 mb-1">
-                                        <div className="w-6 h-6 rounded bg-[#166534] text-white flex items-center justify-center font-black text-xs">V</div>
-                                        <h2 className="font-extrabold text-sm tracking-wide text-black uppercase">Vegetable POS</h2>
+                                <div className="text-center border-b-2 border-emerald-800 pb-2.5 mb-2">
+                                    <div className="flex items-center justify-center gap-2 mb-1">
+                                        <div className="w-7 h-7 rounded-lg bg-[#14532d] text-white flex items-center justify-center font-black text-sm shadow-xs">V</div>
+                                        <h2 className="font-extrabold text-base tracking-wide text-[#14532d] uppercase">Vegetable POS</h2>
                                     </div>
-                                    <p className="text-[10px] text-gray-700 font-medium">Sales Slip � Amroza</p>
+                                    <p className="text-xs text-gray-700 font-semibold">{isUrdu ? 'سیل پرچی · امروزہ' : 'Sales Slip · Amroza'}</p>
                                 </div>
 
                                 {/* Slip Meta */}
-                                <div className="grid grid-cols-2 gap-1 text-[11px] border-b border-gray-200 pb-2 mb-2">
+                                <div className="grid grid-cols-2 gap-2 text-xs border-b border-gray-200 pb-3">
                                     <div>
-                                        <span className="text-gray-500">{isUrdu ? 'پرچی نمبر:' : 'Slip #:'} </span>
-                                        <strong className="text-black">#{slipSale.id}</strong>
+                                        <span className="text-gray-500 font-medium">{isUrdu ? 'پرچی نمبر:' : 'Slip #:'} </span>
+                                        <strong className="text-black font-bold">#{slipSale.id}</strong>
                                     </div>
                                     <div className="text-end">
-                                        <span className="text-gray-500">{isUrdu ? 'تاریخ:' : 'Date:'} </span>
-                                        <strong className="text-black">{slipSale.date}</strong>
+                                        <span className="text-gray-500 font-medium">{isUrdu ? 'تاریخ:' : 'Date:'} </span>
+                                        <strong className="text-black font-bold">{slipSale.date}</strong>
                                     </div>
                                     <div>
-                                        <span className="text-gray-500">{isUrdu ? 'خریدار:' : 'Buyer:'} </span>
-                                        <strong className="text-black">
+                                        <span className="text-gray-500 font-medium">{isUrdu ? 'خریدار:' : 'Buyer:'} </span>
+                                        <strong className="text-black font-bold">
                                             {isUrdu ? (slipSale.merchant?.name_ur || slipSale.merchant?.name_en) : (slipSale.merchant?.name_en || saleItemName(slipSale))} (#{slipSale.merchant?.code})
                                         </strong>
                                     </div>
                                     <div className="text-end">
-                                        <span className="text-gray-500">{isUrdu ? 'ادائیگی:' : 'Payment:'} </span>
-                                        <strong className={slipSale.payment_type === 'naqdi' ? 'text-green-700 font-bold' : 'text-amber-800 font-bold'}>
-                                            {slipSale.payment_type === 'naqdi' ? (isUrdu ? 'نقد' : 'CASH') : (isUrdu ? 'ادھار' : 'CREDIT')}
+                                        <span className="text-gray-500 font-medium">{isUrdu ? 'ادائیگی:' : 'Payment:'} </span>
+                                        <strong className={`px-2 py-0.5 rounded text-xs font-extrabold ${slipSale.payment_type === 'naqdi' ? 'bg-green-100 text-green-800' : slipSale.payment_type === 'bank' ? 'bg-indigo-100 text-indigo-800' : 'bg-blue-100 text-blue-800'}`}>
+                                            {slipSale.payment_type === 'naqdi' ? (isUrdu ? 'نقد' : 'CASH') : slipSale.payment_type === 'bank' ? (isUrdu ? 'بینک' : 'BANK') : (isUrdu ? 'ادھار' : 'UDHAAR')}
                                         </strong>
                                     </div>
                                 </div>
 
                                 {/* Table */}
-                                <table className="w-full text-[11px] mb-2 border-collapse">
+                                <table className="w-full text-xs my-2 border-collapse">
                                     <thead>
-                                        <tr className="border-b border-t border-gray-300 text-gray-700 text-[10px] uppercase font-bold">
-                                            <th className="py-1 text-start">{isUrdu ? 'جنس' : 'Item'}</th>
-                                            <th className="py-1 text-center">{isUrdu ? 'نگ' : 'Nag'}</th>
-                                            <th className="py-1 text-center">{isUrdu ? 'وزن' : 'Weight'}</th>
-                                            <th className="py-1 text-end">{isUrdu ? 'ریٹ' : 'Rate'}</th>
-                                            <th className="py-1 text-end">{isUrdu ? 'باردانہ' : 'Packing'}</th>
-                                            <th className="py-1 text-end">{isUrdu ? 'کل رقم' : 'Total'}</th>
+                                        <tr className="border-b border-t border-gray-300 text-gray-700 uppercase font-bold text-[11px] bg-gray-50">
+                                            <th className="py-2 px-2 text-start">{isUrdu ? 'جنس' : 'Item'}</th>
+                                            <th className="py-2 px-2 text-center">{isUrdu ? 'تعداد' : 'Qty'}</th>
+                                            <th className="py-2 px-2 text-end">{isUrdu ? 'ریٹ' : 'Rate'}</th>
+                                            <th className="py-2 px-2 text-end">{isUrdu ? 'کل رقم' : 'Total'}</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100">
                                         <tr>
-                                            <td className="py-1.5 font-semibold text-black">
+                                            <td className="py-2.5 px-2 font-bold text-black text-sm">
                                                 {isUrdu ? (slipSale.item?.name_ur || slipSale.item?.name_en) : saleItemName(slipSale)}
                                             </td>
-                                            <td className="py-1.5 text-center font-bold text-black">{slipSale.nag}</td>
-                                            <td className="py-1.5 text-center text-gray-700">{Number(slipSale.weight) > 0 ? slipSale.weight : '-'}</td>
-                                            <td className="py-1.5 text-end text-gray-800">Rs. {Number(slipSale.rate).toLocaleString()}</td>
-                                            <td className="py-1.5 text-end text-gray-600">{Number(slipSale.bardana) > 0 ? `Rs. ${Number(slipSale.bardana).toLocaleString()}` : '-'}</td>
-                                            <td className="py-1.5 text-end font-bold text-black">Rs. {Number(slipSale.gross_amount).toLocaleString()}</td>
+                                            <td className="py-2.5 px-2 text-center font-bold text-black text-sm">
+                                                {slipSale.nag} {slipSale.item?.unit ? slipSale.item.unit.toLowerCase() : 'bori'}
+                                            </td>
+                                            <td className="py-2.5 px-2 text-end text-gray-900 font-semibold text-sm">
+                                                Rs. {Number(slipSale.rate).toLocaleString()}
+                                            </td>
+                                            <td className="py-2.5 px-2 text-end font-extrabold text-[#14532d] text-sm">
+                                                Rs. {Number(slipSale.gross_amount).toLocaleString()}
+                                            </td>
                                         </tr>
                                     </tbody>
                                 </table>
 
                                 {/* Total */}
-                                <div className="flex justify-between items-center text-xs font-bold border-t border-b border-gray-300 py-1.5 mb-2">
-                                    <span>{isUrdu ? 'صافی رقم (GRAND TOTAL):' : 'GRAND TOTAL:'}</span>
-                                    <span className="text-sm font-extrabold text-[#14532d]">Rs. {Number(slipSale.gross_amount).toLocaleString()}</span>
+                                <div className="flex justify-between items-center text-sm font-bold border-t-2 border-b border-gray-300 py-2.5">
+                                    <span className="text-gray-900 font-extrabold">{isUrdu ? 'صافی رقم (GRAND TOTAL):' : 'GRAND TOTAL:'}</span>
+                                    <span className="text-base font-black text-[#14532d]">Rs. {Number(slipSale.gross_amount).toLocaleString()}</span>
                                 </div>
 
                                 {/* Footer & Signatures */}
-                                <div className="text-center pt-1 space-y-2">
-                                    <p className="text-[10px] text-gray-600 font-medium">
+                                <div className="text-center pt-2 space-y-1.5">
+                                    <p className="text-xs text-gray-600 font-semibold">
                                         {isUrdu ? 'آپ کی تشریف آوری کا شکریہ - Thank You!' : 'Thank you for your business! - شکریہ'}
                                     </p>
-                                    <div className="text-center pt-2 text-[10px] text-gray-400 border-t border-gray-200 mt-2">
+                                    <div className="text-center pt-1.5 text-[11px] text-gray-400 border-t border-gray-200">
                                         Printed on: {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}
                                     </div>
                                 </div>
@@ -1692,7 +1575,7 @@ Thank you!`;
                                             document.body.classList.remove('printing-slip');
                                         }, 1500);
                                     }}
-                                    className={`flex-1 h-9 text-xs bg-[#14532d] hover:bg-[#0e3b20] text-white font-semibold cursor-pointer flex items-center justify-center gap-1.5 ${isUrdu ? 'font-nastaliq' : ''}`}
+                                    className={`flex-1 h-10 text-xs sm:text-sm bg-[#14532d] hover:bg-[#0e3b20] text-white font-bold cursor-pointer flex items-center justify-center gap-2 ${isUrdu ? 'font-nastaliq' : ''}`}
                                 >
                                     <Icon name="Printer" className="size-4" />
                                     <span>{isUrdu ? 'پرچی پرنٹ کریں' : 'Print Slip'}</span>
@@ -1702,7 +1585,7 @@ Thank you!`;
                                     size="sm"
                                     variant="outline"
                                     onClick={() => setSlipModalOpen(false)}
-                                    className={`h-9 text-xs px-4 cursor-pointer ${isUrdu ? 'font-nastaliq' : ''}`}
+                                    className={`h-10 text-xs sm:text-sm px-5 cursor-pointer font-semibold ${isUrdu ? 'font-nastaliq' : ''}`}
                                 >
                                     {isUrdu ? 'بند کریں' : 'Close'}
                                 </Button>

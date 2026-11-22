@@ -21,6 +21,8 @@ class AmrozaSale extends Model
         'bardana',
         'gross_amount',
         'payment_type',
+        'cash_received',
+        'udhaar_amount',
         'consignment_id',
         'year',
         'created_by',
@@ -33,6 +35,8 @@ class AmrozaSale extends Model
         'rate' => 'decimal:2',
         'bardana' => 'decimal:2',
         'gross_amount' => 'decimal:2',
+        'cash_received' => 'decimal:2',
+        'udhaar_amount' => 'decimal:2',
         'year' => 'integer',
     ];
 
@@ -42,7 +46,7 @@ class AmrozaSale extends Model
 
         static::saving(function ($sale) {
             if (empty($sale->payment_type)) {
-                $sale->payment_type = ($sale->merchant && (int)$sale->merchant->code === 1) ? 'naqdi' : 'udhaar';
+                $sale->payment_type = 'udhaar';
             }
             $weight = floatval($sale->weight ?? 0);
             $nag = intval($sale->nag ?? 0);
@@ -63,6 +67,22 @@ class AmrozaSale extends Model
             }
 
             $sale->gross_amount = round($lineAmount + $bardana, 2);
+
+            if ($sale->payment_type === 'split') {
+                $cash = min(max(0, floatval($sale->cash_received ?? 0)), $sale->gross_amount);
+                $sale->cash_received = round($cash, 2);
+                $sale->udhaar_amount = round($sale->gross_amount - $sale->cash_received, 2);
+            } elseif ($sale->payment_type === 'naqdi') {
+                $sale->cash_received = $sale->gross_amount;
+                $sale->udhaar_amount = 0;
+            } elseif ($sale->payment_type === 'bank') {
+                $sale->cash_received = 0;
+                $sale->udhaar_amount = 0;
+            } else {
+                $sale->payment_type = 'udhaar';
+                $sale->cash_received = 0;
+                $sale->udhaar_amount = $sale->gross_amount;
+            }
 
             if (empty($sale->year)) {
                 $sale->year = config('jkc.default_year', 2026);

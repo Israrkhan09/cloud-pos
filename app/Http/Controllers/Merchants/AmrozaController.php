@@ -24,6 +24,7 @@ class AmrozaController extends Controller
         $summary = $this->amrozaService->getDailySummary($date);
 
         $merchants = Merchant::where('status', 'active')
+            ->where('code', '!=', 1)
             ->select('id', 'code', 'name_en', 'name_ur', 'current_balance')
             ->orderBy('code', 'asc')
             ->get();
@@ -66,7 +67,9 @@ class AmrozaController extends Controller
             'weight' => 'nullable|numeric|min:0',
             'rate' => 'required|numeric|min:0',
             'bardana' => 'nullable|numeric|min:0',
-            'payment_type' => 'nullable|in:naqdi,udhaar,bank',
+            'payment_type' => 'nullable|in:naqdi,udhaar,bank,split',
+            'cash_received' => 'nullable|numeric|min:0',
+            'udhaar_amount' => 'nullable|numeric|min:0',
         ]);
 
         $validated['created_by'] = auth()->id();
@@ -88,7 +91,9 @@ class AmrozaController extends Controller
             'weight' => 'nullable|numeric|min:0',
             'rate' => 'required|numeric|min:0',
             'bardana' => 'nullable|numeric|min:0',
-            'payment_type' => 'nullable|in:naqdi,udhaar,bank',
+            'payment_type' => 'nullable|in:naqdi,udhaar,bank,split',
+            'cash_received' => 'nullable|numeric|min:0',
+            'udhaar_amount' => 'nullable|numeric|min:0',
         ]);
 
         $validated['weight'] = $validated['weight'] ?? 0;

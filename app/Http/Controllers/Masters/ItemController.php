@@ -176,6 +176,64 @@ class ItemController extends Controller
         return back()->with('success', "Discount applied: Rs. {$discountRate}");
     }
 
+    public function stockAdd(Request $request, int $id)
+    {
+        $validated = $request->validate([
+            'quantity' => 'required|numeric|min:1',
+            'note' => 'nullable|string|max:255',
+        ]);
+
+        $item = Item::findOrFail($id);
+        $added = (int) $validated['quantity'];
+        $item->current_stock = ($item->current_stock ?? 0) + $added;
+        if ($item->status === 'khatam' && $item->current_stock > 0) {
+            $item->status = 'active';
+        }
+        if (!empty($validated['note'])) {
+            $item->stock_note = $validated['note'];
+        }
+        $item->save();
+
+        return back()->with('success', "Stock added: {$added} {$item->unit}. Naya stock: {$item->current_stock}");
+    }
+
+    public function stockAdjust(Request $request, int $id)
+    {
+        $validated = $request->validate([
+            'new_stock' => 'required|numeric|min:0',
+            'reason' => 'required|string|max:255',
+        ]);
+
+        $item = Item::findOrFail($id);
+        $newStock = (int) $validated['new_stock'];
+        $item->current_stock = $newStock;
+        $item->status = $newStock <= 0 ? 'khatam' : 'active';
+        $item->stock_note = $validated['reason'];
+        $item->save();
+
+        return back()->with('success', "Stock adjusted to {$newStock} {$item->unit}.");
+    }
+
+    public function purchase(Request $request, int $id)
+    {
+        $validated = $request->validate([
+            'quantity' => 'required|numeric|min:1',
+            'rate' => 'nullable|numeric|min:0',
+            'farmer_name' => 'nullable|string|max:255',
+        ]);
+
+        $item = Item::findOrFail($id);
+        $quantity = (int) $validated['quantity'];
+        $item->current_stock = ($item->current_stock ?? 0) + $quantity;
+        $item->status = 'active';
+        if (!empty($validated['rate'])) {
+            $item->default_rate = $validated['rate'];
+        }
+        $item->save();
+
+        return back()->with('success', "Purchase recorded: {$quantity} {$item->unit} added to stock.");
+    }
+
     public function destroy(int $id)
     {
         try {

@@ -22,9 +22,4 @@ class BankController extends Controller
     {
         return Inertia::render('banking/cheques/index');
     }
-
-    public function reconciliation(): Response
-    {
-        return Inertia::render('banking/reconciliation/index');
-    }
 }

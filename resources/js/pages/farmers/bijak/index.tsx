@@ -1,8 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Head, router } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/layouts/app-layout';
 import MandiPageHeader from '@/components/app/mandi-page-header';
+import Icon from '@/components/ui/icon';
 import { type BreadcrumbItem } from '@/types';
 import { toast } from 'sonner';
 
@@ -39,14 +40,32 @@ interface ItemOption {
     default_bardana: number | null;
 }
 
+interface SavedBillItem {
+    item_id?: number;
+    name: string;
+    nag: number;
+    rate: number;
+    gross: number;
+}
+
 interface SavedBillData {
     id: number;
     bill_no: string;
     farmer_name: string;
+    truck_no?: string;
+    items?: SavedBillItem[];
     net_amount: number;
     gross_amount: number;
+    total_gross?: number;
     total_nag?: number;
     total_weight?: number;
+    commission_pct?: number;
+    commission_amount?: number;
+    mazdoori_rate?: number;
+    mazdoori_amount?: number;
+    kiraya?: number;
+    market_fee_pct?: number;
+    market_fee_amount?: number;
     total_charges?: number;
     date: string;
 }
@@ -80,6 +99,17 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
     const [truckNo, setTruckNo] = useState<string>('');
     const [billDate, setBillDate] = useState<string>(filters?.date || new Date().toISOString().split('T')[0]);
 
+    // Bori input refs for focusing after quick add
+    const boriInputRefs = useRef<{ [key: number]: HTMLInputElement | null }>({});
+
+    // 30-second background polling for real-time updates
+    useEffect(() => {
+        const interval = setInterval(() => {
+            router.reload({ preserveScroll: true, preserveState: true });
+        }, 30000);
+        return () => clearInterval(interval);
+    }, []);
+
     // Selected Farmer Object
     const selectedFarmer = useMemo(() => {
         if (!farmerId) return null;
@@ -88,11 +118,18 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
 
     // Quick Items resolution
     const getItemByKeyword = (kw: string) => {
-        const lower = kw.toLowerCase();
-        return items.find(it => 
-            (it.name_en && it.name_en.toLowerCase().includes(lower)) || 
-            (it.name_ur && it.name_ur.includes(kw))
-        ) || items[0];
+        const lower = kw.toLowerCase().trim();
+        return items.find(it => {
+            const en = (it.name_en || '').toLowerCase();
+            const ur = (it.name_ur || '').toLowerCase();
+            if (lower === 'tamatar') return en.includes('tamatar') || en.includes('tomato') || ur.includes('ٹماٹر');
+            if (lower === 'aloo') return en.includes('aloo') || en.includes('potato') || ur.includes('آلو');
+            if (lower === 'pyaz') return en.includes('piyaz') || en.includes('pyaz') || en.includes('onion') || ur.includes('پیاز');
+            if (lower === 'gobi') return en.includes('gobhi') || en.includes('gobi') || en.includes('cabbage') || ur.includes('گوبھی');
+            if (lower === 'bhindi') return en.includes('bhindi') || en.includes('okra') || ur.includes('بھنڈی');
+            if (lower === 'hari mirch') return en.includes('harri mirch') || en.includes('hari mirch') || en.includes('chilli') || ur.includes('ہری مرچ');
+            return en.includes(lower) || ur.includes(lower);
+        }) || null;
     };
 
     // Bill Items State (starts empty so user selects their own)
@@ -115,20 +152,61 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
         return area ? `${name} - ${area}` : name;
     };
 
+    // Date change handler with filtering
+    const handleDateChange = (newDate: string) => {
+        setBillDate(newDate);
+        router.get('/bijak', { date: newDate }, { preserveScroll: true, replace: true });
+    };
+
     // Row management
     const addQuickItem = (name: string) => {
         const matched = getItemByKeyword(name);
-        const newItemId = matched ? matched.id : (items[0]?.id || 1);
+        if (!matched) return;
+
+        // Check if item already exists in billItems
+        const existingIndex = billItems.findIndex(it => Number(it.item_id) === Number(matched.id));
+        if (existingIndex !== -1) {
+            setTimeout(() => {
+                boriInputRefs.current[existingIndex]?.focus();
+                boriInputRefs.current[existingIndex]?.select();
+            }, 50);
+            return;
+        }
+
+        // Check if there is an empty/untouched initial row
+        const emptyIndex = billItems.findIndex(it => (!it.nag || it.nag === '0') && (!it.rate || it.rate === '0'));
+        if (emptyIndex !== -1) {
+            setBillItems(prev => {
+                const copy = [...prev];
+                copy[emptyIndex] = {
+                    item_id: matched.id,
+                    name: matched.name_en.split(' ')[0],
+                    nag: '',
+                    weight: '',
+                    rate: matched.default_rate ? String(matched.default_rate) : '',
+                };
+                return copy;
+            });
+            setTimeout(() => {
+                boriInputRefs.current[emptyIndex]?.focus();
+            }, 50);
+            return;
+        }
+
+        const newIndex = billItems.length;
         setBillItems(prev => [
             ...prev,
             {
-                item_id: newItemId,
-                name: name,
+                item_id: matched.id,
+                name: matched.name_en.split(' ')[0],
                 nag: '',
                 weight: '',
-                rate: matched?.default_rate ? String(matched.default_rate) : '',
+                rate: matched.default_rate ? String(matched.default_rate) : '',
             },
         ]);
+        setTimeout(() => {
+            boriInputRefs.current[newIndex]?.focus();
+        }, 50);
     };
 
     const updateRow = (index: number, field: keyof BillItemRow, value: any) => {
@@ -149,19 +227,16 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
         setBillItems(prev => prev.filter((_, i) => i !== index));
     };
 
-    // Live Calculations
+    // Live Calculations: Raqam = Bori x Rate per bori
     const calculations = useMemo(() => {
         let totalNag = 0;
-        let totalWeight = 0;
         let totalGross = 0;
 
         billItems.forEach(item => {
             const n = parseFloat(item.nag) || 0;
-            const w = parseFloat(item.weight) || 0;
             const r = parseFloat(item.rate) || 0;
-            const g = w > 0 ? Math.round(w * r) : Math.round(n * r);
+            const g = Math.round(n * r);
             totalNag += n;
-            totalWeight += w;
             totalGross += g;
         });
 
@@ -181,7 +256,6 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
 
         return {
             totalNag,
-            totalWeight,
             totalGross,
             commAmount,
             mazdooriAmount,
@@ -213,7 +287,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
             items: billItems.map(it => ({
                 item_id: it.item_id,
                 nag: parseFloat(it.nag) || 0,
-                weight: parseFloat(it.weight) || 0,
+                weight: 0,
                 rate: parseFloat(it.rate) || 0,
             })),
             commission_pct: parseFloat(commissionPct) || 0,
@@ -228,15 +302,32 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                 setIsSaving(false);
                 toast.success(isUrdu ? 'بیجک محفوظ ہو گیا' : 'Bill saved successfully');
                 const saved = page.props?.saved_bill;
+                const fallbackItems: SavedBillItem[] = billItems.map(it => ({
+                    item_id: it.item_id,
+                    name: it.name,
+                    nag: parseFloat(it.nag) || 0,
+                    rate: parseFloat(it.rate) || 0,
+                    gross: (parseFloat(it.nag) || 0) * (parseFloat(it.rate) || 0),
+                }));
                 const billData: SavedBillData = saved || {
                     id: Date.now(),
                     bill_no: 'BJ-' + String(Math.floor(1000 + Math.random() * 9000)),
                     farmer_name: selectedFarmer ? farmerTitle(selectedFarmer) : 'Farmer',
+                    truck_no: truckNo,
+                    items: fallbackItems,
                     net_amount: calculations.netPayable,
                     gross_amount: calculations.totalGross,
+                    total_gross: calculations.totalGross,
                     total_nag: calculations.totalNag,
-                    total_weight: calculations.totalWeight,
+                    total_weight: 0,
                     total_charges: calculations.totalCharges,
+                    commission_pct: parseFloat(commissionPct) || 0,
+                    commission_amount: calculations.commAmount,
+                    mazdoori_rate: parseFloat(mazdooriRate) || 0,
+                    mazdoori_amount: calculations.mazdooriAmount,
+                    kiraya: parseFloat(kiraya) || 0,
+                    market_fee_pct: parseFloat(marketFeePct) || 0,
+                    market_fee_amount: calculations.marketFeeAmount,
                     date: billDate,
                 };
                 setCompletedBill(billData);
@@ -327,7 +418,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                                 <input
                                     type="date"
                                     value={billDate}
-                                    onChange={e => setBillDate(e.target.value)}
+                                    onChange={e => handleDateChange(e.target.value)}
                                     className="w-full h-10 px-3 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#14532d]"
                                 />
                             </div>
@@ -344,7 +435,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                             <div className="flex items-center justify-between">
                                 <h2 className="text-base font-bold text-gray-900">Maal</h2>
                                 <span className="text-xs text-gray-500 font-medium">
-                                    {billItems.length} item · {calculations.totalNag} tadaad · {calculations.totalWeight} kg
+                                    {billItems.length} item · {calculations.totalNag} bori
                                 </span>
                             </div>
 
@@ -367,10 +458,9 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                             <div className="w-full">
                                 {/* Table Header */}
                                 <div className="grid grid-cols-12 gap-2 px-2 py-2.5 bg-gray-50/90 rounded-lg text-xs font-semibold text-gray-600 mb-2 items-center">
-                                    <div className="col-span-3">Maal</div>
-                                    <div className="col-span-2 text-center">Tadaad (Qty)</div>
-                                    <div className="col-span-2 text-center">Wazan (kg)</div>
-                                    <div className="col-span-2 text-center">Rate (Rs/kg)</div>
+                                    <div className="col-span-4">Maal</div>
+                                    <div className="col-span-3 text-center">Bori (Tadaad)</div>
+                                    <div className="col-span-2 text-center">Rate (Rs/bori)</div>
                                     <div className="col-span-2 text-right pr-1">Raqam</div>
                                     <div className="col-span-1 text-center"></div>
                                 </div>
@@ -384,14 +474,13 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                                     ) : (
                                         billItems.map((row, idx) => {
                                             const n = parseFloat(row.nag) || 0;
-                                            const w = parseFloat(row.weight) || 0;
                                             const r = parseFloat(row.rate) || 0;
-                                            const raqam = w > 0 ? Math.round(w * r) : Math.round(n * r);
+                                            const raqam = Math.round(n * r);
 
                                             return (
                                                 <div key={idx} className="grid grid-cols-12 gap-2 px-2 py-1.5 items-center hover:bg-gray-50/50 rounded-lg transition-colors">
                                                     {/* Maal Name / Select */}
-                                                    <div className="col-span-3">
+                                                    <div className="col-span-4">
                                                         <select
                                                             value={row.item_id}
                                                             onChange={e => updateRow(idx, 'item_id', Number(e.target.value))}
@@ -405,35 +494,25 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                                                         </select>
                                                     </div>
 
-                                                    {/* Tadaad (Qty) */}
-                                                    <div className="col-span-2">
+                                                    {/* Bori (Tadaad) */}
+                                                    <div className="col-span-3">
                                                         <input
+                                                            ref={el => { boriInputRefs.current[idx] = el; }}
                                                             type="number"
                                                             value={row.nag}
                                                             onChange={e => updateRow(idx, 'nag', e.target.value)}
-                                                            className="w-full h-9 px-1 text-center border border-gray-200 rounded-lg text-xs md:text-sm font-medium text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#14532d]"
+                                                            className="w-full h-9 px-2 text-center border border-gray-200 rounded-lg text-xs md:text-sm font-medium text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#14532d]"
                                                             placeholder="0"
                                                         />
                                                     </div>
 
-                                                    {/* Wazan (kg) */}
-                                                    <div className="col-span-2">
-                                                        <input
-                                                            type="number"
-                                                            value={row.weight}
-                                                            onChange={e => updateRow(idx, 'weight', e.target.value)}
-                                                            className="w-full h-9 px-1 text-center border border-gray-200 rounded-lg text-xs md:text-sm font-medium text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#14532d]"
-                                                            placeholder="0"
-                                                        />
-                                                    </div>
-
-                                                    {/* Rate (Rs/kg) */}
+                                                    {/* Rate (Rs/bori) */}
                                                     <div className="col-span-2">
                                                         <input
                                                             type="number"
                                                             value={row.rate}
                                                             onChange={e => updateRow(idx, 'rate', e.target.value)}
-                                                            className="w-full h-9 px-1 text-center border border-gray-200 rounded-lg text-xs md:text-sm font-medium text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#14532d]"
+                                                            className="w-full h-9 px-2 text-center border border-gray-200 rounded-lg text-xs md:text-sm font-medium text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#14532d]"
                                                             placeholder="0"
                                                         />
                                                     </div>
@@ -462,9 +541,8 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
 
                                 {/* Table Footer / Totals Row */}
                                 <div className="grid grid-cols-12 gap-2 px-2 py-3 border-t border-gray-200 mt-3 font-bold text-xs md:text-sm text-gray-900 items-center">
-                                    <div className="col-span-3">Total</div>
-                                    <div className="col-span-2 text-center">{calculations.totalNag}</div>
-                                    <div className="col-span-2 text-center">{calculations.totalWeight}</div>
+                                    <div className="col-span-4">Total</div>
+                                    <div className="col-span-3 text-center">{calculations.totalNag}</div>
                                     <div className="col-span-2"></div>
                                     <div className="col-span-2 text-right whitespace-nowrap pr-1">Rs. {calculations.totalGross.toLocaleString()}</div>
                                     <div className="col-span-1"></div>
@@ -593,36 +671,128 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                 </div>
             </div>
 
-            {/* Success Modal */}
+            {/* Success Modal with Complete Bill Preview */}
             {showSuccessModal && completedBill && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 font-sans">
-                    <div className="bg-white rounded-2xl max-w-sm w-full p-6 text-center shadow-xl space-y-4">
-                        <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-800 mx-auto flex items-center justify-center text-2xl font-bold">
-                            ✓
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 font-sans backdrop-blur-xs">
+                    <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-200 space-y-4">
+                        {/* Header */}
+                        <div className="text-center border-b border-gray-100 pb-3">
+                            <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 mx-auto flex items-center justify-center text-xl font-black mb-1.5">
+                                ✓
+                            </div>
+                            <h2 className="text-lg font-bold text-gray-900">
+                                {isUrdu ? 'بیجک محفوظ ہو گیا' : 'Bill Saved Successfully'}
+                            </h2>
+                            <p className="text-xs text-gray-500 font-semibold">
+                                {completedBill.bill_no} · {completedBill.date}
+                            </p>
                         </div>
-                        <h2 className="text-xl font-bold text-gray-900">
-                            Bill save ho gaya
-                        </h2>
-                        <p className="text-xs text-gray-500 font-medium">
-                            Bill No: {completedBill.bill_no} · {completedBill.farmer_name}
-                        </p>
-                        <div className="text-3xl font-extrabold text-[#14532d]">
-                            Rs. {Number(completedBill.net_amount).toLocaleString()}
+
+                        {/* Bill Details */}
+                        <div className="bg-gray-50 rounded-xl p-3.5 border border-gray-200 text-xs space-y-2">
+                            <div className="flex justify-between items-center pb-1.5 border-b border-gray-200/60">
+                                <span className="text-gray-500 font-medium">{isUrdu ? 'کسان:' : 'Kisan:'}</span>
+                                <strong className="text-gray-900 font-bold">{completedBill.farmer_name}</strong>
+                            </div>
+                            {completedBill.truck_no && (
+                                <div className="flex justify-between items-center pb-1.5 border-b border-gray-200/60">
+                                    <span className="text-gray-500 font-medium">{isUrdu ? 'ٹرک نمبر:' : 'Truck No:'}</span>
+                                    <span className="text-gray-800 font-semibold">{completedBill.truck_no}</span>
+                                </div>
+                            )}
+
+                            {/* Items List */}
+                            <div className="pt-1">
+                                <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+                                    {isUrdu ? 'اجناس' : 'Items'}
+                                </div>
+                                <table className="w-full text-xs">
+                                    <thead>
+                                        <tr className="border-b border-gray-200 text-gray-500 text-[11px]">
+                                            <th className="text-start py-1">{isUrdu ? 'آئٹم' : 'Item'}</th>
+                                            <th className="text-center py-1">{isUrdu ? 'تعداد' : 'Qty'}</th>
+                                            <th className="text-end py-1">{isUrdu ? 'ریٹ' : 'Rate'}</th>
+                                            <th className="text-end py-1">{isUrdu ? 'رقم' : 'Amount'}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100">
+                                        {(completedBill.items || []).map((it, idx) => (
+                                            <tr key={idx}>
+                                                <td className="py-1 font-semibold text-gray-900">{it.name}</td>
+                                                <td className="py-1 text-center font-bold text-gray-800">{it.nag} bori</td>
+                                                <td className="py-1 text-end text-gray-700">Rs. {Number(it.rate).toLocaleString()}</td>
+                                                <td className="py-1 text-end font-bold text-gray-900">Rs. {Number(it.gross).toLocaleString()}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {/* Charges summary */}
+                            <div className="pt-2 border-t border-gray-200/70 space-y-1 text-[11px]">
+                                <div className="flex justify-between text-gray-700">
+                                    <span>{isUrdu ? 'کل فروخت:' : 'Gross Sale:'}</span>
+                                    <span className="font-bold">Rs. {Number(completedBill.total_gross || completedBill.gross_amount).toLocaleString()}</span>
+                                </div>
+                                {(completedBill.commission_amount || 0) > 0 && (
+                                    <div className="flex justify-between text-gray-600">
+                                        <span>{isUrdu ? 'کمیشن' : 'Commission'} ({completedBill.commission_pct}%):</span>
+                                        <span>- Rs. {Number(completedBill.commission_amount).toLocaleString()}</span>
+                                    </div>
+                                )}
+                                {(completedBill.mazdoori_amount || 0) > 0 && (
+                                    <div className="flex justify-between text-gray-600">
+                                        <span>{isUrdu ? 'مزدوری:' : 'Mazdoori:'}</span>
+                                        <span>- Rs. {Number(completedBill.mazdoori_amount).toLocaleString()}</span>
+                                    </div>
+                                )}
+                                {(completedBill.kiraya || 0) > 0 && (
+                                    <div className="flex justify-between text-gray-600">
+                                        <span>{isUrdu ? 'کرایہ:' : 'Kiraya:'}</span>
+                                        <span>- Rs. {Number(completedBill.kiraya).toLocaleString()}</span>
+                                    </div>
+                                )}
+                                {(completedBill.market_fee_amount || 0) > 0 && (
+                                    <div className="flex justify-between text-gray-600">
+                                        <span>{isUrdu ? 'مارکیٹ فیس:' : 'Market Fee:'}</span>
+                                        <span>- Rs. {Number(completedBill.market_fee_amount).toLocaleString()}</span>
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                        <div className="flex gap-2 pt-2">
+
+                        {/* Net Payable Highlight */}
+                        <div className="bg-[#14532d] text-white rounded-xl p-3 text-center space-y-0.5">
+                            <span className="text-[11px] text-emerald-100 font-medium">
+                                {isUrdu ? 'کسان کو قابل ادائیگی رقم (Net Payable)' : 'Kisan Net Payable'}
+                            </span>
+                            <div className="text-2xl font-black tracking-tight">
+                                Rs. {Number(completedBill.net_amount).toLocaleString()}
+                            </div>
+                        </div>
+
+                        {/* Buttons */}
+                        <div className="flex gap-2.5 pt-1">
                             <button
                                 type="button"
-                                onClick={() => window.print()}
-                                className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+                                onClick={() => {
+                                    document.body.classList.add('printing-slip');
+                                    window.print();
+                                    setTimeout(() => {
+                                        document.body.classList.remove('printing-slip');
+                                    }, 1500);
+                                }}
+                                className="flex-1 h-11 bg-[#14532d] hover:bg-[#0e3b20] text-white text-xs sm:text-sm font-bold rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1.5 shadow-xs"
                             >
-                                Print Slip
+                                <Icon name="Printer" className="size-4" />
+                                <span>{isUrdu ? 'پرچی پرنٹ کریں' : 'Print Slip'}</span>
                             </button>
                             <button
                                 type="button"
                                 onClick={handleNewBill}
-                                className="flex-1 py-2.5 bg-[#14532d] hover:bg-[#0e3b20] text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+                                className="flex-1 h-11 bg-gray-100 hover:bg-gray-200 text-gray-900 text-xs sm:text-sm font-bold rounded-xl transition-colors cursor-pointer"
                             >
-                                Naya Bill
+                                {isUrdu ? 'نیا بیجک' : 'Naya Bill'}
                             </button>
                         </div>
                     </div>
@@ -653,47 +823,69 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                             <strong>Kisan: </strong>
                             <span>{completedBill.farmer_name}</span>
                         </div>
-                        {truckNo && (
+                        {completedBill.truck_no && (
                             <div>
                                 <strong>Truck No: </strong>
-                                <span>{truckNo}</span>
+                                <span>{completedBill.truck_no}</span>
                             </div>
                         )}
                         <div>
-                            <strong>Items: </strong>
-                            <span>{billItems.map(it => it.name).join(', ')}</span>
-                        </div>
-                        <div>
-                            <strong>Total Tadaad / Wazan: </strong>
-                            <span>{calculations.totalNag} tadaad / {calculations.totalWeight} kg</span>
+                            <strong>Total Bori: </strong>
+                            <span>{completedBill.total_nag || (completedBill.items || []).reduce((acc, it) => acc + (it.nag || 0), 0)} bori</span>
                         </div>
                     </div>
+
+                    {/* Items table in thermal print */}
+                    {(completedBill.items || []).length > 0 && (
+                        <table className="w-full text-xs my-2 border-collapse">
+                            <thead>
+                                <tr className="border-b border-t border-gray-400 text-gray-700 text-[10px] uppercase font-bold">
+                                    <th className="py-1 text-start">Item</th>
+                                    <th className="py-1 text-center">Bori</th>
+                                    <th className="py-1 text-end">Rate</th>
+                                    <th className="py-1 text-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-200 text-[11px]">
+                                {(completedBill.items || []).map((it, idx) => (
+                                    <tr key={idx}>
+                                        <td className="py-1 font-semibold">{it.name}</td>
+                                        <td className="py-1 text-center font-bold">{it.nag}</td>
+                                        <td className="py-1 text-end">Rs. {Number(it.rate).toLocaleString()}</td>
+                                        <td className="py-1 text-end font-bold">Rs. {Number(it.gross).toLocaleString()}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
 
                     <div className="border border-black rounded p-2 mb-3 text-xs space-y-1">
                         <div className="flex justify-between">
                             <span>Gross Sale:</span>
-                            <span className="font-bold">Rs. {calculations.totalGross.toLocaleString()}</span>
+                            <span className="font-bold">Rs. {Number(completedBill.total_gross || completedBill.gross_amount).toLocaleString()}</span>
                         </div>
-                        <div className="flex justify-between text-gray-700">
-                            <span>Commission ({commissionPct}%):</span>
-                            <span>- Rs. {calculations.commAmount.toLocaleString()}</span>
-                        </div>
-                        {calculations.mazdooriAmount > 0 && (
+                        {(completedBill.commission_amount || 0) > 0 && (
                             <div className="flex justify-between text-gray-700">
-                                <span>Mazdoori ({mazdooriRate} Rs/tadaad):</span>
-                                <span>- Rs. {calculations.mazdooriAmount.toLocaleString()}</span>
+                                <span>Commission ({completedBill.commission_pct}%):</span>
+                                <span>- Rs. {Number(completedBill.commission_amount).toLocaleString()}</span>
                             </div>
                         )}
-                        {calculations.kirayaAmount > 0 && (
+                        {(completedBill.mazdoori_amount || 0) > 0 && (
+                            <div className="flex justify-between text-gray-700">
+                                <span>Mazdoori:</span>
+                                <span>- Rs. {Number(completedBill.mazdoori_amount).toLocaleString()}</span>
+                            </div>
+                        )}
+                        {(completedBill.kiraya || 0) > 0 && (
                             <div className="flex justify-between text-gray-700">
                                 <span>Kiraya:</span>
-                                <span>- Rs. {calculations.kirayaAmount.toLocaleString()}</span>
+                                <span>- Rs. {Number(completedBill.kiraya).toLocaleString()}</span>
                             </div>
                         )}
-                        {calculations.marketFeeAmount > 0 && (
+                        {(completedBill.market_fee_amount || 0) > 0 && (
                             <div className="flex justify-between text-gray-700">
-                                <span>Market fee ({marketFeePct}%):</span>
-                                <span>- Rs. {calculations.marketFeeAmount.toLocaleString()}</span>
+                                <span>Market fee:</span>
+                                <span>- Rs. {Number(completedBill.market_fee_amount).toLocaleString()}</span>
                             </div>
                         )}
                         <div className="flex justify-between items-center pt-1.5 border-t border-black font-bold text-sm">

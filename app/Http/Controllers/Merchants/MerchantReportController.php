@@ -246,7 +246,7 @@ class MerchantReportController extends Controller
         $totalWasooli = 0;
         $totalBaqaya = 0;
 
-        $merchants = Merchant::all();
+        $merchants = Merchant::where('status', 'active')->where('code', '!=', 1)->get();
         $totalOpening = $merchants->sum('opening_balance');
 
         foreach ($period as $dt) {
@@ -318,10 +318,11 @@ class MerchantReportController extends Controller
         ];
 
         switch ($report) {
+            case 'sale_report':
             case 'amroza_print':
             case 'amroza_parchi':
-                $response['title'] = 'Amroza Sales Sheet';
-                $response['title_ur'] = 'امروزہ سیل لسٹ';
+                $response['title'] = 'Sale Report';
+                $response['title_ur'] = 'سیل رپورٹ (امروزہ لسٹ)';
                 $sales = AmrozaSale::with(['merchant', 'item'])->where('date', $date)->orderBy('id', 'asc')->get();
                 $totalNag = 0; $totalWeight = 0; $totalAmount = 0;
                 $rows = [];
@@ -329,12 +330,16 @@ class MerchantReportController extends Controller
                     $totalNag += (int)$s->nag;
                     $totalWeight += (float)$s->weight;
                     $totalAmount += (float)$s->gross_amount;
+                    $buyerName = $s->merchant ? ($s->merchant->name_en ?: ($s->merchant->name ?: $s->merchant->name_ur)) : 'Buyer';
+                    $itemName = $s->item ? ($s->item->name_en ?: ($s->item->name ?: $s->item->name_ur)) : 'Item';
+                    $itemName = trim(preg_replace('/\s*\(.*?\)\s*/', '', $itemName));
+                    $unit = $s->item && $s->item->unit ? $s->item->unit : 'Bori';
                     $rows[] = [
                         'col1' => $idx + 1,
                         'col2' => '#' . ($s->merchant ? $s->merchant->code : '-'),
-                        'col3' => $s->merchant ? ($s->merchant->name_ur ?: $s->merchant->name_en) : 'Buyer',
-                        'col4' => $s->item ? ($s->item->name_ur ?: $s->item->name_en) : 'Item',
-                        'col5' => (int)$s->nag,
+                        'col3' => $buyerName,
+                        'col4' => $itemName,
+                        'col5' => (int)$s->nag . ' ' . $unit,
                         'col6' => (float)$s->weight ?: '—',
                         'col7' => 'Rs. ' . number_format($s->rate),
                         'col8' => 'Rs. ' . number_format($s->gross_amount),
@@ -344,9 +349,153 @@ class MerchantReportController extends Controller
                 $response['rows'] = $rows;
                 $response['totals'] = [
                     'Total Nag: ' . $totalNag,
-                    'Total Weight: ' . $totalWeight,
                     'Grand Total: Rs. ' . number_format($totalAmount),
                 ];
+                break;
+
+            case 'munafa_nuqsan':
+                $response['title'] = 'Munafa / Nuqsan Report';
+                $response['title_ur'] = 'منافع / نقصان رپورٹ (آئٹم وار)';
+                $sales = AmrozaSale::with('item')->where('date', $date)->get();
+                $grouped = [];
+                foreach ($sales as $s) {
+                    $iId = $s->item_id ?: 0;
+                    if (!isset($grouped[$iId])) {
+                        $rawItem = $s->item ? ($s->item->name_en ?: ($s->item->name ?: $s->item->name_ur)) : 'Maal';
+                        $itemName = trim(preg_replace('/\s*\(.*?\)\s*/', '', $rawItem));
+                        $unit = $s->item && $s->item->unit ? $s->item->unit : 'Bori';
+                        // Cost rate from farmer bill or estimate from default_rate
+                        $costRate = 0;
+                        $fBill = FarmerBill::where('item_id', $iId)->where('date', '<=', $date)->orderBy('date', 'desc')->first();
+                        if ($fBill && $fBill->rate > 0) {
+                            $costRate = (float) $fBill->rate;
+                        } else if ($s->item && $s->item->default_rate > 0) {
+                            $costRate = round((float) $s->item->default_rate * 0.85);
+                        }
+                        $grouped[$iId] = [
+                            'item' => $itemName,
+                            'unit' => $unit,
+                            'sold_nag' => 0,
+                            'sale_amount' => 0,
+                            'cost_rate' => $costRate,
+                        ];
+                    }
+                    $grouped[$iId]['sold_nag'] += (int) $s->nag;
+                    $grouped[$iId]['sale_amount'] += (float) $s->gross_amount;
+                }
+                $rows = [];
+                $totSale = 0; $totCost = 0; $totProfit = 0;
+                $i = 1;
+                foreach ($grouped as $g) {
+                    $costAmt = $g['cost_rate'] * $g['sold_nag'];
+                    $profit = $g['sale_amount'] - $costAmt;
+                    $totSale += $g['sale_amount'];
+                    $totCost += $costAmt;
+                    $totProfit += $profit;
+                    $avgSaleRate = $g['sold_nag'] > 0 ? round($g['sale_amount'] / $g['sold_nag']) : 0;
+                    $rows[] = [
+                        'col1' => $i++,
+                        'col2' => $g['item'],
+                        'col3' => $g['sold_nag'] . ' ' . $g['unit'],
+                        'col4' => 'Rs. ' . number_format($avgSaleRate),
+                        'col5' => 'Rs. ' . number_format($g['sale_amount']),
+                        'col6' => 'Rs. ' . number_format($g['cost_rate']),
+                        'col7' => ($profit >= 0 ? '+ Rs. ' : '- Rs. ') . number_format(abs($profit)),
+                    ];
+                }
+                $response['columns'] = ['#', 'Item', 'Nag Becha', 'Sale Rate', 'Total Sale', 'Kisan Cost', 'Munafa / Nuqsan'];
+                $response['rows'] = $rows;
+                $response['totals'] = [
+                    'Total Sale: Rs. ' . number_format($totSale),
+                    'Total Cost: Rs. ' . number_format($totCost),
+                    'Net Munafa: Rs. ' . number_format($totProfit),
+                ];
+                break;
+
+            case 'udhaar_report':
+                $response['title'] = 'Udhaar Report';
+                $response['title_ur'] = 'ادھار رپورٹ (کس سے کتنا لینا)';
+                $merchants = Merchant::where('status', 'active')->where('code', '!=', 1)->orderBy('code', 'asc')->get();
+                $rows = [];
+                $totBaqaya = 0;
+                foreach ($merchants as $idx => $m) {
+                    $mName = $m->name_en ?: ($m->name ?: $m->name_ur);
+                    $totBaqaya += (float) $m->current_balance;
+                    $rows[] = [
+                        'col1' => $idx + 1,
+                        'col2' => '#' . $m->code,
+                        'col3' => $mName,
+                        'col4' => $m->phone ?: '—',
+                        'col5' => 'Rs. ' . number_format($m->opening_balance),
+                        'col6' => 'Rs. ' . number_format($m->current_balance),
+                        'col7' => (float)$m->current_balance > 0 ? 'Dena Hai' : 'Clear',
+                    ];
+                }
+                $response['columns'] = ['#', 'Code', 'Merchant Name', 'Phone', 'Sabiqa', 'Current Udhaar Baqaya', 'Status'];
+                $response['rows'] = $rows;
+                $response['totals'] = ['Total Udhaar Baqaya: Rs. ' . number_format($totBaqaya)];
+                break;
+
+            case 'stock_report':
+                $response['title'] = 'Stock Report';
+                $response['title_ur'] = 'اسٹاک رپورٹ (ویلیو اور کم اسٹاک)';
+                $items = Item::orderBy('id', 'asc')->get();
+                $rows = [];
+                $totItems = count($items);
+                $totStock = 0;
+                $totVal = 0;
+                foreach ($items as $idx => $it) {
+                    $rawName = $it->name_en ?: ($it->name ?: $it->name_ur);
+                    $itName = trim(preg_replace('/\s*\(.*?\)\s*/', '', $rawName));
+                    $stock = (int) ($it->current_stock ?? $it->opening_stock ?? 0);
+                    $rate = (float) ($it->default_rate ?? 0);
+                    $val = $stock * $rate;
+                    $totStock += $stock;
+                    $totVal += $val;
+                    $status = $stock <= 0 ? 'Khatam' : ($stock < 20 ? 'Kam Stock' : 'Theek');
+                    $rows[] = [
+                        'col1' => $idx + 1,
+                        'col2' => '#' . $it->id,
+                        'col3' => $itName,
+                        'col4' => $it->unit ?: 'Bori',
+                        'col5' => $stock,
+                        'col6' => 'Rs. ' . number_format($rate),
+                        'col7' => 'Rs. ' . number_format($val),
+                        'col8' => $status,
+                    ];
+                }
+                $response['columns'] = ['#', 'Code', 'Product Name', 'Unit', 'Baaki Stock', 'Rate', 'Stock Value', 'Status'];
+                $response['rows'] = $rows;
+                $response['totals'] = [
+                    'Total Products: ' . $totItems,
+                    'Total Stock: ' . $totStock,
+                    'Total Stock Value: Rs. ' . number_format($totVal),
+                ];
+                break;
+
+            case 'kisan_hisaab':
+                $response['title'] = 'Kisan Hisaab Report';
+                $response['title_ur'] = 'کسان حساب رپورٹ (دینا باقی)';
+                $farmers = Farmer::with('area')->orderBy('code', 'asc')->get();
+                $rows = [];
+                $totDena = 0;
+                foreach ($farmers as $idx => $f) {
+                    $fName = $f->name_en ?: ($f->name ?: $f->name_ur);
+                    $areaName = $f->area ? ($f->area->name_en ?: $f->area->name_ur) : '—';
+                    $totDena += (float) $f->current_balance;
+                    $rows[] = [
+                        'col1' => $idx + 1,
+                        'col2' => '#' . $f->code,
+                        'col3' => $fName,
+                        'col4' => $areaName,
+                        'col5' => $f->phone ?: '—',
+                        'col6' => 'Rs. ' . number_format($f->opening_balance),
+                        'col7' => 'Rs. ' . number_format($f->current_balance),
+                    ];
+                }
+                $response['columns'] = ['#', 'Code', 'Kisan Name', 'Area', 'Phone', 'Sabiqa', 'Dena Baqi'];
+                $response['rows'] = $rows;
+                $response['totals'] = ['Total Kisan Baqaya (Dena Baqi): Rs. ' . number_format($totDena)];
                 break;
 
             case 'naqdi_print':
@@ -357,10 +506,11 @@ class MerchantReportController extends Controller
                 $rows = [];
                 foreach ($receipts as $idx => $r) {
                     $totalAmt += (float)$r->amount;
+                    $mName = $r->merchant ? ($r->merchant->name_en ?: ($r->merchant->name ?: $r->merchant->name_ur)) : 'Merchant';
                     $rows[] = [
                         'col1' => $idx + 1,
                         'col2' => '#' . ($r->merchant ? $r->merchant->code : '-'),
-                        'col3' => $r->merchant ? ($r->merchant->name_ur ?: $r->merchant->name_en) : 'Merchant',
+                        'col3' => $mName,
                         'col4' => 'Naqdi',
                         'col5' => $r->note ?: '—',
                         'col6' => 'Rs. ' . number_format($r->amount),
@@ -380,10 +530,11 @@ class MerchantReportController extends Controller
                 $rows = [];
                 foreach ($receipts as $idx => $r) {
                     $totalAmt += (float)$r->amount;
+                    $mName = $r->merchant ? ($r->merchant->name_en ?: ($r->merchant->name ?: $r->merchant->name_ur)) : 'Merchant';
                     $rows[] = [
                         'col1' => $idx + 1,
                         'col2' => '#' . ($r->merchant ? $r->merchant->code : '-'),
-                        'col3' => $r->merchant ? ($r->merchant->name_ur ?: $r->merchant->name_en) : 'Merchant',
+                        'col3' => $mName,
                         'col4' => 'Recovery',
                         'col5' => $r->note ?: '—',
                         'col6' => 'Rs. ' . number_format($r->amount),
@@ -403,9 +554,10 @@ class MerchantReportController extends Controller
                 foreach ($sales as $s) {
                     $mId = $s->merchant_id;
                     if (!isset($grouped[$mId])) {
+                        $mName = $s->merchant ? ($s->merchant->name_en ?: ($s->merchant->name ?: $s->merchant->name_ur)) : 'Merchant';
                         $grouped[$mId] = [
                             'code' => $s->merchant ? $s->merchant->code : '-',
-                            'name' => $s->merchant ? ($s->merchant->name_ur ?: $s->merchant->name_en) : 'Merchant',
+                            'name' => $mName,
                             'nag' => 0,
                             'amount' => 0,
                         ];
@@ -440,11 +592,14 @@ class MerchantReportController extends Controller
                 foreach ($sales as $idx => $s) {
                     $totalNag += (int)$s->nag;
                     $totalAmt += (float)$s->gross_amount;
+                    $buyerName = $s->merchant ? ($s->merchant->name_en ?: ($s->merchant->name ?: $s->merchant->name_ur)) : 'Buyer';
+                    $rawItem = $s->item ? ($s->item->name_en ?: ($s->item->name ?: $s->item->name_ur)) : 'Item';
+                    $itemName = trim(preg_replace('/\s*\(.*?\)\s*/', '', $rawItem));
                     $rows[] = [
-                        'col1' => $s->date->format('Y-m-d'),
+                        'col1' => $s->date instanceof \DateTimeInterface ? $s->date->format('Y-m-d') : substr((string)$s->date, 0, 10),
                         'col2' => '#' . ($s->merchant ? $s->merchant->code : '-'),
-                        'col3' => $s->merchant ? ($s->merchant->name_ur ?: $s->merchant->name_en) : 'Buyer',
-                        'col4' => $s->item ? ($s->item->name_ur ?: $s->item->name_en) : 'Item',
+                        'col3' => $buyerName,
+                        'col4' => $itemName,
                         'col5' => (int)$s->nag,
                         'col6' => (float)$s->weight ?: '—',
                         'col7' => 'Rs. ' . number_format($s->rate),
@@ -511,11 +666,14 @@ class MerchantReportController extends Controller
                 foreach ($bills as $idx => $b) {
                     $totalGross += (float)$b->gross_amount;
                     $totalNet += (float)$b->net_payable;
+                    $farmerName = $b->farmer ? ($b->farmer->name_en ?: ($b->farmer->name ?: $b->farmer->name_ur)) : 'Farmer';
+                    $rawItem = $b->item ? ($b->item->name_en ?: ($b->item->name ?: $b->item->name_ur)) : 'Item';
+                    $itemName = trim(preg_replace('/\s*\(.*?\)\s*/', '', $rawItem));
                     $rows[] = [
                         'col1' => $idx + 1,
                         'col2' => '#' . ($b->farmer ? $b->farmer->code : '-'),
-                        'col3' => $b->farmer ? ($b->farmer->name_ur ?: $b->farmer->name_en) : 'Farmer',
-                        'col4' => $b->item ? ($b->item->name_ur ?: $b->item->name_en) : 'Item',
+                        'col3' => $farmerName,
+                        'col4' => $itemName,
                         'col5' => (int)$b->nag,
                         'col6' => 'Rs. ' . number_format($b->gross_amount),
                         'col7' => 'Rs. ' . number_format($b->commission_amount),
@@ -537,12 +695,14 @@ class MerchantReportController extends Controller
                 $rows = [];
                 foreach ($farmers as $idx => $f) {
                     $totalBal += (float)$f->current_balance;
+                    $fName = $f->name_en ?: ($f->name ?: $f->name_ur);
+                    $areaName = $f->area ? ($f->area->name_en ?: $f->area->name_ur) : '—';
                     $rows[] = [
                         'col1' => $idx + 1,
                         'col2' => '#' . $f->code,
-                        'col3' => $f->name_ur ?: $f->name_en,
+                        'col3' => $fName,
                         'col4' => $f->phone ?: '—',
-                        'col5' => $f->area ? ($f->area->name_ur ?: $f->area->name_en) : '—',
+                        'col5' => $areaName,
                         'col6' => 'Rs. ' . number_format($f->opening_balance),
                         'col7' => 'Rs. ' . number_format($f->current_balance),
                     ];
@@ -558,11 +718,13 @@ class MerchantReportController extends Controller
                 $marks = FarmerMark::with('farmer')->orderBy('code', 'asc')->get();
                 $rows = [];
                 foreach ($marks as $idx => $m) {
+                    $markName = $m->name_en ?: ($m->name ?: $m->name_ur);
+                    $farmerName = $m->farmer ? ($m->farmer->name_en ?: ($m->farmer->name ?: $m->farmer->name_ur)) : '—';
                     $rows[] = [
                         'col1' => $idx + 1,
                         'col2' => '#' . $m->code,
-                        'col3' => $m->name_ur ?: $m->name_en,
-                        'col4' => $m->farmer ? ($m->farmer->name_ur ?: $m->farmer->name_en) : '—',
+                        'col3' => $markName,
+                        'col4' => $farmerName,
                         'col5' => '#' . ($m->farmer ? $m->farmer->code : '-'),
                     ];
                 }
@@ -613,10 +775,14 @@ class MerchantReportController extends Controller
      */
     public function merchantKhata(Request $request)
     {
-        $merchants = Merchant::orderBy('code', 'asc')->get();
+        $merchants = Merchant::where('status', 'active')->where('code', '!=', 1)->orderBy('code', 'asc')->get();
 
         $selectedMerchantId = (int) $request->query('merchant_id', $merchants->first()?->id ?? 0);
-        $selectedMerchant = Merchant::find($selectedMerchantId) ?? $merchants->first();
+        $selectedMerchant = Merchant::where('code', '!=', 1)
+            ->where(function ($q) use ($selectedMerchantId) {
+                $q->where('id', $selectedMerchantId)->orWhere('code', $selectedMerchantId);
+            })
+            ->first() ?? $merchants->first();
 
         $fromDate = $request->query('from_date', date('Y-m-01'));
         $toDate = $request->query('to_date', date('Y-m-d'));
@@ -632,9 +798,13 @@ class MerchantReportController extends Controller
             ]);
         }
 
-        // Prior sales and receipts before fromDate
+        // Prior sales and receipts before fromDate (Only Udhaar sales affect ledger)
         $priorSales = (float) AmrozaSale::where('merchant_id', $selectedMerchant->id)
             ->where('date', '<', $fromDate)
+            ->where(function ($q) {
+                $q->where('payment_type', 'udhaar')
+                  ->orWhereNull('payment_type');
+            })
             ->sum('gross_amount');
         $priorWasooli = (float) MerchantReceipt::where('merchant_id', $selectedMerchant->id)
             ->where('date', '<', $fromDate)
@@ -643,7 +813,7 @@ class MerchantReportController extends Controller
         $runningSabqa = round($openingBal + $priorSales - $priorWasooli, 2);
         $initialSabqa = $runningSabqa;
 
-        // Sales and receipts in date range
+        // Sales and receipts in date range (Include all sales and receipts for complete ledger)
         $sales = AmrozaSale::where('merchant_id', $selectedMerchant->id)
             ->whereBetween('date', [$fromDate, $toDate])
             ->get();
@@ -668,10 +838,14 @@ class MerchantReportController extends Controller
 
         foreach ($dates as $d) {
             $daySale = 0;
+            $dayCashBankSettled = 0;
             foreach ($sales as $s) {
                 $sd = $s->date instanceof \DateTimeInterface ? $s->date->format('Y-m-d') : substr((string)$s->date, 0, 10);
                 if ($sd === $d) {
                     $daySale += (float) $s->gross_amount;
+                    if (in_array($s->payment_type, ['naqdi', 'bank'])) {
+                        $dayCashBankSettled += (float) $s->gross_amount;
+                    }
                 }
             }
 
@@ -683,19 +857,23 @@ class MerchantReportController extends Controller
                 }
             }
 
-            $dayBaqaya = round($runningSabqa + $daySale - $dayWasooli, 2);
+            // Total deduction includes recovery wasooli receipts plus immediate settlement for cash/bank sales
+            $effectiveWasooli = $dayWasooli + $dayCashBankSettled;
+            $dayBaqaya = round($runningSabqa + $daySale - $effectiveWasooli, 2);
 
             $rows[] = [
                 'date' => date('d-m-Y', strtotime($d)),
                 'raw_date' => $d,
                 'sabqa' => $runningSabqa,
                 'sale' => $daySale,
-                'wasooli' => $dayWasooli,
+                'wasooli' => $effectiveWasooli,
+                'recovery_wasooli' => $dayWasooli,
+                'cash_bank_sale' => $dayCashBankSettled,
                 'baqaya' => $dayBaqaya,
             ];
 
             $totalSale += $daySale;
-            $totalWasooli += $dayWasooli;
+            $totalWasooli += $effectiveWasooli;
             $runningSabqa = $dayBaqaya;
         }
 

@@ -24,6 +24,7 @@ interface LedgerRow {
     detail: string;
     jama: number;
     banam: number;
+    baqaya: number;
 }
 
 interface Summary {
@@ -47,6 +48,14 @@ export default function GeneralLedgerIndex({ date, dayMonth, rows, summary }: Pr
     const [selectedDate, setSelectedDate] = useState(date || new Date().toISOString().split('T')[0]);
     const [infoOpen, setInfoOpen] = useState(false);
     const [entryModalOpen, setEntryModalOpen] = useState(false);
+
+    // 30-second background polling for real-time updates
+    React.useEffect(() => {
+        const interval = setInterval(() => {
+            router.reload({ preserveScroll: true, preserveState: true });
+        }, 30000);
+        return () => clearInterval(interval);
+    }, []);
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: isUrdu ? 'کھاتہ' : 'Khata', href: '#' },
@@ -135,7 +144,7 @@ export default function GeneralLedgerIndex({ date, dayMonth, rows, summary }: Pr
                     {/* Filter Card: Tarikh */}
                     <div className="bg-white rounded-xl border border-gray-200/90 shadow-2xs p-3.5 md:p-4">
                         <div className="flex flex-wrap items-center gap-3">
-                            <label className="text-[11px] font-semibold text-gray-500">
+                            <label className="text-xs font-bold text-[#374151]">
                                 Tarikh
                             </label>
                             <div className="flex items-center gap-1.5">
@@ -169,100 +178,107 @@ export default function GeneralLedgerIndex({ date, dayMonth, rows, summary }: Pr
                     <div className="bg-white rounded-xl border border-gray-200/90 shadow-2xs p-4 md:p-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-5 items-center divide-y md:divide-y-0 md:divide-x md:divide-gray-100">
                         {/* 1. Balance */}
                         <div className="space-y-0.5">
-                            <span className="text-[10px] font-semibold text-gray-400 block">
+                            <span className="text-xs font-bold text-[#4B5563] block">
                                 Balance
                             </span>
-                            <div className="text-xl md:text-2xl font-black text-gray-900">
+                            <div className="text-xl md:text-2xl font-black text-[#1F2937]">
                                 Rs. {Number(summary.balance).toLocaleString()}
                             </div>
-                            <span className="text-[11px] text-gray-400 block pt-0.5">
+                            <span className="text-xs font-semibold text-[#374151] block pt-0.5">
                                 {dayMonth} {isUrdu ? 'کا حساب' : 'ka hisaab'}
                             </span>
                         </div>
 
                         {/* 2. Total Jama */}
                         <div className="md:ps-5 pt-3 md:pt-0 space-y-0.5">
-                            <span className="text-[10px] font-semibold text-gray-400 block">
+                            <span className="text-xs font-bold text-[#4B5563] block">
                                 Total Jama
                             </span>
-                            <div className="text-lg md:text-xl font-bold text-gray-900">
+                            <div className="text-lg md:text-xl font-black text-[#1F2937]">
                                 Rs. {Number(summary.total_jama).toLocaleString()}
                             </div>
                         </div>
 
                         {/* 3. Total Banam */}
                         <div className="md:ps-5 pt-3 md:pt-0 space-y-0.5">
-                            <span className="text-[10px] font-semibold text-gray-400 block">
+                            <span className="text-xs font-bold text-[#4B5563] block">
                                 Total Banam
                             </span>
-                            <div className="text-lg md:text-xl font-bold text-gray-900">
+                            <div className="text-lg md:text-xl font-black text-[#1F2937]">
                                 Rs. {Number(summary.total_banam).toLocaleString()}
                             </div>
                         </div>
 
                         {/* 4. Entries */}
                         <div className="md:ps-5 pt-3 md:pt-0 space-y-0.5">
-                            <span className="text-[10px] font-semibold text-gray-400 block">
+                            <span className="text-xs font-bold text-[#4B5563] block">
                                 Entries
                             </span>
-                            <div className="text-lg md:text-xl font-bold text-gray-900">
+                            <div className="text-lg md:text-xl font-black text-[#1F2937]">
                                 {summary.entries}
                             </div>
                         </div>
                     </div>
 
-                    {/* Table Card: Pure white, clean muted headers, simple borders */}
+                    {/* Table Card: Pure white, clean dark headers, simple borders */}
                     <div className="bg-white rounded-xl border border-gray-200/90 shadow-2xs overflow-hidden">
                         <div className="overflow-x-auto">
-                            <table className="w-full text-xs font-sans">
+                            <table className="w-full text-sm font-sans">
                                 <thead>
-                                    <tr className="text-gray-400 border-b border-gray-200 font-semibold bg-gray-50/50">
-                                        <th className="px-4 py-3 text-start w-28">Date</th>
-                                        <th className="px-4 py-3 text-start">Naam</th>
-                                        <th className="px-4 py-3 text-start">Detail</th>
-                                        <th className="px-4 py-3 text-end">Jama</th>
-                                        <th className="px-4 py-3 text-end">Banam</th>
+                                    <tr className="text-[#374151] border-b border-gray-200 font-bold bg-gray-50/80 text-xs md:text-sm">
+                                        <th className="px-4 py-3 text-start w-24">{isUrdu ? 'تاریخ' : 'Tarikh'}</th>
+                                        <th className="px-4 py-3 text-start w-52">{isUrdu ? 'کھاتہ / نام' : 'Khata / Naam'}</th>
+                                        <th className="px-4 py-3 text-start">{isUrdu ? 'تفصیل' : 'Tafseel'}</th>
+                                        <th className="px-4 py-3 text-end w-32">{isUrdu ? 'جمع' : 'Jama'}</th>
+                                        <th className="px-4 py-3 text-end w-32">{isUrdu ? 'بنام' : 'Banam'}</th>
+                                        <th className="px-4 py-3 text-end w-36">{isUrdu ? 'بقایا' : 'Baqaya'}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
                                     {rows.length === 0 ? (
                                         <tr>
-                                            <td colSpan={5} className="px-4 py-8 text-center text-gray-400 text-xs">
+                                            <td colSpan={6} className="px-4 py-8 text-center text-gray-500 font-medium text-sm">
                                                 No entries for this date
                                             </td>
                                         </tr>
                                     ) : (
                                         rows.map(row => (
-                                            <tr key={row.id} className="hover:bg-gray-50/60 transition-colors">
-                                                <td className="px-4 py-3 text-gray-600">
+                                            <tr key={row.id} className="hover:bg-gray-50/60 transition-colors text-sm">
+                                                <td className="px-4 py-3.5 font-semibold text-[#1F2937] text-sm">
                                                     {row.date}
                                                 </td>
-                                                <td className="px-4 py-3 font-semibold text-gray-900">
+                                                <td className="px-4 py-3.5 font-bold text-[#1F2937] text-sm md:text-[15px]">
                                                     {row.name}
                                                 </td>
-                                                <td className="px-4 py-3 text-gray-500 text-xs">
+                                                <td className="px-4 py-3.5 font-medium text-[#4B5563] text-sm">
                                                     {row.detail || '—'}
                                                 </td>
-                                                <td className="px-4 py-3 text-end font-medium text-gray-900">
+                                                <td className="px-4 py-3.5 text-end font-bold text-[#166534] text-sm md:text-[15px]">
                                                     {row.jama > 0 ? Number(row.jama).toLocaleString() : '–'}
                                                 </td>
-                                                <td className="px-4 py-3 text-end font-medium text-gray-900">
+                                                <td className="px-4 py-3.5 text-end font-bold text-red-700 text-sm md:text-[15px]">
                                                     {row.banam > 0 ? Number(row.banam).toLocaleString() : '–'}
+                                                </td>
+                                                <td className="px-4 py-3.5 text-end font-black text-[#1F2937] text-sm md:text-[15px]">
+                                                    Rs. {Number(row.baqaya).toLocaleString()}
                                                 </td>
                                             </tr>
                                         ))
                                     )}
                                 </tbody>
                                 <tfoot>
-                                    <tr className="border-t-2 border-gray-900 bg-gray-50/80 font-bold text-gray-900">
-                                        <td className="px-4 py-3">Total</td>
-                                        <td className="px-4 py-3"></td>
-                                        <td className="px-4 py-3"></td>
-                                        <td className="px-4 py-3 text-end">
+                                    <tr className="border-t-2 border-gray-900 bg-gray-50/80 font-bold text-[#1F2937] text-sm md:text-[15px]">
+                                        <td className="px-4 py-3.5">{isUrdu ? 'ٹوٹل' : 'Total'}</td>
+                                        <td className="px-4 py-3.5"></td>
+                                        <td className="px-4 py-3.5"></td>
+                                        <td className="px-4 py-3.5 text-end text-[#166534]">
                                             {Number(summary.total_jama).toLocaleString()}
                                         </td>
-                                        <td className="px-4 py-3 text-end">
+                                        <td className="px-4 py-3.5 text-end text-red-700">
                                             {Number(summary.total_banam).toLocaleString()}
+                                        </td>
+                                        <td className="px-4 py-3.5 text-end font-black text-[#1F2937]">
+                                            Rs. {Number(summary.balance).toLocaleString()}
                                         </td>
                                     </tr>
                                 </tfoot>
@@ -306,15 +322,16 @@ export default function GeneralLedgerIndex({ date, dayMonth, rows, summary }: Pr
                 <table className="w-full text-[10px] border border-black border-collapse mb-3">
                     <thead>
                         <tr className="bg-gray-100 border-b border-black font-bold">
-                            <th className="p-1 text-start border-e border-black">Naam</th>
+                            <th className="p-1 text-start border-e border-black">Khata / Naam</th>
                             <th className="p-1 text-end border-e border-black">Jama</th>
-                            <th className="p-1 text-end">Banam</th>
+                            <th className="p-1 text-end border-e border-black">Banam</th>
+                            <th className="p-1 text-end">Baqaya</th>
                         </tr>
                     </thead>
                     <tbody>
                         {rows.length === 0 ? (
                             <tr>
-                                <td colSpan={3} className="p-3 text-center text-gray-500">
+                                <td colSpan={4} className="p-3 text-center text-gray-500">
                                     No entries
                                 </td>
                             </tr>
@@ -328,8 +345,11 @@ export default function GeneralLedgerIndex({ date, dayMonth, rows, summary }: Pr
                                     <td className="p-1 text-end border-e border-black">
                                         {r.jama > 0 ? Number(r.jama).toLocaleString() : '–'}
                                     </td>
-                                    <td className="p-1 text-end">
+                                    <td className="p-1 text-end border-e border-black">
                                         {r.banam > 0 ? Number(r.banam).toLocaleString() : '–'}
+                                    </td>
+                                    <td className="p-1 text-end font-bold">
+                                        Rs. {Number(r.baqaya).toLocaleString()}
                                     </td>
                                 </tr>
                             ))
@@ -339,7 +359,8 @@ export default function GeneralLedgerIndex({ date, dayMonth, rows, summary }: Pr
                         <tr className="border-t-2 border-black font-bold bg-gray-100">
                             <td className="p-1 border-e border-black">Total</td>
                             <td className="p-1 text-end border-e border-black">Rs. {Number(summary.total_jama).toLocaleString()}</td>
-                            <td className="p-1 text-end">Rs. {Number(summary.total_banam).toLocaleString()}</td>
+                            <td className="p-1 text-end border-e border-black">Rs. {Number(summary.total_banam).toLocaleString()}</td>
+                            <td className="p-1 text-end">Rs. {Number(summary.balance).toLocaleString()}</td>
                         </tr>
                     </tfoot>
                 </table>

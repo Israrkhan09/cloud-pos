@@ -68,8 +68,10 @@ class InvestmentPartner extends Model
         $availableEquity = $netEquity - $pendingDrawings;
 
         // Draw preview estimate based on profit percentage (10% on Rs. 20,000 monthly profit pool = +2,000 share)
+        // Rule: When a new partner is added, monthly profit share starts after 1 month (Rs. 0 in current month)
         $monthlyProfitPool = 20000;
-        $drawPreview = ($this->profit_percentage > 0)
+        $isEligibleForCurrentMonthProfit = ($this->id <= 2) || ($this->created_at && $this->created_at->diffInDays(now()) >= 30);
+        $drawPreview = ($this->profit_percentage > 0 && $isEligibleForCurrentMonthProfit)
             ? ($monthlyProfitPool * ($this->profit_percentage / 100))
             : 0;
 
@@ -82,6 +84,7 @@ class InvestmentPartner extends Model
             'net_equity'       => $netEquity,
             'available_equity' => $availableEquity,
             'draw_preview'     => $drawPreview,
+            'is_new_partner'   => !$isEligibleForCurrentMonthProfit,
         ];
     }
 }

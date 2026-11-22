@@ -64,11 +64,6 @@ export const jkcSidebarNav: NavGroup[] = [
                 url: "/banking/cheques",
                 icon: "CheckSquareOffsetIcon",
             },
-            {
-                title: "nav.reconciliation",
-                url: "/banking/reconciliation",
-                icon: "ScalesIcon",
-            },
         ],
         includeRoutes: [
             "banking"
@@ -134,7 +129,21 @@ export const jkcSidebarNav: NavGroup[] = [
                 icon: "ChartBarIcon",
             },
         ],
-        includeRoutes: ["reports"]
+        includeRoutes: ["reports.index", "reports.data"]
+    },
+    {
+        id: "expiry_gifts",
+        title: "nav.expiry_gifts",
+        icon: "GiftIcon",
+        isGroup: true,
+        items: [
+            {
+                title: "nav.expiry_gifts",
+                url: "/expiry-gifts",
+                icon: "GiftIcon",
+            },
+        ],
+        includeRoutes: ["expiry_gifts", "expiry-gifts"]
     },
     {
         id: "setup",
@@ -148,7 +157,7 @@ export const jkcSidebarNav: NavGroup[] = [
                 icon: "UsersThreeIcon",
             },
             {
-                title: "nav.items_marks_areas",
+                title: "nav.products_areas",
                 url: "/masters/items",
                 icon: "PackageIcon",
             },
@@ -173,16 +182,10 @@ export const jkcSidebarNav: NavGroup[] = [
                 url: "/backup",
                 icon: "CloudArrowUpIcon",
             },
-            {
-                title: "nav.users",
-                url: "/users",
-                icon: "UserGearIcon",
-            },
         ],
         includeRoutes: [
             "settings",
-            "backup",
-            "users"
+            "backup"
         ]
     }
 ];

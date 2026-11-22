@@ -35,10 +35,21 @@ Route::middleware(['auth', 'verified'])
         Route::get('reports', [\App\Http\Controllers\Merchants\MerchantReportController::class, 'index'])->name('reports.index');
         Route::get('reports/data', [\App\Http\Controllers\Merchants\MerchantReportController::class, 'getReportData'])->name('reports.data');
 
+        // System Backup Module
+        Route::get('backup', [\App\Http\Controllers\System\BackupController::class, 'index'])->name('backup.index');
+        Route::get('backup/data', [\App\Http\Controllers\System\BackupController::class, 'getData'])->name('backup.data');
+        Route::get('backup/full', [\App\Http\Controllers\System\BackupController::class, 'fullDatabase'])->name('backup.full');
+
+        // Expiry & Gifts Module
+        Route::get('expiry-gifts', [\App\Http\Controllers\Inventory\ExpiryGiftsController::class, 'index'])->name('expiry_gifts.index');
+        Route::post('expiry-gifts/discount', [\App\Http\Controllers\Inventory\ExpiryGiftsController::class, 'applyDiscount'])->name('expiry_gifts.discount');
+        Route::post('expiry-gifts/wastage', [\App\Http\Controllers\Inventory\ExpiryGiftsController::class, 'recordWastage'])->name('expiry_gifts.wastage');
+        Route::post('expiry-gifts/return-farmer', [\App\Http\Controllers\Inventory\ExpiryGiftsController::class, 'returnToFarmer'])->name('expiry_gifts.return_farmer');
+        Route::post('expiry-gifts/gift', [\App\Http\Controllers\Inventory\ExpiryGiftsController::class, 'storeGift'])->name('expiry_gifts.gift');
+
         Route::get('banking/accounts', [\App\Http\Controllers\Banking\BankController::class, 'index'])->name('banking.accounts');
         Route::get('banking/transfers', [\App\Http\Controllers\Banking\BankController::class, 'transfers'])->name('banking.transfers');
         Route::get('banking/cheques', [\App\Http\Controllers\Banking\BankController::class, 'cheques'])->name('banking.cheques');
-        Route::get('banking/reconciliation', [\App\Http\Controllers\Banking\BankController::class, 'reconciliation'])->name('banking.reconciliation');
 
         // Investment / Capital Module
         Route::get('investment', fn() => redirect()->route('investment.partners'))->name('investment.index');

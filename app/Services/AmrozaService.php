@@ -163,8 +163,9 @@ class AmrozaService
             $totalGross += $gross;
             $totalNag += $nag;
 
-            $isNaqdi = $sale->payment_type === 'naqdi' || ($sale->merchant && (int)$sale->merchant->code === 1);
+            $isNaqdi = $sale->payment_type === 'naqdi';
             $isBank = $sale->payment_type === 'bank';
+            $isSplit = $sale->payment_type === 'split';
 
             if ($isBank) {
                 $bankNag += $nag;
@@ -172,6 +173,15 @@ class AmrozaService
             } elseif ($isNaqdi) {
                 $cashNag += $nag;
                 $cashAmount += $gross;
+            } elseif ($isSplit) {
+                $cashPortion = floatval($sale->cash_received ?? 0);
+                $udhaarPortion = floatval($sale->udhaar_amount ?? ($gross - $cashPortion));
+                $cashAmount += $cashPortion;
+                $creditAmount += $udhaarPortion;
+                $splitRatio = $gross > 0 ? ($cashPortion / $gross) : 0.5;
+                $cNag = (int) round($nag * $splitRatio);
+                $cashNag += $cNag;
+                $creditNag += ($nag - $cNag);
             } else {
                 $creditNag += $nag;
                 $creditAmount += $gross;
@@ -252,15 +262,25 @@ class AmrozaService
 
     /**
      * Recalculate merchant's current balance
+     * Only Udhaar sales increase merchant balance (dukaan baqaya).
+     * Cash and Bank sales do not affect dukaan baqaya.
      */
     public function recalculateMerchantBalance(int $merchantId): void
     {
         $merchant = Merchant::find($merchantId);
         if (!$merchant) return;
 
-        $totalSales = $merchant->sales()->sum('gross_amount');
+        $totalSales = $merchant->sales()
+            ->where(function ($q) {
+                $q->where('payment_type', 'udhaar')
+                  ->orWhereNull('payment_type');
+            })
+            ->sum('gross_amount');
+        $splitSales = $merchant->sales()
+            ->where('payment_type', 'split')
+            ->sum('udhaar_amount');
         $totalReceipts = $merchant->receipts()->sum('amount');
-        $merchant->current_balance = round(($merchant->opening_balance ?? 0) + $totalSales - $totalReceipts, 2);
+        $merchant->current_balance = round(($merchant->opening_balance ?? 0) + $totalSales + $splitSales - $totalReceipts, 2);
         $merchant->save();
     }
 }

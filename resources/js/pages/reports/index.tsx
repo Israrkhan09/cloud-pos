@@ -186,20 +186,44 @@ export default function ReportsIndex() {
             icon: 'BookBookmark',
             reports: [
                 {
-                    id: 'general_ledger',
-                    title: 'General Ledger',
-                    title_ur: 'جنرل لیجر (روکڑ)',
-                    desc: 'Roker aur rozana ka lena dena',
-                    desc_ur: 'روکڑ اور روزانہ کا لینا دینا',
-                    url: '/general-ledger',
+                    id: 'sale_report',
+                    title: 'Sale Report',
+                    title_ur: 'سیل رپورٹ',
+                    desc: 'aaj ki list',
+                    desc_ur: 'آج کی لسٹ',
+                    url: '/amroza',
                 },
                 {
-                    id: 'cash_book',
-                    title: 'Daily Cash Book',
-                    title_ur: 'روزانہ کیش بک',
-                    desc: 'Cash aamad o kharch',
-                    desc_ur: 'کیش آمد و خرچ',
-                    url: '/general-ledger',
+                    id: 'munafa_nuqsan',
+                    title: 'Munafa / Nuqsan',
+                    title_ur: 'منافع / نقصان',
+                    desc: 'item wise',
+                    desc_ur: 'آئٹم کے مطابق',
+                    url: '/reports',
+                },
+                {
+                    id: 'udhaar_report',
+                    title: 'Udhaar Report',
+                    title_ur: 'ادھار رپورٹ',
+                    desc: 'kis se kitna lena',
+                    desc_ur: 'کس سے کتنا لینا',
+                    url: '/merchant-khata',
+                },
+                {
+                    id: 'stock_report',
+                    title: 'Stock Report',
+                    title_ur: 'اسٹاک رپورٹ',
+                    desc: 'value aur kam stock',
+                    desc_ur: 'ویلیو اور کم اسٹاک',
+                    url: '/masters/items',
+                },
+                {
+                    id: 'kisan_hisaab',
+                    title: 'Kisan Hisaab',
+                    title_ur: 'کسان حساب',
+                    desc: 'dena baqi',
+                    desc_ur: 'دینا باقی',
+                    url: '/khata',
                 },
             ],
         },
@@ -252,6 +276,34 @@ export default function ReportsIndex() {
                 window.print();
             }, 300);
         }
+    }
+
+    async function handleExportExcel(rep: ReportItem) {
+        const data = await fetchReportData(rep, selectedDate, selectedFromDate, selectedToDate);
+        if (!data || !data.rows || data.rows.length === 0) {
+            toast.error(isUrdu ? 'ایکسپورٹ کے لیے ڈیٹا موجود نہیں ہے' : 'No data available to export');
+            return;
+        }
+
+        let csv = '\uFEFF' + data.columns.join(',') + '\n';
+        data.rows.forEach(r => {
+            const rowVals = data.columns.map((_, i) => {
+                const val = r[`col${i + 1}`] ?? '';
+                return `"${String(val).replace(/"/g, '""')}"`;
+            });
+            csv += rowVals.join(',') + '\n';
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        const repName = (rep.title || 'Report').replace(/\s+/g, '_');
+        link.setAttribute('download', `${repName}_${selectedDate}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success(isUrdu ? 'ایکسل فائل ڈاؤنلوڈ ہو گئی' : `${rep.title} Excel exported`);
     }
 
     function triggerModalPrint() {
@@ -345,7 +397,28 @@ export default function ReportsIndex() {
                         </div>
 
                         {/* RIGHT COLUMN: Reports List Card */}
-                        <div className="md:col-span-8 lg:col-span-9">
+                        <div className="md:col-span-8 lg:col-span-9 space-y-4">
+                            {/* TOP 5 BUTTONS IN COLUMNS FOR LEDGER */}
+                            {selectedCategory.id === 'ledger' && (
+                                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+                                    {selectedCategory.reports.map(rep => (
+                                        <button
+                                            key={rep.id}
+                                            type="button"
+                                            onClick={() => handlePreview(rep)}
+                                            className="p-3 rounded-xl border border-emerald-600/30 bg-white hover:bg-emerald-50/60 hover:border-emerald-700 shadow-2xs text-start transition-all cursor-pointer group flex flex-col justify-between"
+                                        >
+                                            <div className="font-extrabold text-gray-900 group-hover:text-emerald-900 text-xs md:text-sm">
+                                                {isUrdu ? rep.title_ur : rep.title}
+                                            </div>
+                                            <div className="text-[11px] text-gray-500 mt-1">
+                                                {isUrdu ? rep.desc_ur : rep.desc}
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+
                             <div className="bg-white rounded-xl border border-gray-200/90 shadow-2xs overflow-hidden">
                                 <div className="divide-y divide-gray-100">
                                     {selectedCategory.reports.map(rep => (
@@ -357,7 +430,7 @@ export default function ReportsIndex() {
                                                 <h3 className={`text-xs md:text-sm font-bold text-gray-900 ${isUrdu ? 'font-nastaliq text-base' : ''}`}>
                                                     {isUrdu ? rep.title_ur : rep.title}
                                                 </h3>
-                                                <p className="text-xs text-gray-400">
+                                                <p className="text-xs text-gray-500 font-medium">
                                                     {isUrdu ? rep.desc_ur : rep.desc}
                                                 </p>
                                             </div>
@@ -367,20 +440,27 @@ export default function ReportsIndex() {
                                                 <button
                                                     type="button"
                                                     onClick={() => handlePreview(rep)}
-                                                    className="h-8 px-3 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold cursor-pointer transition-colors shadow-2xs flex items-center gap-1.5"
+                                                    className="h-8 px-3.5 rounded-lg border border-emerald-700 bg-white hover:bg-emerald-50 text-emerald-800 text-xs font-bold cursor-pointer transition-colors shadow-2xs flex items-center gap-1.5"
                                                 >
-                                                    <Icon name="Eye" className="size-3.5 text-gray-500" />
-                                                    <span>{isUrdu ? 'پیش نظارہ' : 'Preview'}</span>
+                                                    <span>Preview</span>
                                                 </button>
 
-                                                {/* Print Button */}
+                                                {/* Excel Button */}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleExportExcel(rep)}
+                                                    className="h-8 px-3.5 rounded-lg border border-emerald-700 bg-white hover:bg-emerald-50 text-emerald-800 text-xs font-bold cursor-pointer transition-colors shadow-2xs flex items-center gap-1.5"
+                                                >
+                                                    <span>Excel</span>
+                                                </button>
+
+                                                {/* Print / PDF Button */}
                                                 <button
                                                     type="button"
                                                     onClick={() => handlePrint(rep)}
-                                                    className="h-8 px-3.5 rounded-lg bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-semibold cursor-pointer transition-colors shadow-2xs flex items-center gap-1.5"
+                                                    className="h-8 px-3.5 rounded-lg border border-emerald-700 bg-white hover:bg-emerald-50 text-emerald-800 text-xs font-bold cursor-pointer transition-colors shadow-2xs flex items-center gap-1.5"
                                                 >
-                                                    <Icon name="Printer" className="size-3.5" />
-                                                    <span>{isUrdu ? 'پرنٹ' : 'Print'}</span>
+                                                    <span>PDF</span>
                                                 </button>
                                             </div>
                                         </div>
@@ -442,6 +522,13 @@ export default function ReportsIndex() {
                                     className="h-7 text-xs bg-emerald-800 hover:bg-emerald-900 text-white"
                                 >
                                     Filter
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    onClick={() => activeReport && handleExportExcel(activeReport)}
+                                    className="h-7 text-xs bg-emerald-700 hover:bg-emerald-800 text-white flex items-center gap-1"
+                                >
+                                    <span>Excel</span>
                                 </Button>
                                 <Button
                                     size="sm"

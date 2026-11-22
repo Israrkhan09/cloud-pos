@@ -157,17 +157,18 @@ class InvestmentController extends Controller
                 'net_equity'        => $fin['net_equity'],
                 'available_equity'  => $fin['available_equity'],
                 'draw_preview'      => $fin['draw_preview'],
+                'is_new_partner'    => $fin['is_new_partner'] ?? false,
                 'status'            => $p->status,
                 'phone'             => $p->phone,
             ];
         });
 
         // 3 Numbers for Partners Page (Section B.1)
-        // 1. Kul Sarmaya (700,000)
-        // 2. Shareekon Ka Hissa (3,000)
-        // 3. Malik Ki Manzoori Baaki (1)
-        $netCapital = $partnerRows->sum('net_equity'); // 700,000
-        $partnersProfitShare = 3000; // Bilal 2,000 + Ali 1,000
+        // 1. Kul Sarmaya
+        // 2. Shareekon Ka Hissa (Sum of active eligible monthly shares)
+        // 3. Malik Ki Manzoori Baaki
+        $netCapital = $partnerRows->sum('net_equity');
+        $partnersProfitShare = (float) $partnerRows->sum('draw_preview');
         $pendingApprovals = InvestmentTransaction::where('approval_status', 'pending_owner')->count();
 
         // Breakdowns for Detail Modal

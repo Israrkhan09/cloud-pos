@@ -133,7 +133,7 @@ class DashboardService
         $totalNag = 0;
 
         foreach ($sales as $sale) {
-            $isCash = $sale->payment_type === 'naqdi' || ($sale->merchant && (int)$sale->merchant->code === 1);
+            $isCash = $sale->payment_type === 'naqdi';
             if ($isCash) {
                 $cashSale += (float)$sale->gross_amount;
             } else {
@@ -358,7 +358,7 @@ class DashboardService
         }
 
         return $sales->map(function ($s) {
-            $isCash = $s->payment_type === 'naqdi' || ($s->merchant && (int)$s->merchant->code === 1);
+            $isCash = $s->payment_type === 'naqdi';
             return [
                 'id' => $s->id,
                 'time' => date('h:i A', strtotime($s->created_at ?? $s->date)),

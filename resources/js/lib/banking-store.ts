@@ -57,7 +57,36 @@ export function getStoredBankAccounts(): BankAccount[] {
     } catch {
         // ignore
     }
-    return [];
+    // Default initial accounts if none stored
+    return [
+        {
+            id: 1,
+            name: 'Meezan Bank',
+            account_number: 'PK00MEZN001234567890',
+            type: 'Bank Account',
+            opening_balance: 500000,
+            current_balance: 500000,
+            status: 'Active',
+        },
+        {
+            id: 2,
+            name: 'HBL Mandi A/C',
+            account_number: 'PK00HABB009876543210',
+            type: 'Bank Account',
+            opening_balance: 250000,
+            current_balance: 250000,
+            status: 'Active',
+        },
+        {
+            id: 3,
+            name: 'EasyPaisa Isra',
+            account_number: '03001234567',
+            type: 'Wallet',
+            opening_balance: 10000,
+            current_balance: 10000,
+            status: 'Active',
+        },
+    ];
 }
 
 // Save stored bank accounts

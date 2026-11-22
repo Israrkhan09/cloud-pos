@@ -442,7 +442,7 @@ export default function EntryDrawer({
                                     )}
                                 >
                                     <span className="text-xs font-bold text-[#1F2937] block">
-                                        Qarza Liya (Dena Hai)
+                                        Dena Hai
                                     </span>
                                     <span className="text-[11px] text-[#4B5563] mt-0.5 leading-tight">
                                         Bahar se udhaar liya
@@ -460,7 +460,7 @@ export default function EntryDrawer({
                                     )}
                                 >
                                     <span className="text-xs font-bold text-[#1F2937] block">
-                                        Qarza Diya (Lena Hai)
+                                        Lena Hai
                                     </span>
                                     <span className="text-[11px] text-[#4B5563] mt-0.5 leading-tight">
                                         Kisi ko udhaar diya
@@ -536,39 +536,11 @@ export default function EntryDrawer({
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between">
                                     <label className="text-sm font-bold text-[#1F2937]">
-                                        Partner / Shareek Ka Naam
+                                        {selectedType === 'capital_in' ? 'New Partner Add' : 'Partner Chunein (Paisa Nikalne Ke Liye)'}
                                     </label>
-                                    {selectedType === 'capital_in' && (
-                                        <div className="flex items-center gap-1.5 p-0.5 bg-gray-100 rounded-lg text-xs font-semibold">
-                                            <button
-                                                type="button"
-                                                onClick={() => setIsNewPartner(false)}
-                                                className={cn(
-                                                    "px-2.5 py-1 rounded-md transition-all cursor-pointer",
-                                                    !isNewPartner
-                                                        ? "bg-[#14532d] text-white shadow-2xs font-bold"
-                                                        : "text-[#4B5563] hover:text-[#1F2937]"
-                                                )}
-                                            >
-                                                Mawjooda
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => setIsNewPartner(true)}
-                                                className={cn(
-                                                    "px-2.5 py-1 rounded-md transition-all cursor-pointer",
-                                                    isNewPartner
-                                                        ? "bg-[#14532d] text-white shadow-2xs font-bold"
-                                                        : "text-[#4B5563] hover:text-[#1F2937]"
-                                                )}
-                                            >
-                                                Naya Partner
-                                            </button>
-                                        </div>
-                                    )}
                                 </div>
 
-                                {!isNewPartner ? (
+                                {selectedType === 'capital_out' ? (
                                     <div className="space-y-1.5">
                                         <select
                                             value={selectedPartnerId}

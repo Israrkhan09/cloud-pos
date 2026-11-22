@@ -27,9 +27,8 @@ class BijjakController extends Controller
             ->orderBy('code', 'asc')
             ->get();
 
-        // Load active items
-        $items = Item::where('status', 'active')
-            ->select('id', 'name_en', 'name_ur', 'unit', 'default_rate', 'default_bardana')
+        // Load all items (farmers can supply any vegetable item)
+        $items = Item::select('id', 'name_en', 'name_ur', 'unit', 'default_rate', 'default_bardana')
             ->orderBy('name_en', 'asc')
             ->get();
 
@@ -98,12 +97,10 @@ class BijjakController extends Controller
 
             foreach ($itemsData as $it) {
                 $n = (float) $it['nag'];
-                $w = (float) ($it['weight'] ?? 0);
                 $r = (float) $it['rate'];
-                $g = $w > 0 ? round($w * $r, 2) : round($n * $r, 2);
+                $g = round($n * $r, 2);
                 $totalGross += $g;
                 $totalNag += $n;
-                $totalWeight += $w;
             }
 
             $totalCommission = round($totalGross * $commPct / 100, 2);
@@ -117,16 +114,27 @@ class BijjakController extends Controller
             $totalNet        = round($totalGross - $totalCharges, 2);
 
             $createdBills = [];
+            $savedItems = [];
             foreach ($itemsData as $idx => $it) {
                 $n = (float) $it['nag'];
-                $w = (float) ($it['weight'] ?? 0);
                 $r = (float) $it['rate'];
-                $g = $w > 0 ? round($w * $r, 2) : round($n * $r, 2);
+                $g = round($n * $r, 2);
                 $itemComm = round($g * $commPct / 100, 2);
                 $itemMaz = round($n * $mazdooriRate, 2);
                 $itemFee = round($g * $marketFeePct / 100, 2);
                 $itemKiraya = ($idx === 0) ? $kiraya : 0;
                 $itemNet = round($g - $itemComm - $itemMaz - $itemFee - $itemKiraya, 2);
+
+                $itemModel = Item::find($it['item_id']);
+                $itemName = $itemModel ? ($itemModel->name_ur ?: $itemModel->name_en) : 'Item';
+
+                $savedItems[] = [
+                    'item_id' => $it['item_id'],
+                    'name'    => $itemName,
+                    'nag'     => $n,
+                    'rate'    => $r,
+                    'gross'   => $g,
+                ];
 
                 $createdBills[] = FarmerBill::create([
                     'date'              => $date,
@@ -135,7 +143,7 @@ class BijjakController extends Controller
                     'truck_no'          => $validated['truck_no'] ?? null,
                     'item_id'           => $it['item_id'],
                     'nag'               => $n,
-                    'weight'            => $w,
+                    'weight'            => 0,
                     'rate'              => $r,
                     'commission_pct'    => $commPct,
                     'bardana_per_nag'   => 0,
@@ -162,18 +170,26 @@ class BijjakController extends Controller
             $fullFarmerTitle = $areaName ? "{$farmerName} - {$areaName}" : $farmerName;
             $billNo = 'BJ-' . str_pad($firstBill->id, 4, '0', STR_PAD_LEFT);
 
-            return redirect()->back()->with([
+            return redirect()->route('farmer.bijak', ['date' => $date])->with([
                 'success'    => 'Farmer bill saved successfully.',
                 'saved_bill' => [
-                    'id'           => $firstBill->id,
-                    'bill_no'      => $billNo,
-                    'farmer_name'  => $fullFarmerTitle,
-                    'net_amount'   => $totalNet,
-                    'gross_amount' => $totalGross,
-                    'total_nag'    => $totalNag,
-                    'total_weight' => $totalWeight,
-                    'total_charges'=> $totalCharges,
-                    'date'         => $date,
+                    'id'               => $firstBill->id,
+                    'bill_no'          => $billNo,
+                    'farmer_name'      => $fullFarmerTitle,
+                    'truck_no'         => $validated['truck_no'] ?? null,
+                    'items'            => $savedItems,
+                    'total_nag'        => $totalNag,
+                    'total_gross'      => $totalGross,
+                    'commission_pct'   => $commPct,
+                    'commission_amount'=> $totalCommission,
+                    'mazdoori_rate'    => $mazdooriRate,
+                    'mazdoori_amount'  => $totalMazdoori,
+                    'kiraya'           => $kiraya,
+                    'market_fee_pct'   => $marketFeePct,
+                    'market_fee_amount'=> $totalMarketFee,
+                    'total_charges'    => $totalCharges,
+                    'net_amount'       => $totalNet,
+                    'date'             => $date,
                 ],
             ]);
         }
@@ -245,15 +261,37 @@ class BijjakController extends Controller
 
         $billNo = 'BJ-' . str_pad($bill->id, 4, '0', STR_PAD_LEFT);
 
+        $itemModel = Item::find($validated['item_id']);
+        $itemName = $itemModel ? ($itemModel->name_ur ?: $itemModel->name_en) : 'Item';
+
         return redirect()->back()->with([
             'success'    => 'Farmer bill saved successfully.',
             'saved_bill' => [
-                'id'          => $bill->id,
-                'bill_no'     => $billNo,
-                'farmer_name' => $fullFarmerTitle,
-                'net_amount'  => $net,
-                'gross_amount'=> $gross,
-                'date'        => $date,
+                'id'               => $bill->id,
+                'bill_no'          => $billNo,
+                'farmer_name'      => $fullFarmerTitle,
+                'truck_no'         => $validated['truck_no'] ?? null,
+                'items'            => [
+                    [
+                        'item_id' => $validated['item_id'],
+                        'name'    => $itemName,
+                        'nag'     => $nag,
+                        'rate'    => $rate,
+                        'gross'   => $gross,
+                    ]
+                ],
+                'total_nag'        => $nag,
+                'total_gross'      => $gross,
+                'commission_pct'   => $commPct,
+                'commission_amount'=> $commission,
+                'mazdoori_rate'    => 0,
+                'mazdoori_amount'  => $mazdoori,
+                'kiraya'           => $kiraya,
+                'market_fee_pct'   => 0,
+                'market_fee_amount'=> $marketFee,
+                'total_charges'    => $totalExpenses + $commission,
+                'net_amount'       => $net,
+                'date'             => $date,
             ],
         ]);
     }

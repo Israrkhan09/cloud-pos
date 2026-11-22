@@ -15,7 +15,7 @@ class WasooliService
      */
     public function getWasooliSheet(string $date, ?string $search = null): array
     {
-        $query = Merchant::where('status', 'active');
+        $query = Merchant::where('status', 'active')->where('code', '!=', 1);
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -34,16 +34,26 @@ class WasooliService
         $totalBaqaya = 0;
 
         foreach ($allMerchants as $merchant) {
-            // Sabiqa: previous balance before this date
+            // Sabiqa: previous balance before this date (only Udhaar sales)
             $sabiqa = $merchant->getSabiqaBalance($date);
 
-            // Amroza: today's sales on this date
-            $amroza = round(
+            // Amroza: today's Udhaar sales on this date (Cash and Bank do not appear in Wasooli)
+            $amrozaUdhaar = floatval(
                 AmrozaSale::where('merchant_id', $merchant->id)
                     ->where('date', $date)
-                    ->sum('gross_amount'),
-                2
+                    ->where(function ($q) {
+                        $q->where('payment_type', 'udhaar')
+                          ->orWhereNull('payment_type');
+                    })
+                    ->sum('gross_amount')
             );
+            $amrozaSplit = floatval(
+                AmrozaSale::where('merchant_id', $merchant->id)
+                    ->where('date', $date)
+                    ->where('payment_type', 'split')
+                    ->sum('udhaar_amount')
+            );
+            $amroza = round($amrozaUdhaar + $amrozaSplit, 2);
 
             // Wasooli: recovery payment on this date
             $receipt = MerchantReceipt::where('merchant_id', $merchant->id)
@@ -60,14 +70,12 @@ class WasooliService
             );
 
             // Total Baqaya = Sabiqa + Amroza - Wasooli
-            // Example: 16100 + 8500 - 8000 = 16600
             $baqaya = round($sabiqa + $amroza - $wasooli, 2);
 
             // If no search filter, show merchants that have a balance or activity
-            // (or if code is not 1, or has activity)
             $hasActivity = (abs($sabiqa) > 0.001 || $amroza > 0 || $wasooli > 0);
 
-            if ($search || $hasActivity || (int)$merchant->code === 1) {
+            if ($search || $hasActivity) {
                 $rows[] = [
                     'merchant_id' => $merchant->id,
                     'code' => $merchant->code,
