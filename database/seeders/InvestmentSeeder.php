@@ -47,10 +47,10 @@ class InvestmentSeeder extends Seeder
                 'name_ur'           => 'حاجی صاحب (مالک)',
                 'role'              => 'owner',
                 'phone'             => '0321-1234567',
-                'profit_percentage' => 0,
+                'profit_percentage' => 85.0,
                 'opening_capital'   => 0,
-                'status'            => 'pending_approval',
-                'notes'             => 'Main proprietor account pending final validation',
+                'status'            => 'active',
+                'notes'             => 'Main proprietor account with 85% profit pool share',
             ]
         );
 
@@ -76,10 +76,10 @@ class InvestmentSeeder extends Seeder
                 'phone'            => '0345-9988776',
                 'principal_amount' => 140000,
                 'fee_or_interest'  => 0,
-                'paid_amount'      => 100000,
-                'due_date'         => '2026-11-18', // 3 days overdue
+                'paid_amount'      => 120000,
+                'due_date'         => '2026-11-18', // 4 days overdue
                 'status'           => 'active',
-                'notes'            => 'Partial payment completed, balance remaining',
+                'notes'            => 'Partial payment of Rs. 120,000 completed, Rs. 20,000 balance remaining',
             ]
         );
 
@@ -92,9 +92,9 @@ class InvestmentSeeder extends Seeder
                 'profit_or_loss'   => 8000,
                 'roi_rate'         => '3.2%',
                 'is_realised'      => false,
-                'maturity_date'    => '2026-12-11',
+                'maturity_date'    => '2026-12-06', // Exactly 15 days from 21 Nov
                 'status'           => 'active',
-                'notes'            => 'Active 15-day liquidity reserve fund',
+                'notes'            => 'Active 15-day liquidity reserve fund, matures on 06 Dec',
             ]
         );
 
@@ -106,13 +106,68 @@ class InvestmentSeeder extends Seeder
                 'profit_or_loss'   => 4200,
                 'roi_rate'         => '3.5%',
                 'is_realised'      => true,
-                'maturity_date'    => '2026-10-15',
+                'maturity_date'    => '2026-10-15', // 38 days overdue from 22 Nov
                 'status'           => 'matured',
-                'notes'            => 'Matured on 15 Oct, profit realised into cash',
+                'notes'            => 'Matured on 15 Oct (38 din se cash wapas aana baqi hai)',
             ]
         );
 
-        // 4. Transactions (matching screenshots)
+        // 4. Transactions (matching screenshots and reconciliation)
+        // LI-0001: 05 Nov, Sohail, Loan In, +140,000, Approved
+        InvestmentTransaction::updateOrCreate(
+            ['ref_no' => 'LI-0001'],
+            [
+                'date'               => '2026-11-05',
+                'type'               => 'loan_in',
+                'loan_id'            => $sohailLoan->id,
+                'party_name'         => 'Sohail (Partial)',
+                'amount'             => 140000,
+                'payment_method'     => 'cash',
+                'reason'             => 'Short-term mandi loan',
+                'approval_status'    => 'approved',
+                'approved_by'        => 'Hajji Sb (Owner)',
+                'approved_at'        => '2026-11-05 10:00:00',
+                'created_by_role'    => 'munshi',
+            ]
+        );
+
+        // LR-0001: 12 Nov, Sohail, Loan Return, -100,000 Pehli qist wapsi, Approved
+        InvestmentTransaction::updateOrCreate(
+            ['ref_no' => 'LR-0001'],
+            [
+                'date'               => '2026-11-12',
+                'type'               => 'loan_out',
+                'loan_id'            => $sohailLoan->id,
+                'party_name'         => 'Sohail (Partial)',
+                'amount'             => 100000,
+                'payment_method'     => 'cash',
+                'reason'             => 'Pehli qist wapsi',
+                'approval_status'    => 'approved',
+                'approved_by'        => 'Hajji Sb (Owner)',
+                'approved_at'        => '2026-11-12 16:00:00',
+                'created_by_role'    => 'munshi',
+            ]
+        );
+
+        // LR-0002: 16 Nov, Sohail, Loan Return, -20,000 Dusri qist wapsi, Approved
+        InvestmentTransaction::updateOrCreate(
+            ['ref_no' => 'LR-0002'],
+            [
+                'date'               => '2026-11-16',
+                'type'               => 'loan_out',
+                'loan_id'            => $sohailLoan->id,
+                'party_name'         => 'Sohail (Partial)',
+                'amount'             => 20000,
+                'payment_method'     => 'bank',
+                'bank_name'          => 'Meezan Bank Ltd',
+                'reason'             => 'Dusri qist wapsi (Baqaya Rs. 20,000)',
+                'approval_status'    => 'approved',
+                'approved_by'        => 'Hajji Sb (Owner)',
+                'approved_at'        => '2026-11-16 14:00:00',
+                'created_by_role'    => 'munshi',
+            ]
+        );
+
         // CI-0141: 20 Nov, Bilal, Capital In, +400,000 Season stock, Approved (Owner)
         InvestmentTransaction::updateOrCreate(
             ['ref_no' => 'CI-0141'],
@@ -125,7 +180,7 @@ class InvestmentSeeder extends Seeder
                 'payment_method'     => 'cash',
                 'reason'             => 'Season stock',
                 'approval_status'    => 'approved',
-                'approved_by'        => 'Owner (Hajji Sb)',
+                'approved_by'        => 'Hajji Sb (Owner)',
                 'approved_at'        => '2026-11-20 18:30:00',
                 'created_by_role'    => 'munshi',
             ]

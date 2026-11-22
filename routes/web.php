@@ -48,6 +48,7 @@ Route::middleware(['auth', 'verified'])
         Route::get('investment/audit', [\App\Http\Controllers\Investment\InvestmentController::class, 'audit'])->name('investment.audit');
 
         Route::post('investment/entry', [\App\Http\Controllers\Investment\InvestmentController::class, 'storeEntry'])->name('investment.entry');
+        Route::post('investment/undo/{id}', [\App\Http\Controllers\Investment\InvestmentController::class, 'undo'])->name('investment.undo');
         Route::post('investment/approve/{id}', [\App\Http\Controllers\Investment\InvestmentController::class, 'approve'])->name('investment.approve');
         Route::post('investment/void/{id}', [\App\Http\Controllers\Investment\InvestmentController::class, 'void'])->name('investment.void');
         Route::post('investment/loans/{id}/return', [\App\Http\Controllers\Investment\InvestmentController::class, 'returnLoan'])->name('investment.loans.return');

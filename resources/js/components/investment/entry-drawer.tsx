@@ -247,8 +247,28 @@ export default function EntryDrawer({
 
         router.post('/investment/entry', payload, {
             preserveScroll: true,
-            onSuccess: () => {
-                toast.success(isUrdu ? 'اینٹری کامیابی سے محفوظ ہو گئی' : 'Investment entry saved successfully!');
+            onSuccess: (page: any) => {
+                const flash = page?.props?.flash;
+                const lastEntry = flash?.last_entry;
+                const toastMsg = lastEntry
+                    ? `Entry ${lastEntry.ref_no} save ho gayi. Baqaya update ho gaya.`
+                    : 'Entry save ho gayi. Baqaya update ho gaya.';
+
+                toast.success(toastMsg, {
+                    duration: 10000,
+                    action: lastEntry?.id ? {
+                        label: 'Undo (10s)',
+                        onClick: () => {
+                            router.post(`/investment/undo/${lastEntry.id}`, {}, {
+                                preserveScroll: true,
+                                onSuccess: () => {
+                                    toast.success(`Entry ${lastEntry.ref_no} undo (mansookh) kardi gayi.`);
+                                },
+                            });
+                        },
+                    } : undefined,
+                });
+
                 setIsSubmitting(false);
                 setAmount('');
                 setReason('');

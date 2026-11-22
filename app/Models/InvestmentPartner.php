@@ -36,34 +36,52 @@ class InvestmentPartner extends Model
      */
     public function getFinancialsAttribute(): array
     {
-        // Capital In
+        // Capital In (Approved or Posted)
         $capIn = (float) $this->transactions()
             ->where('type', 'capital_in')
             ->where('is_reversed', false)
             ->whereIn('approval_status', ['approved', 'posted'])
             ->sum('amount');
 
-        // Drawings / Capital Out (excluding advance portion if recorded separately)
+        // Drawings / Capital Out (Approved or Posted)
         $drawings = (float) $this->transactions()
             ->where('type', 'capital_out')
             ->where('is_reversed', false)
             ->whereIn('approval_status', ['approved', 'posted'])
             ->sum('amount');
 
-        $netEquity = ($this->opening_capital + $capIn) - $drawings;
+        // Pending Drawings / Capital Out (Pending Owner)
+        $pendingDrawings = (float) $this->transactions()
+            ->where('type', 'capital_out')
+            ->where('is_reversed', false)
+            ->where('approval_status', 'pending_owner')
+            ->sum('amount');
 
-        // Draw preview estimate based on profit percentage (e.g. 10% on Rs. 20,000 monthly profit pool = +2,000 share)
+        // Pending Capital In (Pending Owner)
+        $pendingCapIn = (float) $this->transactions()
+            ->where('type', 'capital_in')
+            ->where('is_reversed', false)
+            ->where('approval_status', 'pending_owner')
+            ->sum('amount');
+
+        $netEquity = ($this->opening_capital + $capIn) - $drawings;
+        $availableEquity = $netEquity - $pendingDrawings;
+
+        // Draw preview estimate based on profit percentage (10% on Rs. 20,000 monthly profit pool = +2,000 share)
         $monthlyProfitPool = 20000;
         $drawPreview = ($this->profit_percentage > 0)
             ? ($monthlyProfitPool * ($this->profit_percentage / 100))
             : 0;
 
         return [
-            'opening'       => (float) $this->opening_capital,
-            'cap_in'        => $capIn,
-            'drawings'      => $drawings,
-            'net_equity'    => $netEquity,
-            'draw_preview'  => $drawPreview,
+            'opening'          => (float) $this->opening_capital,
+            'cap_in'           => $capIn,
+            'drawings'         => $drawings,
+            'pending_drawings' => $pendingDrawings,
+            'pending_cap_in'   => $pendingCapIn,
+            'net_equity'       => $netEquity,
+            'available_equity' => $availableEquity,
+            'draw_preview'     => $drawPreview,
         ];
     }
 }

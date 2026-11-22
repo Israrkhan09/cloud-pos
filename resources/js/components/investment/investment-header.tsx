@@ -1,45 +1,35 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, router } from '@inertiajs/react';
 import Icon from '@/components/ui/icon';
 import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
 
 interface InvestmentHeaderProps {
     currentTab: 'partners' | 'loans' | 'surplus' | 'audit';
-    currentRole: 'munshi' | 'owner';
-    searchTerm: string;
-    onSearchChange: (value: string) => void;
+    userName?: string;
+    pendingApprovalsCount?: number;
+    lastUpdated?: string;
     onOpenEntry: () => void;
     isUrdu?: boolean;
 }
 
 export default function InvestmentHeader({
     currentTab,
-    currentRole,
-    searchTerm,
-    onSearchChange,
+    userName = 'Hajji Muhammad (Malik)',
+    pendingApprovalsCount = 0,
+    lastUpdated,
     onOpenEntry,
     isUrdu = false,
 }: InvestmentHeaderProps) {
-    const searchInputRef = useRef<HTMLInputElement>(null);
+    const [currentTime, setCurrentTime] = useState<string>(
+        lastUpdated || new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
+    );
 
-    // Keyboard shortcuts: Ctrl+N for new entry, Ctrl+K or '/' for search focus
+    // Keyboard shortcut: Ctrl+N for new entry
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            // Check for Ctrl+N or Cmd+N
             if ((e.ctrlKey || e.metaKey) && (e.key === 'n' || e.key === 'N')) {
                 e.preventDefault();
                 onOpenEntry();
-            }
-            // Check for Ctrl+K or Cmd+K
-            if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
-                e.preventDefault();
-                searchInputRef.current?.focus();
-            }
-            // '/' shortcut when not inside an input/textarea
-            if (e.key === '/' && !['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName)) {
-                e.preventDefault();
-                searchInputRef.current?.focus();
             }
         };
 
@@ -47,106 +37,101 @@ export default function InvestmentHeader({
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [onOpenEntry]);
 
-    const handleToggleRole = () => {
-        const newRole = currentRole === 'munshi' ? 'owner' : 'munshi';
-        router.post('/investment/role', { role: newRole }, {
-            preserveState: true,
-            preserveScroll: true,
-            onSuccess: () => {
-                toast.success(
-                    newRole === 'owner'
-                        ? (isUrdu ? 'آپ اب بطور اونر لاگ ان ہیں' : 'Role: Owner shuru ho gaya (Mukammal manzoori ki ijazat)')
-                        : (isUrdu ? 'آپ اب بطور منشی لاگ ان ہیں' : 'Role: Munshi shuru ho gaya (Mehdood ijazat)')
-                );
-            },
-        });
-    };
+    // Polling every 25 seconds for realtime background updates without full page refresh
+    useEffect(() => {
+        const interval = setInterval(() => {
+            router.reload({
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => {
+                    setCurrentTime(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }));
+                },
+            });
+        }, 25000);
+
+        return () => clearInterval(interval);
+    }, []);
 
     const tabs = [
         {
             id: 'partners',
             href: '/investment/partners',
             title: isUrdu ? 'پارٹنرز اور ایکویٹی' : 'Partners & Equity',
-            icon: 'Users',
         },
         {
             id: 'loans',
             href: '/investment/loans',
             title: isUrdu ? 'قرضے (Loans)' : 'Qarze (Loans)',
-            icon: 'HandCoins',
         },
         {
             id: 'surplus',
             href: '/investment/surplus',
-            title: isUrdu ? 'سرپلس (Surplus)' : 'Surplus (Faltu Paisa)',
-            icon: 'ChartLineUp',
+            title: isUrdu ? 'سرپلس: فالتو پیسہ (Bank FD jaisa)' : 'Surplus: Faltu Paisa (Bank FD jaisa)',
         },
         {
             id: 'audit',
             href: '/investment/audit',
             title: isUrdu ? 'آڈٹ اور واؤچرز' : 'Audit & Vouchers',
-            icon: 'Receipt',
         },
     ];
 
+    const tabExplainers: Record<string, { en: string; ur: string }> = {
+        partners: {
+            en: 'Karobar ke shareek daron ka sarmaya, munafa hissa aur drawings ka hisab.',
+            ur: 'کاروبار کے شریک داروں کا سرمایہ، منافع حصہ اور ڈرائنگز کا حساب۔',
+        },
+        loans: {
+            en: 'Mandi ke mukhtasar muddat ke qarzay aur unki wapsi tareekhein.',
+            ur: 'منڈی کے مختصر مدت کے قرضے اور ان کی واپسی کی تاریخیں۔',
+        },
+        surplus: {
+            en: 'Faltu Paisa (Bank FD jaisa) — Faarigh raqam par munafa kamane aur wapsi ka hisab.',
+            ur: 'فالتو پیسہ (بینک ایف ڈی جیسا) — فارغ رقم پر منافع کمانے اور واپسی کا حساب۔',
+        },
+        audit: {
+            en: 'Parchi aur entry ka mukammal record jahan koi purani entry delete nahi hoti balkay reversal hoti hai.',
+            ur: 'پرچی اور اینٹری کا مکمل ریکارڈ جہاں کوئی پرانی اینٹری ڈیلیٹ نہیں ہوتی بلکہ ریورسل ہوتی ہے۔',
+        },
+    };
+
     return (
         <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-3.5 space-y-3 shadow-xs">
-            {/* Top row: Search bar & Primary Actions */}
+            {/* Top row: Live indicator, User Name pill, Pending Approvals badge, and Primary + Entry button */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                {/* Search input with Ctrl+K shortcut indicator */}
-                <div className="relative flex-1 max-w-md">
-                    <Icon
-                        name="MagnifyingGlass"
-                        className="absolute start-3 top-1/2 -translate-y-1/2 size-4 text-gray-400 pointer-events-none"
-                    />
-                    <input
-                        ref={searchInputRef}
-                        type="text"
-                        value={searchTerm}
-                        onChange={(e) => onSearchChange(e.target.value)}
-                        placeholder={
-                            isUrdu
-                                ? 'پارٹنر، قرضہ، فنڈ یا اینٹری تلاش کریں (Ctrl K)'
-                                : 'Partner, dene wala, fund ya entry dhoondein (Ctrl K)'
-                        }
-                        className="w-full h-10 ps-9 pe-16 text-sm bg-gray-50 hover:bg-gray-100/70 focus:bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] focus:border-transparent transition-all"
-                    />
-                    <span className="absolute end-2.5 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-[11px] font-medium text-gray-400 bg-gray-200/70 rounded border border-gray-300/50 pointer-events-none">
-                        Ctrl K
-                    </span>
+                {/* Left side: Live Pulse & Explainer */}
+                <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 border border-emerald-200/80 text-[11px] font-semibold text-emerald-900 select-none">
+                        <span className="size-2 rounded-full bg-emerald-600 animate-pulse" />
+                        <span>Live · Last updated: {currentTime}</span>
+                    </div>
+
+                    {/* Pending Approvals clickable badge (Section D.3) */}
+                    {pendingApprovalsCount > 0 && (
+                        <Link
+                            href="/investment/audit?filter=pending"
+                            title="Pending approvals list dekhne ke liye click karein"
+                            className="px-2.5 py-1 rounded-md text-xs font-bold bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-100 transition-colors flex items-center gap-1.5 cursor-pointer select-none"
+                        >
+                            <span className="size-2 rounded-full bg-amber-600 animate-pulse" />
+                            <span>{pendingApprovalsCount} {isUrdu ? 'منظوریاں باقی' : 'Approval Baqi'}</span>
+                            <Icon name="ArrowRight" className="size-3 text-amber-700" />
+                        </Link>
+                    )}
                 </div>
 
-                {/* Right side: Role Switcher & + Entry button */}
+                {/* Right side: Logged-in user name (No Role label or switcher) & + Nayi Entry */}
                 <div className="flex items-center gap-2.5 justify-end">
-                    {/* Role indicator & toggle badge */}
-                    <button
-                        type="button"
-                        onClick={handleToggleRole}
-                        title="Role tabdeel karne ke liye click karein (Munshi / Owner)"
-                        className={cn(
-                            "min-h-[40px] px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 border transition-all cursor-pointer select-none",
-                            currentRole === 'owner'
-                                ? "bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100"
-                                : "bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100"
-                        )}
-                    >
-                        <span className={cn(
-                            "size-2 rounded-full",
-                            currentRole === 'owner' ? "bg-emerald-600 animate-pulse" : "bg-amber-600"
-                        )} />
-                        <span>
-                            {currentRole === 'owner'
-                                ? (isUrdu ? 'رول: اونر (مکمل اختیارات)' : 'Role: Owner (Mukammal)')
-                                : (isUrdu ? 'رول: منشی (محدود)' : 'Role: Munshi (Mehdood)')}
-                        </span>
-                        <Icon name="ArrowsLeftRight" className="size-3.5 opacity-70" />
-                    </button>
+                    {/* Logged-in User Name Pill (Section A.1) */}
+                    <div className="min-h-[38px] px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 text-gray-800 border border-gray-200 flex items-center gap-1.5 select-none">
+                        <Icon name="User" className="size-3.5 text-gray-600" />
+                        <span>{userName}</span>
+                    </div>
 
                     {/* Primary + Entry Button */}
                     <button
                         type="button"
                         onClick={onOpenEntry}
-                        className="min-h-[40px] px-4 py-2 rounded-lg text-sm font-bold bg-[#14532d] hover:bg-[#166534] active:bg-[#0f3d21] text-white shadow-xs transition-colors flex items-center gap-2 cursor-pointer"
+                        className="min-h-[38px] px-4 py-2 rounded-lg text-xs md:text-sm font-bold bg-[#14532d] hover:bg-[#166534] active:bg-[#0f3d21] text-white shadow-xs transition-colors flex items-center gap-2 cursor-pointer"
                     >
                         <Icon name="Plus" className="size-4 stroke-[3]" />
                         <span>{isUrdu ? 'نئی اینٹری' : 'Nayi Entry'}</span>
@@ -165,16 +150,22 @@ export default function InvestmentHeader({
                             href={tab.href}
                             prefetch
                             className={cn(
-                                "min-h-[38px] px-4 py-1.5 rounded-lg text-xs md:text-sm font-medium transition-all whitespace-nowrap flex items-center gap-1.5 border",
+                                "min-h-[38px] px-4 py-1.5 rounded-lg text-xs md:text-sm transition-all whitespace-nowrap flex items-center gap-1.5 border",
                                 isActive
-                                    ? "bg-[#14532d] text-white border-[#14532d] font-semibold shadow-xs"
-                                    : "bg-white text-gray-700 hover:bg-gray-100 border-gray-200"
+                                    ? "bg-[#14532d] text-white border-[#14532d] font-bold shadow-xs"
+                                    : "bg-white text-gray-700 hover:bg-gray-100 border-gray-200 font-medium"
                             )}
                         >
                             <span>{tab.title}</span>
                         </Link>
                     );
                 })}
+            </div>
+
+            {/* 1-line explainer under tabs (Section C.3) */}
+            <div className="text-[11px] text-gray-600 bg-gray-50/70 border border-gray-200/60 rounded-md px-3 py-1.5 flex items-center gap-2">
+                <Icon name="Info" className="size-3.5 text-gray-500 shrink-0" />
+                <span>{isUrdu ? tabExplainers[currentTab]?.ur : tabExplainers[currentTab]?.en}</span>
             </div>
         </div>
     );
