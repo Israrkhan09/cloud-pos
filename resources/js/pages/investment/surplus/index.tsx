@@ -459,6 +459,7 @@ export default function InvestmentSurplusPage({
                 <EntryDrawer
                     isOpen={isEntryDrawerOpen}
                     onClose={() => setIsEntryDrawerOpen(false)}
+                    category="surplus"
                     partners={partnersList}
                     loans={loansList}
                     surplusFunds={surplusList}

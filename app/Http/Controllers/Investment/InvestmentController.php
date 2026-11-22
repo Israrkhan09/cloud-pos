@@ -244,7 +244,9 @@ class InvestmentController extends Controller
             $daysDiff = $l->due_date ? now()->startOfDay()->diffInDays($l->due_date->startOfDay(), false) : null;
             $badgeText = '';
             $badgeType = 'neutral';
-            if ($l->status === 'settled') {
+            $isSettled = $l->status === 'settled' || (float)$l->balance_due <= 0;
+
+            if ($isSettled) {
                 $badgeText = 'Chukta';
                 $badgeType = 'neutral';
             } elseif ($daysDiff !== null) {
@@ -277,7 +279,7 @@ class InvestmentController extends Controller
                 'balance_due'      => $l->balance_due,
                 'due_date'         => $l->due_date ? $l->due_date->format('Y-m-d') : null,
                 'due_date_label'   => $l->due_date ? $l->due_date->format('j M Y') : '—',
-                'status'           => $l->status,
+                'status'           => $isSettled ? 'settled' : $l->status,
                 'due_badge'        => [
                     'text' => $badgeText,
                     'type' => $badgeType,
@@ -287,36 +289,42 @@ class InvestmentController extends Controller
         });
 
         // 3 Numbers for Loans Page (Sirf 3 Numbers)
-        // 1. Kul Baqaya Qarza - Hum Ko Dena Hai (202,000)
+        // 1. Kul Baqaya Qarza - Hum Ko Dena Hai
         // 2. Hum Ko Lena Hai (Diya hua qarza)
-        // 3. Overdue (1 qarza)
+        // 3. Overdue
         $payableLoans = $loans->where('direction', '!=', 'receivable');
         $receivableLoans = $loans->where('direction', '===', 'receivable');
 
-        $activePayableSum = (float) $payableLoans->where('status', '!=', 'settled')->sum('balance_due');
-        $totalBalanceDue = $activePayableSum > 0 ? $activePayableSum : 202000;
-        $totalReceivable = (float) $receivableLoans->where('status', '!=', 'settled')->sum('balance_due');
+        $activePayableLoans = $payableLoans->filter(fn($l) => $l['status'] !== 'settled' && (float)$l['balance_due'] > 0);
+        $activeReceivableLoans = $receivableLoans->filter(fn($l) => $l['status'] !== 'settled' && (float)$l['balance_due'] > 0);
 
-        $activePayableCount = $payableLoans->where('status', '!=', 'settled')->count();
-        $activeReceivableCount = $receivableLoans->where('status', '!=', 'settled')->count();
-        $overdueCount = $loans->filter(fn($l) => $l['due_badge']['type'] === 'danger')->count();
+        $totalBalanceDue = (float) $activePayableLoans->sum('balance_due');
+        $totalReceivable = (float) $activeReceivableLoans->sum('balance_due');
+
+        $activePayableCount = $activePayableLoans->count();
+        $activeReceivableCount = $activeReceivableLoans->count();
+        $overdueCount = $loans->filter(fn($l) => (float)$l['balance_due'] > 0 && $l['status'] !== 'settled' && $l['due_badge']['type'] === 'danger')->count();
 
         $breakdowns = [
             'total_balance_due' => [
                 'title' => 'Kul Baqaya Qarza (Hum Ko Dena Hai) Tafseel',
                 'total' => $totalBalanceDue,
-                'items' => [
-                    ['label' => 'Sohail (Asal 140,000 mein se 120,000 paid)', 'amount' => 20000, 'note' => 'Overdue 2 din pehle'],
-                    ['label' => 'Tariq Sb (Asal Qarza)', 'amount' => 60000, 'note' => 'Wapsi 24 Nov'],
-                    ['label' => 'Aslam Traders (Asal 120,000 + Fee 2,000)', 'amount' => 122000, 'note' => 'Wapsi 01 Dec'],
-                ],
-                'note' => 'Asal Principal: Rs. 200,000 + Muqarrar Fee: Rs. 2,000 = Kul Rs. 202,000 (Hum ko dena hai).',
+                'items' => $activePayableLoans->count() > 0
+                    ? $activePayableLoans->map(fn($p) => [
+                        'label'  => "{$p['lender_name']} (Baqaya Qarza)",
+                        'amount' => $p['balance_due'],
+                        'note'   => "Tareekh: {$p['due_date_label']}",
+                    ])->values()->all()
+                    : [
+                        ['label' => 'Filhal koi qarza dena baaqi nahi', 'amount' => 0, 'note' => 'Tamaam qarze chukta ho chuke hain'],
+                    ],
+                'note' => 'Hum par wajib-ul-ada baqaya qarzat jo wapas ada karne hain.',
             ],
             'total_receivable' => [
                 'title' => 'Kul Baqaya Qarza (Hum Ko Wapas Lena Hai) Tafseel',
                 'total' => $totalReceivable,
-                'items' => $receivableLoans->count() > 0 
-                    ? $receivableLoans->map(fn($r) => [
+                'items' => $activeReceivableLoans->count() > 0 
+                    ? $activeReceivableLoans->map(fn($r) => [
                         'label'  => $r['lender_name'],
                         'amount' => $r['balance_due'],
                         'note'   => 'Tareekh: ' . $r['due_date_label'],

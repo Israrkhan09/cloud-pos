@@ -101,6 +101,7 @@ export default function InvestmentPartnersPage({
 
     const [isEntryDrawerOpen, setIsEntryDrawerOpen] = useState(false);
     const [activeBreakdown, setActiveBreakdown] = useState<BreakdownData | null>(null);
+    const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
 
     // 30-second live background update (Section D)
     useEffect(() => {
@@ -118,10 +119,12 @@ export default function InvestmentPartnersPage({
     const formatRs = (val: number) => 'Rs. ' + Number(val || 0).toLocaleString('en-US');
     const formatNum = (val: number) => Number(val || 0).toLocaleString('en-US');
 
-    // Export CSV functionality
-    const handleExportCSV = () => {
+    // Export CSV functionality for all or specific partner
+    const handleExportCSV = (targetId: number | 'all' = 'all') => {
         const headers = ['Partner Name', 'Hissa %', 'Lagaya Hua Sarmaya', 'Shareekon Ka Hissa', 'Pending Drawings', 'Status'];
-        const rows = partners.map(p => [
+        const targetList = targetId === 'all' ? partners : partners.filter(p => p.id === targetId);
+
+        const rows = targetList.map(p => [
             `"${p.name}"`,
             `${p.profit_percentage}%`,
             p.net_equity,
@@ -130,11 +133,15 @@ export default function InvestmentPartnersPage({
             `"${p.status}"`
         ]);
 
+        const fileName = targetId === 'all'
+            ? `Partners_All_${new Date().toISOString().slice(0, 10)}.csv`
+            : `Partner_${(targetList[0]?.name || 'Detail').replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().slice(0, 10)}.csv`;
+
         const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement('a');
         link.setAttribute('href', encodedUri);
-        link.setAttribute('download', `Partners_${new Date().toISOString().slice(0, 10)}.csv`);
+        link.setAttribute('download', fileName);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -276,14 +283,66 @@ export default function InvestmentPartnersPage({
                                 </h3>
                             </div>
                             <div className="flex items-center gap-2">
-                                <button
-                                    type="button"
-                                    onClick={handleExportCSV}
-                                    className="px-3 py-1.5 text-xs font-semibold text-[#374151] bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
-                                >
-                                    <Icon name="DownloadSimple" className="size-3.5" />
-                                    <span>Excel / CSV</span>
-                                </button>
+                                <div className="relative">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsExportMenuOpen(!isExportMenuOpen)}
+                                        className="px-3 py-1.5 text-xs font-semibold text-[#374151] bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+                                    >
+                                        <Icon name="DownloadSimple" className="size-3.5" />
+                                        <span>Excel / CSV</span>
+                                        <Icon name="CaretDown" className="size-3 text-[#4B5563]" />
+                                    </button>
+
+                                    {/* Party selection dropdown menu */}
+                                    {isExportMenuOpen && (
+                                        <>
+                                            <div
+                                                className="fixed inset-0 z-20"
+                                                onClick={() => setIsExportMenuOpen(false)}
+                                            />
+                                            <div className="absolute end-0 mt-1 w-64 bg-white border border-gray-200 rounded-xl shadow-xl z-30 py-1.5 font-sans animate-in fade-in slide-in-from-top-1 text-start">
+                                                <div className="px-3 py-1.5 text-[11px] font-bold text-[#4B5563] uppercase border-b border-gray-100 flex items-center justify-between">
+                                                    <span>Party / Hissedar Chunein</span>
+                                                    <span className="text-[10px] text-gray-400">CSV Export</span>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        handleExportCSV('all');
+                                                        setIsExportMenuOpen(false);
+                                                    }}
+                                                    className="w-full text-start px-3.5 py-2 text-xs font-bold text-[#14532d] hover:bg-emerald-50 flex items-center justify-between cursor-pointer transition-colors"
+                                                >
+                                                    <span>Sab Partners (Mukammal Data)</span>
+                                                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800">
+                                                        {partners.length}
+                                                    </span>
+                                                </button>
+                                                <div className="border-t border-gray-100 my-1" />
+                                                <div className="max-h-48 overflow-y-auto">
+                                                    {partners.map(p => (
+                                                        <button
+                                                            key={p.id}
+                                                            type="button"
+                                                            onClick={() => {
+                                                                handleExportCSV(p.id);
+                                                                setIsExportMenuOpen(false);
+                                                            }}
+                                                            className="w-full text-start px-3.5 py-2 text-xs text-[#1F2937] hover:bg-gray-100 flex items-center justify-between cursor-pointer transition-colors"
+                                                        >
+                                                            <div>
+                                                                <span className="font-bold text-[#1F2937] block">{p.name}</span>
+                                                                <span className="text-[11px] text-[#4B5563]">Hissa: {p.profit_percentage}%</span>
+                                                            </div>
+                                                            <span className="text-xs font-bold text-[#14532d]">{formatRs(p.net_equity)}</span>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
                                 <span className="text-xs text-[#4B5563]">
                                     {partners.length} Shareek
                                 </span>
@@ -370,6 +429,7 @@ export default function InvestmentPartnersPage({
                 <EntryDrawer
                     isOpen={isEntryDrawerOpen}
                     onClose={() => setIsEntryDrawerOpen(false)}
+                    category="partners"
                     partners={partnersList}
                     loans={loansList}
                     surplusFunds={surplusList}

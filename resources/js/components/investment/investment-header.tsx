@@ -26,8 +26,10 @@ export default function InvestmentHeader({
     onOpenEntry,
     isUrdu = false,
 }: InvestmentHeaderProps) {
-    // Keyboard shortcut: Ctrl+N for new entry
+    // Keyboard shortcut: Ctrl+N for new entry (disabled on audit page)
     useEffect(() => {
+        if (currentTab === 'audit') return;
+
         const handleKeyDown = (e: KeyboardEvent) => {
             if ((e.ctrlKey || e.metaKey) && (e.key === 'n' || e.key === 'N')) {
                 e.preventDefault();
@@ -37,7 +39,7 @@ export default function InvestmentHeader({
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [onOpenEntry]);
+    }, [onOpenEntry, currentTab]);
 
     // Short clean tab names (Section B.5)
     const tabs = [
@@ -65,39 +67,45 @@ export default function InvestmentHeader({
 
     return (
         <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-3.5 space-y-3 shadow-xs">
-            {/* Top row: Pending Approvals badge (if any) and ONE main action button */}
+            {/* Top row: Heading, Pending Approvals badge (if any), and ONE main action button */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                {/* Left side: Pending badge (if any) */}
+                {/* Left side: Page Title Heading matching POS standard */}
                 <div className="flex items-center gap-3 flex-wrap min-h-[36px]">
-                    {pendingApprovalsCount > 0 ? (
+                    <div>
+                        <h1 className="text-xl md:text-2xl font-black text-[#1F2937] tracking-tight leading-tight">
+                            {isUrdu ? 'سرمایہ و قرضہ لیجر' : 'Investment & Capital Ledger'}
+                        </h1>
+                        <p className="text-xs text-[#4B5563] mt-0.5">
+                            {isUrdu ? 'سرمایہ، قرضہ اور سرمایہ کاری کھاتہ' : 'Sarmaya, Qarza aur Sarmayakari Khata'}
+                        </p>
+                    </div>
+
+                    {pendingApprovalsCount > 0 && (
                         <Link
                             href="/investment/audit?filter=pending"
                             title="Pending approvals list dekhne ke liye click karein"
-                            className="px-3 py-1.5 rounded-lg text-sm font-bold bg-amber-50 text-[#1F2937] border border-amber-300 hover:bg-amber-100 transition-colors flex items-center gap-2 cursor-pointer select-none"
+                            className="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-50 text-[#1F2937] border border-amber-300 hover:bg-amber-100 transition-colors flex items-center gap-2 cursor-pointer select-none self-center"
                         >
                             <span className="size-2 rounded-full bg-amber-600 animate-pulse" />
                             <span>{pendingApprovalsCount} {isUrdu ? 'منظوریاں باقی' : 'Approval Baqi'}</span>
-                            <Icon name="ArrowRight" className="size-3.5 text-[#374151]" />
+                            <Icon name="ArrowRight" className="size-3 text-[#374151]" />
                         </Link>
-                    ) : (
-                        <span className="text-xs font-semibold text-[#4B5563] hidden sm:inline">
-                            Vegetable POS · Investment & Capital Ledger
-                        </span>
                     )}
                 </div>
 
-                {/* Right side: ONE main action button */}
-                <div className="flex items-center gap-3 justify-end">
-                    <button
-                        type="button"
-                        onClick={onOpenEntry}
-                        className="min-h-[40px] px-5 py-2 rounded-lg text-sm font-bold bg-[#14532d] hover:bg-[#166534] active:bg-[#0f3d21] text-white shadow-xs transition-colors flex items-center gap-2 cursor-pointer"
-                    >
-                        <Icon name="Plus" className="size-4 stroke-[3]" />
-                        <span>{isUrdu ? 'نئی اینٹری' : 'Nayi Entry'}</span>
-                        <span className="text-xs opacity-80 font-normal hidden sm:inline">(Ctrl N)</span>
-                    </button>
-                </div>
+                {/* Right side: ONE main action button (Hidden on Record / Audit page) */}
+                {currentTab !== 'audit' && (
+                    <div className="flex items-center gap-3 justify-end">
+                        <button
+                            type="button"
+                            onClick={onOpenEntry}
+                            className="min-h-[40px] px-5 py-2 rounded-lg text-sm font-bold bg-[#14532d] hover:bg-[#166534] active:bg-[#0f3d21] text-white shadow-xs transition-colors flex items-center gap-2 cursor-pointer"
+                        >
+                            <Icon name="Plus" className="size-4 stroke-[3]" />
+                            <span>{isUrdu ? 'نئی اینٹری' : 'Nayi Entry'}</span>
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Bottom row: Short clean Navigation Tabs (Section B.5) */}

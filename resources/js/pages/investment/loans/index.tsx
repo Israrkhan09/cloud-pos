@@ -202,11 +202,11 @@ export default function InvestmentLoansPage({
 
     // Export CSV
     const handleExportCSV = () => {
-        const headers = ['Dene Wala', 'Asal Principal', 'Fee', 'Wapas Hua', 'Baqaya Due', 'Wapsi Tareekh', 'Status'];
+        const headers = ['Dene Wala', 'Qisam', 'Asal Principal', 'Wapas Hua', 'Baqaya Due', 'Wapsi Tareekh', 'Status'];
         const rows = loans.map(l => [
             `"${l.lender_name}"`,
+            `"${l.balance_due <= 0 || l.status === 'settled' ? 'Chukta' : l.direction === 'receivable' ? 'Lena Hai' : 'Dena Hai'}"`,
             l.principal_amount,
-            l.fee_or_interest,
             l.paid_amount,
             l.balance_due,
             `"${l.due_date_label}"`,
@@ -282,22 +282,43 @@ export default function InvestmentLoansPage({
                         </div>
 
                         {/* Number 3: Overdue */}
-                        <div className="bg-white p-4 md:p-5 rounded-xl border border-gray-200 shadow-2xs">
-                            <span className="text-xs font-bold text-[#374151] uppercase tracking-wider block">
-                                {isUrdu ? 'اوور ڈیو قرضہ' : 'Overdue Qarza'}
-                            </span>
-                            <div className="mt-2 flex items-center justify-between">
-                                <span className="text-2xl font-black text-amber-800">
-                                    {summary.overdue_count} Qarza
-                                </span>
-                                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-800 border border-red-300">
-                                    2 Din Overdue
-                                </span>
-                            </div>
-                            <span className="text-xs font-medium text-[#4B5563] block mt-1">
-                                Sohail baqaya Rs. 20,000
-                            </span>
-                        </div>
+                        {(() => {
+                            const overdueLoans = loans.filter((l) => (l.balance_due > 0 || l.status !== 'settled') && l.due_badge.type === 'danger');
+                            const overdueCount = overdueLoans.length;
+
+                            return (
+                                <div className="bg-white p-4 md:p-5 rounded-xl border border-gray-200 shadow-2xs">
+                                    <span className="text-xs font-bold text-[#374151] uppercase tracking-wider block">
+                                        {isUrdu ? 'اوور ڈیو قرضہ' : 'Overdue Qarza'}
+                                    </span>
+                                    <div className="mt-2 flex items-center justify-between">
+                                        <span className={cn(
+                                            "text-2xl font-black",
+                                            overdueCount > 0 ? "text-amber-800" : "text-emerald-800"
+                                        )}>
+                                            {overdueCount} Qarza
+                                        </span>
+                                        {overdueCount > 0 ? (
+                                            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-800 border border-red-300">
+                                                Wapsi Tareekh Guzar Chuki
+                                            </span>
+                                        ) : (
+                                            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                                Koi Overdue Nahi
+                                            </span>
+                                        )}
+                                    </div>
+                                    <span className={cn(
+                                        "text-xs font-medium block mt-1",
+                                        overdueCount > 0 ? "text-red-700 font-semibold" : "text-emerald-700"
+                                    )}>
+                                        {overdueCount > 0
+                                            ? overdueLoans.map((l) => `${l.lender_name} baqaya ${formatRs(l.balance_due)}`).join(', ')
+                                            : 'Tamam tareekhein bar-waqt hain'}
+                                    </span>
+                                </div>
+                            );
+                        })()}
                     </div>
 
                     {/* Short-Term Loans Table */}
@@ -331,7 +352,6 @@ export default function InvestmentLoansPage({
                                         <th className="py-3 px-4 text-start">Party / Naam</th>
                                         <th className="py-3 px-4 text-center">Qisam</th>
                                         <th className="py-3 px-4 text-end">Asal</th>
-                                        <th className="py-3 px-4 text-end">Fee</th>
                                         <th className="py-3 px-4 text-end">Wapas Hua</th>
                                         <th className="py-3 px-4 text-end text-[#1F2937]">Baaki</th>
                                         <th className="py-3 px-4 text-center">Tareekh</th>
@@ -342,7 +362,8 @@ export default function InvestmentLoansPage({
                                 <tbody className="divide-y divide-gray-100 text-[#1F2937]">
                                     {loans.map((loan) => {
                                         const isSelected = selectedLoanId === loan.id;
-                                        const isOverdue = loan.due_badge.type === 'danger';
+                                        const isSettled = loan.balance_due <= 0 || loan.status === 'settled';
+                                        const isOverdue = !isSettled && loan.due_badge.type === 'danger';
                                         const isReceivable = loan.direction === 'receivable';
 
                                         return (
@@ -366,26 +387,27 @@ export default function InvestmentLoansPage({
                                                     </div>
                                                 </td>
 
-                                                {/* Qisam (Dena hai vs Lena hai) */}
+                                                {/* Qisam (Dena hai vs Lena hai vs Chukta) */}
                                                 <td className="py-3.5 px-4 text-center">
-                                                    <span className={cn(
-                                                        "inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold border",
-                                                        isReceivable
-                                                            ? "bg-blue-50 text-blue-800 border-blue-200"
-                                                            : "bg-amber-50 text-amber-900 border-amber-200"
-                                                    )}>
-                                                        {isReceivable ? 'Lena Hai' : 'Dena Hai'}
-                                                    </span>
+                                                    {isSettled ? (
+                                                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold border bg-gray-100 text-gray-700 border-gray-300">
+                                                            Chukta
+                                                        </span>
+                                                    ) : (
+                                                        <span className={cn(
+                                                            "inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold border",
+                                                            isReceivable
+                                                                ? "bg-blue-50 text-blue-800 border-blue-200"
+                                                                : "bg-amber-50 text-amber-900 border-amber-200"
+                                                        )}>
+                                                            {isReceivable ? 'Lena Hai' : 'Dena Hai'}
+                                                        </span>
+                                                    )}
                                                 </td>
 
                                                 {/* Asal */}
                                                 <td className="py-3.5 px-4 text-end font-medium text-[#374151] text-sm">
                                                     Rs. {formatNum(loan.principal_amount)}
-                                                </td>
-
-                                                {/* Fee */}
-                                                <td className="py-3.5 px-4 text-end font-medium text-[#374151] text-sm">
-                                                    {loan.fee_or_interest > 0 ? `Rs. ${formatNum(loan.fee_or_interest)}` : 'Rs. 0'}
                                                 </td>
 
                                                 {/* Wapas Hua */}
@@ -409,31 +431,39 @@ export default function InvestmentLoansPage({
                                                         "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold",
                                                         isOverdue && "bg-red-100 text-red-800 border border-red-300",
                                                         loan.due_badge.type === 'warning' && "bg-amber-100 text-amber-900 border border-amber-300",
-                                                        loan.due_badge.type === 'neutral' && "bg-gray-100 text-[#374151] border border-gray-300"
+                                                        (loan.due_badge.type === 'neutral' || isSettled) && "bg-gray-100 text-[#374151] border border-gray-300"
                                                     )}>
                                                         {loan.due_badge.text}
                                                     </span>
                                                 </td>
 
-                                                {/* Row Action: Ek button ("Wapas karein" if payable, "Wapas lein" if receivable) */}
+                                                {/* Row Action: Ek button ("Wapas karein" if payable, "Wapas lein" if receivable, or Chukta if settled) */}
                                                 <td className="py-3.5 px-4 text-center" onClick={(e) => e.stopPropagation()}>
                                                     <div className="flex items-center justify-center gap-1.5">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleOpenSettle(loan)}
-                                                            className="px-3.5 py-1.5 text-xs font-bold text-white bg-[#14532d] hover:bg-[#166534] rounded shadow-2xs transition-colors cursor-pointer"
-                                                        >
-                                                            {isReceivable ? 'Wapas lein' : 'Wapas karein'}
-                                                        </button>
-                                                        {isOverdue && (
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => handleSendReminder(loan)}
-                                                                title="WhatsApp Yaad Dehani Bhejein (Roman Urdu)"
-                                                                className="p-1.5 text-emerald-700 hover:bg-emerald-50 rounded transition-colors cursor-pointer"
-                                                            >
-                                                                <Icon name="WhatsappLogo" className="size-4" />
-                                                            </button>
+                                                        {isSettled ? (
+                                                            <span className="px-3.5 py-1.5 text-xs font-bold text-gray-500 bg-gray-100 rounded border border-gray-200 cursor-default select-none">
+                                                                Chukta
+                                                            </span>
+                                                        ) : (
+                                                            <>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleOpenSettle(loan)}
+                                                                    className="px-3.5 py-1.5 text-xs font-bold text-white bg-[#14532d] hover:bg-[#166534] rounded shadow-2xs transition-colors cursor-pointer"
+                                                                >
+                                                                    {isReceivable ? 'Wapas lein' : 'Wapas karein'}
+                                                                </button>
+                                                                {isOverdue && (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => handleSendReminder(loan)}
+                                                                        title="WhatsApp Yaad Dehani Bhejein (Roman Urdu)"
+                                                                        className="p-1.5 text-emerald-700 hover:bg-emerald-50 rounded transition-colors cursor-pointer"
+                                                                    >
+                                                                        <Icon name="WhatsappLogo" className="size-4" />
+                                                                    </button>
+                                                                )}
+                                                            </>
                                                         )}
                                                     </div>
                                                 </td>
@@ -448,15 +478,26 @@ export default function InvestmentLoansPage({
                         {activeSelectedLoan && (
                             <div className="p-4 bg-gray-50/80 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm">
                                 <div className="text-[#374151]">
-                                    Chuna hua: <span className="font-bold text-[#1F2937]">{activeSelectedLoan.lender_name}</span> ({activeSelectedLoan.direction === 'receivable' ? 'Hum ko lena hai' : 'Hum ko dena hai'}), baqaya <span className="font-black text-red-700">{formatRs(activeSelectedLoan.balance_due)}</span>
+                                    Chuna hua: <span className="font-bold text-[#1F2937]">{activeSelectedLoan.lender_name}</span>{' '}
+                                    {activeSelectedLoan.balance_due <= 0 || activeSelectedLoan.status === 'settled' ? (
+                                        <span className="font-bold text-gray-600">(Chukta ho chuka hai)</span>
+                                    ) : (
+                                        <span>({activeSelectedLoan.direction === 'receivable' ? 'Hum ko lena hai' : 'Hum ko dena hai'}), baqaya <span className="font-black text-red-700">{formatRs(activeSelectedLoan.balance_due)}</span></span>
+                                    )}
                                 </div>
-                                <button
-                                    type="button"
-                                    onClick={() => handleOpenSettle(activeSelectedLoan)}
-                                    className="min-h-[40px] px-5 py-2 text-sm font-bold text-white bg-[#14532d] hover:bg-[#166534] rounded-lg shadow-xs transition-colors cursor-pointer"
-                                >
-                                    {activeSelectedLoan.direction === 'receivable' ? 'Wapas lein' : 'Wapas karein'}
-                                </button>
+                                {activeSelectedLoan.balance_due > 0 && activeSelectedLoan.status !== 'settled' ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => handleOpenSettle(activeSelectedLoan)}
+                                        className="min-h-[40px] px-5 py-2 text-sm font-bold text-white bg-[#14532d] hover:bg-[#166534] rounded-lg shadow-xs transition-colors cursor-pointer"
+                                    >
+                                        {activeSelectedLoan.direction === 'receivable' ? 'Wapas lein' : 'Wapas karein'}
+                                    </button>
+                                ) : (
+                                    <span className="px-4 py-2 text-xs font-bold text-gray-500 bg-gray-100 rounded-lg border border-gray-200 select-none">
+                                        Chukta (Settled)
+                                    </span>
+                                )}
                             </div>
                         )}
                     </div>
@@ -590,6 +631,7 @@ export default function InvestmentLoansPage({
                 <EntryDrawer
                     isOpen={isEntryDrawerOpen}
                     onClose={() => setIsEntryDrawerOpen(false)}
+                    category="loans"
                     partners={partnersList}
                     loans={loansList}
                     surplusFunds={surplusList}

@@ -578,17 +578,6 @@ export default function InvestmentAuditPage({
                         isUrdu={isUrdu}
                     />
                 )}
-
-                {/* Entry Drawer */}
-                <EntryDrawer
-                    isOpen={isEntryDrawerOpen}
-                    onClose={() => setIsEntryDrawerOpen(false)}
-                    partners={partnersList}
-                    loans={loansList}
-                    surplusFunds={surplusList}
-                    bankAccounts={bankAccounts}
-                    isUrdu={isUrdu}
-                />
             </div>
         </AppLayout>
     );
