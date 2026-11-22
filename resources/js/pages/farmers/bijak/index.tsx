@@ -1,7 +1,8 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Head, router } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/layouts/app-layout';
+import MandiPageHeader from '@/components/app/mandi-page-header';
 import { type BreadcrumbItem } from '@/types';
 import { toast } from 'sonner';
 
@@ -74,26 +75,16 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
         { title: isUrdu ? 'کسان کا بل (بیجک)' : 'Farmer Bill (Bijak)', href: '/bijak' },
     ];
 
-    // Find Muneeb Ahmed Khan or first farmer as initial
-    const initialFarmer = useMemo(() => {
-        return farmers.find(f => (f.name_en && f.name_en.toLowerCase().includes('muneeb'))) || farmers[0];
-    }, [farmers]);
-
     // Top Card States
-    const [farmerId, setFarmerId] = useState<string>(initialFarmer ? String(initialFarmer.id) : '');
-    const [farmerMarkId, setFarmerMarkId] = useState<string>('');
-    const [truckNo, setTruckNo] = useState<string>('NAB652');
-    const [billDate, setBillDate] = useState<string>(filters?.date || '2026-11-21');
+    const [farmerId, setFarmerId] = useState<string>('');
+    const [truckNo, setTruckNo] = useState<string>('');
+    const [billDate, setBillDate] = useState<string>(filters?.date || new Date().toISOString().split('T')[0]);
 
-    // Selected Farmer Object & Marks
+    // Selected Farmer Object
     const selectedFarmer = useMemo(() => {
         if (!farmerId) return null;
         return farmers.find(f => String(f.id) === String(farmerId)) || null;
     }, [farmers, farmerId]);
-
-    const farmerMarks = useMemo(() => {
-        return selectedFarmer?.marks || [];
-    }, [selectedFarmer]);
 
     // Quick Items resolution
     const getItemByKeyword = (kw: string) => {
@@ -104,35 +95,14 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
         ) || items[0];
     };
 
-    // Default 2 rows matching the mockup:
-    // Row 1: Tamatar, Nag 12, Wazan 300, Rate 80 => Raqam 24,000
-    // Row 2: Aloo, Nag 8, Wazan 320, Rate 55 => Raqam 17,600
-    const [billItems, setBillItems] = useState<BillItemRow[]>(() => {
-        const tamatar = items.find(it => it.name_en.toLowerCase().includes('tamat') || it.name_en.toLowerCase().includes('tomato')) || items[2] || items[0];
-        const aloo = items.find(it => it.name_en.toLowerCase().includes('aloo') || it.name_en.toLowerCase().includes('potato')) || items[0];
-        return [
-            {
-                item_id: tamatar ? tamatar.id : 3,
-                name: 'Tamatar',
-                nag: '12',
-                weight: '300',
-                rate: '80',
-            },
-            {
-                item_id: aloo ? aloo.id : 1,
-                name: 'Aloo',
-                nag: '8',
-                weight: '320',
-                rate: '55',
-            },
-        ];
-    });
+    // Bill Items State (starts empty so user selects their own)
+    const [billItems, setBillItems] = useState<BillItemRow[]>([]);
 
-    // Charges States
-    const [commissionPct, setCommissionPct] = useState<string>('5');
-    const [mazdooriRate, setMazdooriRate] = useState<string>('15');
-    const [kiraya, setKiraya] = useState<string>('500');
-    const [marketFeePct, setMarketFeePct] = useState<string>('0.5');
+    // Charges States - empty by default so user enters their own values
+    const [commissionPct, setCommissionPct] = useState<string>('');
+    const [mazdooriRate, setMazdooriRate] = useState<string>('');
+    const [kiraya, setKiraya] = useState<string>('');
+    const [marketFeePct, setMarketFeePct] = useState<string>('');
 
     const [isSaving, setIsSaving] = useState<boolean>(false);
     const [completedBill, setCompletedBill] = useState<SavedBillData | null>(saved_bill || null);
@@ -145,11 +115,6 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
         return area ? `${name} - ${area}` : name;
     };
 
-    const handleFarmerChange = (fId: string) => {
-        setFarmerId(fId);
-        setFarmerMarkId('');
-    };
-
     // Row management
     const addQuickItem = (name: string) => {
         const matched = getItemByKeyword(name);
@@ -159,9 +124,9 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
             {
                 item_id: newItemId,
                 name: name,
-                nag: '10',
-                weight: '100',
-                rate: matched?.default_rate ? String(matched.default_rate) : '50',
+                nag: '',
+                weight: '',
+                rate: matched?.default_rate ? String(matched.default_rate) : '',
             },
         ]);
     };
@@ -212,7 +177,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
         const marketFeeAmount = Math.round((totalGross * feePctNum) / 100);
 
         const totalCharges = Math.round(commAmount + mazdooriAmount + kirayaAmount + marketFeeAmount);
-        const netPayable = Math.round(totalGross - totalCharges);
+        const netPayable = Math.max(0, Math.round(totalGross - totalCharges));
 
         return {
             totalNag,
@@ -230,6 +195,11 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
     // Handle Save Bill
     const handleSaveBill = (e: React.FormEvent) => {
         e.preventDefault();
+        if (!farmerId) {
+            toast.error('Baraye meharbani pehle Kisan chunein');
+            return;
+        }
+
         if (billItems.length === 0) {
             toast.error('Baraye meharbani kam az kam aik maal item shamil karein');
             return;
@@ -239,7 +209,6 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
         const payload = {
             date: billDate,
             farmer_id: farmerId,
-            farmer_mark_id: farmerMarkId || null,
             truck_no: truckNo || null,
             items: billItems.map(it => ({
                 item_id: it.item_id,
@@ -283,45 +252,40 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
     const handleNewBill = () => {
         setShowSuccessModal(false);
         setCompletedBill(null);
-        setBillItems([
-            {
-                item_id: items[2]?.id || items[0]?.id || 1,
-                name: 'Tamatar',
-                nag: '',
-                weight: '',
-                rate: '',
-            },
-        ]);
+        setFarmerId('');
+        setBillItems([]);
         setTruckNo('');
+        setCommissionPct('');
+        setMazdooriRate('');
+        setKiraya('');
+        setMarketFeePct('');
     };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Kisan ka Bill (Bijak)" />
 
-            <div className="w-full max-w-full overflow-x-hidden -mt-4 -mx-4 pb-20 bg-[#f4f6f4] min-h-[calc(100vh-4rem)] font-sans text-[#1a211c] print:hidden" dir="ltr">
+            {/* Main Outer Container - edge to edge without side or bottom gaps */}
+            <div className="-mt-4 -mx-4 -mb-8 pb-28 bg-[#f4f6f4] min-h-screen font-sans text-gray-900 print:hidden" dir={isUrdu ? 'rtl' : 'ltr'}>
                 
-                {/* Header Banner */}
-                <div className="bg-[#14532d] text-white pt-6 pb-14 px-6 md:px-8">
-                    <div className="w-full max-w-[1400px] mx-auto flex items-center justify-between">
-                        <div>
-                            <h1 className="text-xl md:text-2xl font-bold tracking-tight flex items-center gap-2">
-                                <span>Kisan ka Bill (Bijak)</span>
-                                <span className="font-normal font-sans text-emerald-100 text-xl md:text-2xl">بیجک</span>
-                            </h1>
-                            <p className="text-xs md:text-sm text-emerald-100/90 mt-1 font-normal">
-                                Kisan ke maal ka bill banayein
-                            </p>
-                        </div>
-                    </div>
-                </div>
+                {/* Green Header Banner */}
+                <MandiPageHeader
+                    title={
+                        <span className="flex items-center gap-2">
+                            <span>Kisan ka Bill (Bijak)</span>
+                            <span className="font-normal font-sans text-emerald-100 text-xl md:text-2xl">بیجک</span>
+                        </span>
+                    }
+                    subtitle="Kisan ke maal ka bill banayein"
+                    isUrdu={isUrdu}
+                />
 
                 {/* Floating Main Content Container */}
-                <div className="w-full max-w-[1400px] mx-auto px-4 md:px-6 -mt-8 space-y-5">
+                <div className="max-w-7xl mx-auto px-3 md:px-6 -mt-6 md:-mt-8 space-y-5">
                     
                     {/* Top Floating Card (Farmer & Transport Details) */}
-                    <div className="bg-white rounded-xl shadow-xs border border-gray-200/80 p-4 md:p-5">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-center">
+                    <div className="bg-white rounded-xl shadow-xs border border-gray-200/90 p-4 md:p-5">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
                             {/* Kisan */}
                             <div>
                                 <label className="block text-xs font-semibold text-gray-700 mb-1.5">
@@ -329,31 +293,13 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                                 </label>
                                 <select
                                     value={farmerId}
-                                    onChange={e => handleFarmerChange(e.target.value)}
+                                    onChange={e => setFarmerId(e.target.value)}
                                     className="w-full h-10 px-3 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#14532d]"
                                 >
+                                    <option value="">-- Select Kisan --</option>
                                     {farmers.map(f => (
                                         <option key={f.id} value={f.id}>
                                             {farmerTitle(f)}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            {/* Mark (Bari) */}
-                            <div>
-                                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                                    Mark (Bari)
-                                </label>
-                                <select
-                                    value={farmerMarkId}
-                                    onChange={e => setFarmerMarkId(e.target.value)}
-                                    className="w-full h-10 px-3 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#14532d]"
-                                >
-                                    <option value="">Khud (Self)</option>
-                                    {farmerMarks.map(m => (
-                                        <option key={m.id} value={m.id}>
-                                            {m.name_en || m.name_ur}
                                         </option>
                                     ))}
                                 </select>
@@ -392,13 +338,13 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
                         
                         {/* LEFT COLUMN: Maal Card */}
-                        <div className="lg:col-span-8 bg-white rounded-xl shadow-xs border border-gray-200/80 p-5 space-y-4">
+                        <div className="lg:col-span-8 bg-white rounded-xl shadow-xs border border-gray-200/90 p-5 space-y-4">
                             
                             {/* Card Header */}
                             <div className="flex items-center justify-between">
                                 <h2 className="text-base font-bold text-gray-900">Maal</h2>
                                 <span className="text-xs text-gray-500 font-medium">
-                                    {billItems.length} item · {calculations.totalNag} nag · {calculations.totalWeight} kg
+                                    {billItems.length} item · {calculations.totalNag} tadaad · {calculations.totalWeight} kg
                                 </span>
                             </div>
 
@@ -417,12 +363,12 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                                 ))}
                             </div>
 
-                            {/* Items Table - No Horizontal Scrollbar */}
+                            {/* Items Table - Responsive with clean layout */}
                             <div className="w-full">
                                 {/* Table Header */}
                                 <div className="grid grid-cols-12 gap-2 px-2 py-2.5 bg-gray-50/90 rounded-lg text-xs font-semibold text-gray-600 mb-2 items-center">
                                     <div className="col-span-3">Maal</div>
-                                    <div className="col-span-2 text-center">Nag</div>
+                                    <div className="col-span-2 text-center">Tadaad (Qty)</div>
                                     <div className="col-span-2 text-center">Wazan (kg)</div>
                                     <div className="col-span-2 text-center">Rate (Rs/kg)</div>
                                     <div className="col-span-2 text-right pr-1">Raqam</div>
@@ -431,81 +377,87 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
 
                                 {/* Table Body Rows */}
                                 <div className="space-y-2">
-                                    {billItems.map((row, idx) => {
-                                        const n = parseFloat(row.nag) || 0;
-                                        const w = parseFloat(row.weight) || 0;
-                                        const r = parseFloat(row.rate) || 0;
-                                        const raqam = w > 0 ? Math.round(w * r) : Math.round(n * r);
+                                    {billItems.length === 0 ? (
+                                        <div className="py-8 text-center text-gray-400 text-xs font-medium border border-dashed border-gray-200 rounded-lg">
+                                            Koi maal shamil nahi hai. Upar diye gaye buttons (+ Tamatar, + Aloo waghera) par click karke maal shamil karein.
+                                        </div>
+                                    ) : (
+                                        billItems.map((row, idx) => {
+                                            const n = parseFloat(row.nag) || 0;
+                                            const w = parseFloat(row.weight) || 0;
+                                            const r = parseFloat(row.rate) || 0;
+                                            const raqam = w > 0 ? Math.round(w * r) : Math.round(n * r);
 
-                                        return (
-                                            <div key={idx} className="grid grid-cols-12 gap-2 px-2 py-1.5 items-center hover:bg-gray-50/50 rounded-lg transition-colors">
-                                                {/* Maal Name / Select */}
-                                                <div className="col-span-3">
-                                                    <select
-                                                        value={row.item_id}
-                                                        onChange={e => updateRow(idx, 'item_id', Number(e.target.value))}
-                                                        className="w-full h-9 px-2 border border-gray-200 rounded-lg text-xs md:text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-1 focus:ring-[#14532d]"
-                                                    >
-                                                        {items.map(it => (
-                                                            <option key={it.id} value={it.id}>
-                                                                {it.name_en.split(' ')[0]}
-                                                            </option>
-                                                        ))}
-                                                    </select>
-                                                </div>
+                                            return (
+                                                <div key={idx} className="grid grid-cols-12 gap-2 px-2 py-1.5 items-center hover:bg-gray-50/50 rounded-lg transition-colors">
+                                                    {/* Maal Name / Select */}
+                                                    <div className="col-span-3">
+                                                        <select
+                                                            value={row.item_id}
+                                                            onChange={e => updateRow(idx, 'item_id', Number(e.target.value))}
+                                                            className="w-full h-9 px-2 border border-gray-200 rounded-lg text-xs md:text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-1 focus:ring-[#14532d]"
+                                                        >
+                                                            {items.map(it => (
+                                                                <option key={it.id} value={it.id}>
+                                                                    {it.name_en.split(' ')[0]}
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
 
-                                                {/* Nag */}
-                                                <div className="col-span-2">
-                                                    <input
-                                                        type="number"
-                                                        value={row.nag}
-                                                        onChange={e => updateRow(idx, 'nag', e.target.value)}
-                                                        className="w-full h-9 px-1 text-center border border-gray-200 rounded-lg text-xs md:text-sm font-medium text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#14532d]"
-                                                        placeholder="0"
-                                                    />
-                                                </div>
+                                                    {/* Tadaad (Qty) */}
+                                                    <div className="col-span-2">
+                                                        <input
+                                                            type="number"
+                                                            value={row.nag}
+                                                            onChange={e => updateRow(idx, 'nag', e.target.value)}
+                                                            className="w-full h-9 px-1 text-center border border-gray-200 rounded-lg text-xs md:text-sm font-medium text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#14532d]"
+                                                            placeholder="0"
+                                                        />
+                                                    </div>
 
-                                                {/* Wazan (kg) */}
-                                                <div className="col-span-2">
-                                                    <input
-                                                        type="number"
-                                                        value={row.weight}
-                                                        onChange={e => updateRow(idx, 'weight', e.target.value)}
-                                                        className="w-full h-9 px-1 text-center border border-gray-200 rounded-lg text-xs md:text-sm font-medium text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#14532d]"
-                                                        placeholder="0"
-                                                    />
-                                                </div>
+                                                    {/* Wazan (kg) */}
+                                                    <div className="col-span-2">
+                                                        <input
+                                                            type="number"
+                                                            value={row.weight}
+                                                            onChange={e => updateRow(idx, 'weight', e.target.value)}
+                                                            className="w-full h-9 px-1 text-center border border-gray-200 rounded-lg text-xs md:text-sm font-medium text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#14532d]"
+                                                            placeholder="0"
+                                                        />
+                                                    </div>
 
-                                                {/* Rate (Rs/kg) */}
-                                                <div className="col-span-2">
-                                                    <input
-                                                        type="number"
-                                                        value={row.rate}
-                                                        onChange={e => updateRow(idx, 'rate', e.target.value)}
-                                                        className="w-full h-9 px-1 text-center border border-gray-200 rounded-lg text-xs md:text-sm font-medium text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#14532d]"
-                                                        placeholder="0"
-                                                    />
-                                                </div>
+                                                    {/* Rate (Rs/kg) */}
+                                                    <div className="col-span-2">
+                                                        <input
+                                                            type="number"
+                                                            value={row.rate}
+                                                            onChange={e => updateRow(idx, 'rate', e.target.value)}
+                                                            className="w-full h-9 px-1 text-center border border-gray-200 rounded-lg text-xs md:text-sm font-medium text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#14532d]"
+                                                            placeholder="0"
+                                                        />
+                                                    </div>
 
-                                                {/* Raqam */}
-                                                <div className="col-span-2 text-right font-bold text-gray-900 text-xs md:text-sm whitespace-nowrap pr-1">
-                                                    Rs. {raqam.toLocaleString()}
-                                                </div>
+                                                    {/* Raqam */}
+                                                    <div className="col-span-2 text-right font-bold text-gray-900 text-xs md:text-sm whitespace-nowrap pr-1">
+                                                        Rs. {raqam.toLocaleString()}
+                                                    </div>
 
-                                                {/* Delete Action Button */}
-                                                <div className="col-span-1 flex justify-center">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => removeRow(idx)}
-                                                        className="w-6 h-6 md:w-7 md:h-7 flex items-center justify-center border border-red-200 text-red-500 hover:bg-red-50 rounded text-xs md:text-sm font-bold transition-colors cursor-pointer"
-                                                        title="Delete row"
-                                                    >
-                                                        ×
-                                                    </button>
+                                                    {/* Delete Action Button */}
+                                                    <div className="col-span-1 flex justify-center">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeRow(idx)}
+                                                            className="w-6 h-6 md:w-7 md:h-7 flex items-center justify-center border border-red-200 text-red-500 hover:bg-red-50 rounded text-xs md:text-sm font-bold transition-colors cursor-pointer"
+                                                            title="Delete row"
+                                                        >
+                                                            ×
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        );
-                                    })}
+                                            );
+                                        })
+                                    )}
                                 </div>
 
                                 {/* Table Footer / Totals Row */}
@@ -524,7 +476,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                         <div className="lg:col-span-4 space-y-4">
                             
                             {/* Charges Card */}
-                            <div className="bg-white rounded-xl shadow-xs border border-gray-200/80 p-5 space-y-4">
+                            <div className="bg-white rounded-xl shadow-xs border border-gray-200/90 p-5 space-y-4">
                                 <h2 className="text-base font-bold text-gray-900">Charges</h2>
 
                                 <div className="space-y-3 text-sm">
@@ -539,6 +491,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                                                 type="number"
                                                 value={commissionPct}
                                                 onChange={e => setCommissionPct(e.target.value)}
+                                                placeholder="0"
                                                 className="w-14 h-9 px-2 text-center border border-gray-200 rounded-lg text-sm font-medium text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#14532d]"
                                             />
                                             <span className="text-xs text-gray-500 font-medium">%</span>
@@ -556,9 +509,10 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                                                 type="number"
                                                 value={mazdooriRate}
                                                 onChange={e => setMazdooriRate(e.target.value)}
+                                                placeholder="0"
                                                 className="w-14 h-9 px-2 text-center border border-gray-200 rounded-lg text-sm font-medium text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#14532d]"
                                             />
-                                            <span className="text-xs text-gray-500 font-medium">Rs/nag</span>
+                                            <span className="text-xs text-gray-500 font-medium">Rs/tadaad</span>
                                         </div>
                                     </div>
 
@@ -573,6 +527,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                                                 type="number"
                                                 value={kiraya}
                                                 onChange={e => setKiraya(e.target.value)}
+                                                placeholder="0"
                                                 className="w-20 h-9 px-2 text-center border border-gray-200 rounded-lg text-sm font-medium text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#14532d]"
                                             />
                                             <span className="text-xs text-gray-500 font-medium">Rs</span>
@@ -591,6 +546,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                                                 step="0.1"
                                                 value={marketFeePct}
                                                 onChange={e => setMarketFeePct(e.target.value)}
+                                                placeholder="0"
                                                 className="w-14 h-9 px-2 text-center border border-gray-200 rounded-lg text-sm font-medium text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#14532d]"
                                             />
                                             <span className="text-xs text-gray-500 font-medium">%</span>
@@ -600,7 +556,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                             </div>
 
                             {/* Summary & Net Payable Card */}
-                            <div className="bg-white rounded-xl shadow-xs border border-gray-200/80 p-5 space-y-4">
+                            <div className="bg-white rounded-xl shadow-xs border border-gray-200/90 p-5 space-y-4">
                                 <div className="space-y-2 text-sm font-medium">
                                     <div className="flex justify-between items-center text-gray-800">
                                         <span>Gross sale</span>
@@ -708,8 +664,8 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                             <span>{billItems.map(it => it.name).join(', ')}</span>
                         </div>
                         <div>
-                            <strong>Total Nag / Wazan: </strong>
-                            <span>{calculations.totalNag} nag / {calculations.totalWeight} kg</span>
+                            <strong>Total Tadaad / Wazan: </strong>
+                            <span>{calculations.totalNag} tadaad / {calculations.totalWeight} kg</span>
                         </div>
                     </div>
 
@@ -724,7 +680,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                         </div>
                         {calculations.mazdooriAmount > 0 && (
                             <div className="flex justify-between text-gray-700">
-                                <span>Mazdoori ({mazdooriRate} Rs/nag):</span>
+                                <span>Mazdoori ({mazdooriRate} Rs/tadaad):</span>
                                 <span>- Rs. {calculations.mazdooriAmount.toLocaleString()}</span>
                             </div>
                         )}

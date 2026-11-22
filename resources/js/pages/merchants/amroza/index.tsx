@@ -40,6 +40,11 @@ interface ItemOption {
     unit: string;
     default_rate: number;
     default_bardana: number;
+    current_stock?: number;
+    opening_stock?: number;
+    kg_per_unit?: number;
+    status?: string;
+    computed_status?: string;
 }
 
 interface Sale {
@@ -110,6 +115,7 @@ export default function AmrozaIndex({
     const [selectedDate, setSelectedDate] = useState(filters.date || new Date().toISOString().split('T')[0]);
     const [searchFilter, setSearchFilter] = useState(filters.search || '');
     const [editingSale, setEditingSale] = useState<Sale | null>(null);
+    const [packingType, setPackingType] = useState<string>('Bori');
     const [lastAddedId, setLastAddedId] = useState<number | null>(null);
 
     // Active tooltip per step (ID IDE-style black tooltip)
@@ -231,8 +237,10 @@ export default function AmrozaIndex({
     }, [recentItemRate, numRate]);
 
     const quickItems = useMemo(() => {
-        if (topItems && topItems.length > 0) return topItems.slice(0, 6);
-        return items.slice(0, 6);
+        // Order: Aloo (#1), Piyaz (#2), Lehsan (#6), Band Gobhi (#5), Mirchi (#7), Tamatar (#3), Harri Mirch (#4)
+        const orderMap: Record<number, number> = { 1: 1, 2: 2, 6: 3, 5: 4, 7: 5, 3: 6, 4: 7 };
+        const source = (topItems && topItems.length > 0) ? topItems : items;
+        return source.slice().sort((a, b) => (orderMap[a.id] ?? (a.id + 10)) - (orderMap[b.id] ?? (b.id + 10)));
     }, [topItems, items]);
 
     // Buyer searchable input state
@@ -286,10 +294,10 @@ export default function AmrozaIndex({
         if (!data.payment_type) list.push(isUrdu ? 'ادائیگی' : 'Payment');
         if (!data.merchant_id) list.push(isUrdu ? 'خریدار' : 'Buyer');
         if (!data.item_id) list.push(isUrdu ? 'مال' : 'Item');
-        if (numNag <= 0) list.push(isUrdu ? 'تعداد' : 'Units');
+        if (numNag <= 0) list.push(packingType);
         if (numRate <= 0) list.push(isUrdu ? 'ریٹ' : 'Rate');
         return list;
-    }, [data.payment_type, data.merchant_id, data.item_id, numNag, numRate, isUrdu]);
+    }, [data.payment_type, data.merchant_id, data.item_id, numNag, numRate, packingType, isUrdu]);
 
     // Keyboard shortcuts: F1 = Cash, F2 = Credit, F3 = Bank/Online
     useEffect(() => {
@@ -369,6 +377,12 @@ export default function AmrozaIndex({
             triggerLockedFeedback('buyer', stepBuyerRef);
             return;
         }
+
+        const itemUnit = (item.unit || '').toLowerCase();
+        if (itemUnit.includes('peti')) setPackingType('Peti');
+        else if (itemUnit.includes('nag')) setPackingType('Nag');
+        else if (itemUnit.includes('thaili')) setPackingType('Thaili');
+        else setPackingType('Bori');
 
         setData(d => ({
             ...d,
@@ -492,6 +506,12 @@ export default function AmrozaIndex({
 
     function startEdit(sale: Sale) {
         setEditingSale(sale);
+        const itemUnit = (sale.item?.unit || '').toLowerCase();
+        if (itemUnit.includes('peti')) setPackingType('Peti');
+        else if (itemUnit.includes('nag')) setPackingType('Nag');
+        else if (itemUnit.includes('thaili')) setPackingType('Thaili');
+        else setPackingType('Bori');
+
         const pType = sale.payment_type || ((sale.merchant && (Number(sale.merchant.code) === 1)) ? 'naqdi' : 'udhaar');
         setData({
             date: sale.date,
@@ -904,9 +924,23 @@ Thank you!`;
                                         {quickItems.map(item => {
                                             const isSelected = String(data.item_id) === String(item.id);
                                             const initial = (item.name_en || item.name_ur || 'I')[0].toUpperCase();
-                                            const displayName = isUrdu
-                                                ? (item.name_ur || item.name_en)
-                                                : (item.name_en ? item.name_en.replace(' (Green Chilli)', '').replace(' (Cabbage)', '') : item.name_ur);
+                                            
+                                            // Clean English name without parentheses (e.g. "Aloo (Potato)" -> "Aloo")
+                                            const cleanName = (item.name_en || item.name_ur || '')
+                                                .replace(/\s*\(.*?\)\s*/g, '')
+                                                .trim();
+
+                                            const liveStock = item.current_stock ?? item.opening_stock ?? 0;
+                                            const isKhatam = item.status === 'khatam' || item.computed_status === 'khatam' || liveStock <= 0;
+                                            const isExpired = !isKhatam && (item.status === 'expired' || item.computed_status === 'expired' || item.id === 4);
+                                            const unitName = item.unit || 'Bori';
+
+                                            let labelText = `${cleanName} - ${liveStock} ${unitName}`;
+                                            if (isExpired) {
+                                                labelText = `${cleanName} - Expired`;
+                                            } else if (isKhatam) {
+                                                labelText = `${cleanName} - Khatam`;
+                                            }
 
                                             return (
                                                 <button
@@ -915,26 +949,40 @@ Thank you!`;
                                                     disabled={!isItemUnlocked}
                                                     tabIndex={!isItemUnlocked ? -1 : 0}
                                                     onClick={() => handleItemSelect(item)}
-                                                    className={`h-10 px-2.5 rounded-xl border transition-all flex items-center gap-2 cursor-pointer ${
+                                                    className={`min-h-[40px] px-2 py-1 rounded-xl border transition-all flex items-center gap-1.5 cursor-pointer ${
                                                         isSelected
-                                                            ? 'bg-[#1e713e] text-white border-[#1e713e] shadow-xs font-bold'
+                                                            ? isExpired
+                                                                ? 'bg-red-600 text-white border-red-700 shadow-xs font-bold'
+                                                                : isKhatam
+                                                                ? 'bg-gray-700 text-white border-gray-800 shadow-xs font-bold'
+                                                                : 'bg-[#1e713e] text-white border-[#1e713e] shadow-xs font-bold'
+                                                            : isExpired
+                                                            ? 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100/90'
+                                                            : isKhatam
+                                                            ? 'bg-gray-100 text-gray-500 border-gray-300 hover:bg-gray-200/90'
                                                             : 'bg-white text-gray-800 border-gray-200 hover:border-gray-300 hover:bg-gray-50/50'
                                                     }`}
                                                 >
-                                                    <span className={`w-6 h-6 rounded-md text-[10px] font-black flex items-center justify-center shrink-0 ${
-                                                        isSelected ? 'bg-white/20 text-white' : 'bg-emerald-100/70 text-emerald-800'
+                                                    <span className={`w-5.5 h-5.5 rounded-md text-[10px] font-black flex items-center justify-center shrink-0 ${
+                                                        isSelected
+                                                            ? 'bg-white/20 text-white'
+                                                            : isExpired
+                                                            ? 'bg-red-200 text-red-800'
+                                                            : isKhatam
+                                                            ? 'bg-gray-200 text-gray-600'
+                                                            : 'bg-emerald-100/70 text-emerald-800'
                                                     }`}>
                                                         {initial}
                                                     </span>
-                                                    <span className={`text-xs font-semibold truncate ${isUrdu ? 'font-nastaliq font-bold' : ''}`}>
-                                                        {displayName}
+                                                    <span className={`text-[11px] font-semibold leading-tight ${isUrdu ? 'font-nastaliq font-bold' : ''}`}>
+                                                        {isUrdu ? (item.name_ur || labelText) : labelText}
                                                     </span>
                                                 </button>
                                             );
                                         })}
                                     </div>
 
-                                    {items.length > 6 && (
+                                    {items.length > quickItems.length && (
                                         <div className="mt-2.5 flex items-center gap-2">
                                             <span className={`text-xs text-gray-400 ${isUrdu ? 'font-nastaliq' : ''}`}>
                                                 {isUrdu ? 'دیگر آئٹم:' : 'Other:'}
@@ -950,11 +998,18 @@ Thank you!`;
                                                 className={`h-9 text-xs rounded-xl border border-gray-200 bg-white px-2.5 flex-1 max-w-xs text-gray-700 ${isUrdu ? 'font-nastaliq' : ''}`}
                                             >
                                                 <option value="">{isUrdu ? 'آئٹم چنیں...' : 'Choose item...'}</option>
-                                                {items.map(it => (
-                                                    <option key={it.id} value={it.id}>
-                                                        {it.code} - {isUrdu ? it.name_ur : it.name_en}
-                                                    </option>
-                                                ))}
+                                                {items.map(it => {
+                                                    const clean = (it.name_en || '').replace(/\s*\(.*?\)\s*/g, '').trim();
+                                                    const stStock = it.current_stock ?? it.opening_stock ?? 0;
+                                                    const khat = it.status === 'khatam' || it.computed_status === 'khatam' || stStock <= 0;
+                                                    const exp = !khat && (it.status === 'expired' || it.computed_status === 'expired' || it.id === 4);
+                                                    const desc = khat ? `${clean} - Khatam` : exp ? `${clean} - Expired` : `${clean} - ${stStock} ${it.unit || 'Bori'}`;
+                                                    return (
+                                                        <option key={it.id} value={it.id}>
+                                                            {it.code} - {isUrdu ? it.name_ur : desc}
+                                                        </option>
+                                                    );
+                                                })}
                                             </select>
                                         </div>
                                     )}
@@ -973,23 +1028,44 @@ Thank you!`;
                                         />
                                     )}
 
-                                    <div className="flex items-center gap-2 mb-2.5">
-                                        <span className="w-5 h-5 rounded-full bg-[#1e713e] text-white text-[11px] font-bold flex items-center justify-center shrink-0">4</span>
-                                        <label className={`text-xs font-bold text-gray-700 uppercase tracking-wider ${isUrdu ? 'font-nastaliq text-sm' : ''}`}>
-                                            {isUrdu ? 'مقدار اور ریٹ (QUANTITY)' : 'QUANTITY'}
-                                        </label>
+                                    <div className="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+                                        <div className="flex items-center gap-2">
+                                            <span className="w-5 h-5 rounded-full bg-[#1e713e] text-white text-[11px] font-bold flex items-center justify-center shrink-0">4</span>
+                                            <label className={`text-xs font-bold text-gray-700 uppercase tracking-wider ${isUrdu ? 'font-nastaliq text-sm' : ''}`}>
+                                                {isUrdu ? 'مقدار اور ریٹ (QUANTITY)' : 'QUANTITY'}
+                                            </label>
+                                        </div>
+
+                                        {/* Packaging / Unit Option (Peti, Bori, Nag, Thaili) */}
+                                        <div className="flex items-center gap-1 bg-gray-100 p-0.5 rounded-lg">
+                                            {(['Bori', 'Peti', 'Nag', 'Thaili'] as const).map((unitOpt) => (
+                                                <button
+                                                    key={unitOpt}
+                                                    type="button"
+                                                    disabled={!isUnitsUnlocked}
+                                                    onClick={() => setPackingType(unitOpt)}
+                                                    className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
+                                                        packingType === unitOpt
+                                                            ? 'bg-[#14532d] text-white shadow-xs'
+                                                            : 'text-gray-600 hover:text-gray-900'
+                                                    }`}
+                                                >
+                                                    {unitOpt}
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
 
                                     <div className={`grid grid-cols-1 sm:grid-cols-3 gap-3 ${!isUnitsUnlocked ? 'opacity-40' : ''}`}>
-                                        {/* UNITS */}
+                                        {/* UNITS / TADAAD */}
                                         <div
                                             ref={stepUnitsRef}
                                             className={`h-10 rounded-xl border bg-white flex items-center justify-between px-3 transition-all focus-within:border-[#1e713e] focus-within:ring-2 focus-within:ring-[#1e713e]/20 ${
                                                 flashingStep === 'units' ? 'shake-error border-red-500 bg-red-50/50' : 'border-gray-200'
                                             }`}
                                         >
-                                            <span className={`text-xs font-semibold text-gray-500 shrink-0 ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                                {isUrdu ? 'تعداد' : 'Units'}
+                                            <span className={`text-xs font-semibold text-gray-700 shrink-0 ${isUrdu ? 'font-nastaliq' : ''}`}>
+                                                {packingType} {isUrdu ? 'تعداد' : '(Tadaad)'}
                                             </span>
                                             <input
                                                 ref={nagRef}
@@ -1020,7 +1096,7 @@ Thank you!`;
                                             }`}
                                         >
                                             <span className={`text-xs font-semibold text-gray-500 shrink-0 ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                                {isUrdu ? 'وزن' : 'Weight'}
+                                                {isUrdu ? 'وزن (کلو)' : 'Weight (kg)'}
                                             </span>
                                             <input
                                                 ref={weightRef}
@@ -1054,7 +1130,7 @@ Thank you!`;
                                             }`}
                                         >
                                             <span className={`text-xs font-semibold text-gray-500 shrink-0 ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                                {isUrdu ? 'ریٹ' : 'Rate'}
+                                                {isUrdu ? 'ریٹ' : 'Rate'} {numWeight > 0 ? '/ kg' : `/ ${packingType.toLowerCase()}`}
                                             </span>
                                             <div className="flex items-center gap-1 font-bold text-gray-900">
                                                 <span className="text-xs text-gray-400">Rs.</span>
@@ -1154,13 +1230,15 @@ Thank you!`;
                                         <div className="border-t border-dashed border-gray-200" />
 
                                         <div className="flex justify-between items-center text-gray-600">
-                                            <span className={isUrdu ? 'font-nastaliq' : 'font-medium'}>{isUrdu ? 'تعداد x ریٹ' : 'Units x Rate'}</span>
+                                            <span className={isUrdu ? 'font-nastaliq' : 'font-medium'}>
+                                                {numWeight > 0 ? (isUrdu ? 'وزن x ریٹ' : 'Weight x Rate') : `${packingType} x Rate`}
+                                            </span>
                                             <span className="font-bold text-gray-900 tabular-nums" dir="ltr">
                                                 {numWeight > 0 && numRate > 0
-                                                    ? `${numWeight} x ${numRate.toLocaleString()} = Rs. ${(numWeight * numRate).toLocaleString()}`
+                                                    ? `${numWeight} kg x ${numRate.toLocaleString()} = Rs. ${(numWeight * numRate).toLocaleString()}`
                                                     : numNag > 0 && numRate > 0
-                                                    ? `${numNag} x ${numRate.toLocaleString()} = Rs. ${(numNag * numRate).toLocaleString()}`
-                                                    : '0 x 0 = Rs. 0'}
+                                                    ? `${numNag} ${packingType} x ${numRate.toLocaleString()} = Rs. ${(numNag * numRate).toLocaleString()}`
+                                                    : `0 ${packingType} x 0 = Rs. 0`}
                                             </span>
                                         </div>
 
@@ -1171,6 +1249,18 @@ Thank you!`;
                                                     <span className={isUrdu ? 'font-nastaliq' : 'font-medium'}>{isUrdu ? 'بوری خرچہ' : 'Packing'}</span>
                                                     <span className="font-bold text-gray-900 tabular-nums" dir="ltr">
                                                         Rs. {numBardana.toLocaleString()}
+                                                    </span>
+                                                </div>
+                                            </>
+                                        )}
+
+                                        {currentItem && (
+                                            <>
+                                                <div className="border-t border-dashed border-gray-200" />
+                                                <div className="flex justify-between items-center text-gray-600">
+                                                    <span className={isUrdu ? 'font-nastaliq' : 'font-medium'}>{isUrdu ? 'باقی اسٹاک' : 'Stock Baqi'}</span>
+                                                    <span className="font-bold text-gray-900 tabular-nums">
+                                                        {(currentItem.current_stock ?? currentItem.opening_stock ?? 0)} {currentItem.unit || packingType}
                                                     </span>
                                                 </div>
                                             </>
@@ -1322,23 +1412,24 @@ Thank you!`;
                                                     <span className={`font-medium text-gray-900 ${isUrdu ? 'font-nastaliq' : ''}`}>
                                                         {isUrdu ? (sale.item?.name_ur || sale.item?.name_en) : (sale.item?.name_en || sale.item?.name_ur)}
                                                     </span>
-                                                    <span className="text-[10px] text-gray-500 ms-1">
-                                                        ({sale.item?.unit || (isUrdu ? 'بوری' : 'Bag')})
-                                                    </span>
                                                 </td>
 
                                                 <td className="p-2 text-end tabular-nums font-bold text-xs">{sale.nag}</td>
 
                                                 <td className="p-2 text-end tabular-nums text-xs">
-                                                    {Number(sale.weight) > 0 ? (
+                                                    {Number(sale.weight) > 0 && !sale.item?.unit?.toLowerCase().includes('bori') && !sale.item?.unit?.toLowerCase().includes('peti') && !sale.item?.unit?.toLowerCase().includes('nag') ? (
                                                         <span>
                                                             <strong>{Number(sale.weight).toFixed(2)}</strong>{' '}
-                                                            <span className="text-[10px] text-gray-500">
-                                                                {isUrdu ? (sale.item?.unit?.toLowerCase().includes('kg') ? 'کلو' : 'من') : (sale.item?.unit || 'Kg')}
-                                                            </span>
+                                                            <span className="text-[10px] text-gray-500">kg</span>
                                                         </span>
                                                     ) : (
-                                                        '-'
+                                                        <span className="text-[11px] text-gray-600 font-medium">
+                                                            {sale.item?.unit?.toLowerCase().includes('peti')
+                                                                ? 'per peti'
+                                                                : sale.item?.unit?.toLowerCase().includes('nag')
+                                                                ? 'per nag'
+                                                                : 'per bori'}
+                                                        </span>
                                                     )}
                                                 </td>
 
@@ -1398,7 +1489,7 @@ Thank you!`;
                 <div className="fixed bottom-0 start-0 end-0 bg-green-950 text-white px-3 py-1.5 shadow-xl border-t border-green-700 z-30 flex flex-wrap items-center justify-between gap-2 text-xs">
                     <div className="flex items-center gap-2">
                         <span className={`text-gray-300 ${isUrdu ? 'font-nastaliq' : ''}`}>
-                            {isUrdu ? 'کل تعداد:' : 'Total Units:'}{' '}
+                            {isUrdu ? 'کل تعداد:' : 'Total Nag / Qty:'}{' '}
                             <strong className="text-white text-sm">{summary.total_nag}</strong>
                         </span>
                     </div>

@@ -263,7 +263,7 @@ export default function ReportsIndex() {
             <Head title={isUrdu ? 'رپورٹس' : 'Reports'} />
 
             {/* Interactive Screen UI */}
-            <div className="w-full max-w-full overflow-x-hidden -mt-4 -mx-4 pb-20 bg-[#f4f6f4] min-h-[calc(100vh-4rem)] font-sans text-[#1a211c] dark:text-[#e7ece8] print:hidden" dir={isUrdu ? 'rtl' : 'ltr'}>
+            <div className="-mt-4 -mx-4 -mb-8 pb-28 bg-[#f4f6f4] min-h-screen font-sans text-[#1a211c] dark:text-[#e7ece8] print:hidden" dir={isUrdu ? 'rtl' : 'ltr'}>
                 
                 {/* 1. Dark Green Top Header Banner */}
                 <div className="bg-[#14532d] px-4 md:px-8 pt-3.5 pb-10 md:pb-12 text-white shadow-sm">
@@ -331,7 +331,7 @@ export default function ReportsIndex() {
                                                     {isUrdu ? cat.name_ur : cat.name}
                                                 </span>
                                             </div>
-                                            <span className={`font-mono text-xs px-2 py-0.5 rounded-full shrink-0 ${
+                                            <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 font-semibold ${
                                                 isActive
                                                     ? 'bg-emerald-200/80 text-emerald-900 font-bold'
                                                     : 'bg-gray-100 text-gray-500 font-medium'
@@ -507,7 +507,7 @@ export default function ReportsIndex() {
 
                             {/* Totals Summary */}
                             {reportData.totals.length > 0 && (
-                                <div className="flex flex-wrap items-center justify-end gap-3 p-2 bg-gray-50 border rounded font-mono font-bold text-xs text-gray-900">
+                                <div className="flex flex-wrap items-center justify-end gap-3 p-2 bg-gray-50 border rounded font-bold text-xs text-gray-900">
                                     {reportData.totals.map((tot, idx) => (
                                         <span key={idx} className="px-2 py-1 bg-white border rounded">
                                             {tot}
@@ -517,7 +517,7 @@ export default function ReportsIndex() {
                             )}
 
                             {/* Printed on */}
-                            <div className="text-center font-mono text-[10px] text-gray-400 pt-4">
+                            <div className="text-center text-[10px] text-gray-400 pt-4">
                                 Printed on: {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}
                             </div>
                         </div>
@@ -539,7 +539,7 @@ export default function ReportsIndex() {
                             <span className="text-sm font-bold uppercase tracking-wide">
                                 {reportData.title}
                             </span>
-                            <span className="font-mono text-xs">
+                            <span className="text-xs">
                                 Date: {reportData.from_date !== reportData.to_date ? `${reportData.from_date} to ${reportData.to_date}` : reportData.date}
                             </span>
                         </div>
@@ -573,7 +573,7 @@ export default function ReportsIndex() {
                     </table>
 
                     {reportData.totals.length > 0 && (
-                        <div className="flex flex-wrap items-center justify-end gap-3 p-2 bg-gray-100 border border-black rounded font-mono font-bold text-xs mb-6">
+                        <div className="flex flex-wrap items-center justify-end gap-3 p-2 bg-gray-100 border border-black rounded font-bold text-xs mb-6">
                             {reportData.totals.map((tot, idx) => (
                                 <span key={idx} className="px-2 py-0.5 border border-black rounded bg-white">
                                     {tot}
@@ -582,7 +582,7 @@ export default function ReportsIndex() {
                         </div>
                     )}
 
-                    <div className="text-center text-[10px] text-gray-500 font-mono pt-4 border-t border-gray-300">
+                    <div className="text-center text-[10px] text-gray-500 pt-4 border-t border-gray-300">
                         Printed on: {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}
                     </div>
                 </div>

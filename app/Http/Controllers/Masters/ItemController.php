@@ -27,7 +27,7 @@ class ItemController extends Controller
                   ->orWhere('unit', 'like', "%{$s}%");
             });
         }
-        $items = $iQuery->orderBy('name_ur', 'asc')
+        $items = $iQuery->orderBy('id', 'asc')
             ->paginate($request->per_page ?? 15, ['*'], 'items_page')
             ->withQueryString();
 
@@ -96,15 +96,34 @@ class ItemController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name_ur' => 'nullable|string|max:255',
-            'name_en' => 'nullable|string|max:255',
-            'unit' => 'required|string|max:50',
-            'default_rate' => 'nullable|numeric',
-            'default_bardana' => 'nullable|numeric',
+            'name_ur'          => 'nullable|string|max:255',
+            'name_en'          => 'nullable|string|max:255',
+            'unit'             => 'nullable|string|max:50',
+            'kg_per_unit'      => 'nullable|numeric',
+            'opening_stock'    => 'nullable|integer',
+            'current_stock'    => 'nullable|integer',
+            'low_stock_alert'  => 'nullable|integer',
+            'lot_date'         => 'nullable|string|max:50',
+            'stock_note'       => 'nullable|string|max:255',
+            'default_rate'     => 'nullable|numeric',
+            'default_bardana'  => 'nullable|numeric',
+            'shelf_life'       => 'nullable|string|max:100',
+            'shelf_life_days'  => 'nullable|integer|min:1',
+            'discount_rate'    => 'nullable|numeric',
+            'status'           => 'nullable|string|in:active,inactive,expiring_soon,expired,low_stock,khatam',
         ]);
 
         if (empty($validated['name_ur']) && empty($validated['name_en'])) {
-            return back()->withErrors(['name_ur' => 'At least one name (Urdu or English) is required.']);
+            return back()->withErrors(['name_en' => 'Item name is required.']);
+        }
+
+        if (!isset($validated['current_stock']) && isset($validated['opening_stock'])) {
+            $validated['current_stock'] = $validated['opening_stock'];
+        }
+
+        // Auto compute expiry_at if shelf_life_days given
+        if (!empty($validated['shelf_life_days'])) {
+            $validated['expiry_at'] = now()->addDays($validated['shelf_life_days']);
         }
 
         Item::create($validated);
@@ -117,17 +136,44 @@ class ItemController extends Controller
         $item = Item::findOrFail($id);
 
         $validated = $request->validate([
-            'name_ur' => 'nullable|string|max:255',
-            'name_en' => 'nullable|string|max:255',
-            'unit' => 'required|string|max:50',
-            'default_rate' => 'nullable|numeric',
-            'default_bardana' => 'nullable|numeric',
-            'status' => 'required|string|in:active,inactive',
+            'name_ur'          => 'nullable|string|max:255',
+            'name_en'          => 'nullable|string|max:255',
+            'unit'             => 'nullable|string|max:50',
+            'kg_per_unit'      => 'nullable|numeric',
+            'opening_stock'    => 'nullable|integer',
+            'current_stock'    => 'nullable|integer',
+            'low_stock_alert'  => 'nullable|integer',
+            'lot_date'         => 'nullable|string|max:50',
+            'stock_note'       => 'nullable|string|max:255',
+            'default_rate'     => 'nullable|numeric',
+            'default_bardana'  => 'nullable|numeric',
+            'shelf_life'       => 'nullable|string|max:100',
+            'shelf_life_days'  => 'nullable|integer|min:1',
+            'discount_rate'    => 'nullable|numeric',
+            'status'           => 'required|string',
         ]);
+
+        if (!empty($validated['shelf_life_days']) && $item->shelf_life_days !== $validated['shelf_life_days']) {
+            $validated['expiry_at'] = now()->addDays($validated['shelf_life_days']);
+        }
 
         $item->update($validated);
 
         return back()->with('success', 'Item updated successfully.');
+    }
+
+    public function applyDiscount(Request $request, int $id)
+    {
+        $item = Item::findOrFail($id);
+        $discountRate = $request->input('discount_rate');
+        if (!$discountRate) {
+            // Default 15% discount
+            $discountRate = round($item->default_rate * 0.85);
+        }
+        $item->discount_rate = $discountRate;
+        $item->save();
+
+        return back()->with('success', "Discount applied: Rs. {$discountRate}");
     }
 
     public function destroy(int $id)

@@ -296,7 +296,7 @@ export default function MerchantsIndex({
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={isUrdu ? 'مرچنٹس و کسان' : 'Merchants & Farmers'} />
 
-            <div className="w-full max-w-full overflow-x-hidden -mt-4 -mx-4 pb-20 bg-[#f4f6f4] min-h-[calc(100vh-4rem)] font-sans text-[#1a211c] print:hidden" dir={isUrdu ? 'rtl' : 'ltr'}>
+            <div className="-mt-4 -mx-4 -mb-8 pb-28 bg-[#f4f6f4] min-h-screen font-sans text-[#1a211c] print:hidden" dir={isUrdu ? 'rtl' : 'ltr'}>
                 
                 {/* 1. Dark Green Top Header Banner */}
                 <MandiPageHeader
@@ -324,7 +324,7 @@ export default function MerchantsIndex({
                     {/* Tab Bar & Search Card */}
                     <div className="bg-white rounded-xl border border-gray-200/90 shadow-sm p-3.5 flex flex-wrap items-center justify-between gap-3">
                         {/* 2 Tabs */}
-                        <div className="flex items-center gap-1.5 p-1 bg-gray-100/90 rounded-lg">
+                        <div className="flex items-center gap-1.5 p-1 bg-gray-100/90 rounded-lg max-w-full overflow-x-auto">
                             <button
                                 type="button"
                                 onClick={() => handleTabChange('merchants')}
@@ -336,7 +336,7 @@ export default function MerchantsIndex({
                             >
                                 <Icon name="Users" className="size-4" />
                                 <span>{isUrdu ? 'مرچنٹس (خریدار)' : 'Merchants (Buyers)'}</span>
-                                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold ${
                                     activeTab === 'merchants' ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-700'
                                 }`}>
                                     {merchants.total}
@@ -354,7 +354,7 @@ export default function MerchantsIndex({
                             >
                                 <Icon name="Tractor" className="size-4" />
                                 <span>{isUrdu ? 'زمیندار (کسان)' : 'Farmers (Growers)'}</span>
-                                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold ${
                                     activeTab === 'farmers' ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-700'
                                 }`}>
                                     {farmers.total}
@@ -414,7 +414,7 @@ export default function MerchantsIndex({
                                         ) : (
                                             merchants.data.map(m => (
                                                 <tr key={m.id} className="hover:bg-gray-50/70 transition-colors">
-                                                    <td className="px-4 py-3 font-mono font-bold text-gray-900">
+                                                    <td className="px-4 py-3 font-bold text-gray-900">
                                                         #{m.code}
                                                         {m.code === 1 && (
                                                             <span className="ms-1.5 text-[9px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-semibold uppercase">
@@ -428,13 +428,13 @@ export default function MerchantsIndex({
                                                     <td className="px-4 py-3 text-gray-700 font-medium">
                                                         {m.name_en || '—'}
                                                     </td>
-                                                    <td className="px-4 py-3 font-mono text-gray-600">
+                                                    <td className="px-4 py-3 text-gray-600">
                                                         {m.phone || '—'}
                                                     </td>
-                                                    <td className="px-4 py-3 text-end font-mono text-gray-700">
+                                                    <td className="px-4 py-3 text-end text-gray-700">
                                                         {Number(m.opening_balance || 0).toLocaleString()}
                                                     </td>
-                                                    <td className="px-4 py-3 text-end font-mono font-bold text-gray-900">
+                                                    <td className="px-4 py-3 text-end font-bold text-gray-900">
                                                         Rs. {Number(m.current_balance || 0).toLocaleString()}
                                                     </td>
                                                     <td className="px-4 py-3 text-center">
@@ -535,7 +535,7 @@ export default function MerchantsIndex({
                                                 const isNeg = (f.current_balance || 0) < 0;
                                                 return (
                                                     <tr key={f.id} className="hover:bg-gray-50/70 transition-colors">
-                                                        <td className="px-4 py-3 font-mono font-bold text-gray-900">
+                                                        <td className="px-4 py-3 font-bold text-gray-900">
                                                             #{f.code}
                                                         </td>
                                                         <td className="px-4 py-3 font-nastaliq font-bold text-gray-900 text-sm">
@@ -547,13 +547,13 @@ export default function MerchantsIndex({
                                                         <td className="px-4 py-3 text-gray-600">
                                                             {f.area ? (isUrdu ? (f.area.name_ur || f.area.name_en) : (f.area.name_en || f.area.name_ur)) : '—'}
                                                         </td>
-                                                        <td className="px-4 py-3 font-mono text-gray-600">
+                                                        <td className="px-4 py-3 text-gray-600">
                                                             {f.phone || '—'}
                                                         </td>
-                                                        <td className="px-4 py-3 text-end font-mono text-gray-700">
+                                                        <td className="px-4 py-3 text-end text-gray-700">
                                                             {Number(f.opening_balance || 0).toLocaleString()}
                                                         </td>
-                                                        <td className={`px-4 py-3 text-end font-mono font-bold ${isNeg ? 'text-red-600' : 'text-gray-900'}`}>
+                                                        <td className={`px-4 py-3 text-end font-bold ${isNeg ? 'text-red-600' : 'text-gray-900'}`}>
                                                             {isNeg ? `- Rs. ${Math.abs(f.current_balance).toLocaleString()}` : `Rs. ${Number(f.current_balance || 0).toLocaleString()}`}
                                                         </td>
                                                         <td className="px-4 py-3 text-center">
@@ -644,7 +644,7 @@ export default function MerchantsIndex({
                                     value={merchantForm.data.code}
                                     onChange={e => merchantForm.setData('code', e.target.value)}
                                     placeholder="Auto"
-                                    className="h-9 text-xs font-mono"
+                                    className="h-9 text-xs font-medium"
                                 />
                             </div>
                             <div>
@@ -653,7 +653,7 @@ export default function MerchantsIndex({
                                     value={merchantForm.data.phone}
                                     onChange={e => merchantForm.setData('phone', e.target.value)}
                                     placeholder="0300-1234567"
-                                    className="h-9 text-xs font-mono"
+                                    className="h-9 text-xs"
                                 />
                             </div>
                         </div>
@@ -687,7 +687,7 @@ export default function MerchantsIndex({
                                 value={merchantForm.data.opening_balance}
                                 onChange={e => merchantForm.setData('opening_balance', parseFloat(e.target.value) || 0)}
                                 placeholder="0"
-                                className="h-9 text-xs font-mono"
+                                className="h-9 text-xs"
                             />
                         </div>
 
@@ -722,7 +722,7 @@ export default function MerchantsIndex({
                                     value={farmerForm.data.code}
                                     onChange={e => farmerForm.setData('code', e.target.value)}
                                     placeholder="Auto"
-                                    className="h-9 text-xs font-mono"
+                                    className="h-9 text-xs font-medium"
                                 />
                             </div>
                             <div>
@@ -731,7 +731,7 @@ export default function MerchantsIndex({
                                     value={farmerForm.data.phone}
                                     onChange={e => farmerForm.setData('phone', e.target.value)}
                                     placeholder="0300-1234567"
-                                    className="h-9 text-xs font-mono"
+                                    className="h-9 text-xs"
                                 />
                             </div>
                         </div>
@@ -781,7 +781,7 @@ export default function MerchantsIndex({
                                 value={farmerForm.data.opening_balance}
                                 onChange={e => farmerForm.setData('opening_balance', parseFloat(e.target.value) || 0)}
                                 placeholder="0"
-                                className="h-9 text-xs font-mono"
+                                className="h-9 text-xs"
                             />
                         </div>
 

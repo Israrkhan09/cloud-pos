@@ -75,6 +75,22 @@ export const jkcSidebarNav: NavGroup[] = [
         ]
     },
     {
+        id: "investment",
+        title: "nav.investment_capital",
+        icon: "CoinsIcon",
+        isGroup: true,
+        items: [
+            {
+                title: "nav.investment_capital",
+                url: "/investment/partners",
+                icon: "CoinsIcon",
+            },
+        ],
+        includeRoutes: [
+            "investment"
+        ]
+    },
+    {
         id: "khata",
         title: "nav.khata",
         icon: "BookOpenIcon",

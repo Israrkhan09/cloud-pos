@@ -96,7 +96,7 @@ export default function GeneralLedgerIndex({ date, dayMonth, rows, summary }: Pr
             <Head title={isUrdu ? 'جنرل لیجر' : 'General Ledger'} />
 
             {/* Screen UI - Clean Simple Style */}
-            <div className="w-full max-w-full overflow-x-hidden -mt-4 -mx-4 pb-20 bg-[#f4f6f4] min-h-[calc(100vh-4rem)] font-sans text-[#1a211c] print:hidden" dir={isUrdu ? 'rtl' : 'ltr'}>
+            <div className="-mt-4 -mx-4 -mb-8 pb-28 bg-[#f4f6f4] min-h-screen font-sans text-[#1a211c] print:hidden" dir={isUrdu ? 'rtl' : 'ltr'}>
                 
                 {/* 1. Greenish Top Header Banner */}
                 <MandiPageHeader
@@ -143,7 +143,7 @@ export default function GeneralLedgerIndex({ date, dayMonth, rows, summary }: Pr
                                     type="date"
                                     value={selectedDate}
                                     onChange={e => handleDateChange(e.target.value)}
-                                    className="h-9 px-3 rounded-lg bg-gray-50 border border-gray-200 text-xs font-mono font-medium text-gray-900 focus:bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none"
+                                    className="h-9 px-3 rounded-lg bg-gray-50 border border-gray-200 text-xs font-medium text-gray-900 focus:bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none"
                                 />
                                 <button
                                     type="button"
@@ -172,10 +172,10 @@ export default function GeneralLedgerIndex({ date, dayMonth, rows, summary }: Pr
                             <span className="text-[10px] font-semibold text-gray-400 block">
                                 Balance
                             </span>
-                            <div className="text-xl md:text-2xl font-black font-mono tabular-nums text-gray-900">
+                            <div className="text-xl md:text-2xl font-black text-gray-900">
                                 Rs. {Number(summary.balance).toLocaleString()}
                             </div>
-                            <span className="text-[11px] text-gray-400 block pt-0.5 font-mono">
+                            <span className="text-[11px] text-gray-400 block pt-0.5">
                                 {dayMonth} {isUrdu ? 'کا حساب' : 'ka hisaab'}
                             </span>
                         </div>
@@ -185,7 +185,7 @@ export default function GeneralLedgerIndex({ date, dayMonth, rows, summary }: Pr
                             <span className="text-[10px] font-semibold text-gray-400 block">
                                 Total Jama
                             </span>
-                            <div className="text-lg md:text-xl font-bold font-mono tabular-nums text-gray-900">
+                            <div className="text-lg md:text-xl font-bold text-gray-900">
                                 Rs. {Number(summary.total_jama).toLocaleString()}
                             </div>
                         </div>
@@ -195,7 +195,7 @@ export default function GeneralLedgerIndex({ date, dayMonth, rows, summary }: Pr
                             <span className="text-[10px] font-semibold text-gray-400 block">
                                 Total Banam
                             </span>
-                            <div className="text-lg md:text-xl font-bold font-mono tabular-nums text-gray-900">
+                            <div className="text-lg md:text-xl font-bold text-gray-900">
                                 Rs. {Number(summary.total_banam).toLocaleString()}
                             </div>
                         </div>
@@ -205,7 +205,7 @@ export default function GeneralLedgerIndex({ date, dayMonth, rows, summary }: Pr
                             <span className="text-[10px] font-semibold text-gray-400 block">
                                 Entries
                             </span>
-                            <div className="text-lg md:text-xl font-bold font-mono tabular-nums text-gray-900">
+                            <div className="text-lg md:text-xl font-bold text-gray-900">
                                 {summary.entries}
                             </div>
                         </div>
@@ -234,7 +234,7 @@ export default function GeneralLedgerIndex({ date, dayMonth, rows, summary }: Pr
                                     ) : (
                                         rows.map(row => (
                                             <tr key={row.id} className="hover:bg-gray-50/60 transition-colors">
-                                                <td className="px-4 py-3 font-mono text-gray-600">
+                                                <td className="px-4 py-3 text-gray-600">
                                                     {row.date}
                                                 </td>
                                                 <td className="px-4 py-3 font-semibold text-gray-900">
@@ -243,10 +243,10 @@ export default function GeneralLedgerIndex({ date, dayMonth, rows, summary }: Pr
                                                 <td className="px-4 py-3 text-gray-500 text-xs">
                                                     {row.detail || '—'}
                                                 </td>
-                                                <td className="px-4 py-3 text-end font-mono font-medium text-gray-900">
+                                                <td className="px-4 py-3 text-end font-medium text-gray-900">
                                                     {row.jama > 0 ? Number(row.jama).toLocaleString() : '–'}
                                                 </td>
-                                                <td className="px-4 py-3 text-end font-mono font-medium text-gray-900">
+                                                <td className="px-4 py-3 text-end font-medium text-gray-900">
                                                     {row.banam > 0 ? Number(row.banam).toLocaleString() : '–'}
                                                 </td>
                                             </tr>
@@ -258,10 +258,10 @@ export default function GeneralLedgerIndex({ date, dayMonth, rows, summary }: Pr
                                         <td className="px-4 py-3">Total</td>
                                         <td className="px-4 py-3"></td>
                                         <td className="px-4 py-3"></td>
-                                        <td className="px-4 py-3 text-end font-mono">
+                                        <td className="px-4 py-3 text-end">
                                             {Number(summary.total_jama).toLocaleString()}
                                         </td>
-                                        <td className="px-4 py-3 text-end font-mono">
+                                        <td className="px-4 py-3 text-end">
                                             {Number(summary.total_banam).toLocaleString()}
                                         </td>
                                     </tr>
@@ -285,7 +285,7 @@ export default function GeneralLedgerIndex({ date, dayMonth, rows, summary }: Pr
                     <p className="text-[11px] font-semibold text-gray-700">
                         {isUrdu ? 'جنرل لیجر · روکڑ' : 'General Ledger · Roker'}
                     </p>
-                    <div className="text-[10px] text-gray-500 font-mono mt-0.5">
+                    <div className="text-[10px] text-gray-500 mt-0.5">
                         Date: {selectedDate}
                     </div>
                 </div>
@@ -293,7 +293,7 @@ export default function GeneralLedgerIndex({ date, dayMonth, rows, summary }: Pr
                 {/* Summary Box */}
                 <div className="border border-black rounded p-2 mb-3 text-center bg-gray-50">
                     <span className="text-[10px] text-gray-600 uppercase font-bold block">Net Cash Balance</span>
-                    <strong className="text-base font-mono font-black text-gray-900">
+                    <strong className="text-base font-black text-gray-900">
                         Rs. {Number(summary.balance).toLocaleString()}
                     </strong>
                     <div className="flex justify-between text-[10px] pt-1 mt-1 border-t border-gray-300">
@@ -325,10 +325,10 @@ export default function GeneralLedgerIndex({ date, dayMonth, rows, summary }: Pr
                                         <div className="font-semibold">{r.name}</div>
                                         {r.detail && <div className="text-[9px] text-gray-600">{r.detail}</div>}
                                     </td>
-                                    <td className="p-1 text-end border-e border-black font-mono">
+                                    <td className="p-1 text-end border-e border-black">
                                         {r.jama > 0 ? Number(r.jama).toLocaleString() : '–'}
                                     </td>
-                                    <td className="p-1 text-end font-mono">
+                                    <td className="p-1 text-end">
                                         {r.banam > 0 ? Number(r.banam).toLocaleString() : '–'}
                                     </td>
                                 </tr>
@@ -338,14 +338,14 @@ export default function GeneralLedgerIndex({ date, dayMonth, rows, summary }: Pr
                     <tfoot>
                         <tr className="border-t-2 border-black font-bold bg-gray-100">
                             <td className="p-1 border-e border-black">Total</td>
-                            <td className="p-1 text-end border-e border-black font-mono">Rs. {Number(summary.total_jama).toLocaleString()}</td>
-                            <td className="p-1 text-end font-mono">Rs. {Number(summary.total_banam).toLocaleString()}</td>
+                            <td className="p-1 text-end border-e border-black">Rs. {Number(summary.total_jama).toLocaleString()}</td>
+                            <td className="p-1 text-end">Rs. {Number(summary.total_banam).toLocaleString()}</td>
                         </tr>
                     </tfoot>
                 </table>
 
                 {/* Print Footer: Only "Printed on", NO signatures */}
-                <div className="text-center text-[9px] text-gray-500 font-mono pt-2 border-t border-gray-300">
+                <div className="text-center text-[9px] text-gray-500 pt-2 border-t border-gray-300">
                     Printed on: {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}
                 </div>
             </div>
@@ -386,7 +386,7 @@ export default function GeneralLedgerIndex({ date, dayMonth, rows, summary }: Pr
                                 value={data.amount}
                                 onChange={e => setData('amount', e.target.value)}
                                 placeholder="0.00"
-                                className="h-9 text-xs font-mono font-bold"
+                                className="h-9 text-xs font-bold"
                             />
                         </div>
 

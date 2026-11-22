@@ -93,7 +93,7 @@ export function AppSidebar() {
                                 // Single item group (e.g. Dashboard, Cash Book, Reports)
                                 if (!hasMultiple && group.items && group.items.length === 1) {
                                     const singleItem = group.items[0];
-                                    const isActive = url === singleItem.url;
+                                    const isActive = url === singleItem.url || (group.includeRoutes && group.includeRoutes.some(r => currentRouteName.startsWith(r) || url.startsWith('/' + r) || url.includes(r)));
                                     const label = t(singleItem.title || group.title);
 
                                     return (

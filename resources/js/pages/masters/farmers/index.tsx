@@ -179,7 +179,7 @@ export default function FarmersIndex({ farmers, areas, filters }: Props) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={isUrdu ? 'زمیندار سیٹ اپ' : 'Farmers Setup'} />
 
-            <div className="-mt-3 md:-mt-6 -mx-3 md:-mx-6 pb-24 bg-[#eef2ee] min-h-screen font-sans text-[#1a211c] dark:text-[#e7ece8]" dir={isUrdu ? 'rtl' : 'ltr'}>
+            <div className="-mt-4 -mx-4 -mb-8 pb-28 bg-[#f4f6f4] min-h-screen font-sans text-[#1a211c] dark:text-[#e7ece8]" dir={isUrdu ? 'rtl' : 'ltr'}>
                 {/* 1. Header Banner */}
                 <MandiPageHeader
                     title={isUrdu ? 'زمیندار (کسان)' : 'Farmers Setup'}
@@ -204,7 +204,7 @@ export default function FarmersIndex({ farmers, areas, filters }: Props) {
                             <span className="text-xs uppercase tracking-wider font-semibold text-gray-500">
                                 {isUrdu ? 'کل ریکارڈز:' : 'Records:'}
                             </span>
-                            <span className="font-mono font-bold text-gray-900 bg-gray-100 px-2.5 py-1 rounded-lg text-xs">
+                            <span className="font-bold text-gray-900 bg-gray-100 px-2.5 py-1 rounded-lg text-xs">
                                 {farmers.total}
                             </span>
                         </div>
@@ -257,7 +257,7 @@ export default function FarmersIndex({ farmers, areas, filters }: Props) {
                                                 }`}
                                             >
                                                 <td className="py-3 px-4">
-                                                    <span className="font-mono font-bold text-gray-900 bg-gray-100 px-2 py-0.5 rounded-lg text-xs">
+                                                    <span className="font-bold text-gray-900 bg-gray-100 px-2 py-0.5 rounded-lg text-xs">
                                                         #{f.code}
                                                     </span>
                                                 </td>
@@ -279,13 +279,13 @@ export default function FarmersIndex({ farmers, areas, filters }: Props) {
                                                         ))}
                                                     </div>
                                                 </td>
-                                                <td className="py-3 px-4 font-mono text-gray-600">
+                                                <td className="py-3 px-4 text-gray-600">
                                                     {f.phone || '—'}
                                                 </td>
-                                                <td className="py-3 px-4 text-end font-mono tabular-nums text-gray-700">
+                                                <td className="py-3 px-4 text-end text-gray-700">
                                                     Rs. {Number(f.opening_balance || 0).toLocaleString()}
                                                 </td>
-                                                <td className="py-3 px-4 text-end font-mono tabular-nums font-bold text-[#14532d]">
+                                                <td className="py-3 px-4 text-end font-bold text-[#14532d]">
                                                     Rs. {Number(f.current_balance || 0).toLocaleString()}
                                                 </td>
                                                 <td className="py-3 px-4 text-center">
@@ -407,7 +407,7 @@ export default function FarmersIndex({ farmers, areas, filters }: Props) {
                                     value={data.code}
                                     onChange={e => setData('code', e.target.value)}
                                     placeholder="Auto"
-                                    className="font-mono text-start h-9 rounded-xl border-gray-200"
+                                    className="text-start h-9 rounded-xl border-gray-200"
                                 />
                                 {errors.code && <span className="text-xs text-red-500">{errors.code}</span>}
                             </div>
@@ -421,7 +421,7 @@ export default function FarmersIndex({ farmers, areas, filters }: Props) {
                                     value={data.phone}
                                     onChange={e => setData('phone', e.target.value)}
                                     placeholder="0300-1122334"
-                                    className="font-mono text-start h-9 rounded-xl border-gray-200"
+                                    className="text-start h-9 rounded-xl border-gray-200"
                                 />
                             </div>
                         </div>
@@ -456,7 +456,7 @@ export default function FarmersIndex({ farmers, areas, filters }: Props) {
                                     value={data.opening_balance}
                                     onChange={e => setData('opening_balance', parseFloat(e.target.value) || 0)}
                                     placeholder="0"
-                                    className="font-mono text-start h-9 rounded-xl border-gray-200"
+                                    className="text-start h-9 rounded-xl border-gray-200"
                                 />
                             </div>
                         </div>

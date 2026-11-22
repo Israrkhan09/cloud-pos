@@ -42,6 +42,18 @@ class AmrozaService
         return DB::transaction(function () use ($data) {
             $sale = AmrozaSale::create($data);
             $this->recalculateMerchantBalance($sale->merchant_id);
+
+            // Deduct stock
+            if (!empty($sale->item_id)) {
+                $item = \App\Models\Item::find($sale->item_id);
+                if ($item && $item->current_stock !== null) {
+                    $item->decrement('current_stock', (int) $sale->nag);
+                    if ($item->current_stock <= 0) {
+                        $item->update(['status' => 'khatam', 'current_stock' => 0]);
+                    }
+                }
+            }
+
             return $sale;
         });
     }
@@ -54,11 +66,44 @@ class AmrozaService
         return DB::transaction(function () use ($id, $data) {
             $sale = AmrozaSale::findOrFail($id);
             $oldMerchantId = $sale->merchant_id;
+            $oldNag = (int) $sale->nag;
+            $oldItemId = $sale->item_id;
+
             $sale->update($data);
 
             $this->recalculateMerchantBalance($sale->merchant_id);
             if ($oldMerchantId !== $sale->merchant_id) {
                 $this->recalculateMerchantBalance($oldMerchantId);
+            }
+
+            // Adjust stock
+            $newItemId = $sale->item_id;
+            $newNag = (int) $sale->nag;
+
+            if ($oldItemId === $newItemId) {
+                $diff = $newNag - $oldNag;
+                if ($diff !== 0) {
+                    $item = \App\Models\Item::find($newItemId);
+                    if ($item && $item->current_stock !== null) {
+                        $item->decrement('current_stock', $diff);
+                        if ($item->current_stock <= 0) {
+                            $item->update(['status' => 'khatam', 'current_stock' => 0]);
+                        } elseif ($item->status === 'khatam' && $item->current_stock > 0) {
+                            $item->update(['status' => 'active']);
+                        }
+                    }
+                }
+            } else {
+                // Revert old item stock
+                $oldItem = \App\Models\Item::find($oldItemId);
+                if ($oldItem && $oldItem->current_stock !== null) {
+                    $oldItem->increment('current_stock', $oldNag);
+                }
+                // Deduct new item stock
+                $newItem = \App\Models\Item::find($newItemId);
+                if ($newItem && $newItem->current_stock !== null) {
+                    $newItem->decrement('current_stock', $newNag);
+                }
             }
 
             return $sale;
@@ -73,8 +118,23 @@ class AmrozaService
         return DB::transaction(function () use ($id) {
             $sale = AmrozaSale::findOrFail($id);
             $merchantId = $sale->merchant_id;
+            $itemId = $sale->item_id;
+            $nag = (int) $sale->nag;
+
             $res = $sale->delete();
             $this->recalculateMerchantBalance($merchantId);
+
+            // Revert stock
+            if (!empty($itemId)) {
+                $item = \App\Models\Item::find($itemId);
+                if ($item && $item->current_stock !== null) {
+                    $item->increment('current_stock', $nag);
+                    if ($item->status === 'khatam' && $item->current_stock > 0) {
+                        $item->update(['status' => 'active']);
+                    }
+                }
+            }
+
             return $res;
         });
     }

@@ -28,27 +28,12 @@ class AmrozaController extends Controller
             ->orderBy('code', 'asc')
             ->get();
 
-        $items = Item::where('status', 'active')
-            ->select('id', 'code', 'name_en', 'name_ur', 'unit', 'default_rate', 'default_bardana')
-            ->orderBy('code', 'asc')
+        $items = Item::select('id', 'code', 'name_en', 'name_ur', 'unit', 'kg_per_unit', 'opening_stock', 'current_stock', 'low_stock_alert', 'default_rate', 'default_bardana', 'status', 'shelf_life', 'expiry_at', 'lot_date', 'stock_note')
+            ->orderBy('id', 'asc')
             ->get();
 
-        // Get top 6 most-sold items for quick-pick buttons, fallback to first 6 items
-        $topItemIds = \App\Models\AmrozaSale::select('item_id', \Illuminate\Support\Facades\DB::raw('COUNT(*) as total_sales'))
-            ->groupBy('item_id')
-            ->orderByDesc('total_sales')
-            ->limit(6)
-            ->pluck('item_id')
-            ->toArray();
-
-        $topItems = collect();
-        if (!empty($topItemIds)) {
-            $topItems = $items->whereIn('id', $topItemIds)->values();
-        }
-        if ($topItems->count() < 6) {
-            $remaining = $items->whereNotIn('id', $topItems->pluck('id'))->take(6 - $topItems->count());
-            $topItems = $topItems->merge($remaining)->values();
-        }
+        // Pass all items for quick-pick buttons so active, khatam, and expired are displayed
+        $topItems = $items;
 
         // Get recent rates per item for anomaly detection
         $recentRates = \App\Models\AmrozaSale::select('item_id', 'rate')

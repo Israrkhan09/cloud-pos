@@ -39,6 +39,21 @@ Route::middleware(['auth', 'verified'])
         Route::get('banking/transfers', [\App\Http\Controllers\Banking\BankController::class, 'transfers'])->name('banking.transfers');
         Route::get('banking/cheques', [\App\Http\Controllers\Banking\BankController::class, 'cheques'])->name('banking.cheques');
         Route::get('banking/reconciliation', [\App\Http\Controllers\Banking\BankController::class, 'reconciliation'])->name('banking.reconciliation');
+
+        // Investment / Capital Module
+        Route::get('investment', fn() => redirect()->route('investment.partners'))->name('investment.index');
+        Route::get('investment/partners', [\App\Http\Controllers\Investment\InvestmentController::class, 'partners'])->name('investment.partners');
+        Route::get('investment/loans', [\App\Http\Controllers\Investment\InvestmentController::class, 'loans'])->name('investment.loans');
+        Route::get('investment/surplus', [\App\Http\Controllers\Investment\InvestmentController::class, 'surplus'])->name('investment.surplus');
+        Route::get('investment/audit', [\App\Http\Controllers\Investment\InvestmentController::class, 'audit'])->name('investment.audit');
+
+        Route::post('investment/entry', [\App\Http\Controllers\Investment\InvestmentController::class, 'storeEntry'])->name('investment.entry');
+        Route::post('investment/approve/{id}', [\App\Http\Controllers\Investment\InvestmentController::class, 'approve'])->name('investment.approve');
+        Route::post('investment/void/{id}', [\App\Http\Controllers\Investment\InvestmentController::class, 'void'])->name('investment.void');
+        Route::post('investment/loans/{id}/return', [\App\Http\Controllers\Investment\InvestmentController::class, 'returnLoan'])->name('investment.loans.return');
+        Route::post('investment/surplus/{id}/return', [\App\Http\Controllers\Investment\InvestmentController::class, 'returnSurplus'])->name('investment.surplus.return');
+        Route::post('investment/surplus/{id}/mature', [\App\Http\Controllers\Investment\InvestmentController::class, 'matureSurplus'])->name('investment.surplus.mature');
+        Route::post('investment/role', [\App\Http\Controllers\Investment\InvestmentController::class, 'switchRole'])->name('investment.role');
     });
 
 require __DIR__ . '/auth.php';

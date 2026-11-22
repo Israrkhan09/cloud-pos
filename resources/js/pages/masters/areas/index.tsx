@@ -82,13 +82,21 @@ export default function AreasIndex({ areas, filters }: Props) {
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        if (!data.name_ur && !data.name_en) {
+        const finalName = data.name_en.trim();
+        if (!finalName) {
             toast.error(isUrdu ? 'براہ کرم علاقہ کا نام درج کریں' : 'Barae meherbani area ka naam darj karein');
             return;
         }
 
+        const payload = {
+            ...data,
+            name_en: finalName,
+            name_ur: finalName,
+        };
+
         if (editingArea) {
             put(`/masters/areas/${editingArea.id}`, {
+                data: payload,
                 onSuccess: () => {
                     setModalOpen(false);
                     toast.success(isUrdu ? 'علاقہ کا ریکارڈ اپڈیٹ ہو گیا' : 'Area record update ho gaya');
@@ -100,6 +108,7 @@ export default function AreasIndex({ areas, filters }: Props) {
             });
         } else {
             post('/masters/areas', {
+                data: payload,
                 onSuccess: () => {
                     setModalOpen(false);
                     toast.success(isUrdu ? 'علاقہ کامیابی سے شامل ہو گیا' : 'Area kamyabi se shamil ho gaya');
@@ -138,7 +147,7 @@ export default function AreasIndex({ areas, filters }: Props) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={isUrdu ? 'علاقہ جات سیٹ اپ' : 'Areas Setup'} />
 
-            <div className="-mt-3 md:-mt-6 -mx-3 md:-mx-6 pb-24 bg-[#eef2ee] min-h-screen font-sans text-[#1a211c] dark:text-[#e7ece8]" dir={isUrdu ? 'rtl' : 'ltr'}>
+            <div className="-mt-4 -mx-4 -mb-8 pb-28 bg-[#f4f6f4] min-h-screen font-sans text-[#1a211c] dark:text-[#e7ece8]" dir={isUrdu ? 'rtl' : 'ltr'}>
                 {/* 1. Header Banner */}
                 <MandiPageHeader
                     title={isUrdu ? 'علاقہ جات (ایریاز)' : 'Areas Setup'}
@@ -163,7 +172,7 @@ export default function AreasIndex({ areas, filters }: Props) {
                             <span className="text-xs uppercase tracking-wider font-semibold text-gray-500">
                                 {isUrdu ? 'کل ریکارڈز:' : 'Records:'}
                             </span>
-                            <span className="font-mono font-bold text-gray-900 bg-gray-100 px-2.5 py-1 rounded-lg text-xs">
+                            <span className="font-bold text-gray-900 bg-gray-100 px-2.5 py-1 rounded-lg text-xs">
                                 {areas.total}
                             </span>
                         </div>
@@ -189,8 +198,7 @@ export default function AreasIndex({ areas, filters }: Props) {
                                 <thead className="bg-[#f0f4f1] text-[#14532d] border-b border-gray-200 select-none">
                                     <tr>
                                         <th className="py-3 px-4 text-start w-20 font-bold">{isUrdu ? 'کوڈ' : 'Code'}</th>
-                                        <th className="py-3 px-4 text-start font-bold">{isUrdu ? 'اردو نام' : 'Naam (Urdu)'}</th>
-                                        <th className="py-3 px-4 text-start font-bold">{isUrdu ? 'انگریزی نام' : 'Name (English)'}</th>
+                                        <th className="py-3 px-4 text-start font-bold">{isUrdu ? 'نام' : 'Name'}</th>
                                         <th className="py-3 px-4 text-center w-24 font-bold">{isUrdu ? 'اسٹیٹس' : 'Status'}</th>
                                         <th className="py-3 px-4 text-center w-24 font-bold">{isUrdu ? 'ایکشن' : 'Actions'}</th>
                                     </tr>
@@ -198,7 +206,7 @@ export default function AreasIndex({ areas, filters }: Props) {
                                 <tbody className="divide-y divide-gray-100">
                                     {areas.data.length === 0 ? (
                                         <tr>
-                                            <td colSpan={5} className="py-12 text-center text-gray-400 text-sm">
+                                            <td colSpan={4} className="py-12 text-center text-gray-400 text-sm">
                                                 {isUrdu ? 'کوئی علاقہ نہیں ملا' : 'Koi area nahi mila'}
                                             </td>
                                         </tr>
@@ -211,15 +219,12 @@ export default function AreasIndex({ areas, filters }: Props) {
                                                 }`}
                                             >
                                                 <td className="py-3 px-4">
-                                                    <span className="font-mono font-bold text-gray-900 bg-gray-100 px-2 py-0.5 rounded-lg text-xs">
+                                                    <span className="font-bold text-gray-900 bg-gray-100 px-2 py-0.5 rounded-lg text-xs">
                                                         #{area.code || area.id}
                                                     </span>
                                                 </td>
-                                                <td className="py-3 px-4 font-semibold font-nastaliq text-sm text-gray-900">
-                                                    {area.name_ur || '—'}
-                                                </td>
-                                                <td className="py-3 px-4 font-medium text-gray-900">
-                                                    {area.name_en || '—'}
+                                                <td className="py-3 px-4 font-bold text-gray-900">
+                                                    {area.name_en || area.name || area.name_ur || '—'}
                                                 </td>
                                                 <td className="py-3 px-4 text-center">
                                                     <button
@@ -299,34 +304,28 @@ export default function AreasIndex({ areas, filters }: Props) {
                     </DialogHeader>
 
                     <form onSubmit={handleSubmit} className="flex flex-col gap-3.5 py-2">
-                        {/* Urdu Name */}
-                        <div className="grid gap-1">
-                            <Label htmlFor="name_ur" className="text-xs font-semibold text-gray-700">
-                                {isUrdu ? 'اردو نام' : 'Naam (Urdu)'} <span className="text-red-500">*</span>
-                            </Label>
-                            <Input
-                                id="name_ur"
-                                autoFocus
-                                value={data.name_ur}
-                                onChange={e => setData('name_ur', e.target.value)}
-                                placeholder="مثلاً بدین، ٹھٹھہ، حیدرآباد"
-                                className="font-nastaliq text-start h-9 rounded-xl border-gray-200 focus:border-[#14532d]"
-                            />
-                            {errors.name_ur && <span className="text-xs text-red-500">{errors.name_ur}</span>}
-                        </div>
-
-                        {/* English Name */}
+                        {/* Name (English Only) */}
                         <div className="grid gap-1">
                             <Label htmlFor="name_en" className="text-xs font-semibold text-gray-700">
-                                {isUrdu ? 'انگریزی نام' : 'Name (English)'}
+                                {isUrdu ? 'نام' : 'Name'} <span className="text-red-500">*</span>
                             </Label>
                             <Input
                                 id="name_en"
+                                autoFocus
+                                required
                                 value={data.name_en}
-                                onChange={e => setData('name_en', e.target.value)}
-                                placeholder="e.g. Badin, Thatta, Hyderabad"
+                                onChange={e => {
+                                    const val = e.target.value;
+                                    setData({
+                                        ...data,
+                                        name_en: val,
+                                        name_ur: val,
+                                    });
+                                }}
+                                placeholder="e.g. Badin, Thatta, Hyderabad, Malir"
                                 className="text-start h-9 rounded-xl border-gray-200 focus:border-[#14532d]"
                             />
+                            {errors.name_en && <span className="text-xs text-red-500">{errors.name_en}</span>}
                         </div>
 
                         <DialogFooter className="pt-3 gap-2 flex items-center justify-end">

@@ -153,7 +153,7 @@ export default function MarksIndex({ marks, farmers, filters }: Props) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={isUrdu ? 'مارکہ سیٹ اپ' : 'Marks Setup'} />
 
-            <div className="-mt-3 md:-mt-6 -mx-3 md:-mx-6 pb-24 bg-[#eef2ee] min-h-screen font-sans text-[#1a211c] dark:text-[#e7ece8]" dir={isUrdu ? 'rtl' : 'ltr'}>
+            <div className="-mt-4 -mx-4 -mb-8 pb-28 bg-[#f4f6f4] min-h-screen font-sans text-[#1a211c] dark:text-[#e7ece8]" dir={isUrdu ? 'rtl' : 'ltr'}>
                 {/* 1. Header Banner */}
                 <MandiPageHeader
                     title={isUrdu ? 'مارکہ / باری سیٹ اپ' : 'Farmer Marks Setup'}
@@ -178,7 +178,7 @@ export default function MarksIndex({ marks, farmers, filters }: Props) {
                             <span className="text-xs uppercase tracking-wider font-semibold text-gray-500">
                                 {isUrdu ? 'کل ریکارڈز:' : 'Records:'}
                             </span>
-                            <span className="font-mono font-bold text-gray-900 bg-gray-100 px-2.5 py-1 rounded-lg text-xs">
+                            <span className="font-bold text-gray-900 bg-gray-100 px-2.5 py-1 rounded-lg text-xs">
                                 {marks.total}
                             </span>
                         </div>
@@ -246,7 +246,7 @@ export default function MarksIndex({ marks, farmers, filters }: Props) {
                                                         {m.farmer ? `#${m.farmer.code} - ${isUrdu ? (m.farmer.name_ur || m.farmer.name_en) : (m.farmer.name_en || m.farmer.name_ur)}` : '—'}
                                                     </td>
                                                     <td className="py-3 px-4">
-                                                        <span className="font-mono font-bold text-gray-900 bg-gray-100 px-2 py-0.5 rounded-lg text-xs">
+                                                        <span className="font-bold text-gray-900 bg-gray-100 px-2 py-0.5 rounded-lg text-xs">
                                                             {m.code}
                                                         </span>
                                                         {isKhud && (
@@ -362,7 +362,7 @@ export default function MarksIndex({ marks, farmers, filters }: Props) {
                                 disabled={editingMark?.code === 0}
                                 onChange={e => setData('code', e.target.value)}
                                 placeholder="Auto"
-                                className="font-mono text-start h-9 rounded-xl border-gray-200"
+                                className="text-start h-9 rounded-xl border-gray-200"
                             />
                         </div>
 

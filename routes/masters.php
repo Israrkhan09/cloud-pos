@@ -22,6 +22,7 @@ Route::middleware(['auth', 'verified'])->prefix('masters')->name('masters.')->gr
 
     // Items
     Route::get('items/search', [ItemController::class, 'search'])->name('items.search');
+    Route::post('items/{id}/discount', [ItemController::class, 'applyDiscount'])->name('items.discount');
     Route::resource('items', ItemController::class)->except(['create', 'edit', 'show']);
 
     // Areas
