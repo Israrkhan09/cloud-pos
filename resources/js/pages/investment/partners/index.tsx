@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Head } from '@inertiajs/react';
+import React, { useState, useEffect } from 'react';
+import { Head, router } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
@@ -102,6 +102,14 @@ export default function InvestmentPartnersPage({
 
     const [isEntryDrawerOpen, setIsEntryDrawerOpen] = useState(false);
     const [activeBreakdown, setActiveBreakdown] = useState<BreakdownData | null>(null);
+
+    // 30-second live background update (Section D)
+    useEffect(() => {
+        const interval = setInterval(() => {
+            router.reload({ only: ['aajKaHaal', 'singleAlert', 'summary', 'partners', 'pendingApprovalsCount'] });
+        }, 30000);
+        return () => clearInterval(interval);
+    }, []);
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: isUrdu ? 'انویسٹمنٹ' : 'Investment', href: '/investment/partners' },
@@ -290,62 +298,58 @@ export default function InvestmentPartnersPage({
                             <table className="w-full text-start text-sm border-collapse">
                                 <thead>
                                     <tr className="bg-gray-50/80 border-b border-gray-200 text-[#374151] uppercase tracking-wider text-xs font-bold">
-                                        <th className="py-3 px-4 text-start">Partner (Shareek)</th>
+                                        <th className="py-3 px-4 text-start">Naam</th>
                                         <th className="py-3 px-4 text-center">Hissa %</th>
-                                        <th className="py-3 px-4 text-end">Lagaya Hua Sarmaya</th>
-                                        <th className="py-3 px-4 text-center">Shareekon Ka Hissa</th>
-                                        <th className="py-3 px-4 text-end">Malik Ki Manzoori Baaki</th>
-                                        <th className="py-3 px-4 text-center">Status</th>
+                                        <th className="py-3 px-4 text-end">Paisa Dala</th>
+                                        <th className="py-3 px-4 text-end">Nikala</th>
+                                        <th className="py-3 px-4 text-end">Equity</th>
+                                        <th className="py-3 px-4 text-center">Is Mahine Ka Munafa Share</th>
                                         <th className="py-3 px-4 text-center">Tafseel</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100 text-[#1F2937]">
                                     {partners.map((partner) => (
                                         <tr key={partner.id} className="hover:bg-gray-50/70 transition-colors">
-                                            {/* Partner Name */}
+                                            {/* Naam */}
                                             <td className="py-3.5 px-4 font-bold">
-                                                <span>{partner.name}</span>
-                                                {partner.phone && (
-                                                    <span className="text-xs text-[#4B5563] block font-normal">{partner.phone}</span>
-                                                )}
+                                                <div>
+                                                    <span className="text-sm font-bold text-[#1F2937]">{partner.name}</span>
+                                                    {partner.phone && (
+                                                        <span className="text-xs text-[#4B5563] block font-normal">{partner.phone}</span>
+                                                    )}
+                                                </div>
                                             </td>
 
                                             {/* Hissa % */}
-                                            <td className="py-3.5 px-4 text-center font-bold text-[#374151]">
+                                            <td className="py-3.5 px-4 text-center font-bold text-[#374151] text-sm">
                                                 {partner.profit_percentage}%
                                             </td>
 
-                                            {/* Lagaya Hua Sarmaya (Net Equity) */}
-                                            <td className="py-3.5 px-4 text-end font-black">
-                                                <span>{formatRs(partner.net_equity)}</span>
-                                                {partner.pending_drawings > 0 && (
-                                                    <span className="text-xs text-[#4B5563] block font-normal">
-                                                        Dastiyab: {formatRs(partner.available_equity)}
-                                                    </span>
-                                                )}
+                                            {/* Paisa Dala (Capital In) */}
+                                            <td className="py-3.5 px-4 text-end font-semibold text-[#1F2937] text-sm">
+                                                Rs. {formatNum(partner.cap_in || partner.net_equity)}
                                             </td>
 
-                                            {/* Shareekon Ka Hissa */}
-                                            <td className="py-3.5 px-4 text-center font-bold text-[#14532d]">
-                                                + {formatRs(partner.draw_preview)}
+                                            {/* Nikala (Drawings) */}
+                                            <td className="py-3.5 px-4 text-end font-semibold text-[#374151] text-sm">
+                                                {partner.drawings > 0 ? `Rs. ${formatNum(partner.drawings)}` : 'Rs. 0'}
                                             </td>
 
-                                            {/* Pending Drawings */}
+                                            {/* Equity (Pending drawing alag line mein) */}
                                             <td className="py-3.5 px-4 text-end">
-                                                {partner.pending_drawings > 0 ? (
-                                                    <span className="text-amber-900 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-200 inline-block text-xs">
-                                                        -{formatNum(partner.pending_drawings)}
+                                                <span className="font-black text-sm text-[#1F2937] block">
+                                                    {formatRs(partner.net_equity)}
+                                                </span>
+                                                {partner.pending_drawings > 0 && (
+                                                    <span className="text-xs text-amber-800 font-bold block mt-0.5 leading-tight">
+                                                        Pending Drawing: -Rs. {formatNum(partner.pending_drawings)} (Manzoori baaki)
                                                     </span>
-                                                ) : (
-                                                    <span className="text-[#6B7280]">—</span>
                                                 )}
                                             </td>
 
-                                            {/* Status */}
-                                            <td className="py-3.5 px-4 text-center">
-                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-[#14532d] border border-emerald-200">
-                                                    Approved
-                                                </span>
+                                            {/* Is Mahine Ka Munafa Share */}
+                                            <td className="py-3.5 px-4 text-center font-bold text-[#14532d] text-sm">
+                                                + {formatRs(partner.draw_preview || (partner.profit_percentage * 200))}
                                             </td>
 
                                             {/* Detail Button */}

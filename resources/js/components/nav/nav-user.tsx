@@ -26,10 +26,9 @@ export function NavUser() {
                     <DropdownMenuTrigger asChild>
                         <SidebarMenuButton
                             size="lg"
-                            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground px-2 py-1.5 h-11 w-full flex items-center justify-between rounded-lg focus:ring-0 cursor-pointer"
+                            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground px-2 py-1.5 h-11 w-full flex items-center justify-center rounded-lg focus:ring-0 cursor-pointer"
                         >
-                            <UserInfo user={auth.user} showEmail={true} />
-                            <DotsThreeVerticalIcon className="size-4 shrink-0 text-muted-foreground group-data-[collapsible=icon]:hidden" />
+                            <UserInfo user={auth.user} showEmail={false} />
                         </SidebarMenuButton>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent

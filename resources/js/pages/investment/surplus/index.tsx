@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Head, router } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/layouts/app-layout';
@@ -22,12 +22,17 @@ interface SurplusFundRow {
     id: number;
     fund_name: string;
     fund_name_ur?: string;
+    agreement_type?: 'market_linked' | 'fixed_term';
     principal_amount: number;
+    market_value?: number;
     profit_or_loss: number;
-    roi_rate: string;
+    diff_formatted?: string;
+    roi_rate?: string;
     is_realised: boolean;
+    profit_label?: string;
     maturity_date?: string;
-    maturity_label: string;
+    muddat_label?: string;
+    maturity_label?: string;
     status: string;
     status_label: string;
     total_return: number;
@@ -99,6 +104,14 @@ export default function InvestmentSurplusPage({
 
     const formatRs = (val: number) => 'Rs. ' + Number(val || 0).toLocaleString('en-US');
     const formatNum = (val: number) => Number(val || 0).toLocaleString('en-US');
+
+    // 30-second live background update (Section D)
+    useEffect(() => {
+        const interval = setInterval(() => {
+            router.reload({ only: ['aajKaHaal', 'singleAlert', 'summary', 'funds', 'pendingApprovalsCount'] });
+        }, 30000);
+        return () => clearInterval(interval);
+    }, []);
 
     // Handle return
     const handleConfirmReturn = (e: React.FormEvent) => {
@@ -200,7 +213,7 @@ export default function InvestmentSurplusPage({
                                 + {formatRs(summary.mila_munafa)}
                             </span>
                             <span className="text-xs font-medium text-[#4B5563] block mt-1">
-                                Gold Savings muddat poori (Cash wapas lene ke qabil)
+                                Gold farq +Rs. 4,200 · Fund A +Rs. 8,000
                             </span>
                         </div>
 
@@ -220,7 +233,7 @@ export default function InvestmentSurplusPage({
                                 {formatRs(summary.wapsi_total)}
                             </span>
                             <span className="text-xs font-medium text-[#4B5563] block mt-1">
-                                Asal Rs. 250k + Abhi tak ka munafa Rs. 8k
+                                Asal Rs. 370,000 + Munafa Rs. 12,200
                             </span>
                         </div>
                     </div>
@@ -250,21 +263,21 @@ export default function InvestmentSurplusPage({
                         </div>
 
                         <div className="overflow-x-auto">
-                            <table className="w-full text-start text-sm border-collapse">
+                            <table className="w-full text-start text-sm border-collapse min-w-[760px]">
                                 <thead>
                                     <tr className="bg-gray-50/80 border-b border-gray-200 text-[#374151] uppercase tracking-wider text-xs font-bold">
-                                        <th className="py-3 px-4 text-start">Fund (Kahan Lagaya)</th>
-                                        <th className="py-3 px-4 text-end">Lagaya Hua Paisa</th>
-                                        <th className="py-3 px-4 text-center">Munafa</th>
-                                        <th className="py-3 px-4 text-center">Muddat / Tareekh</th>
-                                        <th className="py-3 px-4 text-center">Status</th>
+                                        <th className="py-3 px-4 text-start">Fund Ka Naam</th>
+                                        <th className="py-3 px-4 text-end">Lagaya</th>
+                                        <th className="py-3 px-4 text-end">Abhi Ki Qeemat</th>
+                                        <th className="py-3 px-4 text-center">Munafa (Pakka / Abhi Tak Ka)</th>
+                                        <th className="py-3 px-4 text-center">Muddat</th>
                                         <th className="py-3 px-4 text-center">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100 text-[#1F2937]">
                                     {funds.map((fund) => {
                                         const isSelected = selectedFundId === fund.id;
-                                        const isOverdue = fund.status === 'matured' && fund.fund_name.includes('Gold');
+                                        const isMarketLinked = fund.agreement_type === 'market_linked';
 
                                         return (
                                             <tr
@@ -272,53 +285,68 @@ export default function InvestmentSurplusPage({
                                                 onClick={() => setSelectedFundId(fund.id)}
                                                 className={cn(
                                                     "transition-colors cursor-pointer",
-                                                    isSelected ? "bg-emerald-50/50" : "hover:bg-gray-50/70",
-                                                    isOverdue && "bg-rose-50/40"
+                                                    isSelected ? "bg-emerald-50/50" : "hover:bg-gray-50/70"
                                                 )}
                                             >
                                                 {/* Fund Name */}
                                                 <td className="py-3.5 px-4 font-bold">
-                                                    <span>{fund.fund_name}</span>
-                                                    {isOverdue && (
-                                                        <span className="text-xs text-rose-700 block font-semibold">
-                                                            Muddat poori (38 din se baqi)
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-sm font-bold text-[#1F2937]">{fund.fund_name}</span>
+                                                        <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-gray-100 text-[#374151] border border-gray-200">
+                                                            {isMarketLinked ? 'Market-Linked' : 'Fixed-Term'}
+                                                        </span>
+                                                    </div>
+                                                </td>
+
+                                                {/* Lagaya (Principal) */}
+                                                <td className="py-3.5 px-4 text-end font-bold text-[#1F2937] text-sm">
+                                                    {formatRs(fund.principal_amount)}
+                                                </td>
+
+                                                {/* Abhi Ki Qeemat (Section A: Gold Market qeemat & Asal se farq) */}
+                                                <td className="py-3.5 px-4 text-end">
+                                                    <span className="font-black text-sm text-[#1F2937] block">
+                                                        {formatRs(fund.market_value || fund.total_return)}
+                                                    </span>
+                                                    {isMarketLinked ? (
+                                                        <span className="text-[11px] text-emerald-800 font-semibold block leading-tight">
+                                                            Market qeemat: {formatRs(fund.market_value || fund.total_return)} (aaj ki)<br />
+                                                            Asal se farq: {fund.diff_formatted}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-[11px] text-[#4B5563] block">
+                                                            Asal se farq: {fund.diff_formatted}
                                                         </span>
                                                     )}
                                                 </td>
 
-                                                {/* Principal */}
-                                                <td className="py-3.5 px-4 text-end font-bold text-[#1F2937]">
-                                                    {formatRs(fund.principal_amount)}
-                                                </td>
-
-                                                {/* Munafa (Section D: Simple Urdu labels) */}
+                                                {/* Munafa (pakka ya abhi tak ka) */}
                                                 <td className="py-3.5 px-4 text-center">
-                                                    <span className="text-emerald-700 font-bold block">
-                                                        + {formatRs(fund.profit_or_loss)}
+                                                    <span className="text-emerald-700 font-bold text-sm block">
+                                                        {fund.diff_formatted || `+ ${formatRs(fund.profit_or_loss)}`}
                                                     </span>
                                                     <span className="text-xs text-[#4B5563] block">
-                                                        {fund.is_realised ? 'Mila hua' : 'Abhi tak ka munafa (pakka nahi)'}
+                                                        {fund.profit_label || (fund.is_realised ? 'Pakka munafa' : 'Abhi tak ka munafa (pakka nahi)')}
                                                     </span>
                                                 </td>
 
                                                 {/* Muddat */}
-                                                <td className="py-3.5 px-4 text-center font-medium text-[#374151]">
-                                                    {fund.maturity_label}
-                                                </td>
-
-                                                {/* Status (Section D: Muddat poori / Chalu) */}
                                                 <td className="py-3.5 px-4 text-center">
-                                                    <span className={cn(
-                                                        "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold",
-                                                        fund.status === 'active'
-                                                            ? "bg-emerald-100 text-[#14532d] border border-emerald-200"
-                                                            : "bg-rose-100 text-rose-900 border border-rose-300"
-                                                    )}>
-                                                        {fund.status_label}
+                                                    <span className="font-semibold text-xs text-[#374151] block">
+                                                        {fund.muddat_label || fund.maturity_label}
                                                     </span>
+                                                    {!isMarketLinked && fund.status_label === 'Muddat poori' ? (
+                                                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-300 mt-1">
+                                                            Muddat poori
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-[#14532d] border border-emerald-200 mt-1">
+                                                            {isMarketLinked ? 'Market Linked (Khula)' : 'Chalu (Active)'}
+                                                        </span>
+                                                    )}
                                                 </td>
 
-                                                {/* Single Action per row (Section B.2): Wapas lein */}
+                                                {/* Action (Section B.2 & C: Ek button "Wapas lein") */}
                                                 <td className="py-3.5 px-4 text-center" onClick={(e) => e.stopPropagation()}>
                                                     <button
                                                         type="button"

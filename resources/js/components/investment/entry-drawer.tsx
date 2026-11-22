@@ -250,14 +250,14 @@ export default function EntryDrawer({
             onSuccess: (page: any) => {
                 const flash = page?.props?.flash;
                 const lastEntry = flash?.last_entry;
-                const toastMsg = lastEntry
-                    ? `Entry ${lastEntry.ref_no} save ho gayi. Baqaya update ho gaya.`
-                    : 'Entry save ho gayi. Baqaya update ho gaya.';
+                const toastMsg = flash?.success || (lastEntry
+                    ? `Entry ${lastEntry.ref_no} save ho gayi. ${lastEntry.party} ka baaki update ho gaya.`
+                    : 'Entry save ho gayi.');
 
                 toast.success(toastMsg, {
                     duration: 10000,
                     action: lastEntry?.id ? {
-                        label: 'Undo (10s)',
+                        label: 'Wapas karein (Undo)',
                         onClick: () => {
                             router.post(`/investment/undo/${lastEntry.id}`, {}, {
                                 preserveScroll: true,

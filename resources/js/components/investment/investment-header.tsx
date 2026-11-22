@@ -101,11 +101,13 @@ export default function InvestmentHeader({
                     )}
                 </div>
 
-                {/* Right side: Logged-in user name & ONE main action button */}
+                {/* Right side: Sleek profile icon & ONE main action button (No bulky Test User button) */}
                 <div className="flex items-center gap-3 justify-end">
-                    <div className="min-h-[40px] px-3.5 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-[#1F2937] border border-gray-200 flex items-center gap-2 select-none">
-                        <Icon name="User" className="size-4 text-[#374151]" />
-                        <span>{userName}</span>
+                    <div
+                        title={userName}
+                        className="size-10 rounded-lg bg-gray-100 hover:bg-gray-200 text-[#374151] border border-gray-200 flex items-center justify-center transition-colors select-none"
+                    >
+                        <Icon name="User" className="size-5 text-[#1F2937]" />
                     </div>
 
                     {/* ONE main button on page (Section B.2) */}

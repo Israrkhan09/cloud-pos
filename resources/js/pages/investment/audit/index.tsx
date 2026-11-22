@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Head, router } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/layouts/app-layout';
@@ -90,6 +90,14 @@ export default function InvestmentAuditPage({
 
     // Voucher Modal state
     const [activeVoucher, setActiveVoucher] = useState<VoucherData | null>(null);
+
+    // 30-second live background update (Section D)
+    useEffect(() => {
+        const interval = setInterval(() => {
+            router.reload({ only: ['aajKaHaal', 'singleAlert', 'transactions', 'pendingApprovalsCount'] });
+        }, 30000);
+        return () => clearInterval(interval);
+    }, []);
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: isUrdu ? 'انویسٹمنٹ' : 'Investment', href: '/investment/partners' },
@@ -294,24 +302,22 @@ export default function InvestmentAuditPage({
                         </div>
 
                         <div className="overflow-x-auto scrollbar-thin">
-                            <table className="w-full text-start text-sm border-collapse min-w-[780px]">
+                            <table className="w-full text-start text-sm border-collapse">
                                 <thead>
                                     <tr className="bg-gray-50/80 border-b border-gray-200 text-[#374151] uppercase tracking-wider text-xs font-bold">
-                                        <th className="py-2.5 px-2.5 text-start whitespace-nowrap">Parchi No</th>
-                                        <th className="py-2.5 px-2.5 text-start whitespace-nowrap">Tareekh</th>
-                                        <th className="py-2.5 px-2.5 text-start whitespace-nowrap">Party</th>
-                                        <th className="py-2.5 px-2.5 text-start whitespace-nowrap">Qisam</th>
-                                        <th className="py-2.5 px-2.5 text-end whitespace-nowrap">Rakam</th>
-                                        <th className="py-2.5 px-2.5 text-start whitespace-nowrap">Banaya</th>
-                                        <th className="py-2.5 px-2.5 text-start whitespace-nowrap">Approve Kiya</th>
-                                        <th className="py-2.5 px-2.5 text-center whitespace-nowrap">Status</th>
-                                        <th className="py-2.5 px-2.5 text-center whitespace-nowrap">Actions</th>
+                                        <th className="py-2 px-2.5 text-start whitespace-nowrap">Parchi Ka Naam</th>
+                                        <th className="py-2 px-2.5 text-start whitespace-nowrap">Tareekh</th>
+                                        <th className="py-2 px-2.5 text-start whitespace-nowrap">Kis Ke Saath</th>
+                                        <th className="py-2 px-2.5 text-end whitespace-nowrap">Rakam</th>
+                                        <th className="py-2 px-2.5 text-start whitespace-nowrap">Kisne Approve Kiya</th>
+                                        <th className="py-2 px-2.5 text-center whitespace-nowrap">Status</th>
+                                        <th className="py-2 px-2.5 text-center whitespace-nowrap">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100 text-[#1F2937]">
                                     {filteredTx.length === 0 ? (
                                         <tr>
-                                            <td colSpan={9} className="py-8 text-center text-[#4B5563] text-sm">
+                                            <td colSpan={7} className="py-8 text-center text-[#4B5563] text-sm">
                                                 Koi transaction record nahi mila.
                                             </td>
                                         </tr>
@@ -331,7 +337,7 @@ export default function InvestmentAuditPage({
                                                         isReversed && "opacity-60 bg-gray-50/40"
                                                     )}
                                                 >
-                                                    {/* Parchi No */}
+                                                    {/* Parchi Ka Naam */}
                                                     <td className={cn(
                                                         "py-2 px-2.5 font-bold whitespace-nowrap text-xs",
                                                         isReversed && "line-through text-[#6B7280]"
@@ -352,23 +358,18 @@ export default function InvestmentAuditPage({
                                                         )}
                                                     </td>
 
-                                                    {/* Party */}
+                                                    {/* Kis Ke Saath */}
                                                     <td className={cn(
                                                         "py-2 px-2.5 font-bold whitespace-nowrap text-xs",
                                                         isReversed && "line-through text-[#6B7280]"
                                                     )}>
-                                                        {tx.party}
+                                                        <span>{tx.party}</span>
+                                                        <span className="text-[10px] text-[#4B5563] block font-normal">
+                                                            {tx.type_label}
+                                                        </span>
                                                     </td>
 
-                                                    {/* Qisam: Section B.4 Simple Naam directly */}
-                                                    <td className={cn(
-                                                        "py-2 px-2.5 font-semibold text-[#374151] whitespace-nowrap text-xs",
-                                                        isReversed && "line-through text-[#6B7280]"
-                                                    )}>
-                                                        {tx.type_label}
-                                                    </td>
-
-                                                    {/* Amount */}
+                                                    {/* Rakam */}
                                                     <td className="py-2 px-2.5 text-end whitespace-nowrap">
                                                         <span className={cn(
                                                             "font-black text-xs",
@@ -385,12 +386,7 @@ export default function InvestmentAuditPage({
                                                         )}
                                                     </td>
 
-                                                    {/* Banaya Kisne */}
-                                                    <td className="py-2 px-2.5 text-[#374151] font-medium text-xs whitespace-nowrap">
-                                                        {tx.created_by}
-                                                    </td>
-
-                                                    {/* Approve Kisne Kiya */}
+                                                    {/* Kisne Approve Kiya */}
                                                     <td className="py-2 px-2.5 text-[#374151] font-medium text-xs whitespace-nowrap">
                                                         {tx.approved_by}
                                                     </td>
@@ -412,41 +408,42 @@ export default function InvestmentAuditPage({
                                                         )}
                                                     </td>
 
-                                                    {/* Actions */}
+                                                    {/* Actions: Sirf Print aur Mansookh (+ Approve if pending owner) */}
                                                     <td className="py-2 px-2.5 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                                                        <div className="flex items-center justify-center gap-1.5">
-                                                            {/* Approve button (Only for pending, label is Manzoor karein, NO 'Role' text) */}
+                                                        <div className="flex items-center justify-center gap-1">
+                                                            {/* Approve button (Only for pending) */}
                                                             {tx.approval_status === 'pending_owner' && isOwner && (
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => handleApprove(tx)}
-                                                                    className="px-2 py-0.5 text-xs font-bold text-white bg-[#14532d] hover:bg-[#166534] rounded shadow-2xs transition-colors cursor-pointer"
+                                                                    title="Manzoor karein"
+                                                                    className="px-2 py-1 text-[11px] font-bold text-white bg-[#14532d] hover:bg-[#166534] rounded shadow-2xs transition-colors cursor-pointer"
                                                                 >
-                                                                    Manzoor karein
+                                                                    Manzoor
                                                                 </button>
                                                             )}
 
-                                                            {/* Void Action */}
+                                                            {/* Print Button */}
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleOpenVoucher(tx)}
+                                                                title="Parchi Print"
+                                                                className="p-1.5 text-[#374151] hover:text-black hover:bg-gray-100 rounded transition-colors cursor-pointer"
+                                                            >
+                                                                <Icon name="Printer" className="size-4" />
+                                                            </button>
+
+                                                            {/* Mansookh Button */}
                                                             {!tx.is_reversed && (
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => handleOpenVoid(tx)}
-                                                                    title="Mansookh (Cancel) Karein"
-                                                                    className="p-1 text-rose-700 hover:bg-rose-50 rounded transition-colors cursor-pointer"
+                                                                    title="Mansookh (Cancel)"
+                                                                    className="p-1.5 text-rose-700 hover:text-rose-900 hover:bg-rose-50 rounded transition-colors cursor-pointer"
                                                                 >
                                                                     <Icon name="Prohibit" className="size-4" />
                                                                 </button>
                                                             )}
-
-                                                            {/* Parchi Print */}
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => handleOpenVoucher(tx)}
-                                                                title="Parchi Dekhein"
-                                                                className="p-1 text-[#374151] hover:text-black rounded transition-colors cursor-pointer"
-                                                            >
-                                                                <Icon name="Printer" className="size-4" />
-                                                            </button>
                                                         </div>
                                                     </td>
                                                 </tr>

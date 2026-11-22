@@ -68,30 +68,29 @@ class InvestmentController extends Controller
         // Pending approvals (transactions needing owner approval)
         $pendingApprovals = InvestmentTransaction::where('approval_status', 'pending_owner')->count();
 
-        // Active totals for Aaj Ka Haal (Section B.6)
+        // Active totals for Aaj Ka Haal (Section B.6 & Point A: No Gold alert)
         $activeLoans = InvestmentLoan::where('status', 'active')->get();
         $totalLoansDue = (float) $activeLoans->sum(fn($l) => $l->balance_due); // 202,000
         $activeSurplusModels = InvestmentSurplus::where('status', 'active')->get();
-        $activeSurplusReturn = (float) $activeSurplusModels->sum(fn($s) => $s->total_return); // 258,000
+        $activeSurplusReturn = (float) $activeSurplusModels->sum(fn($s) => $s->total_return);
         $overdueLoansCount = $activeLoans->filter(fn($l) => $l->due_date && $l->due_date->format('Y-m-d') < '2026-11-22')->count();
-        $maturedOverdueSurplusCount = InvestmentSurplus::where('status', 'matured')->where('maturity_date', '<', '2026-11-22')->count();
 
-        // 3 Big numbers for Aaj Ka Haal (Section B.6)
+        // 3 Big numbers for Aaj Ka Haal (Section B.6 & Point A)
         $aajKaHaal = [
             'dena_hai'      => $totalLoansDue,
             'dena_hai_sub'  => '3 logon ka qarza wapas karna hai',
             'lena_hai'      => $activeSurplusReturn,
             'lena_hai_sub'  => 'Faltu paisa aur munafa wapas aana hai',
-            'kaam_count'    => ($overdueLoansCount + $maturedOverdueSurplusCount),
-            'kaam_text'     => '1 qarza overdue, 1 fund muddat poori',
-            'kaam_sub'      => 'Sohail baqaya Rs. 20,000 · Gold Savings muddat poori',
+            'kaam_count'    => $overdueLoansCount,
+            'kaam_text'     => $overdueLoansCount > 0 ? '1 qarza overdue (Sohail Rs. 20,000)' : 'Sab theek hai',
+            'kaam_sub'      => $overdueLoansCount > 0 ? 'Wapsi tareekh guzar chuki hai · WhatsApp reminder bhejein' : 'Koi pending kaam nahi',
         ];
 
-        // Section B.3: Single slim alert line
-        $singleAlert = $maturedOverdueSurplusCount > 0 ? [
-            'text'         => 'Gold Savings 38 din se wapas nahi aya.',
-            'action_label' => 'Dekhein / Wapas Lein',
-            'action_url'   => '/investment/surplus',
+        // Section A & C: Single slim alert line ONLY for actionable items (Overdue Loan). NO Gold savings alert.
+        $singleAlert = $overdueLoansCount > 0 ? [
+            'text'         => 'Sohail ka qarza Rs. 20,000 overdue hai (18 Nov).',
+            'action_label' => 'WhatsApp Yaad / Wapas Lein',
+            'action_url'   => '/investment/loans',
         ] : null;
 
         // Profit Pool (Rs. 20,000 base)
@@ -325,65 +324,80 @@ class InvestmentController extends Controller
             });
         }
 
-        $funds = $query->orderBy('status', 'asc')->orderBy('maturity_date', 'asc')->get()->map(function ($s) {
-            $maturityStr = $s->maturity_date ? $s->maturity_date->format('j M') : 'Khula';
-            $statusLabel = $s->status === 'matured' ? 'Muddat poori' : 'Chalu';
+        $funds = $query->orderBy('status', 'asc')->orderBy('id', 'asc')->get()->map(function ($s) {
+            $isGold = str_contains(strtolower($s->fund_name), 'gold');
+            $agreementType = $isGold ? 'market_linked' : 'fixed_term';
+
+            $marketValue = (float) ($s->principal_amount + $s->profit_or_loss);
+            $diffAmount = (float) $s->profit_or_loss;
+            $diffFormatted = ($diffAmount >= 0 ? '+ ' : '- ') . 'Rs. ' . number_format(abs($diffAmount), 0);
+
+            if ($agreementType === 'market_linked') {
+                $muddatLabel = 'Market Linked (Khula)';
+                $statusLabel = 'Market Linked';
+                $profitLabel = 'Abhi tak ka munafa (Market farq)';
+            } else {
+                $muddatLabel = $s->maturity_date ? $s->maturity_date->format('j M Y') . ' (15 din)' : 'Khula';
+                $isMatured = $s->status === 'matured' || ($s->maturity_date && $s->maturity_date->format('Y-m-d') < '2026-11-22');
+                $statusLabel = $isMatured ? 'Muddat poori' : 'Chalu (Active)';
+                $profitLabel = $s->is_realised ? 'Pakka munafa' : 'Abhi tak ka munafa (pakka nahi)';
+            }
 
             return [
-                'id'               => $s->id,
-                'fund_name'        => $s->fund_name,
-                'fund_name_ur'     => $s->fund_name_ur,
-                'principal_amount' => $s->principal_amount,
-                'profit_or_loss'   => $s->profit_or_loss,
-                'roi_rate'         => $s->roi_rate,
-                'is_realised'      => $s->is_realised,
-                'maturity_date'    => $s->maturity_date ? $s->maturity_date->format('Y-m-d') : null,
-                'maturity_label'   => $maturityStr,
-                'status'           => $s->status,
-                'status_label'     => $statusLabel,
-                'total_return'     => $s->total_return,
-                'notes'            => $s->notes,
+                'id'                 => $s->id,
+                'fund_name'          => $s->fund_name,
+                'fund_name_ur'       => $s->fund_name_ur,
+                'agreement_type'     => $agreementType,
+                'principal_amount'   => (float) $s->principal_amount,
+                'market_value'       => $marketValue,
+                'profit_or_loss'     => (float) $s->profit_or_loss,
+                'diff_formatted'     => $diffFormatted,
+                'is_realised'        => (bool) $s->is_realised,
+                'profit_label'       => $profitLabel,
+                'muddat_label'       => $muddatLabel,
+                'maturity_date'      => $s->maturity_date ? $s->maturity_date->format('Y-m-d') : null,
+                'status'             => $s->status,
+                'status_label'       => $statusLabel,
+                'total_return'       => $marketValue,
+                'notes'              => $s->notes,
             ];
         });
 
-        // 3 Numbers for Surplus Page (Section B.1)
-        // 1. Lagaya hua paisa (250,000)
-        // 2. Mila hua munafa (4,200)
-        // 3. Faltu paisa wapas total (258,000)
-        $activeFunds = $funds->where('status', 'active')->values();
-        $closedFunds = $funds->where('status', 'matured')->values();
-
-        $activePrincipal = (float) $activeFunds->sum('principal_amount'); // 250,000
-        $realisedProfit = (float) $closedFunds->where('is_realised', true)->sum('profit_or_loss'); // 4,200
-        $activeReturn = (float) $activeFunds->sum('total_return'); // 258,000
-        $unrealisedProfit = (float) $activeFunds->sum('profit_or_loss'); // 8,000
+        // 3 Numbers for Surplus Page (Section B.1 & Section C)
+        // 1. Lagaya hua paisa (370,000: Fund A 250,000 + Gold 120,000)
+        // 2. Munafa (12,200: 8,000 + 4,200)
+        // 3. Wapsi Total (Abhi ki market value: 382,200)
+        $totalPrincipal = (float) $funds->sum('principal_amount'); // 370,000
+        $totalProfit = (float) $funds->sum('profit_or_loss'); // 12,200
+        $totalReturn = (float) $funds->sum('total_return'); // 382,200
 
         $breakdowns = [
             'lagaya_paisa' => [
                 'title' => 'Lagaya Hua Faltu Paisa Tafseel',
-                'total' => $activePrincipal,
+                'total' => $totalPrincipal,
                 'items' => [
-                    ['label' => 'Fund A (15-day Term)', 'amount' => 150000, 'note' => 'Wapsi tareekh: 06 Dec'],
-                    ['label' => 'Meezan Daily Profit', 'amount' => 100000, 'note' => 'Daily munafa khata'],
+                    ['label' => 'Fund A (15-day Term Agreement)', 'amount' => 250000, 'note' => 'Fixed term liquidity reserve'],
+                    ['label' => 'Gold Savings (Market Linked)', 'amount' => 120000, 'note' => 'Gold reserve sarmayakari'],
                 ],
-                'note' => 'Active sarmaya: Rs. 250,000.',
+                'note' => 'Kul lagaya hua faltu paisa: Rs. 370,000.',
             ],
             'mila_munafa' => [
-                'title' => 'Mila Hua Munafa Tafseel',
-                'total' => $realisedProfit,
+                'title' => 'Munafa (Abhi Tak Ka / Pakka) Tafseel',
+                'total' => $totalProfit,
                 'items' => [
-                    ['label' => 'Gold Savings (3-Month Term)', 'amount' => 4200, 'note' => 'Muddat poori (Cash wapas lene ke qabil)'],
+                    ['label' => 'Fund A (Unrealised Return)', 'amount' => 8000, 'note' => 'Abhi tak ka munafa (+3.2% ROI)'],
+                    ['label' => 'Gold Savings (Market Qeemat Farq)', 'amount' => 4200, 'note' => 'Qeemat mein izafa (+3.5%)'],
                 ],
-                'note' => 'Yeh munafa pakka ho chuka hai aur cash mein wapas aana hai.',
+                'note' => 'Kul munafa: Rs. 12,200.',
             ],
             'wapsi_total' => [
-                'title' => 'Faltu Paisa Wapas Total Tafseel',
-                'total' => $activeReturn,
+                'title' => 'Abhi Ki Market Value (Kul Wapsi) Tafseel',
+                'total' => $totalReturn,
                 'items' => [
-                    ['label' => 'Fund A Wapsi', 'amount' => 154500, 'note' => 'Asal 150,000 + Abhi tak ka munafa 4,500'],
-                    ['label' => 'Meezan Daily Wapsi', 'amount' => 103500, 'note' => 'Asal 100,000 + Abhi tak ka munafa 3,500'],
+                    ['label' => 'Fund A Kul Wapsi', 'amount' => 258000, 'note' => 'Asal 250,000 + Munafa 8,000'],
+                    ['label' => 'Gold Savings Market Qeemat', 'amount' => 124200, 'note' => 'Asal 120,000 + Qeemat farq 4,200'],
                 ],
-                'note' => 'Asal Rs. 250,000 + Abhi tak ka munafa (pakka nahi) Rs. 8,000 = Kul Rs. 258,000.',
+                'note' => 'Asal Rs. 370,000 + Munafa Rs. 12,200 = Kul Rs. 382,200.',
             ],
         ];
 
@@ -392,10 +406,10 @@ class InvestmentController extends Controller
             'search'     => $search,
             'breakdowns' => $breakdowns,
             'summary'    => [
-                'lagaya_paisa'      => $activePrincipal,
-                'mila_munafa'       => $realisedProfit,
-                'wapsi_total'       => $activeReturn,
-                'unrealised_profit' => $unrealisedProfit,
+                'lagaya_paisa'      => $totalPrincipal,
+                'mila_munafa'       => $totalProfit,
+                'wapsi_total'       => $totalReturn,
+                'unrealised_profit' => $totalProfit,
             ],
         ]));
     }
@@ -603,8 +617,13 @@ class InvestmentController extends Controller
             return $tx;
         });
 
+        $msg = "Entry save ho gayi. {$partyName} ka baaki update ho gaya.";
+        if ($createdTx->loan_id && $createdTx->loan) {
+            $msg = "Entry save ho gayi. {$partyName} ka baaki Rs. " . number_format($createdTx->loan->balance_due, 0) . " ho gaya.";
+        }
+
         return redirect()->back()->with([
-            'success'    => "Entry save ho gayi. Baqaya update ho gaya.",
+            'success'    => $msg,
             'last_entry' => [
                 'id'     => $createdTx->id,
                 'ref_no' => $createdTx->ref_no,
@@ -795,7 +814,7 @@ class InvestmentController extends Controller
         $lastId = (InvestmentTransaction::max('id') ?? 0) + 1;
         $refNo = sprintf('LR-%04d', $lastId);
 
-        DB::transaction(function () use ($loan, $amount, $refNo) {
+        $createdTx = DB::transaction(function () use ($loan, $amount, $refNo) {
             $loan->paid_amount += $amount;
             if ($loan->balance_due <= 0) {
                 $loan->status = 'settled';
@@ -823,9 +842,19 @@ class InvestmentController extends Controller
                 'user_role'      => $this->getCurrentRole(),
                 'details'        => "Paid loan Rs. " . number_format($amount, 0) . " to {$loan->lender_name}",
             ]);
+
+            return $tx;
         });
 
-        return redirect()->back()->with('success', "Qarza payment Rs. " . number_format($amount, 0) . " kamyabi se record ho gayi.");
+        return redirect()->back()->with([
+            'success'    => "Entry save ho gayi. {$loan->lender_name} ka baaki Rs. " . number_format($loan->balance_due, 0) . " ho gaya.",
+            'last_entry' => [
+                'id'     => $createdTx->id,
+                'ref_no' => $refNo,
+                'amount' => $amount,
+                'party'  => $loan->lender_name,
+            ],
+        ]);
     }
 
     /**

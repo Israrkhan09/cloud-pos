@@ -122,10 +122,10 @@ class InvestmentSeeder extends Seeder
                 'principal_amount' => 120000,
                 'profit_or_loss'   => 4200,
                 'roi_rate'         => '3.5%',
-                'is_realised'      => true,
-                'maturity_date'    => '2026-10-15', // 38 days overdue from 22 Nov
-                'status'           => 'matured',
-                'notes'            => 'Matured on 15 Oct (38 din se cash wapas aana baqi hai)',
+                'is_realised'      => false,
+                'maturity_date'    => null, // Open-ended market asset
+                'status'           => 'active', // Market-linked active, NOT matured!
+                'notes'            => 'Physical/Digital gold reserve (Market-linked asset, no fixed maturity)',
             ]
         );
 

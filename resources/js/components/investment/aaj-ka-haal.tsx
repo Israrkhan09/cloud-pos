@@ -94,10 +94,10 @@ export default function AajKaHaal({ data, isUrdu = false }: AajKaHaalProps) {
                     </div>
                     <div className="mt-2.5">
                         <span className="text-lg font-black text-[#1F2937] group-hover:text-amber-800 block">
-                            {data.kaam_text || '1 qarza overdue, 1 fund muddat poori'}
+                            {data.kaam_text || '1 qarza overdue (Sohail Rs. 20,000)'}
                         </span>
                         <span className="text-xs font-medium text-[#4B5563] block mt-1">
-                            {data.kaam_sub || 'Sohail baqaya Rs. 20,000 · Gold Savings'}
+                            {data.kaam_sub || 'Wapsi tareekh guzar chuki hai · WhatsApp reminder bhejein'}
                         </span>
                     </div>
                 </Link>
