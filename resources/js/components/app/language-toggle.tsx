@@ -27,7 +27,7 @@ export function LanguageToggle({ className = '', variant = 'outline' }: Language
             title={currentLang === 'en' ? 'Switch to Urdu (اردو)' : 'Switch to English'}
         >
             <GlobeIcon className="size-4 shrink-0" />
-            <span className={currentLang === 'en' ? 'font-nastaliq text-sm leading-none' : 'font-sans'}>
+            <span className={currentLang === 'en' ? 'text-xs leading-none font-semibold' : 'text-xs leading-none font-medium'}>
                 {currentLang === 'en' ? 'اردو' : 'English'}
             </span>
         </Button>

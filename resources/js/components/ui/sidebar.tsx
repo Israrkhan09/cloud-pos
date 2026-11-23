@@ -214,6 +214,7 @@ function Sidebar({
         >
             {/* This is what handles the sidebar gap on desktop */}
             <div
+                style={side === 'right' ? { marginRight: '4px', marginLeft: 0 } : { marginLeft: '4px', marginRight: 0 }}
                 className={cn(
                     "relative h-svh w-(--sidebar-width) bg-transparent transition-[width] duration-200 ease-linear",
                     "group-data-[collapsible=offcanvas]:w-0",
@@ -224,11 +225,12 @@ function Sidebar({
                 )}
             />
             <div
+                style={side === 'right' ? { right: '4px', left: 'auto' } : { left: '4px', right: 'auto' }}
                 className={cn(
                     "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,inset-inline-start,inset-inline-end,width] duration-200 ease-linear md:flex",
                     side === "left"
-                        ? "start-0 group-data-[collapsible=offcanvas]:-start-[var(--sidebar-width)]"
-                        : "end-0 group-data-[collapsible=offcanvas]:-end-[var(--sidebar-width)]",
+                        ? "start-1 group-data-[collapsible=offcanvas]:-start-[var(--sidebar-width)]"
+                        : "end-1 group-data-[collapsible=offcanvas]:-end-[var(--sidebar-width)]",
                     // Adjust the padding for floating and inset variants.
                     variant === "floating" || variant === "inset"
                         ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]"

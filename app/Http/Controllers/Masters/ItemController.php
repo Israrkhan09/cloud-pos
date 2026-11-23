@@ -7,6 +7,8 @@ use App\Models\Item;
 use App\Models\FarmerMark;
 use App\Models\Area;
 use App\Models\Farmer;
+use App\Models\Wastage;
+use App\Models\ExpiryLot;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -96,6 +98,7 @@ class ItemController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'code'             => 'nullable|string|max:50',
             'name_ur'          => 'nullable|string|max:255',
             'name_en'          => 'nullable|string|max:255',
             'unit'             => 'nullable|string|max:50',
@@ -105,6 +108,7 @@ class ItemController extends Controller
             'low_stock_alert'  => 'nullable|integer',
             'lot_date'         => 'nullable|string|max:50',
             'stock_note'       => 'nullable|string|max:255',
+            'purchase_rate'    => 'nullable|numeric',
             'default_rate'     => 'nullable|numeric',
             'default_bardana'  => 'nullable|numeric',
             'shelf_life'       => 'nullable|string|max:100',
@@ -115,6 +119,10 @@ class ItemController extends Controller
 
         if (empty($validated['name_ur']) && empty($validated['name_en'])) {
             return back()->withErrors(['name_en' => 'Item name is required.']);
+        }
+
+        if (empty($validated['unit'])) {
+            $validated['unit'] = 'Bori';
         }
 
         if (!isset($validated['current_stock']) && isset($validated['opening_stock'])) {
@@ -136,6 +144,7 @@ class ItemController extends Controller
         $item = Item::findOrFail($id);
 
         $validated = $request->validate([
+            'code'             => 'nullable|string|max:50',
             'name_ur'          => 'nullable|string|max:255',
             'name_en'          => 'nullable|string|max:255',
             'unit'             => 'nullable|string|max:50',
@@ -145,6 +154,7 @@ class ItemController extends Controller
             'low_stock_alert'  => 'nullable|integer',
             'lot_date'         => 'nullable|string|max:50',
             'stock_note'       => 'nullable|string|max:255',
+            'purchase_rate'    => 'nullable|numeric',
             'default_rate'     => 'nullable|numeric',
             'default_bardana'  => 'nullable|numeric',
             'shelf_life'       => 'nullable|string|max:100',
@@ -152,6 +162,10 @@ class ItemController extends Controller
             'discount_rate'    => 'nullable|numeric',
             'status'           => 'required|string',
         ]);
+
+        if (empty($validated['unit'])) {
+            $validated['unit'] = $item->unit ?: 'Bori';
+        }
 
         if (!empty($validated['shelf_life_days']) && $item->shelf_life_days !== $validated['shelf_life_days']) {
             $validated['expiry_at'] = now()->addDays($validated['shelf_life_days']);
@@ -168,12 +182,57 @@ class ItemController extends Controller
         $discountRate = $request->input('discount_rate');
         if (!$discountRate) {
             // Default 15% discount
-            $discountRate = round($item->default_rate * 0.85);
+            $discountRate = round(($item->default_rate ?: 100) * 0.85);
         }
-        $item->discount_rate = $discountRate;
+        $item->discount_rate = (float)$discountRate;
         $item->save();
 
+        ExpiryLot::where('item_id', $item->id)->update([
+            'discount_rate' => (float)$discountRate,
+            'action_taken' => 'discounted',
+        ]);
+
         return back()->with('success', "Discount applied: Rs. {$discountRate}");
+    }
+
+    public function recordWastage(Request $request, int $id)
+    {
+        $item = Item::findOrFail($id);
+        if ($item->status === 'khatam' || ($item->current_stock ?? 0) <= 0) {
+            return back()->with('info', 'Is sabzi ka stock pehle se khatam / wastage hai.');
+        }
+
+        $qty = (float)($item->current_stock ?? 0);
+        $rate = (float)($item->purchase_rate ?: ($item->default_rate ?: 90));
+        $loss = $qty * $rate;
+
+        $lastWastage = Wastage::max('id') ?? 0;
+        $voucherNo = sprintf('W-%04d', $lastWastage + 1);
+
+        Wastage::create([
+            'voucher_no' => $voucherNo,
+            'date' => date('Y-m-d'),
+            'item_id' => $item->id,
+            'item_name' => $item->name_en ?: $item->name,
+            'quantity' => $qty,
+            'unit' => $item->unit ?: 'Bori',
+            'loss_amount' => $loss,
+            'reason' => 'Expire Maal (Wastage)',
+            'status' => 'approved',
+            'approved_by' => 'Owner (Hajji Muhammad)',
+        ]);
+
+        $item->current_stock = 0;
+        $item->status = 'khatam';
+        $item->save();
+
+        ExpiryLot::where('item_id', $item->id)->update([
+            'quantity' => 0,
+            'nuqsan' => 0,
+            'action_taken' => 'wastage',
+        ]);
+
+        return back()->with('success', "{$item->name_en} ka wastage record voucher {$voucherNo} create ho gaya.");
     }
 
     public function stockAdd(Request $request, int $id)

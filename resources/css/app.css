@@ -78,7 +78,7 @@
 }
 
 :root {
-    --background: oklch(100% 0 0);
+    --background: #eef2ee;
     --foreground: oklch(27.4% .006 286.033);
 
     --card: oklch(100% 0 0);
@@ -179,9 +179,14 @@
     }
 }
 
+html[lang="ur"],
+html[dir="rtl"] {
+    font-family: 'Noto Naskh Arabic', 'Noto Sans Arabic', serif;
+}
+
 html[lang="ur"] body,
 html[dir="rtl"] body {
-    font-family: 'Noto Naskh Arabic', system-ui, -apple-system, sans-serif;
+    font-family: 'Noto Naskh Arabic', 'Noto Sans Arabic', serif;
     line-height: 1.8;
 }
 
@@ -189,9 +194,39 @@ html[lang="ur"] h1,
 html[lang="ur"] h2,
 html[lang="ur"] h3,
 html[lang="ur"] h4,
+html[lang="ur"] h5,
+html[lang="ur"] h6,
+html[lang="ur"] button,
+html[lang="ur"] input,
+html[lang="ur"] select,
+html[lang="ur"] textarea,
+html[lang="ur"] table,
+html[lang="ur"] th,
+html[lang="ur"] td,
+html[lang="ur"] label,
+html[lang="ur"] [data-slot="sidebar"],
+html[lang="ur"] [data-slot="dialog-content"],
+html[lang="ur"] [data-slot="badge"],
 html[lang="ur"] .font-nastaliq {
-    font-family: 'Noto Nastaliq Urdu', 'Noto Naskh Arabic', serif;
-    line-height: 2.2;
+    font-family: 'Noto Naskh Arabic', 'Noto Sans Arabic', serif;
+}
+
+html[lang="ur"] p,
+html[lang="ur"] label,
+html[lang="ur"] th,
+html[lang="ur"] td,
+html[lang="ur"] button {
+    line-height: 1.8;
+}
+
+/* Ensure numbers, currency (Rs), dates and codes remain in English font */
+.font-mono,
+.tabular-nums,
+[data-code],
+code,
+kbd {
+    font-family: var(--font-mono), monospace !important;
+    line-height: normal !important;
 }
 
 /* RTL icon mirroring for direction-sensitive icons */

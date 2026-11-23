@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Head, router } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/layouts/app-layout';
+import MandiPageHeader from '@/components/app/mandi-page-header';
 import { type BreadcrumbItem } from '@/types';
 import Icon from '@/components/ui/icon';
 import { cn } from '@/lib/utils';
@@ -95,7 +96,7 @@ export default function ExpiryGiftsPage({
     giftSummary,
     freshLots,
 }: Props) {
-    const { i18n } = useTranslation();
+    const { t, i18n } = useTranslation();
     const isUrdu = i18n.language === 'ur';
 
     const [activeTab, setActiveTab] = useState<'expiry' | 'gifts'>(initialTab);
@@ -386,61 +387,54 @@ export default function ExpiryGiftsPage({
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={isUrdu ? 'ایکسپائری اور تحائف' : 'Expiry & Gifts - Vegetable POS'} />
 
-            <div className="-mt-4 -mx-4 -mb-4 pb-12 bg-[#f4f6f4] min-h-full font-sans text-[#111827]">
-                {/* Header */}
-                <div className="bg-white border-b border-gray-200 px-6 py-4 shadow-xs">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div>
-                            <h1 className="text-2xl font-black text-[#111827] tracking-tight">
-                                Expiry & Gifts
-                            </h1>
-                            <p className="text-xs text-[#4B5563] mt-0.5">
-                                {activeTab === 'expiry'
-                                    ? 'Kaunsa maal jaldi bikna chahiye, aur kya karna hai'
-                                    : 'Free maal ka hisaab: kis ko, kitna, kyun'}
-                            </p>
-                        </div>
-
-                        {/* Live update pill */}
-                        <div className="flex items-center gap-2 self-start sm:self-center">
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-gray-50 border border-gray-200 text-[#374151] shadow-2xs">
-                                <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                                <span>Live · har minute update</span>
-                            </span>
-                        </div>
+            <div className="-mt-4 -mx-4 -mb-4 pb-28 bg-[#eef2ee] min-h-full font-sans text-[#111827] space-y-4">
+                {/* Green Header */}
+                <MandiPageHeader
+                    title={isUrdu ? t('expiry_gifts_section.title') : 'Expiry & Gifts'}
+                    subtitle={
+                        activeTab === 'expiry'
+                            ? (isUrdu ? t('expiry_gifts_section.subtitle_expiry') : 'Kaunsa maal jaldi bikna chahiye, aur kya karna hai')
+                            : (isUrdu ? t('expiry_gifts_section.subtitle_gifts') : 'Free maal ka hisaab: kis ko, kitna, kyun')
+                    }
+                    isUrdu={isUrdu}
+                >
+                    <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-900/60 border border-emerald-600/60 text-emerald-100 shadow-2xs">
+                            <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
+                            <span>Live · har minute update</span>
+                        </span>
                     </div>
+                </MandiPageHeader>
 
+                <div className="p-4 md:px-6 -mt-6 md:-mt-8 space-y-5 max-w-7xl mx-auto">
                     {/* Tab Switcher */}
-                    <div className="flex items-center gap-2.5 mt-3.5">
+                    <div className="flex items-center gap-2.5">
                         <button
                             type="button"
                             onClick={() => setActiveTab('expiry')}
                             className={cn(
-                                "px-5 py-2 text-sm rounded-lg transition-all cursor-pointer font-bold",
+                                "px-5 py-2 text-sm rounded-xl transition-all cursor-pointer font-bold border",
                                 activeTab === 'expiry'
-                                    ? "bg-[#14532d] text-white shadow-xs"
-                                    : "bg-white text-[#374151] border border-gray-200 hover:bg-gray-50 font-semibold"
+                                    ? "bg-[#14532d] text-white border-[#14532d] shadow-xs"
+                                    : "bg-white text-[#374151] border-gray-200 hover:bg-gray-50 font-semibold"
                             )}
                         >
-                            Expiry
+                            {isUrdu ? t('expiry_gifts_section.expiry_tab') : 'Expiry'}
                         </button>
 
                         <button
                             type="button"
                             onClick={() => setActiveTab('gifts')}
                             className={cn(
-                                "px-5 py-2 text-sm rounded-lg transition-all cursor-pointer font-bold",
+                                "px-5 py-2 text-sm rounded-xl transition-all cursor-pointer font-bold border",
                                 activeTab === 'gifts'
-                                    ? "bg-[#14532d] text-white shadow-xs"
-                                    : "bg-white text-[#374151] border border-gray-200 hover:bg-gray-50 font-semibold"
+                                    ? "bg-[#14532d] text-white border-[#14532d] shadow-xs"
+                                    : "bg-white text-[#374151] border-gray-200 hover:bg-gray-50 font-semibold"
                             )}
                         >
-                            Gifts
+                            {isUrdu ? t('expiry_gifts_section.gifts_tab') : 'Gifts'}
                         </button>
                     </div>
-                </div>
-
-                <div className="p-4 md:p-6 space-y-5 max-w-7xl mx-auto">
                     {/* ===================== TAB 1: EXPIRY TAB ===================== */}
                     {activeTab === 'expiry' && (
                         <>

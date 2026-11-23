@@ -1,4 +1,4 @@
-﻿{
+{
   "common": {
     "save": "محفوظ کریں",
     "saving": "محفوظ ہو رہا ہے...",
@@ -46,7 +46,20 @@
     "balance_lookup": "بقایا جات",
     "advance_payment": "پیشگی رقم (ایڈوانس)",
     "no_records": "کوئی ریکارڈ نہیں ملا۔",
-    "year": "سال 2026"
+    "year": "سال 2026",
+    "expired": "ایکسپائرڈ",
+    "khatam": "ختم",
+    "cash": "کیش",
+    "bank": "بینک",
+    "naqad": "نقد",
+    "udhaar": "ادھار",
+    "wallet": "موبائل والٹ",
+    "cleared": "کلیئرڈ",
+    "pending": "زیر التواء",
+    "bounced": "باؤنسڈ",
+    "print_karein": "پرنٹ کریں",
+    "csv_export": "سی ایس وی ڈاؤن لوڈ",
+    "excel_export": "ایکسل ڈاؤن لوڈ"
   },
   "branding": {
     "name": "جعفر خان اینڈ برادرز کمپنی",
@@ -59,8 +72,8 @@
     "dashboard": "ڈیش بورڈ",
     "daily_overview": "روزانہ کا جائزہ",
     "home": "مین فارم",
-    "daily_kaam": "روزانہ کام (Daily Kaam)",
-    "banking": "بینکنگ (Banking)",
+    "daily_kaam": "روزانہ کام",
+    "banking": "بینکنگ",
     "bank_accounts": "بینک اکاؤنٹس",
     "deposit_transfer": "ڈپازٹ / ٹرانسفر",
     "cheques": "چیکس",
@@ -71,21 +84,25 @@
     "surplus": "سرپلس (Surplus)",
     "audit_vouchers": "آڈٹ اور واؤچرز",
     "nayi_sale": "نئی سیل",
-    "farmer_bill_bijak": "زمیندار بل (بیجک)",
+    "wasooli": "وصولی",
+    "maal_aur_stock": "مال اور اسٹاک",
+    "gahak_customers": "گاہک",
+    "farmers_kisan": "کسان",
+    "farmer_bill_bijak": "کسان بل (بیجک)",
     "merchant_side": "ماشاخور کھاتہ (وصولی)",
     "farmer_side": "زمیندار کھاتہ (مین)",
     "cash_book": "روکڑ / کھاتہ (کیش بک)",
     "masters": "بنیادی اندراج (ماسٹرز)",
-    "setup": "سیٹ اپ (Setup)",
+    "setup": "سیٹ اپ",
     "merchants_farmers": "ماشاخور / زمیندار",
     "items_marks_areas": "پروڈکٹس / علاقہ",
     "products_areas": "پروڈکٹس / علاقہ",
     "reports": "رپورٹس",
     "expiry_gifts": "ایکسپائری اور تحائف",
-    "system": "سسٹم ترتیبات",
+    "discount_rules": "ڈسکاؤنٹ رولز",
+    "system": "سسٹم",
     "amroza": "امروزہ",
     "naqdi": "نقدی",
-    "wasooli": "وصولی",
     "merchant_amroza": "ماشاخور امروزہ",
     "merchant_wasooli": "ماشاخور وصولی",
     "merchant_khata": "ماشاخور کھاتہ",
@@ -310,6 +327,79 @@
     "company_profile": "کمپنی پروفائل",
     "backup": "ڈیٹا بیس بیک اپ",
     "year": "اکاؤنٹنگ سال"
+  },
+  "banking": {
+    "accounts_title": "بینک کھاتہ اور نقد گلہ",
+    "accounts_subtitle": "بینک اکاؤنٹس کا حساب، رقم جمع (ڈپازٹ)، نکاسی (ودڈرا) اور ٹرانسفر",
+    "transfers_title": "ڈپازٹ / ٹرانسفر",
+    "transfers_subtitle": "دن کے آخر میں گلہ سے بینک میں پیسے جمع کروائیں، یا بینک سے کیش نکالیں",
+    "cheques_title": "چیکس",
+    "cheques_subtitle": "ماشاخور سے ملے اور زمیندار کو دیے گئے چیکس کا سٹیٹس یہاں ٹریک کریں",
+    "new_account": "نیا اکاؤنٹ",
+    "cash_galla": "کیش گلہ",
+    "bank_account": "بینک اکاؤنٹ",
+    "mobile_wallet": "موبائل والٹ",
+    "current_balance": "موجودہ بیلنس",
+    "transactions_record": "بینک اور کیش ٹرانزیکشنز ریکارڈ",
+    "date": "تاریخ",
+    "type": "قسم",
+    "from": "کھاتے سے (منجانب)",
+    "to": "کھاتے میں (بنام)",
+    "amount": "رقم (روپے)",
+    "description": "تفصیل"
+  },
+  "investment": {
+    "title": "سرمایہ و قرضہ لیجر",
+    "subtitle": "سرمایہ، قرضہ اور سرمایہ کاری کھاتہ",
+    "new_entry": "نئی اینٹری",
+    "partners_tab": "پارٹنرز (حصہ دار)",
+    "loans_tab": "قرضہ (Loans)",
+    "surplus_tab": "سرمایہ کاری (Investments)",
+    "audit_tab": "ریکارڈ (آڈٹ)"
+  },
+  "reports_mandi": {
+    "title": "منڈی رپورٹس (آڈٹ اور نفع/نقصان)",
+    "subtitle": "روزانہ اور ماہانہ فروخت، اسٹاک ویلیوایشن، گاہک بقایا اور منافع رپورٹ",
+    "print_btn": "پرنٹ کریں",
+    "csv_btn": "سی ایس وی ڈاؤن لوڈ",
+    "rozana_tab": "روزانہ سیل رپورٹ",
+    "mahana_tab": "ماہانہ سیل سمری",
+    "stock_tab": "اسٹاک مالیت (ویلیوایشن)",
+    "gahak_tab": "گاہک بقایا (ادھار)",
+    "pnl_tab": "نفع نقصان (منافع P&L)"
+  },
+  "expiry_gifts_section": {
+    "title": "ایکسپائری اور تحائف",
+    "subtitle_expiry": "کونسا مال جلدی بکنا چاہیے، اور کیا کرنا ہے",
+    "subtitle_gifts": "مفت مال کا حساب: کس کو، کتنا، کیوں",
+    "expiry_tab": "ایکسپائری",
+    "gifts_tab": "تحائف"
+  },
+  "discount_rules_section": {
+    "title": "ڈسکاؤنٹ رولز اور ادائیگی سیٹلمنٹ",
+    "subtitle": "تھوک گاہکوں اور بڑے بل پر خصوصی رعایت (فیصد یا فکسڈ روپے) کے قوانین",
+    "new_rule": "نیا ڈسکاؤنٹ رول"
+  },
+  "backup_mandi": {
+    "title": "ڈیٹا بیس بیک اپ اور ریسٹور",
+    "subtitle": "ڈیٹا بیس کا محفوظ بیک اپ، ڈاؤن لوڈ اور ریسٹور کی سہولت",
+    "new_backup": "ابھی نیا بیک اپ بنائیں",
+    "full_db_backup": "مکمل ڈیٹا بیس بیک اپ (DB)",
+    "backup_in_progress": "بیک اپ بن رہا ہے..."
+  },
+  "farmers_management": {
+    "title": "کسان مینجمنٹ (زمیندار اور بیوپاری کھاتہ)",
+    "subtitle": "کسانوں کے رابطے، بیجک کا بقایا (دینا)، اور کل بقایا",
+    "new_farmer": "نیا کسان شامل کریں"
+  },
+  "gahak_khata": {
+    "title": "گاہک کھاتہ (دکاندار لیجر)",
+    "subtitle": "دکانداروں کا ادھار، فروخت بلز، وصولی اور روزنامچہ لیجر",
+    "print_khata": "پرنٹ کھاتہ"
+  },
+  "farmer_khata": {
+    "title": "کسان کھاتہ (زمیندار منڈی حساب)",
+    "subtitle": "زمینداروں کی آمد مال، بیجک اور ادائیگیوں کا حساب",
+    "print_khata": "پرنٹ کھاتہ"
   }
 }
-

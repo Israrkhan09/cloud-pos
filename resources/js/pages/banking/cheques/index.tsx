@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Head } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/layouts/app-layout';
+import MandiPageHeader from '@/components/app/mandi-page-header';
 import { type BreadcrumbItem } from '@/types';
 import { toast } from 'sonner';
 import { XIcon } from '@phosphor-icons/react';
@@ -119,21 +120,17 @@ export default function ChequesPage() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={isUrdu ? 'چیکس - ویجیٹیبل پی او ایس' : 'Cheques - Vegetable POS'} />
 
-            <div className="max-w-7xl mx-auto w-full space-y-6 pb-12">
-                {/* Header Section */}
-                <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-                        {isUrdu ? 'چیکس (Cheques)' : 'Cheques'}
-                    </h1>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                        {isUrdu
-                            ? 'ماشاخور سے ملے اور زمیندار کو دیے گئے چیکس کا سٹیٹس یہاں ٹریک کریں'
-                            : 'Merchant se mile aur kisan ko diye gaye cheques ka status yahan track karein'}
-                    </p>
-                </div>
+            <div className="-mt-4 -mx-4 -mb-4 pb-28 bg-[#eef2ee] min-h-full space-y-4">
+                {/* Green Header Section */}
+                <MandiPageHeader
+                    title={isUrdu ? t('banking.cheques_title') : 'Cheques'}
+                    subtitle={isUrdu ? t('banking.cheques_subtitle') : 'Merchant se mile aur kisan ko diye gaye cheques ka status yahan track karein'}
+                    isUrdu={isUrdu}
+                />
 
                 {/* Main Content Area */}
-                <div className={`grid grid-cols-1 ${selectedChequeForBounce ? 'lg:grid-cols-12' : ''} gap-6 items-start`}>
+                <div className="w-full px-4 md:px-6 -mt-6 md:-mt-8 space-y-6">
+                    <div className={`grid grid-cols-1 ${selectedChequeForBounce ? 'lg:grid-cols-12' : ''} gap-6 items-start`}>
                     {/* Left Column (Table card) */}
                     <div className={`${selectedChequeForBounce ? 'lg:col-span-7 xl:col-span-8' : 'w-full'} bg-white dark:bg-card border border-gray-200/90 dark:border-border rounded-xl shadow-xs overflow-hidden`}>
                         {/* Top Filters Bar */}
@@ -408,6 +405,7 @@ export default function ChequesPage() {
                             </form>
                         </div>
                     )}
+                </div>
                 </div>
             </div>
         </AppLayout>

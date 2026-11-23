@@ -12,17 +12,298 @@ use App\Models\FarmerBill;
 use App\Models\Expense;
 use App\Models\Item;
 use App\Models\Area;
+use App\Models\Wastage;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class MerchantReportController extends Controller
 {
     /**
-     * Reports Index
+     * Reports Index (Mandi Rapoort)
      */
-    public function index()
+    public function index(Request $request)
     {
-        return Inertia::render('reports/index');
+        $tab = $request->query('tab', 'rozana');
+        $fromDate = $request->query('from_date', date('Y-m-d'));
+        $toDate = $request->query('to_date', date('Y-m-d'));
+        $year = (int)$request->query('year', date('Y'));
+
+        // 1. Rozana Sale Report Data (Filtered by from_date - to_date)
+        $rozanaSales = AmrozaSale::with(['merchant', 'item'])
+            ->whereDate('date', '>=', $fromDate)
+            ->whereDate('date', '<=', $toDate)
+            ->orderBy('id', 'desc')
+            ->get();
+
+        $rozanaRows = [];
+        $totalBillsCount = $rozanaSales->count();
+        $totalGross = 0;
+        $totalCash = 0;
+        $totalUdhaar = 0;
+
+        foreach ($rozanaSales as $sale) {
+            $gross = (float)$sale->gross_amount;
+            $cash = 0;
+            $udhaar = 0;
+
+            $pType = strtolower($sale->payment_type ?? 'cash');
+            if ($pType === 'split') {
+                $cash = (float)($sale->cash_received ?? 0);
+                $udhaar = (float)($sale->udhaar_amount ?? max(0, $gross - $cash));
+            } elseif ($pType === 'udhaar') {
+                $cash = 0;
+                $udhaar = $gross;
+            } elseif ($pType === 'bank') {
+                $cash = 0;
+                $udhaar = 0;
+            } else { // naqdi / cash
+                $cash = $gross;
+                $udhaar = 0;
+            }
+
+            $totalGross += $gross;
+            $totalCash += $cash;
+            $totalUdhaar += $udhaar;
+
+            $mName = $sale->merchant ? ($sale->merchant->name_en ?: ($sale->merchant->name ?: $sale->merchant->name_ur)) : 'Aam Naqad Gahak';
+            $itName = $sale->item ? ($sale->item->name_en ?: $sale->item->name) : 'Sabzi';
+
+            $displayType = 'NAQAD';
+            if ($pType === 'udhaar') {
+                $displayType = 'UDHAAR';
+            } elseif ($pType === 'bank') {
+                $displayType = 'BANK';
+            } elseif ($pType === 'split') {
+                $displayType = 'ADHA CASH / ADHA UDHAAR';
+            }
+
+            $rozanaRows[] = [
+                'id' => $sale->id,
+                'bill_no' => sprintf('INV-%04d', 1000 + $sale->id),
+                'customer_name' => $mName,
+                'date' => $sale->date ? date('Y-m-d', strtotime($sale->date)) : date('Y-m-d'),
+                'item_count' => (int)($sale->nag ?: 1) . ' Sabzian',
+                'item_name' => $itName,
+                'gross_amount' => $gross,
+                'cash_paid' => $cash,
+                'udhaar_baqaya' => $udhaar,
+                'payment_type' => $displayType,
+            ];
+        }
+
+        $rozanaData = [
+            'from_date' => $fromDate,
+            'to_date' => $toDate,
+            'bills_count' => $totalBillsCount,
+            'total_gross' => $totalGross,
+            'total_cash' => $totalCash,
+            'total_udhaar' => $totalUdhaar,
+            'rows' => $rozanaRows,
+        ];
+
+        // 2. Mahana Sale Summary Data (Filtered by Year)
+        $yearSales = AmrozaSale::whereYear('date', $year)->orderBy('date', 'desc')->get();
+        $monthGroups = [];
+        $totalYearBills = 0;
+        $totalYearGross = 0;
+        $totalYearCash = 0;
+        $totalYearUdhaar = 0;
+        $totalYearDiscount = 0;
+
+        foreach ($yearSales as $s) {
+            $mKey = substr($s->date, 0, 7); // e.g. "2026-11"
+            if (!isset($monthGroups[$mKey])) {
+                $monthGroups[$mKey] = [
+                    'month' => $mKey,
+                    'bills_count' => 0,
+                    'total_sale' => 0,
+                    'cash_wasooli' => 0,
+                    'udhaar_baqaya' => 0,
+                    'discount' => 0,
+                ];
+            }
+
+            $gross = (float)$s->gross_amount;
+            $cash = 0;
+            $udhaar = 0;
+            $discount = (float)($s->bardana < 0 ? abs($s->bardana) : 0);
+
+            $pType = strtolower($s->payment_type ?? 'cash');
+            if ($pType === 'split') {
+                $cash = (float)($s->cash_received ?? 0);
+                $udhaar = (float)($s->udhaar_amount ?? max(0, $gross - $cash));
+            } elseif ($pType === 'udhaar') {
+                $cash = 0;
+                $udhaar = $gross;
+            } elseif ($pType === 'bank') {
+                $cash = 0;
+                $udhaar = 0;
+            } else {
+                $cash = $gross;
+                $udhaar = 0;
+            }
+
+            $monthGroups[$mKey]['bills_count'] += 1;
+            $monthGroups[$mKey]['total_sale'] += $gross;
+            $monthGroups[$mKey]['cash_wasooli'] += $cash;
+            $monthGroups[$mKey]['udhaar_baqaya'] += $udhaar;
+            $monthGroups[$mKey]['discount'] += $discount;
+
+            $totalYearBills += 1;
+            $totalYearGross += $gross;
+            $totalYearCash += $cash;
+            $totalYearUdhaar += $udhaar;
+            $totalYearDiscount += $discount;
+        }
+
+        krsort($monthGroups);
+        $mahanaRows = array_values($monthGroups);
+
+        $mahanaData = [
+            'year' => $year,
+            'rows' => $mahanaRows,
+            'totals' => [
+                'bills_count' => $totalYearBills,
+                'total_sale' => $totalYearGross,
+                'cash_wasooli' => $totalYearCash,
+                'udhaar_baqaya' => $totalYearUdhaar,
+                'discount' => $totalYearDiscount,
+            ],
+        ];
+
+        // 3. Stock Valuation (Malyaat) Data (Live current stock from DB)
+        $items = Item::orderBy('id', 'asc')->get();
+        $stockRows = [];
+        $totalItemsCount = $items->count();
+        $totalCostValuation = 0;
+        $totalSaleValuation = 0;
+
+        foreach ($items as $it) {
+            $stock = (float)($it->current_stock ?? $it->opening_stock ?? 0);
+            $costRate = (float)($it->purchase_rate ?: ($it->default_rate ? round($it->default_rate * 0.8) : 50));
+            $saleRate = (float)($it->default_rate ?: 100);
+
+            $totalCost = $stock * $costRate;
+            $totalSale = $stock * $saleRate;
+
+            $totalCostValuation += $totalCost;
+            $totalSaleValuation += $totalSale;
+
+            $stockRows[] = [
+                'id' => $it->id,
+                'name' => $it->name_en ?: $it->name,
+                'stock' => $stock,
+                'unit' => $it->unit ?: 'Bori',
+                'cost_rate' => $costRate,
+                'total_cost' => $totalCost,
+                'sale_rate' => $saleRate,
+                'total_sale' => $totalSale,
+            ];
+        }
+
+        $stockData = [
+            'items_count' => $totalItemsCount,
+            'cost_valuation' => $totalCostValuation,
+            'sale_valuation' => $totalSaleValuation,
+            'expected_profit' => max(0, $totalSaleValuation - $totalCostValuation),
+            'rows' => $stockRows,
+        ];
+
+        // 4. Gahak Baqaya (Udhaar) Data (Only merchants with current_balance > 0)
+        $merchants = Merchant::where('current_balance', '>', 0)
+            ->orderByDesc('current_balance')
+            ->get();
+
+        $gahakRows = [];
+        $totalMarketUdhaar = 0;
+
+        foreach ($merchants as $m) {
+            $bal = (float)$m->current_balance;
+            $totalMarketUdhaar += $bal;
+
+            $lastSale = AmrozaSale::where('merchant_id', $m->id)->latest('date')->first();
+            $lastReceipt = MerchantReceipt::where('merchant_id', $m->id)->latest('date')->first();
+
+            $gahakRows[] = [
+                'id' => $m->id,
+                'name' => $m->name_en ?: ($m->name ?: $m->name_ur),
+                'phone' => $m->phone ?: '—',
+                'area' => $m->city ?: 'Mandi',
+                'credit_limit' => (float)($m->credit_limit ?: 0),
+                'balance' => $bal,
+                'last_sale' => $lastSale?->date ? date('Y-m-d', strtotime($lastSale->date)) : '—',
+                'last_wasooli' => $lastReceipt?->date ? date('Y-m-d', strtotime($lastReceipt->date)) : '—',
+            ];
+        }
+
+        $gahakData = [
+            'total_market_udhaar' => $totalMarketUdhaar,
+            'rows' => $gahakRows,
+        ];
+
+        // 5. Nafa-Nuqsan (Munafa P&L) Data (Filtered by from_date - to_date)
+        $pnlSales = AmrozaSale::with('item')
+            ->whereDate('date', '>=', $fromDate)
+            ->whereDate('date', '<=', $toDate)
+            ->get();
+
+        $grossRevenue = (float)$pnlSales->sum('gross_amount');
+
+        $cogs = 0;
+        foreach ($pnlSales as $ps) {
+            $qty = (float)($ps->nag ?: 1);
+            $costRate = (float)($ps->item?->purchase_rate ?: ($ps->rate ? round($ps->rate * 0.8) : 50));
+            $cogs += ($qty * $costRate);
+        }
+
+        $grossProfit = $grossRevenue - $cogs;
+
+        $farmerCommission = (float)FarmerBill::whereDate('date', '>=', $fromDate)
+            ->whereDate('date', '<=', $toDate)
+            ->sum('commission_amount');
+
+        if ($farmerCommission == 0 && $fromDate === date('Y-m-d')) {
+            $farmerCommission = (float)FarmerBill::sum('commission_amount');
+        }
+
+        $wastageLoss = (float)Wastage::whereDate('date', '>=', $fromDate)
+            ->whereDate('date', '<=', $toDate)
+            ->sum('loss_amount');
+
+        $totalDiscounts = 0;
+        foreach ($pnlSales as $ps) {
+            if ($ps->bardana < 0) {
+                $totalDiscounts += abs((float)$ps->bardana);
+            }
+        }
+
+        // Formula: Saaf Munafa = Kham Munafa + Commission − Nuqsan − Riaayat
+        $netProfit = $grossProfit + $farmerCommission - $wastageLoss - $totalDiscounts;
+
+        $pnlData = [
+            'from_date' => $fromDate,
+            'to_date' => $toDate,
+            'gross_revenue' => $grossRevenue,
+            'cogs' => $cogs,
+            'gross_profit' => $grossProfit,
+            'farmer_commission' => $farmerCommission,
+            'wastage_loss' => $wastageLoss,
+            'total_discounts' => $totalDiscounts,
+            'net_profit' => $netProfit,
+        ];
+
+        return Inertia::render('reports/index', [
+            'initialTab' => $tab,
+            'initialFromDate' => $fromDate,
+            'initialToDate' => $toDate,
+            'initialYear' => $year,
+            'rozanaData' => $rozanaData,
+            'mahanaData' => $mahanaData,
+            'stockData' => $stockData,
+            'gahakData' => $gahakData,
+            'pnlData' => $pnlData,
+        ]);
     }
 
     /**
@@ -773,16 +1054,56 @@ class MerchantReportController extends Controller
     /**
      * Merchant Khata (Customer Ledger)
      */
+    /**
+     * Merchant Khata Roznamcha & Statement
+     */
     public function merchantKhata(Request $request)
     {
-        $merchants = Merchant::where('status', 'active')->where('code', '!=', 1)->orderBy('code', 'asc')->get();
+        $today = date('Y-m-d');
+        $activeMerchants = Merchant::where('status', 'active')->where('code', '!=', 1)->orderBy('code', 'asc')->get();
 
-        $selectedMerchantId = (int) $request->query('merchant_id', $merchants->first()?->id ?? 0);
-        $selectedMerchant = Merchant::where('code', '!=', 1)
-            ->where(function ($q) use ($selectedMerchantId) {
-                $q->where('id', $selectedMerchantId)->orWhere('code', $selectedMerchantId);
+        // Top 4 Summary Cards (Live from database)
+        $totalMarketReceivable = (float) $activeMerchants->where('current_balance', '>', 0)->sum('current_balance');
+        $debtCustomersCount = $activeMerchants->where('current_balance', '>', 0)->count();
+        $totalCustomersCount = $activeMerchants->count();
+
+        $todayCreditSale = (float) AmrozaSale::whereDate('date', $today)
+            ->where(function ($q) {
+                $q->where('payment_type', 'udhaar')
+                  ->orWhere('payment_type', 'split');
             })
-            ->first() ?? $merchants->first();
+            ->sum(DB::raw('CASE WHEN payment_type = "split" THEN udhaar_amount ELSE gross_amount END'));
+
+        $todayRecovery = (float) MerchantReceipt::whereDate('date', $today)->sum('amount');
+
+        $topSummary = [
+            'total_receivable' => round($totalMarketReceivable, 2),
+            'debt_customers_count' => $debtCustomersCount,
+            'total_customers' => $totalCustomersCount,
+            'today_credit_sale' => round($todayCreditSale, 2),
+            'today_recovery' => round($todayRecovery, 2),
+        ];
+
+        $merchantsData = $activeMerchants->map(function ($m) {
+            return [
+                'id' => $m->id,
+                'code' => $m->code,
+                'name' => $m->name_en ?: ($m->name ?: $m->name_ur),
+                'name_en' => $m->name_en,
+                'name_ur' => $m->name_ur,
+                'phone' => $m->phone ?: '',
+                'city' => $m->city ?: 'Mandi',
+                'customer_type' => $m->customer_type ?: 'Dukandar',
+                'credit_limit' => (float)($m->credit_limit ?? 50000),
+                'balance' => (float)$m->current_balance,
+                'opening_balance' => (float)$m->opening_balance,
+            ];
+        })->values();
+
+        $selectedMerchantId = (int) $request->query('merchant_id', $activeMerchants->first()?->id ?? 0);
+        $selectedMerchant = $activeMerchants->firstWhere('id', $selectedMerchantId) 
+            ?? $activeMerchants->firstWhere('code', $selectedMerchantId) 
+            ?? $activeMerchants->first();
 
         $fromDate = $request->query('from_date', date('Y-m-01'));
         $toDate = $request->query('to_date', date('Y-m-d'));
@@ -792,104 +1113,151 @@ class MerchantReportController extends Controller
                 'merchants' => [],
                 'selectedMerchantId' => 0,
                 'selectedMerchant' => null,
-                'summary' => ['baqaya' => 0, 'sabqa' => 0, 'total_sale' => 0, 'total_wasooli' => 0],
-                'rows' => [],
+                'topSummary' => $topSummary,
+                'statement' => [
+                    'entries' => [],
+                    'total_debit' => 0,
+                    'total_credit' => 0,
+                    'final_balance' => 0,
+                ],
                 'filters' => ['from_date' => $fromDate, 'to_date' => $toDate],
             ]);
         }
 
-        // Prior sales and receipts before fromDate (Only Udhaar sales affect ledger)
+        // Prior sales and receipts before fromDate for Sabiqa Baqaya
         $priorSales = (float) AmrozaSale::where('merchant_id', $selectedMerchant->id)
             ->where('date', '<', $fromDate)
             ->where(function ($q) {
                 $q->where('payment_type', 'udhaar')
-                  ->orWhereNull('payment_type');
+                  ->orWhere('payment_type', 'split');
             })
-            ->sum('gross_amount');
+            ->sum(DB::raw('CASE WHEN payment_type = "split" THEN udhaar_amount ELSE gross_amount END'));
+
         $priorWasooli = (float) MerchantReceipt::where('merchant_id', $selectedMerchant->id)
             ->where('date', '<', $fromDate)
             ->sum('amount');
-        $openingBal = (float) $selectedMerchant->opening_balance;
-        $runningSabqa = round($openingBal + $priorSales - $priorWasooli, 2);
-        $initialSabqa = $runningSabqa;
 
-        // Sales and receipts in date range (Include all sales and receipts for complete ledger)
-        $sales = AmrozaSale::where('merchant_id', $selectedMerchant->id)
+        $openingBal = (float) $selectedMerchant->opening_balance;
+        $runningBalance = round($openingBal + $priorSales - $priorWasooli, 2);
+        $initialSabqa = $runningBalance;
+
+        // Sales and receipts in date range
+        $sales = AmrozaSale::with('item')
+            ->where('merchant_id', $selectedMerchant->id)
             ->whereBetween('date', [$fromDate, $toDate])
             ->get();
+
         $receipts = MerchantReceipt::where('merchant_id', $selectedMerchant->id)
             ->whereBetween('date', [$fromDate, $toDate])
             ->get();
 
-        // Get unique sorted dates
-        $dateStrings = [];
-        foreach ($sales as $s) {
-            $dateStrings[] = $s->date instanceof \DateTimeInterface ? $s->date->format('Y-m-d') : substr((string)$s->date, 0, 10);
-        }
-        foreach ($receipts as $r) {
-            $dateStrings[] = $r->date instanceof \DateTimeInterface ? $r->date->format('Y-m-d') : substr((string)$r->date, 0, 10);
-        }
-        $dates = array_values(array_unique($dateStrings));
-        sort($dates);
+        $entries = [];
 
-        $rows = [];
-        $totalSale = 0;
-        $totalWasooli = 0;
-
-        foreach ($dates as $d) {
-            $daySale = 0;
-            $dayCashBankSettled = 0;
-            foreach ($sales as $s) {
-                $sd = $s->date instanceof \DateTimeInterface ? $s->date->format('Y-m-d') : substr((string)$s->date, 0, 10);
-                if ($sd === $d) {
-                    $daySale += (float) $s->gross_amount;
-                    if (in_array($s->payment_type, ['naqdi', 'bank'])) {
-                        $dayCashBankSettled += (float) $s->gross_amount;
-                    }
-                }
-            }
-
-            $dayWasooli = 0;
-            foreach ($receipts as $r) {
-                $rd = $r->date instanceof \DateTimeInterface ? $r->date->format('Y-m-d') : substr((string)$r->date, 0, 10);
-                if ($rd === $d) {
-                    $dayWasooli += (float) $r->amount;
-                }
-            }
-
-            // Total deduction includes recovery wasooli receipts plus immediate settlement for cash/bank sales
-            $effectiveWasooli = $dayWasooli + $dayCashBankSettled;
-            $dayBaqaya = round($runningSabqa + $daySale - $effectiveWasooli, 2);
-
-            $rows[] = [
-                'date' => date('d-m-Y', strtotime($d)),
-                'raw_date' => $d,
-                'sabqa' => $runningSabqa,
-                'sale' => $daySale,
-                'wasooli' => $effectiveWasooli,
-                'recovery_wasooli' => $dayWasooli,
-                'cash_bank_sale' => $dayCashBankSettled,
-                'baqaya' => $dayBaqaya,
+        // If prior balance exists, show Sabiqa entry
+        if ($initialSabqa != 0) {
+            $entries[] = [
+                'id' => 'sabiqa_0',
+                'entry_date' => $fromDate,
+                'description' => 'Sabiqa Baqaya (Opening Balance)',
+                'ref_type' => 'SABIQA',
+                'entry_type' => $initialSabqa >= 0 ? 'debit' : 'credit',
+                'debit' => $initialSabqa >= 0 ? $initialSabqa : 0,
+                'credit' => $initialSabqa < 0 ? abs($initialSabqa) : 0,
+                'amount' => abs($initialSabqa),
+                'balance_after' => $runningBalance,
+                'timestamp' => strtotime($fromDate) - 1,
             ];
-
-            $totalSale += $daySale;
-            $totalWasooli += $effectiveWasooli;
-            $runningSabqa = $dayBaqaya;
         }
 
-        $finalBaqaya = $runningSabqa;
+        // Add sales entries
+        foreach ($sales as $s) {
+            $dateStr = $s->date instanceof \DateTimeInterface ? $s->date->format('Y-m-d') : substr((string)$s->date, 0, 10);
+            $gross = (float)($s->gross_amount ?? ($s->nag * $s->rate));
+            $udhaarPortion = (float)($s->payment_type === 'split' ? ($s->udhaar_amount ?? 0) : ($s->payment_type === 'udhaar' ? $gross : 0));
+            $cashSettled = (float)($s->payment_type === 'split' ? ($s->cash_received ?? 0) : ($s->payment_type === 'cash' || $s->payment_type === 'naqdi' ? $gross : 0));
+
+            // In ledger, debit is sale amount and immediate cash payment is credit
+            $debit = $gross;
+            $credit = $cashSettled;
+            $runningBalance = round($runningBalance + $debit - $credit, 2);
+
+            $entries[] = [
+                'id' => 'sale_' . $s->id,
+                'entry_date' => $dateStr,
+                'description' => "Farokht Bill #INV-{$s->id} (Kul Maal: Rs " . number_format($gross, 1) . ")",
+                'ref_type' => 'SALE',
+                'entry_type' => 'debit',
+                'debit' => $debit,
+                'credit' => $credit,
+                'amount' => $debit,
+                'balance_after' => $runningBalance,
+                'timestamp' => strtotime($dateStr) + $s->id,
+            ];
+        }
+
+        // Add receipts entries
+        foreach ($receipts as $r) {
+            $dateStr = $r->date instanceof \DateTimeInterface ? $r->date->format('Y-m-d') : substr((string)$r->date, 0, 10);
+            $credit = (float)$r->amount;
+            $runningBalance = round($runningBalance - $credit, 2);
+            $rcptNum = $r->receipt_no ?: $r->id;
+            $mode = $r->payment_mode ? ucfirst($r->payment_mode) : 'Cash';
+            $noteStr = $r->notes ? " - {$r->notes}" : '';
+
+            $entries[] = [
+                'id' => 'rcpt_' . $r->id,
+                'entry_date' => $dateStr,
+                'description' => "Wasooli Receipt #REC-{$rcptNum} ({$mode}{$noteStr})",
+                'ref_type' => 'WASOOLI',
+                'entry_type' => 'credit',
+                'debit' => 0,
+                'credit' => $credit,
+                'amount' => $credit,
+                'balance_after' => $runningBalance,
+                'timestamp' => strtotime($dateStr) + 50000 + $r->id,
+            ];
+        }
+
+        // Sort chronologically
+        usort($entries, fn($a, $b) => $a['timestamp'] <=> $b['timestamp']);
+
+        $totalDebit = array_sum(array_column($entries, 'debit'));
+        $totalCredit = array_sum(array_column($entries, 'credit'));
+        $finalBalance = (float)$selectedMerchant->current_balance;
+
+        $selectedMerchantArray = [
+            'id' => $selectedMerchant->id,
+            'code' => $selectedMerchant->code,
+            'name' => $selectedMerchant->name_en ?: ($selectedMerchant->name ?: $selectedMerchant->name_ur),
+            'name_en' => $selectedMerchant->name_en,
+            'name_ur' => $selectedMerchant->name_ur,
+            'phone' => $selectedMerchant->phone ?: '',
+            'city' => $selectedMerchant->city ?: 'Mandi',
+            'customer_type' => $selectedMerchant->customer_type ?: 'Dukandar',
+            'credit_limit' => (float)($selectedMerchant->credit_limit ?? 50000),
+            'balance' => $finalBalance,
+            'opening_balance' => (float)$selectedMerchant->opening_balance,
+        ];
 
         return Inertia::render('merchants/khata/index', [
-            'merchants' => $merchants,
+            'merchants' => $merchantsData,
             'selectedMerchantId' => $selectedMerchant->id,
-            'selectedMerchant' => $selectedMerchant,
-            'summary' => [
-                'baqaya' => $finalBaqaya,
-                'sabqa' => $initialSabqa,
-                'total_sale' => round($totalSale, 2),
-                'total_wasooli' => round($totalWasooli, 2),
+            'selectedMerchant' => $selectedMerchantArray,
+            'topSummary' => $topSummary,
+            'statement' => [
+                'entries' => $entries,
+                'total_debit' => round($totalDebit, 2),
+                'total_credit' => round($totalCredit, 2),
+                'final_balance' => round($finalBalance, 2),
             ],
-            'rows' => $rows,
+            // Backwards-compatible fields
+            'summary' => [
+                'baqaya' => round($finalBalance, 2),
+                'sabqa' => $initialSabqa,
+                'total_sale' => round($totalDebit, 2),
+                'total_wasooli' => round($totalCredit, 2),
+            ],
+            'rows' => $entries,
             'filters' => [
                 'from_date' => $fromDate,
                 'to_date' => $toDate,

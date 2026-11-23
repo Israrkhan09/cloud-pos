@@ -3,7 +3,10 @@ import { initReactI18next } from 'react-i18next';
 import enTranslations from '../locales/en.json';
 import urTranslations from '../locales/ur.json';
 
-const savedLocale = (typeof window !== 'undefined' ? localStorage.getItem('jkc_locale') : null) || 'en';
+const savedLocale =
+    (typeof window !== 'undefined'
+        ? localStorage.getItem('veg_locale') || localStorage.getItem('jkc_locale') || localStorage.getItem('locale')
+        : null) || 'en';
 
 if (typeof document !== 'undefined') {
     document.documentElement.lang = savedLocale;
@@ -28,6 +31,8 @@ export const changeLanguage = (lng: 'en' | 'ur') => {
     i18n.changeLanguage(lng);
     if (typeof window !== 'undefined') {
         localStorage.setItem('jkc_locale', lng);
+        localStorage.setItem('veg_locale', lng);
+        localStorage.setItem('locale', lng);
         document.documentElement.lang = lng;
         document.documentElement.dir = lng === 'ur' ? 'rtl' : 'ltr';
 

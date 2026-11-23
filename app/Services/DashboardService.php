@@ -6,6 +6,8 @@ use App\Models\AmrozaSale;
 use App\Models\Merchant;
 use App\Models\Farmer;
 use App\Models\MerchantReceipt;
+use App\Models\Item;
+use App\Models\Expense;
 use Illuminate\Support\Facades\DB;
 
 class DashboardService
@@ -133,9 +135,15 @@ class DashboardService
         $totalNag = 0;
 
         foreach ($sales as $sale) {
-            $isCash = $sale->payment_type === 'naqdi';
-            if ($isCash) {
+            $pType = strtolower($sale->payment_type ?? '');
+            if ($pType === 'split') {
+                $cRec = (float)($sale->cash_received ?? 0);
+                $cashSale += $cRec;
+                $creditSale += max(0, (float)$sale->gross_amount - $cRec);
+            } elseif ($pType === 'naqdi' || $pType === 'cash') {
                 $cashSale += (float)$sale->gross_amount;
+            } elseif ($pType === 'bank') {
+                // Bank sale directly
             } else {
                 $creditSale += (float)$sale->gross_amount;
             }
@@ -143,9 +151,10 @@ class DashboardService
         }
 
         // Recoveries in this range
-        $received = (float)MerchantReceipt::whereBetween('date', [$dates['start'], $dates['end']])
-            ->where('type', 'recovery')
-            ->sum('amount');
+        $wasooliQuery = MerchantReceipt::whereBetween('date', [$dates['start'], $dates['end']])
+            ->where('type', 'recovery');
+        $received = (float)$wasooliQuery->sum('amount');
+        $wasooliCount = $wasooliQuery->count();
 
         $recoveryMerchantsCount = MerchantReceipt::whereBetween('date', [$dates['start'], $dates['end']])
             ->where('type', 'recovery')
@@ -158,6 +167,31 @@ class DashboardService
         // Total farmer balance outstanding
         $farmersBalance = (float)Farmer::where('status', 'active')->sum('current_balance');
 
+        // Calculate all-time net Cash in Galla from actual DB
+        $allCashSales = (float)AmrozaSale::where(function($q) {
+            $q->where('payment_type', 'naqdi')->orWhere('payment_type', 'cash');
+        })->sum('gross_amount');
+        $allSplitCash = (float)AmrozaSale::where('payment_type', 'split')->sum('cash_received');
+        $allCashWasooli = (float)MerchantReceipt::where('type', 'recovery')
+            ->where(function($q) {
+                $q->whereNull('payment_method')->orWhere('payment_method', 'cash')->orWhere('payment_method', '');
+            })->sum('amount');
+        $allExpenses = (float)Expense::sum('amount');
+        $cashGalla = max(0, $allCashSales + $allSplitCash + $allCashWasooli - $allExpenses);
+
+        // Bank balance from active bank sales & wasooli + default bank accounts
+        $bankSales = (float)AmrozaSale::where('payment_type', 'bank')->sum('gross_amount');
+        $bankWasooli = (float)MerchantReceipt::where('type', 'recovery')->where('payment_method', 'bank')->sum('amount');
+        $bankAccountsOpening = 760000; // Meezan (500k) + HBL (250k) + EasyPaisa (10k)
+        $bankBalance = $bankAccountsOpening + $bankSales + $bankWasooli;
+        $totalCashAndBank = $cashGalla + $bankBalance;
+
+        // Low stock sabzian count
+        $lowStockCount = Item::where('status', 'active')
+            ->where(function($q) {
+                $q->whereRaw('COALESCE(current_stock, 0) <= COALESCE(low_stock_alert, 10)');
+            })->count();
+
         $cashInHand = $cashSale + $received;
         $cashPct = $saleTotal > 0 ? round(($cashSale / $saleTotal) * 100) : 0;
 
@@ -169,9 +203,14 @@ class DashboardService
             'cashReceived' => round($cashSale, 2),
             'cashPct' => $cashPct,
             'received' => round($received, 2),
+            'wasooliCount' => $wasooliCount,
             'recoveryMerchantsCount' => $recoveryMerchantsCount,
             'merchantsBalance' => round($merchantsBalance, 2),
             'farmersBalance' => round($farmersBalance, 2),
+            'cashGalla' => round($cashGalla, 2),
+            'bankBalance' => round($bankBalance, 2),
+            'totalCashAndBank' => round($totalCashAndBank, 2),
+            'lowStockCount' => $lowStockCount,
             'cashInHand' => round($cashInHand, 2),
             'expectedCash' => round($cashInHand, 2),
             'cashDiff' => 0,
@@ -182,7 +221,7 @@ class DashboardService
     }
 
     /**
-     * Get last 7 days sales trend for graph from actual database records
+     * Get last 7 days sales and wasooli trends for graph from actual database records
      */
     private function getSalesTrends(): array
     {
@@ -202,23 +241,45 @@ class DashboardService
             return date('Y-m-d', strtotime($item->date));
         });
 
+        $dailyWasooli = MerchantReceipt::select(
+            'date',
+            DB::raw('SUM(amount) as total_recovery')
+        )
+        ->where('type', 'recovery')
+        ->whereBetween('date', [$startDate, $endDate])
+        ->groupBy('date')
+        ->orderBy('date', 'asc')
+        ->get()
+        ->keyBy(function ($item) {
+            return date('Y-m-d', strtotime($item->date));
+        });
+
         $chart = [];
         $maxVal = 1;
         for ($i = 6; $i >= 0; $i--) {
             $d = date('Y-m-d', strtotime("-{$i} days"));
-            $stat = $dailyStats->get($d);
-            $tot = $stat ? round((float)$stat->total_gross, 2) : 0;
-            if ($tot > $maxVal) $maxVal = $tot;
+            $sStat = $dailyStats->get($d);
+            $wStat = $dailyWasooli->get($d);
+            $sTot = $sStat ? round((float)$sStat->total_gross, 2) : 0;
+            $wTot = $wStat ? round((float)$wStat->total_recovery, 2) : 0;
+            if ($sTot > $maxVal) $maxVal = $sTot;
+            if ($wTot > $maxVal) $maxVal = $wTot;
         }
 
         for ($i = 6; $i >= 0; $i--) {
             $d = date('Y-m-d', strtotime("-{$i} days"));
             $dayName = date('D', strtotime($d));
-            $stat = $dailyStats->get($d);
-            $total = $stat ? round((float)$stat->total_gross, 2) : 0;
+            $sStat = $dailyStats->get($d);
+            $wStat = $dailyWasooli->get($d);
+            $total = $sStat ? round((float)$sStat->total_gross, 2) : 0;
+            $wasooli = $wStat ? round((float)$wStat->total_recovery, 2) : 0;
 
             $chart[] = [
                 'day' => $dayName,
+                'date' => $dayName,
+                'fullDate' => $d,
+                'sale' => $total,
+                'wasooli' => $wasooli,
                 'val' => round($total / 1000, 1),
                 'amount' => $total,
                 'isToday' => ($i === 0),
@@ -332,9 +393,12 @@ class DashboardService
             ->limit(5)
             ->get()
             ->map(function ($row) {
+                $raw = $row->item ? ($row->item->name_en ?: ($row->item->name ?: $row->item->name_ur)) : 'Item';
+                $clean = trim(preg_replace('/\s*\(.*?\)\s*/', '', $raw));
                 return [
-                    'name_en' => $row->item->name_en ?? 'Item',
-                    'name_ur' => $row->item->name_ur ?? 'آئٹم',
+                    'name_en' => $clean,
+                    'name_ur' => $row->item->name_ur ?? $clean,
+                    'name' => $clean,
                     'amount' => round((float)$row->total_amount, 2),
                     'nag' => (int)$row->total_nag,
                 ];
@@ -358,14 +422,17 @@ class DashboardService
         }
 
         return $sales->map(function ($s) {
-            $isCash = $s->payment_type === 'naqdi';
+            $isCash = $s->payment_type === 'naqdi' || $s->payment_type === 'cash';
+            $mName = $s->merchant ? ($s->merchant->name_en ?: ($s->merchant->name ?: $s->merchant->name_ur)) : 'Buyer';
+            $rawItem = $s->item ? ($s->item->name_en ?: ($s->item->name ?: $s->item->name_ur)) : 'Item';
+            $iName = trim(preg_replace('/\s*\(.*?\)\s*/', '', $rawItem));
             return [
                 'id' => $s->id,
                 'time' => date('h:i A', strtotime($s->created_at ?? $s->date)),
                 'type' => $isCash ? 'Cash sale' : 'Sale',
                 'isCash' => $isCash,
-                'party' => $s->merchant->name_ur ?: ($s->merchant->name_en ?: 'Buyer'),
-                'item' => $s->item->name_ur ?: ($s->item->name_en ?: 'Item'),
+                'party' => $mName,
+                'item' => $iName,
                 'nag' => $s->nag,
                 'amount' => round((float)$s->gross_amount, 2),
             ];

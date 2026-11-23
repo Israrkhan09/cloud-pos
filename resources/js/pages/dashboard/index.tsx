@@ -3,8 +3,18 @@ import { Head, Link, usePage, router } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { WarningIcon } from '@phosphor-icons/react';
+import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
+import {
+    AreaChart,
+    Area,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer,
+} from 'recharts';
+import { getStoredBankAccounts } from '@/lib/banking-store';
 
 interface DashboardStatsData {
     todaysSale: number;
@@ -14,9 +24,14 @@ interface DashboardStatsData {
     cashReceived: number;
     cashPct: number;
     received: number;
+    wasooliCount?: number;
     recoveryMerchantsCount: number;
     merchantsBalance: number;
     farmersBalance: number;
+    cashGalla?: number;
+    bankBalance?: number;
+    totalCashAndBank?: number;
+    lowStockCount?: number;
     cashInHand: number;
     expectedCash: number;
     cashDiff: number;
@@ -27,10 +42,14 @@ interface DashboardStatsData {
 
 interface ChartDay {
     day: string;
-    val: number;
+    date?: string;
+    fullDate?: string;
+    sale?: number;
+    wasooli?: number;
+    val?: number;
     amount: number;
     isToday: boolean;
-    heightPct: number;
+    heightPct?: number;
 }
 
 interface ChartSummary {
@@ -39,19 +58,16 @@ interface ChartSummary {
     bestDay: string;
 }
 
-interface TopMerchant {
-    name: string;
-    code: string;
-    balance: number;
-}
-
-interface AlertItem {
-    title: string;
-    subtitle: string;
-    type: string;
+interface TopItemPoint {
+    name_en: string;
+    name_ur: string;
+    name?: string;
+    amount: number;
+    nag: number;
 }
 
 interface RecentEntry {
+    id?: number;
     time: string;
     type: string;
     isCash: boolean;
@@ -67,64 +83,55 @@ export default function Dashboard() {
     const pageProps = usePage().props as any;
 
     const stats: DashboardStatsData = pageProps.stats || {
-        todaysSale: 412500,
-        saleChangePct: 12.4,
-        cashSale: 268000,
-        creditSale: 144500,
-        cashReceived: 268000,
-        cashPct: 65,
-        received: 96400,
-        recoveryMerchantsCount: 11,
-        merchantsBalance: 263346,
-        farmersBalance: 282491,
-        cashInHand: 364400,
-        expectedCash: 364400,
+        todaysSale: 0,
+        saleChangePct: 0,
+        cashSale: 0,
+        creditSale: 0,
+        cashReceived: 0,
+        cashPct: 0,
+        received: 0,
+        wasooliCount: 0,
+        recoveryMerchantsCount: 0,
+        merchantsBalance: 0,
+        farmersBalance: 0,
+        cashGalla: 0,
+        bankBalance: 760000,
+        totalCashAndBank: 760000,
+        lowStockCount: 0,
+        cashInHand: 0,
+        expectedCash: 0,
         cashDiff: 0,
-        billsToday: 38,
-        totalNagSold: 1240,
-        weekChange: 48100,
+        billsToday: 0,
+        totalNagSold: 0,
+        weekChange: 0,
     };
 
-    const chartData: ChartDay[] = pageProps.chartData || [
-        { day: 'Mon', val: 286, amount: 286000, isToday: false, heightPct: 64 },
-        { day: 'Tue', val: 301, amount: 301000, isToday: false, heightPct: 68 },
-        { day: 'Wed', val: 264, amount: 264000, isToday: false, heightPct: 59 },
-        { day: 'Thu', val: 335, amount: 335000, isToday: false, heightPct: 75 },
-        { day: 'Fri', val: 398, amount: 398000, isToday: false, heightPct: 89 },
-        { day: 'Sat', val: 188, amount: 188000, isToday: false, heightPct: 42 },
-        { day: 'Sun', val: 412, amount: 412500, isToday: true, heightPct: 92 },
-    ];
-
+    const chartData: ChartDay[] = pageProps.chartData || [];
     const chartSummary: ChartSummary = pageProps.chartSummary || {
-        total: 2184000,
-        average: 312000,
-        bestDay: 'Friday',
+        total: 0,
+        average: 0,
+        bestDay: '—',
     };
 
-    const topMerchants: TopMerchant[] = pageProps.topMerchants || [
-        { name: 'Haji Gul', code: 'Code 7', balance: 89290 },
-        { name: 'Baloch Trading Co', code: 'Code 3', balance: 82944 },
-        { name: 'Haji Gul Merchant', code: 'Code 2', balance: 44036 },
-        { name: 'Muhammad Raza & Sons', code: 'Code 4', balance: 22676 },
-        { name: 'Naqdi (Cash Customer)', code: 'Code 1', balance: 16860 },
-    ];
-
-    const alerts: AlertItem[] = pageProps.alerts || [
-        { title: "Haji Gul’s balance is over Rs. 85,000", subtitle: "No payment in 14 days", type: "warn" },
-        { title: "3 farmer bills not yet created", subtitle: "Bijak received today", type: "warn" },
-        { title: "Yesterday’s day is not closed", subtitle: "Close it to lock the entries", type: "warn" },
-    ];
-
-    const recentSales: RecentEntry[] = pageProps.recentSales || [
-        { time: '11:42 PM', type: 'Sale', isCash: true, party: 'Baloch Trading Co', item: 'Aloo (Potato)', nag: 40, amount: 62000 },
-        { time: '11:20 PM', type: 'Recovery', isCash: false, party: 'Haji Gul', item: '—', nag: '—', amount: 25000 },
-        { time: '10:58 PM', type: 'Cash sale', isCash: true, party: 'Naqdi (Cash Customer)', item: 'Piyaz (Onion)', nag: 12, amount: 18400 },
-        { time: '10:31 PM', type: 'Farmer bill', isCash: false, party: 'Ghulam Nabi', item: 'Tamatar (Tomato)', nag: 60, amount: 0 },
-        { time: '10:05 PM', type: 'Sale', isCash: true, party: 'Karachi Fresh Store', item: 'Lehsan (Garlic)', nag: 8, amount: 31200 },
-    ];
+    const topItemsChart: TopItemPoint[] = pageProps.topItemsChart || [];
+    const recentSales: RecentEntry[] = pageProps.recentSales || [];
 
     const activeRange = (pageProps.range || pageProps.activeRange || 'today') as 'today' | 'yesterday' | 'week' | 'month';
     const [range, setRange] = useState<'today' | 'yesterday' | 'week' | 'month'>(activeRange);
+    const [bankAccountsTotal, setBankAccountsTotal] = useState<number>(0);
+
+    // Sync client-side bank accounts
+    useEffect(() => {
+        try {
+            const accs = getStoredBankAccounts();
+            if (Array.isArray(accs) && accs.length > 0) {
+                const total = accs.reduce((sum, a) => sum + (Number(a.current_balance) || 0), 0);
+                setBankAccountsTotal(total);
+            }
+        } catch {
+            // ignore
+        }
+    }, []);
 
     useEffect(() => {
         if (pageProps.range || pageProps.activeRange) {
@@ -159,16 +166,33 @@ export default function Dashboard() {
         });
     };
 
-    const formatRupees = (amount: number) => {
-        return `Rs. ${Number(amount).toLocaleString('en-US')}`;
+    const formatRupees = (amount?: number) => {
+        return `Rs. ${Number(amount || 0).toLocaleString('en-US')}`;
     };
+
+    const formatNum = (val?: number) => {
+        return Number(val || 0).toLocaleString('en-US');
+    };
+
+    // Calculate dynamic Card 5: Naqad Galla + Bank
+    const cashAmount = stats.cashGalla !== undefined && stats.cashGalla !== null ? stats.cashGalla : (stats.cashInHand || stats.cashSale || 0);
+    const bankAmount = bankAccountsTotal > 0 ? bankAccountsTotal : (stats.bankBalance || 760000);
+    const totalCashAndBank = stats.totalCashAndBank !== undefined && stats.totalCashAndBank !== null ? stats.totalCashAndBank : (cashAmount + bankAmount);
+
+    // Range titles
+    const saleCardTitle = range === 'today' ? 'Aaj Ki Kul Sale' : (range === 'yesterday' ? 'Kal Ki Kul Sale' : (range === 'week' ? 'Hafte Ki Kul Sale' : 'Mahine Ki Kul Sale'));
+    const wasooliCardTitle = range === 'today' ? 'Aaj Ki Wasooli' : (range === 'yesterday' ? 'Kal Ki Wasooli' : (range === 'week' ? 'Hafte Ki Wasooli' : 'Mahine Ki Wasooli'));
+
+    // Top items max calculation for horizontal bars
+    const maxItemAmount = Math.max(...topItemsChart.map(i => i.amount || 0), 1);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={isUrdu ? 'ڈیش بورڈ - جے کے سی' : 'Dashboard'} />
+            <Head title={isUrdu ? 'ڈیش بورڈ' : 'Dashboard'} />
 
-            <div className="w-full max-w-[1400px] mx-auto space-y-4 pb-12 font-sans text-[#1a211c] dark:text-[#e7ece8]">
-                {/* Title & Range Switcher */}
+            <div className="w-full max-w-[1440px] mx-auto space-y-4 pb-12 font-sans text-[#1a211c] dark:text-[#e7ece8]">
+                
+                {/* 1. Header: Title & Existing Filter Switcher */}
                 <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 pt-2">
                     <div>
                         <h1 className={`text-[22px] font-bold tracking-tight text-[#1a211c] dark:text-[#e7ece8] ${isUrdu ? 'font-nastaliq text-2xl' : ''}`}>
@@ -179,42 +203,47 @@ export default function Dashboard() {
                         </p>
                     </div>
 
-                    <div className="inline-flex items-center p-0.5 border border-[#e6e9e6] dark:border-[#262d28] rounded-lg bg-white dark:bg-[#161b18] shadow-2xs self-start sm:self-auto">
+                    {/* Filter Buttons: Today, Yesterday, This week, This month */}
+                    <div className="inline-flex items-center p-0.5 border border-[#e6e9e6] dark:border-[#262d28] rounded-xl bg-white dark:bg-[#161b18] shadow-2xs self-start sm:self-auto">
                         <button
+                            type="button"
                             onClick={() => handleRangeChange('today', isUrdu ? 'آج' : 'Today')}
-                            className={`px-3 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
+                            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                                 range === 'today'
-                                    ? 'bg-[#ecf5ee] dark:bg-[#1b2a20] text-[#166534] dark:text-[#4ade80]'
+                                    ? 'bg-[#ecf5ee] dark:bg-[#1b2a20] text-[#166534] dark:text-[#4ade80] shadow-2xs'
                                     : 'text-[#68736b] dark:text-[#8b968e] hover:text-[#1a211c] dark:hover:text-[#e7ece8]'
                             } ${isUrdu ? 'font-nastaliq' : ''}`}
                         >
                             {isUrdu ? 'آج' : 'Today'}
                         </button>
                         <button
+                            type="button"
                             onClick={() => handleRangeChange('yesterday', isUrdu ? 'کل' : 'Yesterday')}
-                            className={`px-3 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
+                            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                                 range === 'yesterday'
-                                    ? 'bg-[#ecf5ee] dark:bg-[#1b2a20] text-[#166534] dark:text-[#4ade80]'
+                                    ? 'bg-[#ecf5ee] dark:bg-[#1b2a20] text-[#166534] dark:text-[#4ade80] shadow-2xs'
                                     : 'text-[#68736b] dark:text-[#8b968e] hover:text-[#1a211c] dark:hover:text-[#e7ece8]'
                             } ${isUrdu ? 'font-nastaliq' : ''}`}
                         >
                             {isUrdu ? 'کل' : 'Yesterday'}
                         </button>
                         <button
+                            type="button"
                             onClick={() => handleRangeChange('week', isUrdu ? 'ہفتہ' : 'This week')}
-                            className={`px-3 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
+                            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                                 range === 'week'
-                                    ? 'bg-[#ecf5ee] dark:bg-[#1b2a20] text-[#166534] dark:text-[#4ade80]'
+                                    ? 'bg-[#ecf5ee] dark:bg-[#1b2a20] text-[#166534] dark:text-[#4ade80] shadow-2xs'
                                     : 'text-[#68736b] dark:text-[#8b968e] hover:text-[#1a211c] dark:hover:text-[#e7ece8]'
                             } ${isUrdu ? 'font-nastaliq' : ''}`}
                         >
                             {isUrdu ? 'ہفتہ' : 'This week'}
                         </button>
                         <button
+                            type="button"
                             onClick={() => handleRangeChange('month', isUrdu ? 'مہینہ' : 'This month')}
-                            className={`px-3 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
+                            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                                 range === 'month'
-                                    ? 'bg-[#ecf5ee] dark:bg-[#1b2a20] text-[#166534] dark:text-[#4ade80]'
+                                    ? 'bg-[#ecf5ee] dark:bg-[#1b2a20] text-[#166534] dark:text-[#4ade80] shadow-2xs'
                                     : 'text-[#68736b] dark:text-[#8b968e] hover:text-[#1a211c] dark:hover:text-[#e7ece8]'
                             } ${isUrdu ? 'font-nastaliq' : ''}`}
                         >
@@ -223,282 +252,321 @@ export default function Dashboard() {
                     </div>
                 </div>
 
-                {/* Section 1: KPIs Row (4 Cards) */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-                    {/* KPI 1: Sale */}
-                    <div className="bg-white dark:bg-[#161b18] border border-[#e6e9e6] dark:border-[#262d28] rounded-xl p-4 shadow-2xs">
-                        <span className={`text-[12.5px] font-medium text-[#68736b] dark:text-[#8b968e] block ${isUrdu ? 'font-nastaliq' : ''}`}>
-                            {isUrdu ? (pageProps.rangeLabels?.saleTitleUr || 'سیل') : (pageProps.rangeLabels?.saleTitle || 'Today’s sale')}
-                        </span>
-                        <strong className="block text-[26px] font-bold text-[#1a211c] dark:text-[#e7ece8] tracking-tight my-1.5 tabular-nums">
-                            {formatRupees(stats.todaysSale)}
-                        </strong>
-                        <small className="text-xs text-[#68736b] dark:text-[#8b968e] block">
-                            <b className="text-[#166534] dark:text-[#4ade80] font-semibold">
-                                {stats.saleChangePct >= 0 ? `+${stats.saleChangePct}%` : `${stats.saleChangePct}%`}
-                            </b>{' '}
-                            {isUrdu ? (pageProps.rangeLabels?.compTextUr || 'پچھلے دورانیہ کے مقابلے') : (pageProps.rangeLabels?.compText || 'vs yesterday')}
-                        </small>
+                {/* 2. STAT CARDS: 6 Cards in Exact Specified Order */}
+                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+                    
+                    {/* Card 1: Aaj Ki Kul Sale */}
+                    <div className="bg-white dark:bg-[#161b18] border border-[#e6e9e6] dark:border-[#262d28] rounded-xl p-3.5 shadow-2xs flex flex-col justify-between hover:border-emerald-600/40 transition-all">
+                        <div>
+                            <div className="flex items-center justify-between gap-1.5">
+                                <span className="text-xs font-bold text-[#68736b] dark:text-[#8b968e] leading-tight">
+                                    {saleCardTitle}
+                                </span>
+                                <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-200/50">
+                                    <Icon name="ShoppingCart" className="size-3.5" weight="bold" />
+                                </div>
+                            </div>
+                            <div className="my-1.5">
+                                <span className="text-lg xl:text-xl 2xl:text-[22px] font-black text-[#1a211c] dark:text-[#e7ece8] tracking-tight tabular-nums whitespace-nowrap block">
+                                    {formatRupees(stats.todaysSale)}
+                                </span>
+                            </div>
+                        </div>
+                        <div className="border-t border-[#f0f2f0] dark:border-[#1e2420] pt-1.5 text-[11px] leading-tight text-[#68736b] dark:text-[#8b968e] flex items-center justify-between gap-1 flex-wrap font-medium">
+                            <span>Naqad: <b className="text-emerald-800 dark:text-emerald-300 font-bold">Rs {formatNum(stats.cashSale)}</b></span>
+                            <span>Udhaar: <b className="text-rose-800 dark:text-rose-300 font-bold">Rs {formatNum(stats.creditSale)}</b></span>
+                        </div>
                     </div>
 
-                    {/* KPI 2: Cash Received */}
-                    <div className="bg-white dark:bg-[#161b18] border border-[#e6e9e6] dark:border-[#262d28] rounded-xl p-4 shadow-2xs">
-                        <span className={`text-[12.5px] font-medium text-[#68736b] dark:text-[#8b968e] block ${isUrdu ? 'font-nastaliq' : ''}`}>
-                            {isUrdu ? 'نقد وصول' : 'Cash received'}
-                        </span>
-                        <strong className="block text-[26px] font-bold text-[#1a211c] dark:text-[#e7ece8] tracking-tight my-1.5 tabular-nums">
-                            {formatRupees(stats.cashReceived)}
-                        </strong>
-                        <small className="text-xs text-[#68736b] dark:text-[#8b968e] block">
-                            {stats.cashPct}% {isUrdu ? (pageProps.rangeLabels?.cashReceivedSubUr || 'کل سیل کا') : (pageProps.rangeLabels?.cashReceivedSub || 'of today’s sale')}
-                        </small>
+                    {/* Card 2: Aaj Ki Wasooli */}
+                    <div className="bg-white dark:bg-[#161b18] border border-[#e6e9e6] dark:border-[#262d28] rounded-xl p-3.5 shadow-2xs flex flex-col justify-between hover:border-emerald-600/40 transition-all">
+                        <div>
+                            <div className="flex items-center justify-between gap-1.5">
+                                <span className="text-xs font-bold text-[#68736b] dark:text-[#8b968e] leading-tight">
+                                    {wasooliCardTitle}
+                                </span>
+                                <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-200/50">
+                                    <Icon name="Receipt" className="size-3.5" weight="bold" />
+                                </div>
+                            </div>
+                            <div className="my-1.5">
+                                <span className="text-lg xl:text-xl 2xl:text-[22px] font-black text-emerald-800 dark:text-emerald-400 tracking-tight tabular-nums whitespace-nowrap block">
+                                    {formatRupees(stats.received)}
+                                </span>
+                            </div>
+                        </div>
+                        <div className="border-t border-[#f0f2f0] dark:border-[#1e2420] pt-1.5 text-[11px] leading-tight text-[#68736b] dark:text-[#8b968e] font-medium">
+                            Kul {stats.wasooliCount || stats.recoveryMerchantsCount || 0} Wasooli Parchiyan
+                        </div>
                     </div>
 
-                    {/* KPI 3: Recovery */}
-                    <div className="bg-white dark:bg-[#161b18] border border-[#e6e9e6] dark:border-[#262d28] rounded-xl p-4 shadow-2xs">
-                        <span className={`text-[12.5px] font-medium text-[#68736b] dark:text-[#8b968e] block ${isUrdu ? 'font-nastaliq' : ''}`}>
-                            {isUrdu ? (pageProps.rangeLabels?.recoveryTitleUr || 'وصولی') : (pageProps.rangeLabels?.recoveryTitle || 'Recovery today')}
-                        </span>
-                        <strong className="block text-[26px] font-bold text-[#1a211c] dark:text-[#e7ece8] tracking-tight my-1.5 tabular-nums">
-                            {formatRupees(stats.received)}
-                        </strong>
-                        <small className="text-xs text-[#68736b] dark:text-[#8b968e] block">
-                            {isUrdu ? `${stats.recoveryMerchantsCount} مرچنٹس سے` : `From ${stats.recoveryMerchantsCount} merchants`}
-                        </small>
+                    {/* Card 3: Gahak Baqaya (Lena) */}
+                    <div className="bg-white dark:bg-[#161b18] border border-[#e6e9e6] dark:border-[#262d28] rounded-xl p-3.5 shadow-2xs flex flex-col justify-between hover:border-amber-500/40 transition-all">
+                        <div>
+                            <div className="flex items-center justify-between gap-1.5">
+                                <span className="text-xs font-bold text-[#68736b] dark:text-[#8b968e] leading-tight">
+                                    Gahak Baqaya (Lena)
+                                </span>
+                                <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-200/50">
+                                    <Icon name="ArrowDownLeft" className="size-3.5" weight="bold" />
+                                </div>
+                            </div>
+                            <div className="my-1.5">
+                                <span className="text-lg xl:text-xl 2xl:text-[22px] font-black text-amber-900 dark:text-amber-300 tracking-tight tabular-nums whitespace-nowrap block">
+                                    {formatRupees(stats.merchantsBalance)}
+                                </span>
+                            </div>
+                        </div>
+                        <div className="border-t border-[#f0f2f0] dark:border-[#1e2420] pt-1.5 text-[11px] leading-tight text-[#68736b] dark:text-[#8b968e] font-medium">
+                            Market Udhaar (Receivable)
+                        </div>
                     </div>
 
-                    {/* KPI 4: Total Outstanding */}
-                    <div className="bg-white dark:bg-[#161b18] border border-[#e6e9e6] dark:border-[#262d28] rounded-xl p-4 shadow-2xs">
-                        <span className={`text-[12.5px] font-medium text-[#68736b] dark:text-[#8b968e] block ${isUrdu ? 'font-nastaliq' : ''}`}>
-                            {isUrdu ? 'کل بقایا' : 'Total outstanding'}
-                        </span>
-                        <strong className="block text-[26px] font-bold text-[#1a211c] dark:text-[#e7ece8] tracking-tight my-1.5 tabular-nums">
-                            {formatRupees(stats.merchantsBalance)}
-                        </strong>
-                        <small className="text-xs text-[#68736b] dark:text-[#8b968e] block">
-                            <b className="text-[#b42318] dark:text-[#f97066] font-semibold">
-                                +Rs. {Number(stats.weekChange).toLocaleString()}
-                            </b>{' '}
-                            {isUrdu ? 'سسٹم بقایا جات' : 'active parties'}
-                        </small>
+                    {/* Card 4: Bopari / Kisan Dena */}
+                    <div className="bg-white dark:bg-[#161b18] border border-[#e6e9e6] dark:border-[#262d28] rounded-xl p-3.5 shadow-2xs flex flex-col justify-between hover:border-rose-500/40 transition-all">
+                        <div>
+                            <div className="flex items-center justify-between gap-1.5">
+                                <span className="text-xs font-bold text-[#68736b] dark:text-[#8b968e] leading-tight">
+                                    Bopari / Kisan Dena
+                                </span>
+                                <div className="w-7 h-7 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 flex items-center justify-center shrink-0 border border-rose-200/50">
+                                    <Icon name="ArrowUpRight" className="size-3.5" weight="bold" />
+                                </div>
+                            </div>
+                            <div className="my-1.5">
+                                <span className="text-lg xl:text-xl 2xl:text-[22px] font-black text-rose-800 dark:text-rose-400 tracking-tight tabular-nums whitespace-nowrap block">
+                                    {formatRupees(Math.round(stats.farmersBalance || 0))}
+                                </span>
+                            </div>
+                        </div>
+                        <div className="border-t border-[#f0f2f0] dark:border-[#1e2420] pt-1.5 text-[11px] leading-tight text-[#68736b] dark:text-[#8b968e] font-medium">
+                            Kul Wajibaat (Payables)
+                        </div>
                     </div>
+
+                    {/* Card 5: Naqad Galla + Bank */}
+                    <div className="bg-white dark:bg-[#161b18] border border-[#e6e9e6] dark:border-[#262d28] rounded-xl p-3.5 shadow-2xs flex flex-col justify-between hover:border-blue-500/40 transition-all">
+                        <div>
+                            <div className="flex items-center justify-between gap-1.5">
+                                <span className="text-xs font-bold text-[#68736b] dark:text-[#8b968e] leading-tight">
+                                    Naqad Galla + Bank
+                                </span>
+                                <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-200/50">
+                                    <Icon name="Bank" className="size-3.5" weight="bold" />
+                                </div>
+                            </div>
+                            <div className="my-1.5">
+                                <span className="text-lg xl:text-xl 2xl:text-[22px] font-black text-blue-900 dark:text-blue-300 tracking-tight tabular-nums whitespace-nowrap block">
+                                    {formatRupees(totalCashAndBank)}
+                                </span>
+                            </div>
+                        </div>
+                        <div className="border-t border-[#f0f2f0] dark:border-[#1e2420] pt-1.5 text-[11px] leading-tight text-[#68736b] dark:text-[#8b968e] font-medium">
+                            Cash: <b className="text-[#1a211c] dark:text-[#e7ece8] font-bold">Rs {formatNum(cashAmount)}</b>
+                        </div>
+                    </div>
+
+                    {/* Card 6: Kam Stock Alerts */}
+                    <div className="bg-white dark:bg-[#161b18] border border-[#e6e9e6] dark:border-[#262d28] rounded-xl p-3.5 shadow-2xs flex flex-col justify-between hover:border-amber-500/40 transition-all">
+                        <div>
+                            <div className="flex items-center justify-between gap-1.5">
+                                <span className="text-xs font-bold text-[#68736b] dark:text-[#8b968e] leading-tight">
+                                    Kam Stock Alerts
+                                </span>
+                                <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-200/50">
+                                    <Icon name="Warning" className="size-3.5" weight="bold" />
+                                </div>
+                            </div>
+                            <div className="my-1.5">
+                                <span className="text-lg xl:text-xl 2xl:text-[22px] font-black text-amber-900 dark:text-amber-400 tracking-tight tabular-nums whitespace-nowrap block">
+                                    {stats.lowStockCount ?? 0} Items
+                                </span>
+                            </div>
+                        </div>
+                        <div className="border-t border-[#f0f2f0] dark:border-[#1e2420] pt-1.5 text-[11px] leading-tight text-[#68736b] dark:text-[#8b968e] font-medium">
+                            Khatam hone wali sabzian
+                        </div>
+                    </div>
+
                 </div>
 
-                {/* Section 2: Middle Grid (2fr : 1fr) */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5">
-                    {/* Left 2 Cols: Sales Last 7 Days Custom Bar Chart */}
-                    <div className="lg:col-span-2 bg-white dark:bg-[#161b18] border border-[#e6e9e6] dark:border-[#262d28] rounded-xl p-4 shadow-2xs flex flex-col justify-between">
+                {/* 3. CHARTS GRID: 7-Day Trend (Left) + Top Selling Items (Right) */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5">
+                    
+                    {/* Left: Pichle 7 Din Ka Farokht aur Wasooli Trend */}
+                    <div className="lg:col-span-8 bg-white dark:bg-[#161b18] border border-[#e6e9e6] dark:border-[#262d28] rounded-2xl p-4 md:p-5 shadow-2xs flex flex-col justify-between">
                         <div>
-                            <div className="flex items-center justify-between mb-2">
-                                <h2 className={`text-sm font-bold text-[#1a211c] dark:text-[#e7ece8] ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                    {isUrdu ? 'پچھلے 7 دن کی سیل' : 'Sales, last 7 days'}
-                                </h2>
-                                <Link
-                                    href="/reports"
-                                    className="text-xs font-semibold text-[#68736b] hover:text-[#166534] dark:hover:text-[#4ade80] transition-colors"
-                                >
-                                    {isUrdu ? 'رپورٹ دیکھیں' : 'View report'}
-                                </Link>
+                            <div className="flex items-center justify-between gap-2 mb-3">
+                                <div>
+                                    <h2 className="text-sm md:text-base font-bold text-[#1a211c] dark:text-[#e7ece8]">
+                                        Pichle 7 Din Ka Farokht aur Wasooli Trend
+                                    </h2>
+                                    <p className="text-xs text-[#68736b] dark:text-[#8b968e]">
+                                        Rozana ki Sale aur Wasool shuda raqam ka mawazna
+                                    </p>
+                                </div>
+                                <span className="px-2.5 py-1 text-[11px] font-bold rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-300 shrink-0">
+                                    Haftawar Chart
+                                </span>
                             </div>
 
-                            {/* Custom CSS Bar Chart */}
-                            <div className="h-48 border-b border-[#e6e9e6] dark:border-[#262d28] flex items-end gap-3 pt-6 pb-0 px-2" dir="ltr">
-                                {chartData.map((item, idx) => (
-                                    <div key={idx} className="flex-1 flex flex-col justify-end items-center h-full relative group">
-                                        <em className="text-[11px] font-medium text-[#68736b] dark:text-[#8b968e] mb-1.5 transition-transform group-hover:scale-110">
-                                            {item.val}k
-                                        </em>
-                                        <div
-                                            style={{ height: `${item.heightPct}%` }}
-                                            className={`w-full max-w-[44px] rounded-t-md transition-all ${
-                                                item.isToday
-                                                    ? 'bg-[#166534] dark:bg-[#4ade80] opacity-100 shadow-xs'
-                                                    : 'bg-[#166534] dark:bg-[#4ade80] opacity-30 hover:opacity-50'
-                                            }`}
-                                            title={`${item.day}: Rs. ${Number(item.amount).toLocaleString()}`}
+                            {/* Dual AreaChart: Kul Sale vs Wasooli */}
+                            <div className="h-[280px] w-full pt-2" dir="ltr">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                                        <defs>
+                                            <linearGradient id="colorSale" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#15803d" stopOpacity={0.4} />
+                                                <stop offset="95%" stopColor="#15803d" stopOpacity={0.02} />
+                                            </linearGradient>
+                                            <linearGradient id="colorWasooli" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#0284c7" stopOpacity={0.4} />
+                                                <stop offset="95%" stopColor="#0284c7" stopOpacity={0.02} />
+                                            </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e6e9e6" />
+                                        <XAxis
+                                            dataKey="date"
+                                            tickLine={false}
+                                            axisLine={false}
+                                            tick={{ fontSize: 11, fill: '#68736b' }}
                                         />
-                                    </div>
-                                ))}
-                            </div>
-
-                            {/* Days Axis */}
-                            <div className="flex gap-3 mt-2 text-xs text-[#68736b] dark:text-[#8b968e] px-2" dir="ltr">
-                                {chartData.map((item, idx) => (
-                                    <span key={idx} className={`flex-1 text-center font-medium ${item.isToday ? 'font-bold text-[#166534] dark:text-[#4ade80]' : ''}`}>
-                                        {item.day}
-                                    </span>
-                                ))}
+                                        <YAxis
+                                            tickLine={false}
+                                            axisLine={false}
+                                            tick={{ fontSize: 10, fill: '#68736b' }}
+                                            tickFormatter={(val) => (val >= 1000 ? `Rs ${(val / 1000).toFixed(0)}k` : `Rs ${val}`)}
+                                        />
+                                        <Tooltip
+                                            formatter={(value: any, name: any) => [
+                                                formatRupees(Number(value)),
+                                                name === 'sale' ? 'Kul Sale (Bikri)' : 'Wasooli (Recovery)',
+                                            ]}
+                                            contentStyle={{
+                                                backgroundColor: '#18181b',
+                                                borderRadius: '8px',
+                                                color: '#ffffff',
+                                                fontSize: '12px',
+                                                border: 'none',
+                                            }}
+                                        />
+                                        <Area
+                                            type="monotone"
+                                            dataKey="sale"
+                                            stroke="#15803d"
+                                            strokeWidth={2.5}
+                                            fillOpacity={1}
+                                            fill="url(#colorSale)"
+                                            name="sale"
+                                        />
+                                        <Area
+                                            type="monotone"
+                                            dataKey="wasooli"
+                                            stroke="#0284c7"
+                                            strokeWidth={2.5}
+                                            fillOpacity={1}
+                                            fill="url(#colorWasooli)"
+                                            name="wasooli"
+                                        />
+                                    </AreaChart>
+                                </ResponsiveContainer>
                             </div>
                         </div>
 
                         {/* Legend */}
-                        <div className="flex flex-wrap items-center gap-4 text-xs text-[#68736b] dark:text-[#8b968e] mt-4 pt-2 border-t border-[#f0f2f0] dark:border-[#1e2420]">
-                            <span>
-                                {isUrdu ? 'کل:' : 'Total'}{' '}
-                                <b className="text-[#1a211c] dark:text-[#e7ece8] font-bold">
-                                    {formatRupees(chartSummary.total)}
-                                </b>
-                            </span>
-                            <span>
-                                {isUrdu ? 'روزانہ اوسط:' : 'Daily average'}{' '}
-                                <b className="text-[#1a211c] dark:text-[#e7ece8] font-bold">
-                                    {formatRupees(chartSummary.average)}
-                                </b>
-                            </span>
-                            <span>
-                                {isUrdu ? 'بہترین دن:' : 'Best day'}{' '}
-                                <b className="text-[#1a211c] dark:text-[#e7ece8] font-bold">
-                                    {chartSummary.bestDay}
-                                </b>
-                            </span>
-                        </div>
-                    </div>
-
-                    {/* Right 1 Col: Cash vs Credit Today */}
-                    <div className="bg-white dark:bg-[#161b18] border border-[#e6e9e6] dark:border-[#262d28] rounded-xl p-4 shadow-2xs flex flex-col justify-between">
-                        <div>
-                            <h2 className={`text-sm font-bold text-[#1a211c] dark:text-[#e7ece8] mb-3 ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                {isUrdu ? 'نقد بمقابلہ ادھار' : 'Cash vs credit today'}
-                            </h2>
-
-                            {/* Split progress bar */}
-                            <div className="h-2 rounded-full bg-[#f0f2f0] dark:bg-[#1e2420] overflow-hidden flex my-3.5">
-                                <div
-                                    style={{ width: `${stats.cashPct}%` }}
-                                    className="bg-[#166534] dark:bg-[#4ade80] transition-all"
-                                    title={`Cash: ${stats.cashPct}%`}
-                                />
-                                <div
-                                    style={{ width: `${100 - stats.cashPct}%` }}
-                                    className="bg-[#68736b]/40 dark:bg-[#8b968e]/40 transition-all"
-                                    title={`Credit: ${100 - stats.cashPct}%`}
-                                />
+                        <div className="flex items-center justify-center gap-6 text-xs text-[#68736b] dark:text-[#8b968e] mt-4 pt-3 border-t border-[#f0f2f0] dark:border-[#1e2420]">
+                            <div className="flex items-center gap-2">
+                                <span className="w-3 h-3 rounded-full bg-[#15803d]"></span>
+                                <span className="font-bold text-[#1a211c] dark:text-[#e7ece8]">Kul Sale (Bikri)</span>
                             </div>
-
-                            {/* Rows */}
-                            <div className="space-y-0 text-xs">
-                                <div className="flex justify-between items-center py-2.5 border-t border-[#e6e9e6] dark:border-[#262d28]">
-                                    <span className="text-[#1a211c] dark:text-[#e7ece8] font-medium">
-                                        {isUrdu ? 'نقد سیل' : 'Cash sale'}
-                                    </span>
-                                    <b className="font-bold text-[#1a211c] dark:text-[#e7ece8] tabular-nums">
-                                        {formatRupees(stats.cashSale)}
-                                    </b>
-                                </div>
-                                <div className="flex justify-between items-center py-2.5 border-t border-[#e6e9e6] dark:border-[#262d28]">
-                                    <span className="text-[#1a211c] dark:text-[#e7ece8] font-medium">
-                                        {isUrdu ? 'ادھار سیل' : 'Credit sale'}
-                                    </span>
-                                    <b className="font-bold text-[#1a211c] dark:text-[#e7ece8] tabular-nums">
-                                        {formatRupees(stats.creditSale)}
-                                    </b>
-                                </div>
-                                <div className="flex justify-between items-center py-2.5 border-t border-[#e6e9e6] dark:border-[#262d28]">
-                                    <span className="text-[#1a211c] dark:text-[#e7ece8] font-medium">
-                                        {isUrdu ? 'آج کے بل' : 'Bills today'}
-                                    </span>
-                                    <b className="font-bold text-[#1a211c] dark:text-[#e7ece8] tabular-nums">
-                                        {stats.billsToday}
-                                    </b>
-                                </div>
-                                <div className="flex justify-between items-center py-2.5 border-t border-[#e6e9e6] dark:border-[#262d28]">
-                                    <span className="text-[#1a211c] dark:text-[#e7ece8] font-medium">
-                                        {isUrdu ? 'کل فروخت شدہ نگ' : 'Total nag sold'}
-                                    </span>
-                                    <b className="font-bold text-[#1a211c] dark:text-[#e7ece8] tabular-nums">
-                                        {Number(stats.totalNagSold).toLocaleString()}
-                                    </b>
-                                </div>
+                            <div className="flex items-center gap-2">
+                                <span className="w-3 h-3 rounded-full bg-[#0284c7]"></span>
+                                <span className="font-bold text-[#1a211c] dark:text-[#e7ece8]">Wasooli (Recovery)</span>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                {/* Section 3: Bottom Grid 1 (2 Cols: Top Outstanding & Needs Attention) */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                    {/* Card 1: Top Outstanding Merchants */}
-                    <div className="bg-white dark:bg-[#161b18] border border-[#e6e9e6] dark:border-[#262d28] rounded-xl p-4 shadow-2xs flex flex-col justify-between">
+                    {/* Right: Top Farokht Shuda Sabzian */}
+                    <div className="lg:col-span-4 bg-white dark:bg-[#161b18] border border-[#e6e9e6] dark:border-[#262d28] rounded-2xl p-4 md:p-5 shadow-2xs flex flex-col justify-between">
                         <div>
-                            <div className="flex items-center justify-between mb-2">
-                                <h2 className={`text-sm font-bold text-[#1a211c] dark:text-[#e7ece8] ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                    {isUrdu ? 'سب سے زیادہ ادھار' : 'Top outstanding merchants'}
-                                </h2>
-                                <Link
-                                    href="/merchant-wasooli"
-                                    className="text-xs font-semibold text-[#68736b] hover:text-[#166534] dark:hover:text-[#4ade80] transition-colors"
-                                >
-                                    {isUrdu ? 'سب دیکھیں' : 'View all'}
-                                </Link>
+                            <div className="flex items-center justify-between gap-2 mb-3">
+                                <div>
+                                    <h2 className="text-sm md:text-base font-bold text-[#1a211c] dark:text-[#e7ece8]">
+                                        Top Farokht Shuda Sabzian
+                                    </h2>
+                                    <p className="text-xs text-[#68736b] dark:text-[#8b968e]">
+                                        Sab se zyada bikri wali sabzi jins
+                                    </p>
+                                </div>
+                                <Icon name="Sparkle" className="size-4 text-emerald-700" weight="bold" />
                             </div>
 
-                            <div className="space-y-0 text-xs">
-                                {topMerchants.length === 0 ? (
-                                    <div className="py-6 text-center text-muted-foreground text-xs">
-                                        {isUrdu ? 'کوئی بقایا مرچنٹ نہیں ہے' : 'No outstanding merchants'}
+                            {/* Horizontal items ranking bars */}
+                            <div className="space-y-3 pt-2">
+                                {topItemsChart.length === 0 ? (
+                                    <div className="py-12 text-center text-xs text-gray-400 font-medium">
+                                        No sales records found
                                     </div>
                                 ) : (
-                                    topMerchants.map((m, idx) => (
-                                        <div key={idx} className="flex items-center justify-between py-2 border-t border-[#e6e9e6] dark:border-[#262d28] first:border-t-0">
-                                            <div className="flex items-center gap-2.5 min-w-0">
-                                                <span className="w-4 text-[#68736b] dark:text-[#8b968e] text-xs font-medium shrink-0">
-                                                    {idx + 1}
-                                                </span>
-                                                <div className="min-w-0">
-                                                    <div className="font-semibold text-[#1a211c] dark:text-[#e7ece8] truncate">
-                                                        {m.name}
+                                    topItemsChart.map((it, idx) => {
+                                        const pct = Math.min(100, Math.max(12, Math.round((it.amount / maxItemAmount) * 100)));
+                                        const displayName = it.name_en || it.name || it.name_ur;
+                                        return (
+                                            <div key={idx} className="space-y-1">
+                                                <div className="flex items-center justify-between text-xs">
+                                                    <span className="font-bold text-[#1a211c] dark:text-[#e7ece8] truncate">
+                                                        {displayName}
+                                                    </span>
+                                                    <span className="font-extrabold text-[#1a211c] dark:text-[#e7ece8] tabular-nums">
+                                                        Rs {formatNum(it.amount)}
+                                                    </span>
+                                                </div>
+                                                <div className="h-4 rounded-md bg-[#f0f2f0] dark:bg-[#1e2420] overflow-hidden flex items-center">
+                                                    <div
+                                                        style={{ width: `${pct}%` }}
+                                                        className="h-full bg-emerald-700 hover:bg-emerald-800 transition-all rounded-md flex items-center justify-end px-1.5"
+                                                    >
+                                                        {it.nag > 0 && (
+                                                            <span className="text-[9px] font-bold text-white tracking-tight">
+                                                                {it.nag}
+                                                            </span>
+                                                        )}
                                                     </div>
-                                                    <small className="text-[#68736b] dark:text-[#8b968e] text-[11px] block">
-                                                        {m.code}
-                                                    </small>
                                                 </div>
                                             </div>
-                                            <b className="font-bold text-[#1a211c] dark:text-[#e7ece8] tabular-nums shrink-0 ps-2">
-                                                {formatRupees(m.balance)}
-                                            </b>
-                                        </div>
-                                    ))
+                                        );
+                                    })
                                 )}
                             </div>
                         </div>
-                    </div>
 
-                    {/* Card 2: Needs Attention */}
-                    <div className="bg-white dark:bg-[#161b18] border border-[#e6e9e6] dark:border-[#262d28] rounded-xl p-4 shadow-2xs">
-                        <div className="mb-2">
-                            <h2 className={`text-sm font-bold text-[#1a211c] dark:text-[#e7ece8] ${isUrdu ? 'font-nastaliq' : ''}`}>
-                                {isUrdu ? 'اطلاعات' : 'Needs attention'}
-                            </h2>
-                        </div>
-
-                        <div className="space-y-0 text-xs">
-                            {alerts.map((alert, idx) => (
-                                <div key={idx} className="flex items-start gap-2.5 py-2.5 border-t border-[#e6e9e6] dark:border-[#262d28] first:border-t-0">
-                                    <WarningIcon className="size-4 shrink-0 text-[#a15c07] dark:text-[#f0b54a] mt-0.5" weight="bold" />
-                                    <div className="min-w-0">
-                                        <div className="font-medium text-[#1a211c] dark:text-[#e7ece8]">
-                                            {alert.title}
-                                        </div>
-                                        <small className="text-[#68736b] dark:text-[#8b968e] text-[11px] block mt-0.5">
-                                            {alert.subtitle}
-                                        </small>
-                                    </div>
-                                </div>
-                            ))}
+                        {/* Bottom note */}
+                        <div className="border-t border-[#f0f2f0] dark:border-[#1e2420] pt-3 mt-4 flex items-center justify-between text-xs text-[#68736b]">
+                            <span>Kul 5 Top Sabzian</span>
+                            <Link href="/reports" className="font-bold text-emerald-800 hover:underline">
+                                Report dekhein →
+                            </Link>
                         </div>
                     </div>
+
                 </div>
 
-                {/* Section 4: Bottom Grid 2 (Recent Entries Table) */}
-                <div className="bg-white dark:bg-[#161b18] border border-[#e6e9e6] dark:border-[#262d28] rounded-xl p-4 shadow-2xs">
+                {/* 4. Bottom Table: Recent Entries */}
+                <div className="bg-white dark:bg-[#161b18] border border-[#e6e9e6] dark:border-[#262d28] rounded-2xl p-4 md:p-5 shadow-2xs">
                     <div className="flex items-center justify-between mb-3">
-                        <h2 className={`text-sm font-bold text-[#1a211c] dark:text-[#e7ece8] ${isUrdu ? 'font-nastaliq' : ''}`}>
-                            {isUrdu ? 'حالیہ اندراج' : 'Recent entries'}
-                        </h2>
+                        <div>
+                            <h2 className="text-sm md:text-base font-bold text-[#1a211c] dark:text-[#e7ece8]">
+                                Haliya Indraj (Recent Entries)
+                            </h2>
+                            <p className="text-xs text-[#68736b] dark:text-[#8b968e]">
+                                Aaj ki taza tareen bikri aur wasooli
+                            </p>
+                        </div>
                         <Link
                             href="/amroza-detail"
-                            className="text-xs font-semibold text-[#68736b] hover:text-[#166534] dark:hover:text-[#4ade80] transition-colors"
+                            className="text-xs font-bold text-emerald-800 hover:text-emerald-950 transition-colors"
                         >
-                            {isUrdu ? 'سب دیکھیں' : 'View all'}
+                            Sab dekhein →
                         </Link>
                     </div>
 
@@ -506,49 +574,57 @@ export default function Dashboard() {
                         <table className="w-full text-xs text-start">
                             <thead>
                                 <tr className="border-b border-[#e6e9e6] dark:border-[#262d28] text-[#68736b] dark:text-[#8b968e]">
-                                    <th className="py-2 px-3 text-start font-semibold">{isUrdu ? 'وقت' : 'Time'}</th>
-                                    <th className="py-2 px-3 text-start font-semibold">{isUrdu ? 'قسم' : 'Type'}</th>
-                                    <th className="py-2 px-3 text-start font-semibold">{isUrdu ? 'مرچنٹ / کسان' : 'Merchant / Farmer'}</th>
-                                    <th className="py-2 px-3 text-start font-semibold">{isUrdu ? 'آئٹم' : 'Item'}</th>
-                                    <th className="py-2 px-3 text-end font-semibold">{isUrdu ? 'نگ' : 'Nag'}</th>
-                                    <th className="py-2 px-3 text-end font-semibold">{isUrdu ? 'رقم' : 'Amount'}</th>
+                                    <th className="py-2.5 px-3 text-start font-bold">Waqt</th>
+                                    <th className="py-2.5 px-3 text-start font-bold">Qisam</th>
+                                    <th className="py-2.5 px-3 text-start font-bold">Gahak / Kisan</th>
+                                    <th className="py-2.5 px-3 text-start font-bold">Jins</th>
+                                    <th className="py-2.5 px-3 text-end font-bold">Nag</th>
+                                    <th className="py-2.5 px-3 text-end font-bold">Raqam</th>
                                 </tr>
                             </thead>
-                            <tbody className="tabular-nums">
-                                {recentSales.map((entry, idx) => (
-                                    <tr key={idx} className="border-b border-[#e6e9e6] dark:border-[#262d28] last:border-b-0 hover:bg-[#f0f2f0]/60 dark:hover:bg-[#1e2420]/60 transition-colors">
-                                        <td className="py-2.5 px-3 text-[#68736b] dark:text-[#8b968e]">
-                                            {entry.time}
-                                        </td>
-                                        <td className="py-2.5 px-3">
-                                            <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${
-                                                entry.isCash
-                                                    ? 'bg-[#ecf5ee] dark:bg-[#1b2a20] text-[#166534] dark:text-[#4ade80]'
-                                                    : 'bg-[#f0f2f0] dark:bg-[#1e2420] text-[#68736b] dark:text-[#8b968e]'
-                                            }`}>
-                                                {entry.type}
-                                            </span>
-                                        </td>
-                                        <td className="py-2.5 px-3 font-semibold text-[#1a211c] dark:text-[#e7ece8]">
-                                            {entry.party}
-                                        </td>
-                                        <td className="py-2.5 px-3 text-[#1a211c] dark:text-[#e7ece8]">
-                                            {entry.item}
-                                        </td>
-                                        <td className="py-2.5 px-3 text-end font-medium text-[#1a211c] dark:text-[#e7ece8]">
-                                            {entry.nag}
-                                        </td>
-                                        <td className="py-2.5 px-3 text-end font-bold text-[#1a211c] dark:text-[#e7ece8]">
-                                            {entry.amount ? formatRupees(entry.amount) : '—'}
+                            <tbody className="tabular-nums divide-y divide-gray-100 dark:divide-zinc-800/60">
+                                {recentSales.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={6} className="py-8 text-center text-gray-400 font-medium">
+                                            No recent entries for this range
                                         </td>
                                     </tr>
-                                ))}
+                                ) : (
+                                    recentSales.map((entry, idx) => (
+                                        <tr key={idx} className="hover:bg-gray-50/70 dark:hover:bg-[#1e2420]/60 transition-colors">
+                                            <td className="py-2.5 px-3 text-[#68736b] dark:text-[#8b968e] font-medium">
+                                                {entry.time}
+                                            </td>
+                                            <td className="py-2.5 px-3">
+                                                <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
+                                                    entry.isCash
+                                                        ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300'
+                                                        : 'bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300'
+                                                }`}>
+                                                    {entry.type}
+                                                </span>
+                                            </td>
+                                            <td className="py-2.5 px-3 font-bold text-[#1a211c] dark:text-[#e7ece8]">
+                                                {entry.party}
+                                            </td>
+                                            <td className="py-2.5 px-3 text-[#1a211c] dark:text-[#e7ece8]">
+                                                {entry.item}
+                                            </td>
+                                            <td className="py-2.5 px-3 text-end font-medium text-[#1a211c] dark:text-[#e7ece8]">
+                                                {entry.nag}
+                                            </td>
+                                            <td className="py-2.5 px-3 text-end font-bold text-[#1a211c] dark:text-[#e7ece8]">
+                                                {entry.amount ? formatRupees(entry.amount) : '—'}
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
                             </tbody>
                         </table>
                     </div>
                 </div>
+
             </div>
         </AppLayout>
     );
 }
-

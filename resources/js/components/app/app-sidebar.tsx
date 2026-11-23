@@ -67,7 +67,7 @@ export function AppSidebar() {
     };
 
     return (
-        <Sidebar collapsible="icon" variant="sidebar" className="border-e shadow-xs">
+        <Sidebar collapsible="icon" variant="sidebar" side={isUrdu ? "right" : "left"} className={cn("shadow-xs", isUrdu ? "border-s" : "border-e")}>
             {/* Sidebar Branding Header */}
             <SidebarHeader className="border-b px-3 py-2.5">
                 <SidebarMenu>
@@ -87,7 +87,8 @@ export function AppSidebar() {
                     <SidebarGroupContent>
                         <SidebarMenu className="gap-1">
                             {sideNav.map((group: NavGroup) => {
-                                const hasMultiple = group.items && group.items.length > 1;
+                                if (!group.items || group.items.length === 0) return null;
+                                const hasMultiple = (group.items && group.items.length > 1) || group.id === 'setup';
                                 const groupHasActiveItem = group.items.some(item => item.url === url);
 
                                 // Single item group (e.g. Dashboard, Cash Book, Reports)
@@ -118,7 +119,7 @@ export function AppSidebar() {
                                                             isActive ? "text-[#166534] dark:text-[#4ade80]" : "text-[#68736b] dark:text-[#8b968e]"
                                                         )}
                                                     />
-                                                    <span className={cn("truncate text-[15px] font-medium text-black dark:text-white", isUrdu && "font-nastaliq text-[17px]")}>
+                                                    <span className="truncate text-[15px] font-medium text-black dark:text-white">
                                                         {label}
                                                     </span>
                                                 </Link>
@@ -155,7 +156,7 @@ export function AppSidebar() {
                                                             weight="regular"
                                                             className="!size-5 shrink-0 text-[#68736b] dark:text-[#8b968e]"
                                                         />
-                                                        <span className={cn("truncate text-[15px] font-medium text-black dark:text-white", isUrdu && "font-nastaliq text-[17px]")}>
+                                                        <span className="truncate text-[15px] font-medium text-black dark:text-white">
                                                             {groupLabel}
                                                         </span>
                                                     </div>
@@ -200,7 +201,7 @@ export function AppSidebar() {
                                                                             }}
                                                                             className="flex items-center gap-2 w-full text-start"
                                                                         >
-                                                                            <span className={cn("truncate text-[15px] font-medium text-[#68736b] dark:text-[#8b968e]", isUrdu && "font-nastaliq text-[16px]")}>
+                                                                            <span className="truncate text-[15px] font-medium text-[#68736b] dark:text-[#8b968e]">
                                                                                 {subLabel}
                                                                             </span>
                                                                         </button>
@@ -208,8 +209,7 @@ export function AppSidebar() {
                                                                         <Link href={subItem.url} className="flex items-center gap-2">
                                                                             <span className={cn(
                                                                                 "truncate text-[15px] font-medium",
-                                                                                isSubActive ? "text-[#166534] dark:text-[#4ade80] font-semibold" : "text-[#2e3831] dark:text-white",
-                                                                                isUrdu && "font-nastaliq text-[16px]"
+                                                                                isSubActive ? "text-[#166534] dark:text-[#4ade80] font-semibold" : "text-[#2e3831] dark:text-white"
                                                                             )}>
                                                                                 {subLabel}
                                                                             </span>

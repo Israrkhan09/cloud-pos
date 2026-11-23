@@ -16,6 +16,11 @@ class Merchant extends Model
         'name_en',
         'name_ur',
         'phone',
+        'city',
+        'customer_type',
+        'credit_limit',
+        'description',
+        'notes',
         'opening_balance',
         'current_balance',
         'status',
@@ -26,6 +31,7 @@ class Merchant extends Model
 
     protected $casts = [
         'code' => 'integer',
+        'credit_limit' => 'float',
         'opening_balance' => 'float',
         'current_balance' => 'float',
     ];

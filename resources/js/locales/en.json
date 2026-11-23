@@ -46,7 +46,20 @@
     "balance_lookup": "Balance Lookup",
     "advance_payment": "Advance Payment",
     "no_records": "No records found.",
-    "year": "Year 2026"
+    "year": "Year 2026",
+    "expired": "Expired",
+    "khatam": "Khatam",
+    "cash": "Cash",
+    "bank": "Bank",
+    "naqad": "Naqad",
+    "udhaar": "Udhaar",
+    "wallet": "Mobile Wallet",
+    "cleared": "Cleared",
+    "pending": "Pending",
+    "bounced": "Bounced",
+    "print_karein": "Print Karein",
+    "csv_export": "CSV Export",
+    "excel_export": "Excel Export"
   },
   "branding": {
     "name": "Vegetable POS",
@@ -71,6 +84,10 @@
     "surplus": "Surplus",
     "audit_vouchers": "Audit & Vouchers",
     "nayi_sale": "Nayi Sale",
+    "wasooli": "Wasooli",
+    "maal_aur_stock": "Maal aur Stock",
+    "gahak_customers": "Gahak (Customers)",
+    "farmers_kisan": "Farmers (Kisan)",
     "farmer_bill_bijak": "Farmer Bill (Bijak)",
     "merchant_side": "Merchant Side (Wasooli)",
     "farmer_side": "Farmer Side (Main)",
@@ -82,10 +99,10 @@
     "products_areas": "Products / Areas",
     "reports": "Reports",
     "expiry_gifts": "Expiry & Gifts",
+    "discount_rules": "Discount Rules",
     "system": "System",
     "amroza": "Amroza",
     "naqdi": "Naqdi",
-    "wasooli": "Wasooli",
     "merchant_amroza": "Merchant Amroza",
     "merchant_wasooli": "Merchant Wasooli",
     "merchant_khata": "Merchant Khata",
@@ -310,6 +327,79 @@
     "company_profile": "Company Profile",
     "backup": "Database Backup",
     "year": "Accounting Year"
+  },
+  "banking": {
+    "accounts_title": "Bank Khata & Naqad Galla (Banking & Cash Accounts)",
+    "accounts_subtitle": "Bank accounts ka hisaab, raqam jama (deposit), nikasi (withdraw) aur transfer",
+    "transfers_title": "Deposit / Transfer",
+    "transfers_subtitle": "Din ke aakhir mein galla se bank mein paise jama karwayein, ya bank se cash nikalein",
+    "cheques_title": "Cheques",
+    "cheques_subtitle": "Merchant se mile aur kisan ko diye gaye cheques ka status yahan track karein",
+    "new_account": "Naya Account",
+    "cash_galla": "CASH GALLA",
+    "bank_account": "BANK ACCOUNT",
+    "mobile_wallet": "MOBILE WALLET",
+    "current_balance": "Mojooda Balance",
+    "transactions_record": "Bank aur Cash Transactions Record",
+    "date": "Tareekh",
+    "type": "Qism",
+    "from": "Account Se (From)",
+    "to": "Account Mein (To)",
+    "amount": "Raqam (Rs)",
+    "description": "Tafseel (Description)"
+  },
+  "investment": {
+    "title": "Investment & Capital Ledger",
+    "subtitle": "Sarmaya, Qarza aur Sarmayakari Khata",
+    "new_entry": "Nayi Entry",
+    "partners_tab": "Partners (Hissedar)",
+    "loans_tab": "Qarza (Loans)",
+    "surplus_tab": "Sarmayakari (Investments)",
+    "audit_tab": "Record (Audit)"
+  },
+  "reports_mandi": {
+    "title": "Mandi Rapoort (Reports, Audits & Profit/Loss)",
+    "subtitle": "Rozana aur mahana bikri, stock valuation, gahak baqaya aur munafa rapoort",
+    "print_btn": "Print Karein",
+    "csv_btn": "CSV Export",
+    "rozana_tab": "Rozana Sale Report",
+    "mahana_tab": "Mahana Sale Summary",
+    "stock_tab": "Stock Valuation (Malyaat)",
+    "gahak_tab": "Gahak Baqaya (Udhaar)",
+    "pnl_tab": "Nafa-Nuqsan (Munafa P&L)"
+  },
+  "expiry_gifts_section": {
+    "title": "Expiry & Gifts",
+    "subtitle_expiry": "Kaunsa maal jaldi bikna chahiye, aur kya karna hai",
+    "subtitle_gifts": "Free maal ka hisaab: kis ko, kitna, kyun",
+    "expiry_tab": "Expiry",
+    "gifts_tab": "Gifts"
+  },
+  "discount_rules_section": {
+    "title": "Discount Rules & Payment Settlement",
+    "subtitle": "Thok gahakon aur baray bill par khususi riaayat (percentage ya fixed rupay) ke qawaneen",
+    "new_rule": "Naya Discount Rule"
+  },
+  "backup_mandi": {
+    "title": "Database Backup aur Restore",
+    "subtitle": "SQLite database ka mehfooz backup, timestamped files download aur restore ki sahulat",
+    "new_backup": "Abhi Naya Backup Banayein",
+    "full_db_backup": "Full Database Backup (DB)",
+    "backup_in_progress": "Backup Ban Raha Hai..."
+  },
+  "farmers_management": {
+    "title": "Farmers Management (Kisan aur Bopari Khata)",
+    "subtitle": "Kisanon ke rabtay, bijak ka baqaya (dena), aur kul baqaya",
+    "new_farmer": "Naya Kisan Shamil Karein"
+  },
+  "gahak_khata": {
+    "title": "Gahak Khata (Dukandar / Customer Ledger)",
+    "subtitle": "Dukandaron ka udhaar, farokht bills, wasooli aur roznamcha ledger",
+    "print_khata": "Print Khata"
+  },
+  "farmer_khata": {
+    "title": "Farmer Khata (Kisan Mandi Hisaab)",
+    "subtitle": "Kisan aur zamindar ki aamad, bijak aur adaigi ka hisaab",
+    "print_khata": "Print Khata"
   }
 }
-

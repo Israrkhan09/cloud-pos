@@ -66,16 +66,16 @@ export default function InvestmentHeader({
     ];
 
     return (
-        <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-3.5 space-y-3 shadow-xs">
+        <div className="bg-[#14532d] px-4 md:px-6 pt-3.5 pb-4 text-white shadow-sm print:hidden space-y-3">
             {/* Top row: Heading, Pending Approvals badge (if any), and ONE main action button */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
                 {/* Left side: Page Title Heading matching POS standard */}
                 <div className="flex items-center gap-3 flex-wrap min-h-[36px]">
                     <div>
-                        <h1 className="text-xl md:text-2xl font-black text-[#1F2937] tracking-tight leading-tight">
+                        <h1 className="text-lg md:text-xl font-bold text-white tracking-tight leading-tight flex items-center gap-2">
                             {isUrdu ? 'سرمایہ و قرضہ لیجر' : 'Investment & Capital Ledger'}
                         </h1>
-                        <p className="text-xs text-[#4B5563] mt-0.5">
+                        <p className="text-emerald-100/80 text-xs font-medium mt-0.5">
                             {isUrdu ? 'سرمایہ، قرضہ اور سرمایہ کاری کھاتہ' : 'Sarmaya, Qarza aur Sarmayakari Khata'}
                         </p>
                     </div>
@@ -99,9 +99,9 @@ export default function InvestmentHeader({
                         <button
                             type="button"
                             onClick={onOpenEntry}
-                            className="min-h-[40px] px-5 py-2 rounded-lg text-sm font-bold bg-[#14532d] hover:bg-[#166534] active:bg-[#0f3d21] text-white shadow-xs transition-colors flex items-center gap-2 cursor-pointer"
+                            className="min-h-[36px] px-4 py-1.5 rounded-xl text-xs sm:text-sm font-semibold bg-white text-emerald-900 hover:bg-emerald-50 shadow-xs transition-colors flex items-center gap-2 cursor-pointer"
                         >
-                            <Icon name="Plus" className="size-4 stroke-[3]" />
+                            <Icon name="Plus" className="size-4 stroke-[3] text-emerald-900" />
                             <span>{isUrdu ? 'نئی اینٹری' : 'Nayi Entry'}</span>
                         </button>
                     </div>
@@ -118,10 +118,10 @@ export default function InvestmentHeader({
                             href={tab.href}
                             prefetch
                             className={cn(
-                                "min-h-[40px] px-5 py-2 rounded-lg text-sm transition-all whitespace-nowrap flex items-center gap-2 border",
+                                "min-h-[34px] px-4 py-1.5 rounded-xl text-xs sm:text-sm transition-all whitespace-nowrap flex items-center gap-1.5 border",
                                 isActive
-                                    ? "bg-[#14532d] text-white border-[#14532d] font-bold shadow-xs"
-                                    : "bg-white text-[#374151] hover:bg-gray-100 border-gray-200 font-semibold"
+                                    ? "bg-[#20693e] text-white border-emerald-500 font-bold shadow-xs"
+                                    : "bg-emerald-900/60 text-emerald-100 hover:bg-[#20693e]/60 border-emerald-700/50 font-medium"
                             )}
                         >
                             <span>{tab.title}</span>

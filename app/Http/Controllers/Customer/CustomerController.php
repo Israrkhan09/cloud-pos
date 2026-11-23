@@ -3,83 +3,226 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Customer\StoreRequest;
-use App\Http\Requests\Customer\UpdateRequest;
+use App\Models\AmrozaSale;
 use App\Models\Customer;
+use App\Models\Merchant;
+use App\Models\MerchantReceipt;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class CustomerController extends Controller
 {
-    public function __construct(
-        private Customer $model,
-    ) {}
-
-
     public function index(Request $request): Response
     {
-        $customers = $this->model->query()
-            ->select(['id', 'name', 'email', 'phone', 'status', 'avatar'])
-            ->applyFilter($request->qry)
-            ->orderBy('id', 'desc')
-            ->paginate(perPage: $request->per_page ?? config('pos.per_page'))
-            ->withQueryString();
+        $query = Merchant::where('status', 'active')->where('code', '!=', 1);
+
+        $search = $request->query('search', $request->query('qry'));
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name_en', 'like', "%{$search}%")
+                  ->orWhere('name_ur', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%")
+                  ->orWhere('city', 'like', "%{$search}%");
+            });
+        }
+
+        $onlyBaqaya = filter_var($request->query('only_baqaya', false), FILTER_VALIDATE_BOOLEAN);
+        if ($onlyBaqaya) {
+            $query->where('current_balance', '>', 0);
+        }
+
+        $merchants = $query->orderBy('id', 'asc')->get();
+
+        $customers = $merchants->map(function ($m) {
+            return [
+                'id' => $m->id,
+                'code' => $m->code,
+                'name' => $m->name_en ?: ($m->name ?: $m->name_ur),
+                'description' => $m->description ?: '',
+                'phone' => $m->phone ?: '—',
+                'city' => $m->city ?: '—',
+                'customer_type' => $m->customer_type ?: 'Dukandar',
+                'credit_limit' => (float) ($m->credit_limit ?? 0),
+                'current_balance' => (float) ($m->current_balance ?? 0),
+                'opening_balance' => (float) ($m->opening_balance ?? 0),
+                'notes' => $m->notes ?: '',
+                'status' => $m->status,
+            ];
+        });
 
         return Inertia::render('customer/index', [
-            'customers' => Inertia::merge($customers->items()),
-            'pagination' => Arr::except($customers->toArray(), ['data', 'links'])
+            'customers' => $customers,
+            'filters' => [
+                'search' => $search ?? '',
+                'only_baqaya' => $onlyBaqaya,
+            ],
         ]);
     }
 
-
-    public function store(StoreRequest $request): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'phone' => 'nullable|string|max:50',
+            'city' => 'nullable|string|max:100',
+            'customer_type' => 'nullable|string|max:100',
+            'credit_limit' => 'nullable|numeric|min:0',
+            'opening_balance' => 'nullable|numeric',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        $maxCode = (int) (Merchant::max('code') ?? 0);
+        $nextCode = $maxCode + 1;
+        $openBal = (float) ($validated['opening_balance'] ?? 0);
+
+        Merchant::create([
+            'code' => $nextCode,
+            'name_en' => $validated['name'],
+            'name_ur' => $validated['name'],
+            'phone' => $validated['phone'] ?? null,
+            'city' => $validated['city'] ?? null,
+            'customer_type' => $validated['customer_type'] ?? null,
+            'credit_limit' => (float) ($validated['credit_limit'] ?? 0),
+            'opening_balance' => $openBal,
+            'current_balance' => $openBal,
+            'notes' => $validated['notes'] ?? null,
+            'status' => 'active',
+            'created_by' => auth()->id(),
+        ]);
+
         try {
-            $this->model->create($request->getRequested());
-            return to_route('customers.index');
-        } catch (\Exception $e) {
-            return back()->with('error', $e->getMessage());
+            Customer::create([
+                'name' => $validated['name'],
+                'phone' => $validated['phone'] ?? '0300-0000000',
+                'address' => $validated['city'] ?? null,
+                'status' => 'active',
+            ]);
+        } catch (\Throwable $e) {
+            // Ignore legacy table conflicts
         }
+
+        return redirect()->back()->with('success', 'Naya gahak shamil ho gaya.');
     }
 
-
-    public function show(int $id): Customer
+    public function update(Request $request, int $id): RedirectResponse
     {
-        return $this->model->findOrFail($id);
+        $merchant = Merchant::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'phone' => 'nullable|string|max:50',
+            'city' => 'nullable|string|max:100',
+            'customer_type' => 'nullable|string|max:100',
+            'credit_limit' => 'nullable|numeric|min:0',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        $merchant->update([
+            'name_en' => $validated['name'],
+            'name_ur' => $validated['name'],
+            'phone' => $validated['phone'] ?? null,
+            'city' => $validated['city'] ?? null,
+            'customer_type' => $validated['customer_type'] ?? null,
+            'credit_limit' => (float) ($validated['credit_limit'] ?? 0),
+            'notes' => $validated['notes'] ?? null,
+        ]);
+
+        return redirect()->back()->with('success', 'Gahak ki maloomat update ho gayi.');
     }
-
-
-    public function update(UpdateRequest $request, int $id): RedirectResponse
-    {
-        try {
-            $this->model->findOrFail($id)->update($request->getRequested());
-            return to_route('customers.index');
-        } catch (\Exception $e) {
-            return back()->with('error', $e->getMessage());
-        }
-    }
-
 
     public function destroy(int $id): RedirectResponse
     {
-        try {
-            $this->model->findOrFail($id)->delete();
-            return to_route('customers.index');
-        } catch (\Exception $e) {
-            return back()->with('error', $e->getMessage());
-        }
+        $merchant = Merchant::findOrFail($id);
+        $merchant->delete();
+        return redirect()->back()->with('success', 'Gahak delete ho gaya.');
     }
 
-
-    public function search(Request $request)
+    public function khata(int $id)
     {
-        return $this->model->query()
-            ->select(['id', 'name', 'email', 'phone', 'status', 'avatar'])
-            ->applyFilter($request->search_qry)
-            ->take(10)
+        $merchant = Merchant::findOrFail($id);
+
+        $sales = AmrozaSale::where('merchant_id', $merchant->id)
+            ->where(function ($q) {
+                $q->where('payment_type', 'udhaar')
+                  ->orWhereNull('payment_type')
+                  ->orWhere('payment_type', 'split');
+            })
+            ->latest('date')
+            ->take(30)
             ->get();
+
+        $receipts = MerchantReceipt::where('merchant_id', $merchant->id)
+            ->where('type', 'recovery')
+            ->latest('date')
+            ->take(30)
+            ->get();
+
+        $entries = [];
+
+        foreach ($sales as $s) {
+            $amount = $s->payment_type === 'split' ? (float) $s->udhaar_amount : (float) $s->gross_amount;
+            $entries[] = [
+                'date' => $s->date instanceof \DateTimeInterface ? $s->date->format('Y-m-d') : substr((string) $s->date, 0, 10),
+                'description' => 'Farokht (Udhaar Bill #' . $s->id . ')',
+                'debit' => $amount,
+                'credit' => 0,
+                'timestamp' => strtotime((string) $s->date . ' 12:00:00'),
+            ];
+        }
+
+        foreach ($receipts as $r) {
+            $entries[] = [
+                'date' => $r->date instanceof \DateTimeInterface ? $r->date->format('Y-m-d') : substr((string) $r->date, 0, 10),
+                'description' => $r->note ?: 'Wasooli Receipt #' . (5000 + $r->id),
+                'debit' => 0,
+                'credit' => (float) $r->amount,
+                'timestamp' => strtotime((string) $r->date . ' 13:00:00'),
+            ];
+        }
+
+        usort($entries, function ($a, $b) {
+            return $a['timestamp'] <=> $b['timestamp'];
+        });
+
+        $running = (float) $merchant->opening_balance;
+        $ledgerEntries = [];
+
+        if (abs($running) > 0.01) {
+            $ledgerEntries[] = [
+                'date' => substr((string) $merchant->created_at, 0, 10),
+                'description' => 'Purana / Sabqa Baqaya (Opening Balance)',
+                'debit' => $running > 0 ? $running : 0,
+                'credit' => $running < 0 ? abs($running) : 0,
+                'balance' => $running,
+            ];
+        }
+
+        foreach ($entries as $e) {
+            $running = round($running + $e['debit'] - $e['credit'], 2);
+            $ledgerEntries[] = [
+                'date' => $e['date'],
+                'description' => $e['description'],
+                'debit' => $e['debit'],
+                'credit' => $e['credit'],
+                'balance' => $running,
+            ];
+        }
+
+        $recentEntries = array_slice($ledgerEntries, -20);
+
+        return response()->json([
+            'merchant' => [
+                'id' => $merchant->id,
+                'name' => $merchant->name_en ?: ($merchant->name ?: $merchant->name_ur),
+                'phone' => $merchant->phone ?: '—',
+                'city' => $merchant->city ?: '—',
+                'customer_type' => $merchant->customer_type ?: 'Dukandar',
+                'credit_limit' => (float) ($merchant->credit_limit ?? 0),
+                'current_balance' => (float) ($merchant->current_balance ?? 0),
+            ],
+            'entries' => array_reverse($recentEntries),
+        ]);
     }
 }

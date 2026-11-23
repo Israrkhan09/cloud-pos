@@ -11,6 +11,7 @@ class Item extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'code',
         'name_en',
         'name_ur',
         'unit',
@@ -21,6 +22,7 @@ class Item extends Model
         'lot_date',
         'stock_note',
         'default_rate',
+        'purchase_rate',
         'default_bardana',
         'status',
         'shelf_life',
@@ -32,6 +34,7 @@ class Item extends Model
     protected $appends = ['name', 'expiry_countdown', 'computed_status', 'live_stock'];
 
     protected $casts = [
+        'purchase_rate'   => 'float',
         'kg_per_unit'     => 'float',
         'opening_stock'   => 'integer',
         'current_stock'   => 'integer',

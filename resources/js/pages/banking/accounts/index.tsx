@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Head } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/layouts/app-layout';
+import MandiPageHeader from '@/components/app/mandi-page-header';
 import { type BreadcrumbItem } from '@/types';
 import { toast } from 'sonner';
 import {
@@ -15,11 +16,25 @@ import {
     getStoredBankAccounts,
     saveStoredBankAccounts,
     getStoredTransfers,
-    getStoredCheques,
     EVENT_BANKING_UPDATED,
 } from '@/lib/banking-store';
 
-export default function BankAccountsPage() {
+interface DbTransaction {
+    id: string;
+    date: string;
+    type: string;
+    from: string;
+    to: string;
+    amount: number;
+    description: string;
+}
+
+interface Props {
+    liveCashGalla?: number;
+    dbTransactions?: DbTransaction[];
+}
+
+export default function BankAccountsPage({ liveCashGalla = 48813.6, dbTransactions = [] }: Props) {
     const { t, i18n } = useTranslation();
     const isUrdu = i18n.language === 'ur';
 
@@ -57,7 +72,7 @@ export default function BankAccountsPage() {
     });
 
     const formatCurrency = (val: number) => {
-        return 'Rs. ' + Number(val || 0).toLocaleString('en-US');
+        return 'Rs ' + Number(val || 0).toLocaleString('en-US');
     };
 
     // Open modal to add a brand new account
@@ -195,20 +210,70 @@ export default function BankAccountsPage() {
         });
     };
 
-    // Calculate total bank balance from current accounts
-    const totalBankBalance = accounts.reduce((acc, curr) => acc + (Number(curr.current_balance) || 0), 0);
+    // Stored transfers from local banking store
+    const storedTransfers = getStoredTransfers();
 
-    // Dynamic stats from transfers and cheques
-    const transfers = getStoredTransfers();
-    const todayDeposits = transfers
-        .filter((t) => t.type === 'deposit')
-        .reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
+    // Combined unified transactions list for the table
+    const allTransactions = useMemo(() => {
+        const list: Array<{
+            id: string | number;
+            date: string;
+            type: string;
+            typeBadge: 'jama' | 'nikasi' | 'transfer';
+            from: string;
+            to: string;
+            amount: number;
+            description: string;
+        }> = [];
 
-    const cheques = getStoredCheques();
-    const pendingCheques = cheques
-        .filter((c) => c.status === 'Pending')
-        .reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
-    const pendingChequesCount = cheques.filter((c) => c.status === 'Pending').length;
+        // 1. Stored local transfers
+        storedTransfers.forEach((st) => {
+            let fromAcc = 'Naqad / Counter';
+            let toAcc = st.bankName || 'Bank Account';
+            let badge: 'jama' | 'nikasi' | 'transfer' = 'jama';
+            let typeLabel = 'Jama';
+
+            if (st.type === 'withdraw') {
+                fromAcc = st.bankName || 'Bank Account';
+                toAcc = 'Naqad / Counter';
+                badge = 'nikasi';
+                typeLabel = 'Nikasi';
+            } else if (st.type === 'transfer') {
+                const parts = (st.title || '').split('→');
+                fromAcc = parts[0]?.trim() || st.bankName || 'Bank';
+                toAcc = parts[1]?.trim() || 'Bank';
+                badge = 'transfer';
+                typeLabel = 'Transfer';
+            }
+
+            list.push({
+                id: 'transfer_' + st.id,
+                date: st.date || '2026-11-23',
+                type: typeLabel,
+                typeBadge: badge,
+                from: fromAcc,
+                to: toAcc,
+                amount: st.amount,
+                description: st.title || 'Bank / Cash Transfer',
+            });
+        });
+
+        // 2. Real DB transactions
+        dbTransactions.forEach((dt) => {
+            list.push({
+                id: dt.id,
+                date: dt.date,
+                type: dt.type || 'Jama',
+                typeBadge: 'jama',
+                from: dt.from,
+                to: dt.to,
+                amount: dt.amount,
+                description: dt.description,
+            });
+        });
+
+        return list;
+    }, [storedTransfers, dbTransactions]);
 
     const breadcrumbs: BreadcrumbItem[] = [
         {
@@ -227,201 +292,243 @@ export default function BankAccountsPage() {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={isUrdu ? 'بینک اکاؤنٹس - ویجیٹیبل پی او ایس' : 'Bank Accounts - Vegetable POS'} />
+            <Head title="Bank Khata & Naqad Galla (Banking & Cash Accounts) - Vegetable POS" />
 
-            <div className="max-w-7xl mx-auto w-full space-y-6 pb-12">
-                {/* Header Section */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div>
-                        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-                            {isUrdu ? 'بینک اکاؤنٹس' : 'Bank Accounts'}
-                        </h1>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                            {isUrdu
-                                ? 'سیٹ اپ / بینکنگ: اپنے بزنس کے بینک اور والٹ اکاؤنٹس یہاں ایڈ کریں'
-                                : 'Setup / Banking: apne business ke bank aur wallet accounts yahan add karein'}
-                        </p>
-                    </div>
-
+            <div className="-mt-4 -mx-4 -mb-4 pb-28 bg-[#eef2ee] min-h-full space-y-4">
+                {/* Green Header Section */}
+                <MandiPageHeader
+                    title={isUrdu ? t('banking.accounts_title') : 'Bank Khata & Naqad Galla (Banking & Cash Accounts)'}
+                    subtitle={isUrdu ? t('banking.accounts_subtitle') : 'Bank accounts ka hisaab, raqam jama (deposit), nikasi (withdraw) aur transfer'}
+                    isUrdu={isUrdu}
+                >
                     <button
                         type="button"
                         onClick={handleOpenModal}
-                        className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-[#166534] hover:bg-[#14532d] text-white text-sm font-semibold shadow-xs transition-colors cursor-pointer self-start sm:self-auto"
+                        className="h-9 px-4 rounded-xl text-xs md:text-sm font-semibold bg-white text-emerald-900 hover:bg-emerald-50 shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
                     >
-                        <span>{isUrdu ? '+ نیا بینک اکاؤنٹ' : '+ Naya Bank Account'}</span>
+                        <span>+ {isUrdu ? t('banking.new_account') : 'Naya Account'}</span>
                     </button>
-                </div>
+                </MandiPageHeader>
 
-                {/* 3 Summary Stat Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {/* Card 1: Total Bank Balance */}
-                    <div className="bg-white dark:bg-card border border-gray-200/90 dark:border-border rounded-xl p-5 shadow-xs">
-                        <div className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                            {isUrdu ? 'کل بینک بیلنس' : 'Total bank balance'}
+                <div className="w-full px-4 md:px-6 -mt-6 md:-mt-8 space-y-6">
+                    {/* 4 Cards Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {/* Card 1: Mandi Naqad Galla (Cash Counter) */}
+                    <div className="bg-white dark:bg-card border border-emerald-100 dark:border-border rounded-2xl p-4 shadow-xs relative flex flex-col justify-between hover:shadow-md transition-shadow min-h-[145px]">
+                        <div>
+                            {/* Top Row: Type Badge and Cash Icon */}
+                            <div className="flex items-center justify-between">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-200/80">
+                                    CASH GALLA
+                                </span>
+                                <div className="text-emerald-700/70 p-1">
+                                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <rect width="20" height="12" x="2" y="6" rx="2" />
+                                        <circle cx="12" cy="12" r="2" />
+                                        <path d="M6 12h.01M18 12h.01" />
+                                    </svg>
+                                </div>
+                            </div>
+
+                            {/* Account Name & Code */}
+                            <div className="mt-2.5">
+                                <h3 className="font-bold text-sm sm:text-base text-gray-900 dark:text-white leading-snug">
+                                    Mandi Naqad Galla (Cash Counter)
+                                </h3>
+                                <p className="text-xs text-gray-400 font-mono mt-0.5 tracking-tight">
+                                    CASH-01
+                                </p>
+                            </div>
                         </div>
-                        <div className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mt-2 tracking-tight">
-                            {formatCurrency(totalBankBalance)}
-                        </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1.5">
-                            {isUrdu ? `${accounts.length} اکاؤنٹس میں` : `${accounts.length} accounts mein`}
+
+                        {/* Mojooda Balance */}
+                        <div className="mt-3 pt-2 border-t border-gray-100 dark:border-border flex items-baseline justify-between">
+                            <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                                Mojooda Balance:
+                            </span>
+                            <span className="text-base sm:text-lg font-black text-gray-900 dark:text-white">
+                                {formatCurrency(liveCashGalla)}
+                            </span>
                         </div>
                     </div>
 
-                    {/* Card 2: Aaj bank mein aaya */}
-                    <div className="bg-white dark:bg-card border border-gray-200/90 dark:border-border rounded-xl p-5 shadow-xs">
-                        <div className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                            {isUrdu ? 'آج بینک میں آیا' : 'Aaj bank mein aaya'}
-                        </div>
-                        <div className="text-2xl sm:text-3xl font-bold text-[#166534] dark:text-[#4ade80] mt-2 tracking-tight">
-                            + {formatCurrency(todayDeposits)}
-                        </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1.5">
-                            {isUrdu
-                                ? `${transfers.filter((t) => t.type === 'deposit').length} ڈپازٹ انٹریز`
-                                : `${transfers.filter((t) => t.type === 'deposit').length} deposit entries`}
-                        </div>
-                    </div>
+                    {/* Cards 2+: Bank & Mobile Wallet Accounts */}
+                    {accounts.map((acc) => {
+                        const isWallet = acc.type === 'Wallet' || (acc.rawType && acc.rawType.includes('Wallet'));
+                        const typeLabel = isWallet ? 'MOBILE WALLET' : 'BANK ACCOUNT';
 
-                    {/* Card 3: Pending cheques */}
-                    <div className="bg-white dark:bg-card border border-gray-200/90 dark:border-border rounded-xl p-5 shadow-xs">
-                        <div className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                            {isUrdu ? 'زیر التواء چیکس' : 'Pending cheques'}
-                        </div>
-                        <div className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mt-2 tracking-tight">
-                            {formatCurrency(pendingCheques)}
-                        </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1.5">
-                            {isUrdu
-                                ? `${pendingChequesCount} چیکس کلیئر ہونا باقی`
-                                : `${pendingChequesCount} cheques clear hona baqi`}
-                        </div>
-                    </div>
-                </div>
+                        return (
+                            <div
+                                key={acc.id}
+                                className="bg-white dark:bg-card border border-emerald-100 dark:border-border rounded-2xl p-4 shadow-xs relative flex flex-col justify-between hover:shadow-md transition-shadow min-h-[145px]"
+                            >
+                                <div>
+                                    {/* Top Row: Type Badge and Actions */}
+                                    <div className="flex items-center justify-between">
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-200/80">
+                                            {typeLabel}
+                                        </span>
 
-                {/* Account info table - Full width */}
-                <div className="w-full bg-white dark:bg-card border border-gray-200/90 dark:border-border rounded-xl shadow-xs overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-start border-collapse">
-                            <thead>
-                                <tr className="border-b border-gray-100 dark:border-border bg-gray-50/60 dark:bg-muted/30">
-                                    <th className="py-3 px-4 text-start text-xs font-semibold text-gray-600 dark:text-gray-400">
-                                        {isUrdu ? 'اکاؤنٹ' : 'Account'}
-                                    </th>
-                                    <th className="py-3 px-3 text-start text-xs font-semibold text-gray-600 dark:text-gray-400">
-                                        {isUrdu ? 'قسم' : 'Type'}
-                                    </th>
-                                    <th className="py-3 px-3 text-start text-xs font-semibold text-gray-600 dark:text-gray-400 leading-tight">
-                                        {isUrdu ? 'ابتدائی بیلنس' : (
-                                            <>
-                                                Opening<br />balance
-                                            </>
-                                        )}
-                                    </th>
-                                    <th className="py-3 px-3 text-start text-xs font-semibold text-gray-600 dark:text-gray-400 leading-tight">
-                                        {isUrdu ? 'موجودہ بیلنس' : 'Current balance'}
-                                    </th>
-                                    <th className="py-3 px-4 text-start text-xs font-semibold text-gray-600 dark:text-gray-400">
-                                        {isUrdu ? 'حیثیت' : 'Status'}
-                                    </th>
-                                    <th className="py-3 px-4 text-end text-xs font-semibold text-gray-600 dark:text-gray-400">
-                                        {isUrdu ? 'ایکشن' : 'Action'}
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100 dark:divide-border">
-                                {accounts.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={6} className="py-12 px-4 text-center">
-                                            <div className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                                {isUrdu
-                                                    ? 'ابھی تک کوئی بینک اکاؤنٹ شامل نہیں ہے۔ نیا اکاؤنٹ شامل کرنے کے لیے اوپر بٹن پر کلک کریں۔'
-                                                    : 'Abhi koi bank account mojood nahi hai. Naya account add karne ke liye "+ Naya Bank Account" button click karein.'}
+                                        <div className="flex items-center gap-1">
+                                            {/* Bank / Wallet Icon */}
+                                            <div className="text-emerald-700/70 p-1">
+                                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <path d="M3 21h18" />
+                                                    <path d="M3 10h18" />
+                                                    <path d="M5 6l7-3 7 3" />
+                                                    <path d="M4 10v11" />
+                                                    <path d="M20 10v11" />
+                                                </svg>
                                             </div>
-                                        </td>
+
+                                            {/* Edit Icon */}
+                                            <button
+                                                type="button"
+                                                onClick={() => handleEditClick(acc)}
+                                                title="Edit account"
+                                                className="p-1 text-gray-400 hover:text-emerald-800 hover:bg-emerald-50 rounded transition-colors cursor-pointer"
+                                            >
+                                                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                                                    <path d="m15 5 4 4" />
+                                                </svg>
+                                            </button>
+
+                                            {/* Delete Icon */}
+                                            <button
+                                                type="button"
+                                                onClick={() => handleDeleteClick(acc)}
+                                                title="Delete account"
+                                                className="p-1 text-gray-300 hover:text-red-600 hover:bg-red-50 rounded transition-colors cursor-pointer"
+                                            >
+                                                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <path d="M3 6h18" />
+                                                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                                                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Account Name & Code */}
+                                    <div className="mt-2.5">
+                                        <h3 className="font-bold text-sm sm:text-base text-gray-900 dark:text-white leading-snug">
+                                            {acc.name}
+                                        </h3>
+                                        <p className="text-xs text-gray-400 font-mono mt-0.5 tracking-tight truncate" title={acc.account_number}>
+                                            {acc.account_number}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Mojooda Balance */}
+                                <div className="mt-3 pt-2 border-t border-gray-100 dark:border-border flex items-baseline justify-between">
+                                    <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                                        Mojooda Balance:
+                                    </span>
+                                    <span className="text-base sm:text-lg font-black text-gray-900 dark:text-white">
+                                        {formatCurrency(acc.current_balance)}
+                                    </span>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+
+                {/* Bank aur Cash Transactions Record Table */}
+                <div className="space-y-2.5 pt-4">
+                    <h2 className="text-sm font-bold text-gray-800 dark:text-gray-200">
+                        {isUrdu ? t('banking.transactions_record') : 'Bank aur Cash Transactions Record'}
+                    </h2>
+
+                    <div className="w-full bg-white dark:bg-card border border-gray-200/90 dark:border-border rounded-xl shadow-xs overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-start border-collapse text-xs sm:text-sm">
+                                <thead>
+                                    <tr className="border-b border-gray-100 dark:border-border bg-gray-50/70 dark:bg-muted/30">
+                                        {/* Column 1: Tareekh */}
+                                        <th className="py-3 px-4 text-start font-bold text-gray-700 dark:text-gray-300">
+                                            {isUrdu ? t('banking.date') : 'Tareekh'}
+                                        </th>
+                                        {/* Column 2: Qism */}
+                                        <th className="py-3 px-3 text-start font-bold text-gray-700 dark:text-gray-300">
+                                            {isUrdu ? t('banking.type') : 'Qism'}
+                                        </th>
+                                        {/* Column 3: Account Se (From) */}
+                                        <th className="py-3 px-3 text-start font-bold text-gray-700 dark:text-gray-300">
+                                            {isUrdu ? t('banking.from') : 'Account Se (From)'}
+                                        </th>
+                                        {/* Column 4: Account Mein (To) */}
+                                        <th className="py-3 px-3 text-start font-bold text-gray-700 dark:text-gray-300">
+                                            {isUrdu ? t('banking.to') : 'Account Mein (To)'}
+                                        </th>
+                                        {/* Column 5: Raqam (Rs) */}
+                                        <th className="py-3 px-3 text-end font-bold text-gray-700 dark:text-gray-300">
+                                            {isUrdu ? t('banking.amount') : 'Raqam (Rs)'}
+                                        </th>
+                                        {/* Column 6: Tafseel (Description) */}
+                                        <th className="py-3 px-4 text-start font-bold text-gray-700 dark:text-gray-300">
+                                            {isUrdu ? t('banking.description') : 'Tafseel (Description)'}
+                                        </th>
                                     </tr>
-                                ) : (
-                                    accounts.map((acc) => (
-                                        <tr key={acc.id} className="hover:bg-gray-50/50 dark:hover:bg-muted/20 transition-colors">
-                                            {/* Account name & subtitle */}
-                                            <td className="py-3.5 px-4 align-middle">
-                                                <div className="font-semibold text-sm text-gray-900 dark:text-white">
-                                                    {acc.name}
-                                                </div>
-                                                <div className="text-xs font-mono text-gray-400 dark:text-gray-500 mt-0.5">
-                                                    {acc.account_number}
-                                                </div>
-                                            </td>
-
-                                            {/* Type badge */}
-                                            <td className="py-3.5 px-3 align-middle">
-                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#eef2ff] text-[#4338ca] dark:bg-indigo-950/40 dark:text-indigo-300">
-                                                    {acc.type}
-                                                </span>
-                                            </td>
-
-                                            {/* Opening balance */}
-                                            <td className="py-3.5 px-3 align-middle text-sm text-gray-600 dark:text-gray-300">
-                                                {formatCurrency(acc.opening_balance)}
-                                            </td>
-
-                                            {/* Current balance */}
-                                            <td className="py-3.5 px-3 align-middle text-sm font-bold text-gray-900 dark:text-white">
-                                                {formatCurrency(acc.current_balance)}
-                                            </td>
-
-                                            {/* Status badge */}
-                                            <td className="py-3.5 px-4 align-middle">
-                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#dcfce7] text-[#15803d] dark:bg-emerald-950/40 dark:text-emerald-300">
-                                                    {isUrdu ? 'ایکٹو' : acc.status}
-                                                </span>
-                                            </td>
-
-                                            {/* Action Icons: Edit & Delete */}
-                                            <td className="py-3.5 px-4 align-middle text-end whitespace-nowrap">
-                                                <div className="flex items-center justify-end gap-1.5">
-                                                    {/* Edit Button */}
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleEditClick(acc)}
-                                                        title={isUrdu ? 'اکاؤنٹ ایڈٹ کریں' : 'Edit account'}
-                                                        className="p-1.5 text-gray-500 hover:text-[#166534] dark:hover:text-[#4ade80] hover:bg-emerald-50 dark:hover:bg-emerald-950/30 rounded-lg transition-colors cursor-pointer"
-                                                    >
-                                                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                                                            <path d="m15 5 4 4" />
-                                                        </svg>
-                                                    </button>
-
-                                                    {/* Delete Button */}
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleDeleteClick(acc)}
-                                                        title={isUrdu ? 'اکاؤنٹ ڈیلیٹ کریں' : 'Delete account'}
-                                                        className="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors cursor-pointer"
-                                                    >
-                                                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                            <path d="M3 6h18" />
-                                                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                                                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                                                            <line x1="10" x2="10" y1="11" y2="17" />
-                                                            <line x1="14" x2="14" y1="11" y2="17" />
-                                                        </svg>
-                                                    </button>
-                                                </div>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100 dark:divide-border">
+                                    {allTransactions.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={6} className="py-10 px-4 text-center text-xs text-gray-400">
+                                                Koi transaction record dastiyab nahi hai.
                                             </td>
                                         </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                                    ) : (
+                                        allTransactions.map((tx) => (
+                                            <tr key={tx.id} className="hover:bg-gray-50/60 dark:hover:bg-muted/20 transition-colors">
+                                                {/* 1. Tareekh */}
+                                                <td className="py-3 px-4 align-middle text-gray-700 dark:text-gray-300 whitespace-nowrap font-medium">
+                                                    {tx.date}
+                                                </td>
 
-                    {/* Bottom note */}
-                    <div className="border-t border-gray-100 dark:border-border p-4 bg-gray-50/30 dark:bg-muted/10 text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
-                        {isUrdu
-                            ? 'کیش ڈراور (گلہ) الگ ٹریک ہوتا ہے: بینکنگ میں صرف بینک اور والٹ اکاؤنٹس دکھتے ہیں۔'
-                            : 'Cash drawer (galla) alag track hota hai: Banking mein sirf bank/wallet accounts dikhte hain.'}
+                                                {/* 2. Qism */}
+                                                <td className="py-3 px-3 align-middle whitespace-nowrap">
+                                                    <span
+                                                        className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold ${
+                                                            tx.typeBadge === 'jama'
+                                                                ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                                                                : tx.typeBadge === 'nikasi'
+                                                                ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                                                                : 'bg-indigo-50 text-indigo-800 border border-indigo-200'
+                                                        }`}
+                                                    >
+                                                        {tx.type}
+                                                    </span>
+                                                </td>
+
+                                                {/* 3. Account Se (From) */}
+                                                <td className="py-3 px-3 align-middle text-gray-800 dark:text-gray-200 font-semibold whitespace-nowrap">
+                                                    {tx.from}
+                                                </td>
+
+                                                {/* 4. Account Mein (To) */}
+                                                <td className="py-3 px-3 align-middle text-gray-800 dark:text-gray-200 font-semibold whitespace-nowrap">
+                                                    {tx.to}
+                                                </td>
+
+                                                {/* 5. Raqam (Rs) */}
+                                                <td className="py-3 px-3 align-middle text-end font-bold text-gray-900 dark:text-white whitespace-nowrap">
+                                                    {formatCurrency(tx.amount)}
+                                                </td>
+
+                                                {/* 6. Tafseel (Description) */}
+                                                <td className="py-3 px-4 align-middle text-gray-600 dark:text-gray-400 text-xs">
+                                                    {tx.description}
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
+                </div>
                 </div>
 
                 {/* Pop-up Dialog for "Naya Bank Account" / "Edit Bank Account" */}

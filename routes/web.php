@@ -22,7 +22,19 @@ Route::middleware(['auth', 'verified'])
         Route::get('dashboard', [PageController::class, 'dashboard'])
             ->name('dashboard');
 
+        // Global Search API
+        Route::get('global-search', [\App\Http\Controllers\Search\GlobalSearchController::class, 'search'])->name('global.search');
+
         // Navigation aliases
+        Route::get('farmers', [\App\Http\Controllers\Farmers\FarmerController::class, 'index'])->name('farmers.index');
+        Route::post('farmers', [\App\Http\Controllers\Farmers\FarmerController::class, 'store'])->name('farmers.store');
+        Route::put('farmers/{id}', [\App\Http\Controllers\Farmers\FarmerController::class, 'update'])->name('farmers.update');
+        Route::get('farmers/{id}/khata', [\App\Http\Controllers\Farmers\FarmerController::class, 'khata'])->name('farmers.khata');
+
+        Route::get('farmer-khata', [\App\Http\Controllers\Farmers\FarmerKhataController::class, 'farmerKhataPage'])->name('farmers.khata_page');
+        Route::post('farmer-khata/pay', [\App\Http\Controllers\Farmers\FarmerKhataController::class, 'recordPayment'])->name('farmers.pay');
+        Route::get('farmer-khata/{id}/parchi', [\App\Http\Controllers\Farmers\FarmerKhataController::class, 'getParchi'])->name('farmers.parchi');
+
         Route::get('bijak', [\App\Http\Controllers\Farmers\BijjakController::class, 'index'])->name('farmer.bijak');
         Route::post('bijak', [\App\Http\Controllers\Farmers\BijjakController::class, 'store'])->name('farmer.bijak.store');
         Route::delete('bijak/{id}', [\App\Http\Controllers\Farmers\BijjakController::class, 'destroy'])->name('farmer.bijak.destroy');
@@ -37,8 +49,16 @@ Route::middleware(['auth', 'verified'])
 
         // System Backup Module
         Route::get('backup', [\App\Http\Controllers\System\BackupController::class, 'index'])->name('backup.index');
-        Route::get('backup/data', [\App\Http\Controllers\System\BackupController::class, 'getData'])->name('backup.data');
+        Route::get('backup/list', [\App\Http\Controllers\System\BackupController::class, 'listBackups'])->name('backup.list');
+        Route::post('backup/create', [\App\Http\Controllers\System\BackupController::class, 'createBackup'])->name('backup.create');
+        Route::get('backup/download/{filename}', [\App\Http\Controllers\System\BackupController::class, 'downloadBackup'])->name('backup.download');
         Route::get('backup/full', [\App\Http\Controllers\System\BackupController::class, 'fullDatabase'])->name('backup.full');
+        Route::post('backup/restore', [\App\Http\Controllers\System\BackupController::class, 'restoreDatabase'])->name('backup.restore');
+        Route::get('backup/categories/summary', [\App\Http\Controllers\System\BackupController::class, 'categoriesSummary'])->name('backup.categories.summary');
+        Route::get('backup/categories/{category}/preview', [\App\Http\Controllers\System\BackupController::class, 'categoryPreview'])->name('backup.categories.preview');
+        Route::get('backup/categories/{category}/export-excel', [\App\Http\Controllers\System\BackupController::class, 'categoryExportExcel'])->name('backup.categories.export_excel');
+        Route::get('backup/categories/{category}/export-db', [\App\Http\Controllers\System\BackupController::class, 'categoryExportDb'])->name('backup.categories.export_db');
+        Route::get('backup/data', [\App\Http\Controllers\System\BackupController::class, 'getData'])->name('backup.data');
 
         // Expiry & Gifts Module
         Route::get('expiry-gifts', [\App\Http\Controllers\Inventory\ExpiryGiftsController::class, 'index'])->name('expiry_gifts.index');
@@ -46,6 +66,12 @@ Route::middleware(['auth', 'verified'])
         Route::post('expiry-gifts/wastage', [\App\Http\Controllers\Inventory\ExpiryGiftsController::class, 'recordWastage'])->name('expiry_gifts.wastage');
         Route::post('expiry-gifts/return-farmer', [\App\Http\Controllers\Inventory\ExpiryGiftsController::class, 'returnToFarmer'])->name('expiry_gifts.return_farmer');
         Route::post('expiry-gifts/gift', [\App\Http\Controllers\Inventory\ExpiryGiftsController::class, 'storeGift'])->name('expiry_gifts.gift');
+
+        // Discount Rules Module
+        Route::get('discount-rules', [\App\Http\Controllers\Discount\DiscountRuleController::class, 'index'])->name('discount_rules.index');
+        Route::post('discount-rules', [\App\Http\Controllers\Discount\DiscountRuleController::class, 'store'])->name('discount_rules.store');
+        Route::match(['put', 'post'], 'discount-rules/{id}/toggle', [\App\Http\Controllers\Discount\DiscountRuleController::class, 'toggle'])->name('discount_rules.toggle');
+        Route::delete('discount-rules/{id}', [\App\Http\Controllers\Discount\DiscountRuleController::class, 'destroy'])->name('discount_rules.destroy');
 
         Route::get('banking/accounts', [\App\Http\Controllers\Banking\BankController::class, 'index'])->name('banking.accounts');
         Route::get('banking/transfers', [\App\Http\Controllers\Banking\BankController::class, 'transfers'])->name('banking.transfers');
@@ -74,7 +100,6 @@ if (config('jkc.show_legacy_pos', false)) {
     require __DIR__ . "/attributes.php";
     require __DIR__ . '/brands.php';
     require __DIR__ . '/categories.php';
-    require __DIR__ . '/customers.php';
     require __DIR__ . '/employees.php';
     require __DIR__ . '/expenses.php';
     require __DIR__ . '/products.php';
@@ -83,6 +108,7 @@ if (config('jkc.show_legacy_pos', false)) {
     require __DIR__ . '/suppliers.php';
 }
 
+require __DIR__ . '/customers.php';
 require __DIR__ . '/masters.php';
 require __DIR__ . '/merchants.php';
 require __DIR__ . '/settings.php';

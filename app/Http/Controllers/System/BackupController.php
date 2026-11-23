@@ -11,227 +11,812 @@ use App\Models\FarmerBill;
 use App\Models\Item;
 use App\Models\Expense;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class BackupController extends Controller
 {
+    protected string $backupDir;
+
+    public function __construct()
+    {
+        $this->backupDir = storage_path('app/backups');
+        if (!file_exists($this->backupDir)) {
+            @mkdir($this->backupDir, 0755, true);
+        }
+    }
+
     /**
-     * Display the Backup page
+     * Display the Backup & Restore page
      */
     public function index()
     {
-        $categories = [
-            [
-                'id' => 'sales',
-                'title' => 'Sales & Amroza',
-                'title_ur' => 'سیل اور امروزہ ریکارڈ',
-                'description' => 'Rozana ki naqad aur udhaar sale ka mukammal record',
-                'icon' => 'Tag',
-                'count' => AmrozaSale::count(),
-            ],
-            [
-                'id' => 'merchants',
-                'title' => 'Merchants & Wasooli',
-                'title_ur' => 'خریدار اور وصولی کھاتہ',
-                'description' => 'Kharidaar (buyers), baqaya jaat aur wasooli receipts',
-                'icon' => 'Users',
-                'count' => Merchant::count(),
-            ],
-            [
-                'id' => 'farmers',
-                'title' => 'Farmers & Bijak',
-                'title_ur' => 'زمیندار اور کسان بلز',
-                'description' => 'Farmers masters, bills (bijak), charges aur commissions',
-                'icon' => 'Tractor',
-                'count' => Farmer::count(),
-            ],
-            [
-                'id' => 'products',
-                'title' => 'Products & Stock',
-                'title_ur' => 'پروڈکٹس اور اسٹاک ڈیٹا',
-                'description' => 'Tamaam sabzi اجناس، اسٹاک tadaad، rates aur shelf life',
-                'icon' => 'Package',
-                'count' => Item::count(),
-            ],
-            [
-                'id' => 'ledger',
-                'title' => 'Ledger & Expenses',
-                'title_ur' => 'روکڑ اور روزانہ اخراجات',
-                'description' => 'Dukaan ke rozana khorcha, cash book aur aamad o kharch',
-                'icon' => 'BookBookmark',
-                'count' => Expense::count(),
-            ],
-        ];
+        $this->checkAndRunAutoBackup();
+        $this->enforceRetentionLimit(15);
+
+        $backups = $this->getBackupsList();
+        $categories = $this->getCategoriesSummary();
 
         return Inertia::render('system/backup/index', [
+            'backups' => $backups,
             'categories' => $categories,
         ]);
     }
 
     /**
-     * Get preview data for a category
+     * Get JSON list of backups
+     */
+    public function listBackups()
+    {
+        $backups = $this->getBackupsList();
+        return response()->json([
+            'success' => true,
+            'backups' => $backups,
+        ]);
+    }
+
+    /**
+     * Create manual full backup (.db)
+     */
+    public function createBackup()
+    {
+        try {
+            $now = new \DateTime();
+            $timestamp = $now->format('Y-m-d\TH-i-s-v\Z');
+            $filename = "mandi_backup_{$timestamp}.db";
+            $destPath = $this->backupDir . DIRECTORY_SEPARATOR . $filename;
+            $dbPath = database_path('database.sqlite');
+
+            if (!file_exists($dbPath)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'SQLite database file nahi mili.'
+                ], 500);
+            }
+
+            // Ensure any WAL changes are checkpointed
+            try {
+                DB::statement('PRAGMA wal_checkpoint(PASSIVE)');
+            } catch (\Throwable $e) {
+                // ignore
+            }
+
+            // Backup using SQLite3 or copy
+            if (class_exists(\SQLite3::class)) {
+                $src = new \SQLite3($dbPath);
+                $dst = new \SQLite3($destPath);
+                $src->backup($dst);
+                $src->close();
+                $dst->close();
+            } else {
+                copy($dbPath, $destPath);
+            }
+
+            $this->enforceRetentionLimit(15);
+
+            $sizeBytes = filesize($destPath);
+            $sizeKb = round($sizeBytes / 1024, 1);
+
+            return response()->json([
+                'success' => true,
+                'message' => "Database backup kamyabi se ban gaya! File: {$filename}",
+                'filename' => $filename,
+                'size_kb' => $sizeKb,
+                'created_at' => date('Y-m-d H:i:s', filemtime($destPath)),
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Backup banane mein masla aya: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Download a specific backup file
+     */
+    public function downloadBackup(string $filename)
+    {
+        $safeFilename = basename($filename);
+        $filePath = $this->backupDir . DIRECTORY_SEPARATOR . $safeFilename;
+
+        if (!file_exists($filePath)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Backup file nahi mili.'
+            ], 404);
+        }
+
+        return response()->download($filePath, $safeFilename, [
+            'Content-Type' => 'application/x-sqlite3',
+        ]);
+    }
+
+    /**
+     * Full Database Backup (.db download)
+     */
+    public function fullDatabase()
+    {
+        $dbPath = database_path('database.sqlite');
+        if (!file_exists($dbPath)) {
+            return response()->json(['error' => 'Database file not found'], 404);
+        }
+
+        try {
+            DB::statement('PRAGMA wal_checkpoint(PASSIVE)');
+        } catch (\Throwable $e) {
+            // ignore
+        }
+
+        $now = new \DateTime();
+        $timestamp = $now->format('Y-m-d_His');
+        $filename = "mandi_full_backup_{$timestamp}.db";
+
+        return response()->download($dbPath, $filename, [
+            'Content-Type' => 'application/x-sqlite3',
+        ]);
+    }
+
+    /**
+     * Restore database from uploaded .db file
+     */
+    public function restoreDatabase(Request $request)
+    {
+        if (!$request->hasFile('backup_file')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Barah-e-karam backup (.db) file upload karein!'
+            ], 400);
+        }
+
+        $file = $request->file('backup_file');
+        $origName = $file->getClientOriginalName();
+        $ext = strtolower($file->getClientOriginalExtension());
+
+        if (!in_array($ext, ['db', 'sqlite', 'sqlite3'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ghalat file format: Sirf .db backup file qabool hai!'
+            ], 400);
+        }
+
+        $uploadedPath = $file->getRealPath();
+
+        // 1. Validate SQLite header
+        $fh = fopen($uploadedPath, 'rb');
+        $header = fread($fh, 16);
+        fclose($fh);
+        if (substr($header, 0, 15) !== "SQLite format 3") {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ghalat file: Yeh ek durust SQLite database file nahi hai (Header check failed).'
+            ], 400);
+        }
+
+        // 2. Validate SQLite integrity and schema
+        try {
+            $testDb = new \SQLite3($uploadedPath);
+            $integrity = $testDb->querySingle('PRAGMA integrity_check;');
+            if (strtolower((string)$integrity) !== 'ok') {
+                $testDb->close();
+                return response()->json([
+                    'success' => false,
+                    'message' => "Database file corrupted hai: Integrity check fail ho gaya ({$integrity})."
+                ], 400);
+            }
+
+            $res = $testDb->query("SELECT name FROM sqlite_master WHERE type='table'");
+            $tables = [];
+            while ($row = $res->fetchArray(SQLITE3_ASSOC)) {
+                $tables[] = $row['name'];
+            }
+            $testDb->close();
+
+            // Must contain items or merchants or sales
+            $hasKeyTable = in_array('items', $tables) || in_array('merchants', $tables) || in_array('amroza_sales', $tables) || in_array('sales', $tables);
+            if (!$hasKeyTable) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid database: Zaroori tables (items, merchants, sales) mojood nahi hain.'
+                ], 400);
+            }
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Database validation error: ' . $e->getMessage()
+            ], 400);
+        }
+
+        // 3. Safety Backup of existing DB
+        $dbPath = database_path('database.sqlite');
+        $safetyFilename = 'pre_restore_safety_' . date('Y-m-d_His') . '.db';
+        $safetyPath = $this->backupDir . DIRECTORY_SEPARATOR . $safetyFilename;
+
+        if (file_exists($dbPath)) {
+            @copy($dbPath, $safetyPath);
+        }
+
+        // 4. Overwrite existing database
+        try {
+            DB::disconnect();
+
+            if (!copy($uploadedPath, $dbPath)) {
+                throw new \Exception('Failed to copy restored database over database.sqlite');
+            }
+
+            // Remove existing WAL and SHM files
+            @unlink($dbPath . '-wal');
+            @unlink($dbPath . '-shm');
+
+            DB::reconnect();
+            DB::select('SELECT 1');
+
+            // 5. Record restore log
+            $logFile = $this->backupDir . DIRECTORY_SEPARATOR . 'restore_log.json';
+            $logs = file_exists($logFile) ? json_decode(file_get_contents($logFile), true) : [];
+            if (!is_array($logs)) $logs = [];
+            $logs[] = [
+                'filename' => $origName,
+                'restored_at' => date('Y-m-d H:i:s'),
+                'size_kb' => round(filesize($dbPath) / 1024, 1),
+                'safety_backup' => $safetyFilename,
+            ];
+            @file_put_contents($logFile, json_encode($logs, JSON_PRETTY_PRINT));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Database kamyabi se restore ho gaya hai! Page refresh ho raha hai...'
+            ]);
+        } catch (\Throwable $e) {
+            // Rollback from safety backup
+            if (file_exists($safetyPath)) {
+                @copy($safetyPath, $dbPath);
+                @unlink($dbPath . '-wal');
+                @unlink($dbPath . '-shm');
+                DB::reconnect();
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Restore fail ho gaya, purani database mehfooz rahi (Rollback mukammal): ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Categories summary with live record counts
+     */
+    public function categoriesSummary()
+    {
+        return response()->json([
+            'success' => true,
+            'categories' => $this->getCategoriesSummary(),
+        ]);
+    }
+
+    /**
+     * Category preview data
+     */
+    public function categoryPreview(Request $request, string $categoryId)
+    {
+        $cfg = $this->getCategoryConfig($categoryId);
+        if (!$cfg) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ghalat category muntakhib ki gayi hai.'
+            ], 404);
+        }
+
+        $data = $this->fetchCategoryRowsAndColumns($categoryId);
+
+        return response()->json([
+            'success' => true,
+            'category' => [
+                'id' => $cfg['id'],
+                'name' => $cfg['name'],
+                'description' => $cfg['description'],
+                'total_records' => count($data['rows']),
+                'columns' => $data['columns'],
+                'rows' => $data['rows'],
+            ],
+        ]);
+    }
+
+    /**
+     * Category Export Excel (.xlsx)
+     */
+    public function categoryExportExcel(string $categoryId)
+    {
+        $cfg = $this->getCategoryConfig($categoryId);
+        if (!$cfg) {
+            return response()->json(['success' => false, 'message' => 'Ghalat category.'], 404);
+        }
+
+        $data = $this->fetchCategoryRowsAndColumns($categoryId);
+        if (empty($data['rows'])) {
+            return response()->json([
+                'success' => false,
+                'message' => "Is category ({$cfg['name']}) mein koi record nahi hai, khali file download nahi ki ja sakti."
+            ], 400);
+        }
+
+        $dateStr = date('Y-m-d');
+        $filename = "{$cfg['filePrefix']}_{$dateStr}.xlsx";
+
+        $sheets = [
+            $cfg['name'] => $data['rows'],
+        ];
+
+        $xml = $this->generateExcelXml($sheets, $data['columns']);
+
+        return response($xml, 200, [
+            'Content-Type' => 'application/vnd.ms-excel',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ]);
+    }
+
+    /**
+     * Category Export DB (.db)
+     */
+    public function categoryExportDb(string $categoryId)
+    {
+        $cfg = $this->getCategoryConfig($categoryId);
+        if (!$cfg) {
+            return response()->json(['success' => false, 'message' => 'Ghalat category.'], 404);
+        }
+
+        $data = $this->fetchCategoryRowsAndColumns($categoryId);
+        if (empty($data['rows'])) {
+            return response()->json([
+                'success' => false,
+                'message' => "Is category ({$cfg['name']}) mein koi record nahi hai, khali database download nahi kiya ja sakta."
+            ], 400);
+        }
+
+        $dateStr = date('Y-m-d');
+        $filename = "{$cfg['filePrefix']}_{$dateStr}.db";
+        $tempPath = storage_path('app/temp_' . $cfg['filePrefix'] . '_' . time() . '.db');
+
+        try {
+            if (file_exists($tempPath)) @unlink($tempPath);
+            $subDb = new \SQLite3($tempPath);
+            $subDb->exec('PRAGMA foreign_keys = OFF;');
+
+            $mainDb = new \SQLite3(database_path('database.sqlite'));
+
+            foreach ($cfg['tables'] as $tableName) {
+                // Check if table exists
+                $schemaRow = $mainDb->querySingle("SELECT sql FROM sqlite_master WHERE type='table' AND name = '{$tableName}'", true);
+                if ($schemaRow && !empty($schemaRow['sql'])) {
+                    $subDb->exec($schemaRow['sql']);
+
+                    $rowsRes = $mainDb->query("SELECT * FROM {$tableName}");
+                    while ($row = $rowsRes->fetchArray(SQLITE3_ASSOC)) {
+                        $keys = array_keys($row);
+                        $cols = implode(', ', $keys);
+                        $placeholders = implode(', ', array_fill(0, count($keys), '?'));
+                        $stmt = $subDb->prepare("INSERT INTO {$tableName} ({$cols}) VALUES ({$placeholders})");
+                        $i = 1;
+                        foreach ($row as $val) {
+                            $stmt->bindValue($i++, $val);
+                        }
+                        $stmt->execute();
+                    }
+                }
+            }
+
+            $mainDb->close();
+            $subDb->close();
+
+            return response()->download($tempPath, $filename, [
+                'Content-Type' => 'application/x-sqlite3',
+            ])->deleteFileAfterSend(true);
+        } catch (\Throwable $e) {
+            if (file_exists($tempPath)) @unlink($tempPath);
+            return response()->json([
+                'success' => false,
+                'message' => 'SQLite database file banane mein masla aya: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Legacy getData route for backwards compatibility
      */
     public function getData(Request $request)
     {
-        $category = $request->query('category', 'sales');
+        $category = $request->query('category', 'sales_amroza');
+        // Map old category ids if needed
+        $map = [
+            'sales' => 'sales_amroza',
+            'merchants' => 'merchants_wasooli',
+            'farmers' => 'farmers_bijak',
+            'products' => 'products_stock',
+            'ledger' => 'ledger_expenses',
+        ];
+        $catId = $map[$category] ?? $category;
 
-        $response = [
-            'category' => $category,
-            'title' => '',
-            'title_ur' => '',
-            'columns' => [],
-            'rows' => [],
-            'total_count' => 0,
+        return $this->categoryPreview($request, $catId);
+    }
+
+    // ==========================================
+    // Internal Helper Methods
+    // ==========================================
+
+    protected function getBackupsList(): array
+    {
+        if (!file_exists($this->backupDir)) {
+            return [];
+        }
+
+        $files = scandir($this->backupDir);
+        $backups = [];
+
+        foreach ($files as $file) {
+            if ($file === '.' || $file === '..' || str_starts_with($file, 'temp_') || str_starts_with($file, 'pre_restore_safety_') || !str_ends_with($file, '.db')) {
+                continue;
+            }
+
+            $filePath = $this->backupDir . DIRECTORY_SEPARATOR . $file;
+            $size = filesize($filePath);
+            $mtime = filemtime($filePath);
+
+            $backups[] = [
+                'filename' => $file,
+                'size_bytes' => $size,
+                'size_kb' => round($size / 1024, 1),
+                'created_at' => date('c', $mtime),
+                'formatted_time' => date('d/m/Y, h:i:s A', $mtime),
+            ];
+        }
+
+        usort($backups, fn($a, $b) => strcmp($b['created_at'], $a['created_at']));
+
+        return $backups;
+    }
+
+    protected function checkAndRunAutoBackup(): void
+    {
+        $backups = $this->getBackupsList();
+        $autoBackups = array_filter($backups, fn($b) => str_starts_with($b['filename'], 'mandi_auto_backup_'));
+
+        $shouldRun = false;
+        if (empty($autoBackups)) {
+            $shouldRun = true;
+        } else {
+            $latest = reset($autoBackups);
+            $latestTime = strtotime($latest['created_at']);
+            // If more than 6 hours (21600 seconds) ago
+            if (time() - $latestTime > 21600) {
+                $shouldRun = true;
+            }
+        }
+
+        if ($shouldRun) {
+            $now = new \DateTime();
+            $timestamp = $now->format('Y-m-d\TH-i-s-v\Z');
+            $filename = "mandi_auto_backup_{$timestamp}.db";
+            $destPath = $this->backupDir . DIRECTORY_SEPARATOR . $filename;
+            $dbPath = database_path('database.sqlite');
+
+            if (file_exists($dbPath)) {
+                if (class_exists(\SQLite3::class)) {
+                    $src = new \SQLite3($dbPath);
+                    $dst = new \SQLite3($destPath);
+                    $src->backup($dst);
+                    $src->close();
+                    $dst->close();
+                } else {
+                    copy($dbPath, $destPath);
+                }
+            }
+        }
+    }
+
+    protected function enforceRetentionLimit(int $limit = 15): void
+    {
+        $backups = $this->getBackupsList();
+        if (count($backups) > $limit) {
+            // Backups are sorted newest first. The ones after index ($limit - 1) are oldest.
+            $toRemove = array_slice($backups, $limit);
+            foreach ($toRemove as $item) {
+                $p = $this->backupDir . DIRECTORY_SEPARATOR . $item['filename'];
+                if (file_exists($p)) {
+                    @unlink($p);
+                }
+            }
+        }
+    }
+
+    protected function getCategoriesSummary(): array
+    {
+        return [
+            [
+                'id' => 'sales_amroza',
+                'name' => 'Sales & Amroza',
+                'filePrefix' => 'Sales_Amroza',
+                'description' => 'Rozana ki naqad aur udhaar sale ka mukammal record',
+                'icon' => 'Receipt',
+                'record_count' => AmrozaSale::count(),
+            ],
+            [
+                'id' => 'merchants_wasooli',
+                'name' => 'Merchants & Wasooli',
+                'filePrefix' => 'Merchants_Wasooli',
+                'description' => 'Kharidaar (buyers), baqaya jaat aur wasooli receipts',
+                'icon' => 'Users',
+                'record_count' => Merchant::count(),
+            ],
+            [
+                'id' => 'farmers_bijak',
+                'name' => 'Farmers & Bijak',
+                'filePrefix' => 'Farmers_Bijak',
+                'description' => 'Farmers masters, bills (bijak), charges aur commissions',
+                'icon' => 'Sprout',
+                'record_count' => Farmer::count() + FarmerBill::count(),
+            ],
+            [
+                'id' => 'products_stock',
+                'name' => 'Products & Stock',
+                'filePrefix' => 'Products_Stock',
+                'description' => 'Tamaam sabzi items, stock, rates aur shelf life',
+                'icon' => 'Boxes',
+                'record_count' => Item::count(),
+            ],
+            [
+                'id' => 'ledger_expenses',
+                'name' => 'Ledger & Expenses',
+                'filePrefix' => 'Ledger_Expenses',
+                'description' => 'Dukaan ke rozana kharcha, cash book aur aamad o kharch',
+                'icon' => 'BookOpen',
+                'record_count' => Expense::count(),
+            ],
+        ];
+    }
+
+    protected function getCategoryConfig(string $categoryId): ?array
+    {
+        $all = [
+            'sales_amroza' => [
+                'id' => 'sales_amroza',
+                'name' => 'Sales & Amroza',
+                'filePrefix' => 'Sales_Amroza',
+                'description' => 'Rozana ki naqad aur udhaar sale ka mukammal record',
+                'tables' => ['amroza_sales'],
+            ],
+            'merchants_wasooli' => [
+                'id' => 'merchants_wasooli',
+                'name' => 'Merchants & Wasooli',
+                'filePrefix' => 'Merchants_Wasooli',
+                'description' => 'Kharidaar (buyers), baqaya jaat aur wasooli receipts',
+                'tables' => ['merchants', 'merchant_receipts'],
+            ],
+            'farmers_bijak' => [
+                'id' => 'farmers_bijak',
+                'name' => 'Farmers & Bijak',
+                'filePrefix' => 'Farmers_Bijak',
+                'description' => 'Farmers masters, bills (bijak), charges aur commissions',
+                'tables' => ['farmers', 'farmer_bills'],
+            ],
+            'products_stock' => [
+                'id' => 'products_stock',
+                'name' => 'Products & Stock',
+                'filePrefix' => 'Products_Stock',
+                'description' => 'Tamaam sabzi items, stock, rates aur shelf life',
+                'tables' => ['items'],
+            ],
+            'ledger_expenses' => [
+                'id' => 'ledger_expenses',
+                'name' => 'Ledger & Expenses',
+                'filePrefix' => 'Ledger_Expenses',
+                'description' => 'Dukaan ke rozana kharcha, cash book aur aamad o kharch',
+                'tables' => ['expenses'],
+            ],
         ];
 
-        switch ($category) {
-            case 'sales':
-                $response['title'] = 'Sales & Amroza Backup';
-                $response['title_ur'] = 'سیل اور امروزہ بیک اپ';
-                $sales = AmrozaSale::with(['merchant', 'item'])->orderBy('date', 'desc')->limit(500)->get();
+        return $all[$categoryId] ?? null;
+    }
+
+    protected function fetchCategoryRowsAndColumns(string $categoryId): array
+    {
+        switch ($categoryId) {
+            case 'sales_amroza':
+                $columns = [
+                    ['key' => 'invoice_no', 'label' => 'Invoice #'],
+                    ['key' => 'date', 'label' => 'Tareekh'],
+                    ['key' => 'customer_name', 'label' => 'Gahak / Buyer'],
+                    ['key' => 'item_name', 'label' => 'Sabzi / Item'],
+                    ['key' => 'quantity', 'label' => 'Quantity'],
+                    ['key' => 'rate', 'label' => 'Rate'],
+                    ['key' => 'grand_total', 'label' => 'Kul Raqam'],
+                    ['key' => 'paid_amount', 'label' => 'Wasool'],
+                    ['key' => 'remaining_amount', 'label' => 'Baqaya Udhaar'],
+                    ['key' => 'payment_mode', 'label' => 'Tariqa'],
+                ];
+                $sales = AmrozaSale::with(['merchant', 'item'])->orderBy('id', 'desc')->limit(500)->get();
                 $rows = [];
-                foreach ($sales as $idx => $s) {
+                foreach ($sales as $s) {
                     $mName = $s->merchant ? ($s->merchant->name_en ?: ($s->merchant->name ?: $s->merchant->name_ur)) : 'Naqad';
                     $iName = $s->item ? ($s->item->name_en ?: ($s->item->name ?: $s->item->name_ur)) : 'Item';
                     $iName = trim(preg_replace('/\s*\(.*?\)\s*/', '', $iName));
                     $unit = $s->item && $s->item->unit ? $s->item->unit : 'Bori';
                     $dateStr = $s->date instanceof \DateTimeInterface ? $s->date->format('Y-m-d') : substr((string)$s->date, 0, 10);
+                    $tot = (float)($s->gross_amount ?? ($s->nag * $s->rate));
+                    $paid = (float)($s->cash_received ?? ($s->payment_type === 'cash' || $s->payment_type === 'naqdi' ? $tot : 0));
+                    $rem = (float)($s->udhaar_amount ?? max(0, $tot - $paid));
+
                     $rows[] = [
-                        'col1' => $idx + 1,
-                        'col2' => $dateStr,
-                        'col3' => $mName,
-                        'col4' => $iName,
-                        'col5' => (int)$s->nag . ' ' . $unit,
-                        'col6' => 'Rs. ' . number_format($s->rate),
-                        'col7' => 'Rs. ' . number_format($s->gross_amount),
-                        'col8' => ucfirst($s->payment_type ?: 'Udhaar'),
+                        'invoice_no' => 'INV-' . $s->id,
+                        'date' => $dateStr,
+                        'customer_name' => $mName,
+                        'item_name' => $iName,
+                        'quantity' => ((int)$s->nag) . ' ' . $unit,
+                        'rate' => (float)$s->rate,
+                        'grand_total' => $tot,
+                        'paid_amount' => $paid,
+                        'remaining_amount' => $rem,
+                        'payment_mode' => strtoupper($s->payment_type ?: 'UDHAAR'),
                     ];
                 }
-                $response['columns'] = ['#', 'Date', 'Buyer / Merchant', 'Product', 'Quantity', 'Rate', 'Total Amount', 'Payment Type'];
-                $response['rows'] = $rows;
-                $response['total_count'] = AmrozaSale::count();
-                break;
+                return ['columns' => $columns, 'rows' => $rows];
 
-            case 'merchants':
-                $response['title'] = 'Merchants (Buyers) Backup';
-                $response['title_ur'] = 'خریدار کھاتہ بیک اپ';
+            case 'merchants_wasooli':
+                $columns = [
+                    ['key' => 'code', 'label' => 'Code'],
+                    ['key' => 'name', 'label' => 'Kharidaar / Buyer'],
+                    ['key' => 'phone', 'label' => 'Phone'],
+                    ['key' => 'city', 'label' => 'Ilaqa / City'],
+                    ['key' => 'credit_limit', 'label' => 'Credit Limit'],
+                    ['key' => 'opening_balance', 'label' => 'Sabiqa Balance'],
+                    ['key' => 'current_balance', 'label' => 'Baqaya Udhaar'],
+                    ['key' => 'status', 'label' => 'Status'],
+                ];
                 $merchants = Merchant::orderBy('code', 'asc')->get();
                 $rows = [];
-                foreach ($merchants as $idx => $m) {
-                    $mName = $m->name_en ?: ($m->name ?: $m->name_ur);
+                foreach ($merchants as $m) {
                     $rows[] = [
-                        'col1' => $idx + 1,
-                        'col2' => '#' . $m->code,
-                        'col3' => $mName,
-                        'col4' => $m->phone ?: '—',
-                        'col5' => 'Rs. ' . number_format($m->opening_balance),
-                        'col6' => 'Rs. ' . number_format($m->current_balance),
-                        'col7' => ucfirst($m->status ?: 'Active'),
+                        'code' => '#' . $m->code,
+                        'name' => $m->name_en ?: ($m->name ?: $m->name_ur),
+                        'phone' => $m->phone ?: '—',
+                        'city' => $m->city ?: 'Mandi',
+                        'credit_limit' => (float)($m->credit_limit ?? 0),
+                        'opening_balance' => (float)($m->opening_balance ?? 0),
+                        'current_balance' => (float)($m->current_balance ?? 0),
+                        'status' => ucfirst($m->status ?: 'Active'),
                     ];
                 }
-                $response['columns'] = ['#', 'Code', 'Merchant Name', 'Phone', 'Opening Balance', 'Current Baqaya', 'Status'];
-                $response['rows'] = $rows;
-                $response['total_count'] = count($merchants);
-                break;
+                return ['columns' => $columns, 'rows' => $rows];
 
-            case 'farmers':
-                $response['title'] = 'Farmers (Growers) Backup';
-                $response['title_ur'] = 'زمیندار و کسان بیک اپ';
-                $farmers = Farmer::with('area')->orderBy('code', 'asc')->get();
+            case 'farmers_bijak':
+                $columns = [
+                    ['key' => 'entry_no', 'label' => 'Bijak / Parchi #'],
+                    ['key' => 'farmer_name', 'label' => 'Kisan Ka Naam'],
+                    ['key' => 'date', 'label' => 'Tareekh'],
+                    ['key' => 'gross_sale', 'label' => 'Kul Bikri'],
+                    ['key' => 'commission', 'label' => 'Commission'],
+                    ['key' => 'mazdoori', 'label' => 'Mazdoori'],
+                    ['key' => 'net_payable', 'label' => 'Saaf Raqam'],
+                    ['key' => 'paid_amount', 'label' => 'Ada Shuda'],
+                    ['key' => 'remaining', 'label' => 'Baqaya Dena'],
+                ];
+                $bills = FarmerBill::with('farmer')->orderBy('id', 'desc')->get();
                 $rows = [];
-                foreach ($farmers as $idx => $f) {
-                    $fName = $f->name_en ?: ($f->name ?: $f->name_ur);
-                    $areaName = $f->area ? ($f->area->name_en ?: $f->area->name_ur) : '—';
+                foreach ($bills as $b) {
+                    $fName = $b->farmer ? ($b->farmer->name_en ?: ($b->farmer->name ?: $b->farmer->name_ur)) : 'Kisan';
                     $rows[] = [
-                        'col1' => $idx + 1,
-                        'col2' => '#' . $f->code,
-                        'col3' => $fName,
-                        'col4' => $areaName,
-                        'col5' => $f->phone ?: '—',
-                        'col6' => 'Rs. ' . number_format($f->opening_balance),
-                        'col7' => 'Rs. ' . number_format($f->current_balance),
-                        'col8' => ucfirst($f->status ?: 'Active'),
+                        'entry_no' => 'BJK-' . ($b->bill_number ?: $b->id),
+                        'farmer_name' => $fName,
+                        'date' => substr((string)$b->bill_date, 0, 10),
+                        'gross_sale' => (float)($b->total_gross ?? $b->gross_amount ?? 0),
+                        'commission' => (float)($b->commission_amount ?? 0),
+                        'mazdoori' => (float)($b->mazdoori_amount ?? 0),
+                        'net_payable' => (float)($b->net_payable ?? $b->net_amount ?? 0),
+                        'paid_amount' => (float)($b->paid_amount ?? 0),
+                        'remaining' => (float)($b->remaining_balance ?? 0),
                     ];
                 }
-                $response['columns'] = ['#', 'Code', 'Farmer Name', 'Area (Ilaqa)', 'Phone', 'Opening Balance', 'Current Baqaya', 'Status'];
-                $response['rows'] = $rows;
-                $response['total_count'] = count($farmers);
-                break;
+                return ['columns' => $columns, 'rows' => $rows];
 
-            case 'products':
-                $response['title'] = 'Products & Inventory Backup';
-                $response['title_ur'] = 'پروڈکٹس اور اسٹاک بیک اپ';
+            case 'products_stock':
+                $columns = [
+                    ['key' => 'code', 'label' => 'Item Code'],
+                    ['key' => 'name', 'label' => 'Sabzi / Item'],
+                    ['key' => 'unit', 'label' => 'Unit'],
+                    ['key' => 'purchase_rate', 'label' => 'Khareed Rate'],
+                    ['key' => 'sale_rate', 'label' => 'Farokht Rate'],
+                    ['key' => 'stock_quantity', 'label' => 'Stock Miqdar'],
+                    ['key' => 'shelf_life', 'label' => 'Shelf Life'],
+                    ['key' => 'status', 'label' => 'Status'],
+                ];
                 $items = Item::orderBy('id', 'asc')->get();
                 $rows = [];
-                foreach ($items as $idx => $it) {
+                foreach ($items as $it) {
                     $rawName = $it->name_en ?: ($it->name ?: $it->name_ur);
                     $itName = trim(preg_replace('/\s*\(.*?\)\s*/', '', $rawName));
-                    $stock = (int) ($it->current_stock ?? $it->opening_stock ?? 0);
+                    $stock = (int)($it->current_stock ?? $it->opening_stock ?? 0);
                     $rows[] = [
-                        'col1' => $idx + 1,
-                        'col2' => '#' . $it->id,
-                        'col3' => $itName,
-                        'col4' => $it->unit ?: 'Bori',
-                        'col5' => $stock,
-                        'col6' => 'Rs. ' . number_format($it->default_rate ?? 0),
-                        'col7' => $it->shelf_life ?: '4-5 din',
-                        'col8' => $stock <= 0 ? 'Khatam' : ($stock < 20 ? 'Kam Stock' : 'Theek'),
+                        'code' => $it->code ?: ('ITM-' . $it->id),
+                        'name' => $itName,
+                        'unit' => $it->unit ?: 'Bori',
+                        'purchase_rate' => (float)($it->purchase_rate ?? 50),
+                        'sale_rate' => (float)($it->default_rate ?? $it->rate ?? 70),
+                        'stock_quantity' => $stock,
+                        'shelf_life' => $it->shelf_life ?: '4-5 din',
+                        'status' => $stock <= 0 ? 'Khatam' : ($stock < 20 ? 'Kam Stock' : 'Dastiyab'),
                     ];
                 }
-                $response['columns'] = ['#', 'Code', 'Product Name', 'Unit', 'Current Stock', 'Rate', 'Shelf Life', 'Status'];
-                $response['rows'] = $rows;
-                $response['total_count'] = count($items);
-                break;
+                return ['columns' => $columns, 'rows' => $rows];
 
-            case 'ledger':
+            case 'ledger_expenses':
             default:
-                $response['title'] = 'Ledger & Expenses Backup';
-                $response['title_ur'] = 'روکڑ اور اخراجات بیک اپ';
-                $expenses = Expense::orderBy('date', 'desc')->limit(500)->get();
+                $columns = [
+                    ['key' => 'id', 'label' => '#'],
+                    ['key' => 'date', 'label' => 'Tareekh'],
+                    ['key' => 'name', 'label' => 'Kharcha / Expense'],
+                    ['key' => 'note', 'label' => 'Tafseel (Notes)'],
+                    ['key' => 'amount', 'label' => 'Raqam (Amount)'],
+                ];
+                $expenses = Expense::orderBy('id', 'desc')->limit(500)->get();
                 $rows = [];
-                foreach ($expenses as $idx => $e) {
+                foreach ($expenses as $e) {
                     $dateStr = $e->date instanceof \DateTimeInterface ? $e->date->format('Y-m-d') : substr((string)$e->date, 0, 10);
                     $rows[] = [
-                        'col1' => $idx + 1,
-                        'col2' => $dateStr,
-                        'col3' => $e->name ?: ($e->title ?: 'Expense'),
-                        'col4' => $e->note ?: ($e->description ?: '—'),
-                        'col5' => 'Rs. ' . number_format($e->amount),
+                        'id' => $e->id,
+                        'date' => $dateStr,
+                        'name' => $e->name ?: ($e->title ?: 'Expense'),
+                        'note' => $e->note ?: ($e->description ?: '—'),
+                        'amount' => (float)$e->amount,
                     ];
                 }
-                $response['columns'] = ['#', 'Date', 'Expense Category / Name', 'Description', 'Amount'];
-                $response['rows'] = $rows;
-                $response['total_count'] = Expense::count();
-                break;
+                return ['columns' => $columns, 'rows' => $rows];
         }
-
-        return response()->json($response);
     }
 
-    /**
-     * Download full database JSON backup
-     */
-    public function fullDatabase()
+    protected function generateExcelXml(array $sheets, array $columns): string
     {
-        $data = [
-            'app' => 'Vegetable POS',
-            'exported_at' => date('Y-m-d H:i:s'),
-            'sales' => AmrozaSale::with(['merchant', 'item'])->get(),
-            'merchants' => Merchant::all(),
-            'merchant_receipts' => MerchantReceipt::all(),
-            'farmers' => Farmer::with('area')->get(),
-            'farmer_bills' => FarmerBill::all(),
-            'products' => Item::all(),
-            'expenses' => Expense::all(),
-        ];
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+        $xml .= '<?mso-application progid="Excel.Sheet"?>' . "\n";
+        $xml .= '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"' . "\n";
+        $xml .= ' xmlns:o="urn:schemas-microsoft-com:office:office"' . "\n";
+        $xml .= ' xmlns:x="urn:schemas-microsoft-com:office:excel"' . "\n";
+        $xml .= ' xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"' . "\n";
+        $xml .= ' xmlns:html="http://www.w3.org/TR/REC-html40">' . "\n";
+        $xml .= '<Styles>' . "\n";
+        $xml .= '  <Style ss:ID="Header"><Font ss:Bold="1" ss:Color="#000000"/><Interior ss:Color="#dcfce7" ss:Pattern="Solid"/></Style>' . "\n";
+        $xml .= '  <Style ss:ID="Number"><NumberFormat ss:Format="#,##0.00"/></Style>' . "\n";
+        $xml .= '</Styles>' . "\n";
 
-        $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-        $fileName = 'Vegetable_POS_Full_Backup_' . date('Y-m-d_His') . '.json';
+        foreach ($sheets as $sheetName => $rows) {
+            $xml .= '<Worksheet ss:Name="' . htmlspecialchars(substr($sheetName, 0, 31), ENT_XML1) . '">' . "\n";
+            $xml .= ' <Table>' . "\n";
 
-        return response($json, 200, [
-            'Content-Type' => 'application/json',
-            'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
-        ]);
+            // Headers
+            $xml .= '  <Row>' . "\n";
+            foreach ($columns as $col) {
+                $xml .= '   <Cell ss:StyleID="Header"><Data ss:Type="String">' . htmlspecialchars((string)$col['label'], ENT_XML1) . '</Data></Cell>' . "\n";
+            }
+            $xml .= '  </Row>' . "\n";
+
+            // Data
+            foreach ($rows as $row) {
+                $xml .= '  <Row>' . "\n";
+                foreach ($columns as $col) {
+                    $val = $row[$col['key']] ?? '';
+                    if (is_numeric($val) && !str_starts_with((string)$val, '0') && !str_contains((string)$col['key'], 'phone')) {
+                        $xml .= '   <Cell ss:StyleID="Number"><Data ss:Type="Number">' . (float)$val . '</Data></Cell>' . "\n";
+                    } else {
+                        $xml .= '   <Cell><Data ss:Type="String">' . htmlspecialchars((string)$val, ENT_XML1) . '</Data></Cell>' . "\n";
+                    }
+                }
+                $xml .= '  </Row>' . "\n";
+            }
+
+            $xml .= ' </Table>' . "\n";
+            $xml .= '</Worksheet>' . "\n";
+        }
+
+        $xml .= '</Workbook>';
+        return $xml;
     }
 }

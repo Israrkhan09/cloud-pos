@@ -227,7 +227,7 @@ export default function InvestmentLoansPage({
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={isUrdu ? 'قرضہ - انویسٹمنٹ' : 'Qarza (Loans) - Investment'} />
 
-            <div className="-mt-4 -mx-4 -mb-4 pb-12 bg-[#f4f6f4] min-h-full font-sans text-[#1F2937]">
+            <div className="-mt-4 -mx-4 -mb-4 pb-12 bg-[#eef2ee] min-h-full font-sans text-[#1F2937]">
                 {/* Header (Section B.5 short tabs & single alert line) */}
                 <InvestmentHeader
                     currentTab="loans"

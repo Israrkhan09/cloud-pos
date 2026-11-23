@@ -17,6 +17,11 @@ $app = Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->validateCsrfTokens(except: [
+            'backup/create',
+            'backup/restore',
+        ]);
+
         $middleware->encryptCookies(except: ['appearance']);
 
         $middleware->web(append: [

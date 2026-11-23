@@ -32,15 +32,34 @@ export const jkcSidebarNav: NavGroup[] = [
                 icon: "HandCoinsIcon",
             },
             {
-                title: "nav.farmer_bill_bijak",
-                url: "/bijak",
-                icon: "ReceiptXIcon",
+                title: "nav.maal_aur_stock",
+                url: "/masters/items",
+                icon: "PackageIcon",
             },
+            {
+                title: "nav.gahak_customers",
+                url: "/customers",
+                icon: "UsersIcon",
+            },
+            {
+                title: "nav.farmers_kisan",
+                url: "/farmers",
+                icon: "TractorIcon",
+            },
+            // Farmer Bill (Bijak) temporarily hidden from sidebar menu
+            // {
+            //     title: "nav.farmer_bill_bijak",
+            //     url: "/bijak",
+            //     icon: "ReceiptXIcon",
+            // },
         ],
         includeRoutes: [
             "amroza",
             "wasooli",
-            "bijak"
+            "bijak",
+            "masters/items",
+            "customers",
+            "farmers"
         ]
     },
     {
@@ -98,16 +117,13 @@ export const jkcSidebarNav: NavGroup[] = [
             },
             {
                 title: "nav.farmer_khata",
-                url: "/khata",
+                url: "/farmer-khata",
                 icon: "UserCircleIcon",
-            },
-            {
-                title: "nav.general_ledger",
-                url: "/general-ledger",
-                icon: "BookBookmarkIcon",
             },
         ],
         includeRoutes: [
+            "merchant-khata",
+            "farmer-khata",
             "merchant-wasooli",
             "merchant-amroza",
             "amroza-detail",
@@ -146,46 +162,41 @@ export const jkcSidebarNav: NavGroup[] = [
         includeRoutes: ["expiry_gifts", "expiry-gifts"]
     },
     {
-        id: "setup",
-        title: "nav.setup",
-        icon: "GearSixIcon",
+        id: "discount_rules",
+        title: "nav.discount_rules",
+        icon: "PercentIcon",
         isGroup: true,
         items: [
             {
-                title: "nav.merchants_farmers",
-                url: "/masters/merchants",
-                icon: "UsersThreeIcon",
-            },
-            {
-                title: "nav.products_areas",
-                url: "/masters/items",
-                icon: "PackageIcon",
+                title: "nav.discount_rules",
+                url: "/discount-rules",
+                icon: "PercentIcon",
             },
         ],
-        includeRoutes: [
-            "masters"
-        ]
+        includeRoutes: ["discount_rules", "discount-rules"]
     },
     {
-        id: "system",
-        title: "nav.system",
-        icon: "WrenchIcon",
+        id: "backup",
+        title: "nav.backup",
+        icon: "CloudArrowUpIcon",
         isGroup: true,
         items: [
-            {
-                title: "nav.settings",
-                url: "/settings/currency",
-                icon: "GearIcon",
-            },
             {
                 title: "nav.backup",
                 url: "/backup",
                 icon: "CloudArrowUpIcon",
             },
         ],
+        includeRoutes: ["backup"]
+    },
+    {
+        id: "system",
+        title: "nav.system",
+        icon: "WrenchIcon",
+        isGroup: true,
+        items: [],
         includeRoutes: [
-            "settings",
-            "backup"
+            "settings"
         ]
     }
 ];

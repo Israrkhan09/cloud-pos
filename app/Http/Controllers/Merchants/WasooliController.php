@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Merchants;
 
 use App\Http\Controllers\Controller;
+use App\Models\MerchantReceipt;
 use App\Services\WasooliService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -20,9 +21,16 @@ class WasooliController extends Controller
 
         $sheet = $this->wasooliService->getWasooliSheet($date, $search);
 
+        $receipts = MerchantReceipt::with(['merchant', 'creator'])
+            ->where('type', 'recovery')
+            ->latest('id')
+            ->take(100)
+            ->get();
+
         return Inertia::render('merchants/wasooli/index', [
             'rows' => $sheet['rows'],
             'totals' => $sheet['totals'],
+            'receipts' => $receipts,
             'filters' => [
                 'date' => $date,
                 'search' => $search,
@@ -39,6 +47,7 @@ class WasooliController extends Controller
             'note' => 'nullable|string|max:255',
             'payment_type' => 'nullable|string',
             'bank_account' => 'nullable|string',
+            'reference' => 'nullable|string|max:100',
         ]);
 
         $note = $validated['note'] ?? null;
@@ -47,6 +56,9 @@ class WasooliController extends Controller
             if (!empty($validated['bank_account'])) {
                 $note .= ' (' . $validated['bank_account'] . ')';
             }
+        }
+        if (!empty($validated['reference'])) {
+            $note = ($note ? $note . ' · Ref: ' : 'Ref: ') . $validated['reference'];
         }
 
         $this->wasooliService->saveWasooliReceipt(

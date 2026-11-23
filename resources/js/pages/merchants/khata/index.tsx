@@ -1,63 +1,99 @@
 import React, { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
-import { useTranslation } from 'react-i18next';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import Icon from '@/components/ui/icon';
 import MandiPageHeader from '@/components/app/mandi-page-header';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
-interface Merchant {
+interface MerchantItem {
     id: number;
     code: number;
+    name: string;
     name_en: string;
     name_ur: string;
-    phone?: string;
+    phone: string;
+    city: string;
+    customer_type: string;
+    credit_limit: number;
+    balance: number;
     opening_balance: number;
-    current_balance: number;
 }
 
-interface KhataRow {
-    date: string;
-    raw_date: string;
-    sabqa: number;
-    sale: number;
-    wasooli: number;
-    baqaya: number;
+interface TopSummary {
+    total_receivable: number;
+    debt_customers_count: number;
+    total_customers: number;
+    today_credit_sale: number;
+    today_recovery: number;
+}
+
+interface StatementEntry {
+    id: string;
+    entry_date: string;
+    description: string;
+    ref_type: string;
+    entry_type: 'debit' | 'credit';
+    debit: number;
+    credit: number;
+    amount: number;
+    balance_after: number;
+    timestamp: number;
+}
+
+interface StatementData {
+    entries: StatementEntry[];
+    total_debit: number;
+    total_credit: number;
+    final_balance: number;
 }
 
 interface Props {
-    merchants: Merchant[];
+    merchants: MerchantItem[];
     selectedMerchantId: number;
-    selectedMerchant: Merchant | null;
-    summary: {
-        baqaya: number;
-        sabqa: number;
-        total_sale: number;
-        total_wasooli: number;
-    };
-    rows: KhataRow[];
+    selectedMerchant: MerchantItem | null;
+    topSummary: TopSummary;
+    statement: StatementData;
     filters: {
         from_date: string;
         to_date: string;
     };
+    summary?: any;
+    rows?: any;
 }
 
 export default function MerchantKhataIndex({
-    merchants,
+    merchants = [],
     selectedMerchantId,
     selectedMerchant,
-    summary,
-    rows,
+    topSummary,
+    statement,
     filters,
 }: Props) {
     const { t, i18n } = useTranslation();
     const isUrdu = i18n.language === 'ur';
 
-    const [fromDate, setFromDate] = useState(filters.from_date || new Date().toISOString().split('T')[0]);
-    const [toDate, setToDate] = useState(filters.to_date || new Date().toISOString().split('T')[0]);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [debtOnly, setDebtOnly] = useState(false);
+    const [fromDate, setFromDate] = useState(filters?.from_date || new Date().toISOString().slice(0, 8) + '01');
+    const [toDate, setToDate] = useState(filters?.to_date || new Date().toISOString().split('T')[0]);
 
-    // 30-second background polling for real-time updates
+    // Format rupee with commas and optional decimals
+    const formatRs = (val: number | string | null | undefined) => {
+        const num = Number(val || 0);
+        return 'Rs ' + num.toLocaleString('en-US', {
+            minimumFractionDigits: num % 1 === 0 ? 0 : 1,
+            maximumFractionDigits: 2,
+        });
+    };
+
+    const breadcrumbs: BreadcrumbItem[] = [
+        { title: 'Khata', href: '#' },
+        { title: 'Gahak Khata', href: '/merchant-khata' },
+    ];
+
+    // Background refresh
     React.useEffect(() => {
         const interval = setInterval(() => {
             router.reload({ preserveScroll: true, preserveState: true });
@@ -65,301 +101,552 @@ export default function MerchantKhataIndex({
         return () => clearInterval(interval);
     }, []);
 
-    const breadcrumbs: BreadcrumbItem[] = [
-        { title: isUrdu ? 'کھاتہ' : 'Khata', href: '#' },
-        { title: isUrdu ? 'مرچنٹ کھاتہ' : 'Merchant Khata', href: '/merchant-khata' },
-    ];
-
-    function handleFilterChange(newMerchantId: number, from: string, to: string) {
-        setFromDate(from);
-        setToDate(to);
-        router.get('/merchant-khata', {
-            merchant_id: newMerchantId,
-            from_date: from,
-            to_date: to,
-        }, {
-            preserveState: true,
-            replace: true,
-            onSuccess: () => {
-                toast.success(isUrdu ? 'مرچنٹ کھاتہ اپڈیٹ ہو گیا' : 'Merchant khata updated');
+    // Selection handlers
+    const handleMerchantSelect = (id: number) => {
+        router.get(
+            '/merchant-khata',
+            {
+                merchant_id: id,
+                from_date: fromDate,
+                to_date: toDate,
             },
-        });
-    }
+            {
+                preserveState: true,
+                replace: true,
+                preserveScroll: true,
+            }
+        );
+    };
 
-    const merchantDisplayName = selectedMerchant
-        ? (isUrdu ? (selectedMerchant.name_ur || selectedMerchant.name_en) : (selectedMerchant.name_en || selectedMerchant.name_ur))
-        : '';
+    const handleDateChange = (newFrom: string, newTo: string) => {
+        setFromDate(newFrom);
+        setToDate(newTo);
+        router.get(
+            '/merchant-khata',
+            {
+                merchant_id: selectedMerchant?.id || selectedMerchantId,
+                from_date: newFrom,
+                to_date: newTo,
+            },
+            {
+                preserveState: true,
+                replace: true,
+                preserveScroll: true,
+                onSuccess: () => {
+                    toast.success('Khata statement update ho gaya');
+                },
+            }
+        );
+    };
+
+    // Filter merchants list
+    const filteredMerchants = (merchants || []).filter((m) => {
+        const q = searchQuery.toLowerCase().trim();
+        const matchesSearch =
+            !q ||
+            (m.name && m.name.toLowerCase().includes(q)) ||
+            (m.name_en && m.name_en.toLowerCase().includes(q)) ||
+            (m.name_ur && m.name_ur.includes(q)) ||
+            (m.phone && m.phone.includes(q)) ||
+            (m.city && m.city.toLowerCase().includes(q)) ||
+            String(m.code).includes(q);
+
+        const matchesDebt = debtOnly ? m.balance > 0 : true;
+        return matchesSearch && matchesDebt;
+    });
+
+    const entries = statement?.entries || [];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={isUrdu ? 'مرچنٹ کھاتہ' : 'Merchant Khata'} />
+            <Head title="Gahak Khata (Dukandar / Customer Ledger)" />
 
-            {/* Screen UI - Clean Simple Style */}
-            <div className="-mt-4 -mx-4 -mb-8 pb-28 bg-[#f4f6f4] min-h-screen font-sans text-[#1a211c] print:hidden" dir={isUrdu ? 'rtl' : 'ltr'}>
-                
-                {/* 1. Greenish Top Header Banner */}
-                <MandiPageHeader
-                    title={
-                        <span className="flex items-center gap-2">
-                            <span>Merchant Khata</span>
-                            <span className="font-nastaliq font-normal text-emerald-100 text-lg md:text-xl">مشاخور کھاتہ</span>
-                        </span>
+            <style
+                dangerouslySetInnerHTML={{
+                    __html: `
+                    @media print {
+                        @page {
+                            size: A4 portrait;
+                            margin: 12mm;
+                        }
+                        body {
+                            background: white !important;
+                            color: black !important;
+                            -webkit-print-color-adjust: exact;
+                            print-color-adjust: exact;
+                        }
+                        .print\\:hidden, header, nav, aside, .sidebar-wrapper {
+                            display: none !important;
+                        }
+                        thead {
+                            display: table-header-group;
+                        }
+                        tr {
+                            page-break-inside: avoid;
+                        }
                     }
-                    subtitle={isUrdu ? 'ایک مرچنٹ کا پورا حساب' : 'Ek merchant ka poora hisaab'}
+                `,
+                }}
+            />
+
+            {/* Screen UI */}
+            <div className="-mt-4 -mx-4 -mb-4 pb-28 bg-[#eef2ee] min-h-full font-sans text-[#1a211c] print:hidden">
+                {/* 1. Header Banner */}
+                <MandiPageHeader
+                    title={isUrdu ? t('gahak_khata.title') : 'Gahak Khata (Dukandar / Customer Ledger)'}
+                    subtitle={isUrdu ? t('gahak_khata.subtitle') : 'Dukandaron ka udhaar, farokht bills, wasooli aur roznamcha ledger'}
                     isUrdu={isUrdu}
                 >
                     <button
                         type="button"
                         onClick={() => window.print()}
-                        className="h-8.5 px-4 rounded-xl text-xs font-semibold bg-white text-emerald-900 hover:bg-emerald-50 shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
+                        className="h-8.5 px-3.5 rounded-xl text-xs font-semibold bg-white text-emerald-900 hover:bg-emerald-50 shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
                     >
                         <Icon name="Printer" className="size-4 text-emerald-800" />
-                        <span>Print</span>
+                        <span>{isUrdu ? t('gahak_khata.print_khata') : 'Print Khata'}</span>
                     </button>
                 </MandiPageHeader>
 
                 {/* 2. Floating Content Area */}
                 <div className="max-w-7xl mx-auto px-3 md:px-6 -mt-6 md:-mt-8 space-y-4">
-                    
-                    {/* Filter Card: Merchant, Se, Tak */}
-                    <div className="bg-white rounded-xl border border-gray-200/90 shadow-2xs p-3.5 md:p-4">
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <div>
-                                <label className="block text-xs font-bold text-[#374151] mb-1">
-                                    Merchant
-                                </label>
-                                <select
-                                    value={selectedMerchantId}
-                                    onChange={e => handleFilterChange(Number(e.target.value), fromDate, toDate)}
-                                    className="w-full h-9 px-3 rounded-lg bg-gray-50 border border-gray-200 text-xs font-medium text-gray-900 focus:bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none"
-                                >
-                                    {merchants.map(m => (
-                                        <option key={m.id} value={m.id}>
-                                            {m.name_en || m.name_ur} (#{m.code})
-                                        </option>
-                                    ))}
-                                </select>
+                    {/* 4 Summary Cards */}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                        {/* Card 1: Market Ka Kul Baqaya */}
+                        <div className="bg-white border border-emerald-200 rounded-xl p-3.5 shadow-2xs">
+                            <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">
+                                Market Ka Kul Baqaya (Lena):
+                            </span>
+                            <div className="text-xl font-bold text-red-700 mt-1">
+                                {formatRs(topSummary?.total_receivable || 0)}
                             </div>
-                            <div>
-                                <label className="block text-xs font-bold text-[#374151] mb-1">
-                                    Se
-                                </label>
-                                <input
-                                    type="date"
-                                    value={fromDate}
-                                    onChange={e => handleFilterChange(selectedMerchantId, e.target.value, toDate)}
-                                    className="w-full h-9 px-3 rounded-lg bg-gray-50 border border-gray-200 text-xs font-medium text-gray-900 focus:bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none"
-                                />
+                            <span className="text-[10px] text-gray-500 mt-0.5 block">
+                                Dukandaron se wasool karna hai
+                            </span>
+                        </div>
+
+                        {/* Card 2: Udhaar Wale Gahak */}
+                        <div className="bg-white border border-emerald-200 rounded-xl p-3.5 shadow-2xs">
+                            <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">
+                                Udhaar Wale Gahak:
+                            </span>
+                            <div className="text-xl font-bold text-gray-900 mt-1">
+                                {topSummary?.debt_customers_count || 0} / {topSummary?.total_customers || 0}
                             </div>
-                            <div>
-                                <label className="block text-xs font-bold text-[#374151] mb-1">
-                                    Tak
-                                </label>
-                                <input
-                                    type="date"
-                                    value={toDate}
-                                    onChange={e => handleFilterChange(selectedMerchantId, fromDate, e.target.value)}
-                                    className="w-full h-9 px-3 rounded-lg bg-gray-50 border border-gray-200 text-xs font-medium text-gray-900 focus:bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none"
-                                />
+                            <span className="text-[10px] text-gray-500 mt-0.5 block">
+                                Jinke zimmay baqaya hai
+                            </span>
+                        </div>
+
+                        {/* Card 3: Aaj Ki Udhaar Farokht */}
+                        <div className="bg-white border border-emerald-200 rounded-xl p-3.5 shadow-2xs">
+                            <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">
+                                Aaj Ki Udhaar Farokht:
+                            </span>
+                            <div className="text-xl font-bold text-gray-900 mt-1">
+                                {formatRs(topSummary?.today_credit_sale || 0)}
                             </div>
+                            <span className="text-[10px] text-gray-500 mt-0.5 block">
+                                Aaj ka naya udhaar
+                            </span>
+                        </div>
+
+                        {/* Card 4: Aaj Ki Wasooli */}
+                        <div className="bg-white border border-emerald-200 rounded-xl p-3.5 shadow-2xs">
+                            <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">
+                                Aaj Ki Wasooli (Recovered):
+                            </span>
+                            <div className="text-xl font-bold text-emerald-800 mt-1">
+                                {formatRs(topSummary?.today_recovery || 0)}
+                            </div>
+                            <span className="text-[10px] text-gray-500 mt-0.5 block">
+                                Aaj wasool shuda naqad
+                            </span>
                         </div>
                     </div>
 
-                    {/* Summary Card: Pure White Card with 4 columns divided by vertical borders */}
-                    <div className="bg-white rounded-xl border border-gray-200/90 shadow-2xs p-4 md:p-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-5 items-center divide-y md:divide-y-0 md:divide-x md:divide-gray-100">
-                        {/* 1. Baqaya (aakhri) */}
-                        <div className="space-y-0.5">
-                            <span className="text-xs font-bold text-[#4B5563] block">
-                                Baqaya (aakhri)
-                            </span>
-                            <div className="text-xl md:text-2xl font-black text-[#1F2937]">
-                                Rs. {Number(summary.baqaya).toLocaleString()}
+                    {/* 2-Panel Layout: Left = Customer Selector, Right = Detailed Ledger */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                        {/* Left Panel: Customer List (4 cols) */}
+                        <div className="lg:col-span-4 bg-white border border-emerald-200 rounded-xl p-3.5 space-y-3 shadow-2xs">
+                            <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+                                <span className="font-bold text-xs text-gray-900">Gahak Muntakhib Karein</span>
+                                <span className="text-[11px] text-gray-500 font-medium">
+                                    {filteredMerchants.length} Dukandar
+                                </span>
                             </div>
-                            <span className="text-xs font-semibold text-[#374151] block pt-0.5 truncate">
-                                {merchantDisplayName}
-                            </span>
+
+                            {/* Search & Debt Filter */}
+                            <div className="space-y-2">
+                                <div className="relative">
+                                    <Icon
+                                        name="MagnifyingGlass"
+                                        className="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-2.5"
+                                    />
+                                    <input
+                                        type="text"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        placeholder="Gahak ka naam ya phone..."
+                                        className="w-full pl-8 pr-2.5 py-1.5 border border-gray-300 rounded-lg text-xs text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition"
+                                    />
+                                </div>
+
+                                <div className="flex items-center justify-between text-[11px]">
+                                    <span className="text-gray-600 font-medium">Sirf Baqaya Wale:</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setDebtOnly(!debtOnly)}
+                                        className={`px-2.5 py-0.5 rounded text-xs font-bold transition cursor-pointer ${
+                                            debtOnly
+                                                ? 'bg-red-100 text-red-800'
+                                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                        }`}
+                                    >
+                                        {debtOnly ? 'Haan' : 'Nahi'}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Merchant Cards List */}
+                            <div className="max-h-[540px] overflow-y-auto space-y-1.5 pr-1">
+                                {filteredMerchants.length === 0 ? (
+                                    <div className="py-8 text-center text-gray-400 text-xs">
+                                        Koi gahak nahi mila.
+                                    </div>
+                                ) : (
+                                    filteredMerchants.map((m) => {
+                                        const isSelected = selectedMerchant && m.id === selectedMerchant.id;
+                                        const hasDebt = m.balance > 0;
+
+                                        return (
+                                            <button
+                                                key={m.id}
+                                                type="button"
+                                                onClick={() => handleMerchantSelect(m.id)}
+                                                className={`w-full p-2.5 rounded-lg border text-left transition flex items-center justify-between cursor-pointer ${
+                                                    isSelected
+                                                        ? 'bg-emerald-50/70 border-emerald-600 ring-1 ring-emerald-600/30'
+                                                        : 'bg-white border-gray-200 hover:bg-gray-50'
+                                                }`}
+                                            >
+                                                <div className="truncate pr-2">
+                                                    <div className="flex items-center space-x-1.5">
+                                                        <span className="font-bold text-xs text-gray-900 truncate block">
+                                                            {m.name || m.name_en || m.name_ur}
+                                                        </span>
+                                                        {isSelected && (
+                                                            <Icon
+                                                                name="Check"
+                                                                className="w-3.5 h-3.5 text-emerald-700 flex-shrink-0"
+                                                                weight="bold"
+                                                            />
+                                                        )}
+                                                    </div>
+                                                    <span className="text-[10px] text-gray-500 block truncate mt-0.5">
+                                                        {m.phone || m.city || 'Mandi Dukandar'}
+                                                    </span>
+                                                </div>
+
+                                                <div className="text-right flex-shrink-0">
+                                                    <span
+                                                        className={`text-xs font-bold block ${
+                                                            hasDebt ? 'text-red-700' : 'text-emerald-800'
+                                                        }`}
+                                                    >
+                                                        {formatRs(m.balance)}
+                                                    </span>
+                                                    <span className="text-[9px] text-gray-400 font-medium">
+                                                        {hasDebt ? 'Lena Hai' : 'Saaf'}
+                                                    </span>
+                                                </div>
+                                            </button>
+                                        );
+                                    })
+                                )}
+                            </div>
                         </div>
 
-                        {/* 2. Sabqa (shuru ka) */}
-                        <div className="md:ps-5 pt-3 md:pt-0 space-y-0.5">
-                            <span className="text-xs font-bold text-[#4B5563] block">
-                                Sabqa (shuru ka)
-                            </span>
-                            <div className="text-lg md:text-xl font-black text-[#1F2937]">
-                                Rs. {Number(summary.sabqa).toLocaleString()}
-                            </div>
-                        </div>
+                        {/* Right Panel: Selected Customer Ledger (8 cols) */}
+                        <div className="lg:col-span-8 bg-white border border-emerald-200 rounded-xl p-4 space-y-3 shadow-2xs">
+                            {selectedMerchant ? (
+                                <>
+                                    {/* Customer Banner Header */}
+                                    <div className="bg-emerald-50/70 border border-emerald-200 rounded-lg p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                        <div>
+                                            <div className="flex items-center space-x-2">
+                                                <h3 className="font-bold text-base text-gray-900">
+                                                    {selectedMerchant.name ||
+                                                        selectedMerchant.name_en ||
+                                                        selectedMerchant.name_ur}
+                                                </h3>
+                                                <span className="bg-emerald-100 text-emerald-900 text-[10px] font-bold px-2 py-0.5 rounded capitalize">
+                                                    {selectedMerchant.customer_type || 'Dukandar'}
+                                                </span>
+                                            </div>
+                                            <div className="text-[11px] text-gray-600 mt-1 flex flex-wrap gap-3">
+                                                {selectedMerchant.phone && (
+                                                    <span className="flex items-center space-x-1">
+                                                        <Icon name="Phone" className="w-3 h-3 text-gray-500" />
+                                                        <span>{selectedMerchant.phone}</span>
+                                                    </span>
+                                                )}
+                                                {selectedMerchant.city && (
+                                                    <span className="flex items-center space-x-1">
+                                                        <Icon name="MapPin" className="w-3 h-3 text-gray-500" />
+                                                        <span>{selectedMerchant.city}</span>
+                                                    </span>
+                                                )}
+                                                <span>Credit Limit: {formatRs(selectedMerchant.credit_limit)}</span>
+                                            </div>
+                                        </div>
 
-                        {/* 3. Total sale */}
-                        <div className="md:ps-5 pt-3 md:pt-0 space-y-0.5">
-                            <span className="text-xs font-bold text-[#4B5563] block">
-                                Total sale
-                            </span>
-                            <div className="text-lg md:text-xl font-black text-[#1F2937]">
-                                Rs. {Number(summary.total_sale).toLocaleString()}
-                            </div>
-                        </div>
+                                        <div className="text-left sm:text-right bg-white px-3 py-1.5 rounded-lg border border-emerald-200">
+                                            <span className="text-[10px] uppercase font-bold text-gray-500 block">
+                                                Baqaya Udhaar (Lena Hai):
+                                            </span>
+                                            <span
+                                                className={`text-base font-bold block ${
+                                                    selectedMerchant.balance > 0
+                                                        ? 'text-red-700'
+                                                        : 'text-emerald-800'
+                                                }`}
+                                            >
+                                                {formatRs(selectedMerchant.balance)}
+                                            </span>
+                                        </div>
+                                    </div>
 
-                        {/* 4. Total wasooli */}
-                        <div className="md:ps-5 pt-3 md:pt-0 space-y-0.5">
-                            <span className="text-xs font-bold text-[#4B5563] block">
-                                Total wasooli
-                            </span>
-                            <div className="text-lg md:text-xl font-black text-[#1F2937]">
-                                Rs. {Number(summary.total_wasooli).toLocaleString()}
-                            </div>
-                        </div>
-                    </div>
+                                    {/* Action Ribbon & Date Filters */}
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+                                        <div className="flex items-center flex-wrap gap-2.5">
+                                            <span className="font-bold text-xs text-gray-900">
+                                                Khata Roznamcha Statement:
+                                            </span>
+                                            <div className="flex items-center gap-1.5 text-xs">
+                                                <span className="text-gray-500 text-[11px] font-medium">Se:</span>
+                                                <input
+                                                    type="date"
+                                                    value={fromDate}
+                                                    onChange={(e) => handleDateChange(e.target.value, toDate)}
+                                                    className="h-7.5 px-2 border border-gray-300 rounded text-xs text-gray-800 focus:outline-none focus:border-emerald-600 bg-white"
+                                                />
+                                                <span className="text-gray-500 text-[11px] font-medium">Tak:</span>
+                                                <input
+                                                    type="date"
+                                                    value={toDate}
+                                                    onChange={(e) => handleDateChange(fromDate, e.target.value)}
+                                                    className="h-7.5 px-2 border border-gray-300 rounded text-xs text-gray-800 focus:outline-none focus:border-emerald-600 bg-white"
+                                                />
+                                            </div>
+                                        </div>
 
-                    {/* Table Card: Pure white, clean dark headers, simple borders */}
-                    <div className="bg-white rounded-xl border border-gray-200/90 shadow-2xs overflow-hidden">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm font-sans">
-                                <thead>
-                                    <tr className="text-[#374151] border-b border-gray-200 font-bold bg-gray-50/80 text-xs md:text-sm">
-                                        <th className="px-4 py-3 text-start w-32">Date</th>
-                                        <th className="px-4 py-3 text-end">Sabqa</th>
-                                        <th className="px-4 py-3 text-end">Sale</th>
-                                        <th className="px-4 py-3 text-end">Wasooli</th>
-                                        <th className="px-4 py-3 text-end">Baqaya</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100">
-                                    {rows.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={5} className="px-4 py-8 text-center text-gray-500 font-medium text-sm">
-                                                No records found for this period
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        rows.map((row, idx) => (
-                                            <tr key={idx} className="hover:bg-gray-50/60 transition-colors text-sm">
-                                                <td className="px-4 py-3.5 font-semibold text-[#1F2937] text-sm">
-                                                    {row.date}
-                                                </td>
-                                                <td className="px-4 py-3.5 text-end font-semibold text-[#1F2937] text-sm md:text-[15px]">
-                                                    {Number(row.sabqa).toLocaleString()}
-                                                </td>
-                                                <td className="px-4 py-3.5 text-end font-bold text-[#1F2937] text-sm md:text-[15px]">
-                                                    {row.sale > 0 ? Number(row.sale).toLocaleString() : '–'}
-                                                </td>
-                                                <td className="px-4 py-3.5 text-end font-bold text-[#1F2937] text-sm md:text-[15px]">
-                                                    {row.wasooli > 0 ? Number(row.wasooli).toLocaleString() : '–'}
-                                                </td>
-                                                <td className="px-4 py-3.5 text-end font-black text-[#1F2937] text-sm md:text-[15px]">
-                                                    {Number(row.baqaya).toLocaleString()}
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                                <tfoot>
-                                    <tr className="border-t-2 border-gray-900 bg-gray-50/80 font-bold text-[#1F2937] text-sm md:text-[15px]">
-                                        <td className="px-4 py-3.5">Total</td>
-                                        <td className="px-4 py-3.5"></td>
-                                        <td className="px-4 py-3.5 text-end">
-                                            Rs. {Number(summary.total_sale).toLocaleString()}
-                                        </td>
-                                        <td className="px-4 py-3.5 text-end">
-                                            Rs. {Number(summary.total_wasooli).toLocaleString()}
-                                        </td>
-                                        <td className="px-4 py-3.5 text-end">
-                                            Rs. {Number(summary.baqaya).toLocaleString()}
-                                        </td>
-                                    </tr>
-                                </tfoot>
-                            </table>
+                                        <div>
+                                            <button
+                                                type="button"
+                                                onClick={() => window.print()}
+                                                className="bg-white hover:bg-emerald-50 text-emerald-900 border border-emerald-300 font-bold px-3 py-1.5 rounded-lg transition flex items-center space-x-1.5 text-xs cursor-pointer shadow-2xs"
+                                            >
+                                                <Icon name="Printer" className="w-3.5 h-3.5" />
+                                                <span>Print Khata</span>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Statement Table (Simplified 3 Columns: Pese Lena, Wasooli, Baqaya) */}
+                                    <div className="overflow-x-auto border border-emerald-200 rounded-lg">
+                                        <table className="w-full text-left text-xs">
+                                            <thead className="bg-emerald-50 text-gray-900 border-b border-emerald-200 font-bold">
+                                                <tr>
+                                                    <th className="py-2.5 px-4 text-start">Tafseel</th>
+                                                    <th className="py-2.5 px-4 text-start">Hawala</th>
+                                                    <th className="py-2.5 px-4 text-end text-red-700">Pese Lena</th>
+                                                    <th className="py-2.5 px-4 text-end text-emerald-800">Wasooli</th>
+                                                    <th className="py-2.5 px-4 text-end">Baqaya</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-100">
+                                                {entries.length === 0 ? (
+                                                    <tr>
+                                                        <td colSpan={5} className="py-8 text-center text-gray-400">
+                                                            Is gahak ke khate mein is muddad mein koi entry mojood nahi
+                                                            hai.
+                                                        </td>
+                                                    </tr>
+                                                ) : (
+                                                    entries.map((e) => (
+                                                        <tr key={e.id} className="hover:bg-gray-50/80 transition">
+                                                            <td className="py-2.5 px-4 text-start font-medium text-gray-800">
+                                                                {e.description || '-'}
+                                                            </td>
+                                                            <td className="py-2.5 px-4 text-start text-gray-500 whitespace-nowrap">
+                                                                {e.ref_type || '-'}
+                                                            </td>
+                                                            <td className="py-2.5 px-4 text-end font-bold text-red-700 whitespace-nowrap">
+                                                                {e.debit > 0 ? formatRs(e.debit) : '-'}
+                                                            </td>
+                                                            <td className="py-2.5 px-4 text-end font-bold text-emerald-800 whitespace-nowrap">
+                                                                {e.credit > 0 ? formatRs(e.credit) : '-'}
+                                                            </td>
+                                                            <td className="py-2.5 px-4 text-end font-bold text-gray-900 whitespace-nowrap">
+                                                                {formatRs(e.balance_after)}
+                                                            </td>
+                                                        </tr>
+                                                    ))
+                                                )}
+                                            </tbody>
+                                            {entries.length > 0 && (
+                                                <tfoot className="bg-gray-50 font-bold border-t border-gray-200 text-xs">
+                                                    <tr>
+                                                        <td colSpan={2} className="py-2.5 px-4 text-start font-bold text-gray-800">
+                                                            Kul Total
+                                                        </td>
+                                                        <td className="py-2.5 px-4 text-end text-red-700 font-bold whitespace-nowrap">
+                                                            {formatRs(statement?.total_debit || 0)}
+                                                        </td>
+                                                        <td className="py-2.5 px-4 text-end text-emerald-800 font-bold whitespace-nowrap">
+                                                            {formatRs(statement?.total_credit || 0)}
+                                                        </td>
+                                                        <td className="py-2.5 px-4 text-end text-gray-900 font-bold whitespace-nowrap">
+                                                            {formatRs(selectedMerchant.balance)}
+                                                        </td>
+                                                    </tr>
+                                                </tfoot>
+                                            )}
+                                        </table>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="py-12 text-center text-gray-400 text-xs">
+                                    Bayein (left) taraf se kisi bhi gahak par click karein uska mukammal khata dekhne ke
+                                    liye.
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Thermal 80mm Print Document */}
-            <div id="printable-merchant-khata" className="hidden print:block p-4 bg-white text-black font-sans text-xs max-w-[80mm] mx-auto print-document-container" dir={isUrdu ? 'rtl' : 'ltr'}>
-                {/* Header: Green V Logo + Vegetable POS */}
-                <div className="text-center border-b-2 border-[#166534] pb-2 mb-3">
-                    <div className="flex items-center justify-center gap-1.5 mb-1">
-                        <div className="w-6 h-6 rounded bg-[#166534] flex items-center justify-center text-white font-black text-xs">V</div>
-                        <h1 className="text-base font-extrabold tracking-tight text-[#166534] uppercase">
-                            Vegetable POS
-                        </h1>
-                    </div>
-                    <p className="text-[11px] font-semibold text-gray-700">
-                        {isUrdu ? 'مرچنٹ کھاتہ · مشاخور کھاتہ' : 'Merchant Khata · Customer Ledger'}
-                    </p>
-                </div>
-
-                {/* Merchant Details */}
-                <div className="border border-gray-400 rounded p-2 mb-3 text-[11px] space-y-1 bg-gray-50/50">
-                    <div className="flex justify-between font-bold">
-                        <span>{selectedMerchant?.name_en || selectedMerchant?.name_ur || '—'}</span>
-                        <span>#{selectedMerchant?.code}</span>
-                    </div>
-                    {selectedMerchant?.phone && (
-                        <div className="text-gray-600 text-[10px]">
-                            Ph: {selectedMerchant.phone}
+            {/* ==================== PRINT DOCUMENT (ONLY VISIBLE ON PRINT) ==================== */}
+            <div className="hidden print:block print-document text-black bg-white p-6 max-w-4xl mx-auto font-sans">
+                {selectedMerchant && (
+                    <>
+                        {/* Print Letterhead Header */}
+                        <div className="text-center pb-4 mb-4 border-b-2 border-black">
+                            <h1 className="text-2xl font-black tracking-tight uppercase">
+                                VEGETABLE POS
+                            </h1>
+                            <p className="text-sm font-bold mt-1 uppercase tracking-wide">
+                                Gahak Khata Roznamcha Statement
+                            </p>
+                            <p className="text-xs text-gray-600 mt-0.5">
+                                Muddad: {fromDate} Ta {toDate} | Print Tareekh: {new Date().toLocaleDateString('en-GB')}
+                            </p>
                         </div>
-                    )}
-                    <div className="text-[10px] text-gray-600 pt-0.5 border-t border-gray-200 flex justify-between">
-                        <span>Period:</span>
-                        <span>{fromDate} to {toDate}</span>
-                    </div>
-                </div>
 
-                {/* Baqaya Box */}
-                <div className="border border-black rounded p-2 mb-3 text-center bg-gray-50">
-                    <span className="text-[10px] text-gray-600 uppercase font-bold block">Final Baqaya (بقایا)</span>
-                    <strong className="text-base font-black text-gray-900">
-                        Rs. {Number(summary.baqaya).toLocaleString()}
-                    </strong>
-                    <div className="flex justify-between text-[10px] pt-1 mt-1 border-t border-gray-300">
-                        <span>Sale: Rs. {Number(summary.total_sale).toLocaleString()}</span>
-                        <span>Wasooli: Rs. {Number(summary.total_wasooli).toLocaleString()}</span>
-                    </div>
-                </div>
+                        {/* Merchant Details Box */}
+                        <div className="grid grid-cols-2 gap-4 p-3 mb-4 border border-gray-300 rounded text-xs bg-gray-50">
+                            <div>
+                                <p>
+                                    <span className="font-bold">Gahak Ka Naam:</span>{' '}
+                                    {selectedMerchant.name ||
+                                        selectedMerchant.name_en ||
+                                        selectedMerchant.name_ur}{' '}
+                                    (#{selectedMerchant.code})
+                                </p>
+                                <p className="mt-1">
+                                    <span className="font-bold">Qism (Category):</span>{' '}
+                                    {selectedMerchant.customer_type || 'Dukandar'}
+                                </p>
+                                <p className="mt-1">
+                                    <span className="font-bold">Phone:</span> {selectedMerchant.phone || '-'}
+                                </p>
+                            </div>
+                            <div className="text-right">
+                                <p>
+                                    <span className="font-bold">Ilaqa (City):</span> {selectedMerchant.city || '-'}
+                                </p>
+                                <p className="mt-1">
+                                    <span className="font-bold">Credit Limit:</span>{' '}
+                                    {formatRs(selectedMerchant.credit_limit)}
+                                </p>
+                                <p className="mt-1 font-bold text-sm">
+                                    <span>Baqaya Udhaar (Lena Hai): </span>
+                                    <span className="text-red-700">{formatRs(selectedMerchant.balance)}</span>
+                                </p>
+                            </div>
+                        </div>
 
-                {/* Table */}
-                <table className="w-full text-[10px] border border-black border-collapse mb-3">
-                    <thead>
-                        <tr className="bg-gray-100 border-b border-black font-bold">
-                            <th className="p-1 text-start border-e border-black">Date</th>
-                            <th className="p-1 text-end border-e border-black">Sale</th>
-                            <th className="p-1 text-end border-e border-black">Wasooli</th>
-                            <th className="p-1 text-end">Baqaya</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {rows.length === 0 ? (
-                            <tr>
-                                <td colSpan={4} className="p-3 text-center text-gray-500">
-                                    No records
-                                </td>
-                            </tr>
-                        ) : (
-                            rows.map((r, i) => (
-                                <tr key={i} className="border-b border-gray-300">
-                                    <td className="p-1 border-e border-black">{r.date}</td>
-                                    <td className="p-1 text-end border-e border-black">{r.sale > 0 ? Number(r.sale).toLocaleString() : '–'}</td>
-                                    <td className="p-1 text-end border-e border-black">{r.wasooli > 0 ? Number(r.wasooli).toLocaleString() : '–'}</td>
-                                    <td className="p-1 text-end font-bold">{Number(r.baqaya).toLocaleString()}</td>
+                        {/* Print Table (Simplified 3 Columns: Pese Lena, Wasooli, Baqaya) */}
+                        <table className="w-full text-xs border border-gray-400 border-collapse">
+                            <thead>
+                                <tr className="bg-gray-100 border-b border-gray-400">
+                                    <th className="p-2 text-start border border-gray-300 font-bold">Tafseel</th>
+                                    <th className="p-2 text-start border border-gray-300 font-bold">Hawala</th>
+                                    <th className="p-2 text-end border border-gray-300 font-bold text-red-700">Pese Lena</th>
+                                    <th className="p-2 text-end border border-gray-300 font-bold text-emerald-800">Wasooli</th>
+                                    <th className="p-2 text-end border border-gray-300 font-bold">Baqaya</th>
                                 </tr>
-                            ))
-                        )}
-                    </tbody>
-                    <tfoot>
-                        <tr className="border-t-2 border-black font-bold bg-gray-100">
-                            <td className="p-1 border-e border-black">Total</td>
-                            <td className="p-1 text-end border-e border-black">Rs. {Number(summary.total_sale).toLocaleString()}</td>
-                            <td className="p-1 text-end border-e border-black">Rs. {Number(summary.total_wasooli).toLocaleString()}</td>
-                            <td className="p-1 text-end">Rs. {Number(summary.baqaya).toLocaleString()}</td>
-                        </tr>
-                    </tfoot>
-                </table>
+                            </thead>
+                            <tbody>
+                                {entries.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={5} className="p-4 text-center border border-gray-300 text-gray-500">
+                                            Is muddad mein koi entry mojood nahi hai.
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    entries.map((e) => (
+                                        <tr
+                                            key={e.id}
+                                            className="border-b border-gray-300"
+                                            style={{ pageBreakInside: 'avoid' }}
+                                        >
+                                            <td className="p-2 border border-gray-300 text-start font-medium text-gray-800">
+                                                {e.description || '-'}
+                                            </td>
+                                            <td className="p-2 border border-gray-300 text-start text-gray-600 whitespace-nowrap">
+                                                {e.ref_type || '-'}
+                                            </td>
+                                            <td className="p-2 border border-gray-300 text-end font-bold text-red-700 whitespace-nowrap">
+                                                {e.debit > 0 ? formatRs(e.debit) : '-'}
+                                            </td>
+                                            <td className="p-2 border border-gray-300 text-end font-bold text-emerald-800 whitespace-nowrap">
+                                                {e.credit > 0 ? formatRs(e.credit) : '-'}
+                                            </td>
+                                            <td className="p-2 border border-gray-300 text-end font-bold whitespace-nowrap">
+                                                {formatRs(e.balance_after)}
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                            {entries.length > 0 && (
+                                <tfoot>
+                                    <tr className="bg-gray-100 border-t-2 border-gray-400 font-bold">
+                                        <td colSpan={2} className="p-2 border border-gray-300 text-start font-bold">
+                                            Kul Total
+                                        </td>
+                                        <td className="p-2 border border-gray-300 text-end font-black text-red-700 whitespace-nowrap">
+                                            {formatRs(statement?.total_debit || 0)}
+                                        </td>
+                                        <td className="p-2 border border-gray-300 text-end font-black text-emerald-800 whitespace-nowrap">
+                                            {formatRs(statement?.total_credit || 0)}
+                                        </td>
+                                        <td className="p-2 border border-gray-300 text-end font-black whitespace-nowrap">
+                                            {formatRs(selectedMerchant.balance)}
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            )}
+                        </table>
 
-                {/* Print Footer */}
-                <div className="text-center text-[9px] text-gray-500 pt-2 border-t border-gray-300">
-                    Printed on: {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}
-                </div>
+                        {/* Print Footer */}
+                        <div className="mt-8 pt-4 border-t border-gray-300 flex justify-between items-center text-[10px] text-gray-500">
+                            <span>Vegetable POS - System Generated Statement | Page 1</span>
+                            <span>Print Tareekh: {new Date().toLocaleString()}</span>
+                        </div>
+                    </>
+                )}
             </div>
         </AppLayout>
     );

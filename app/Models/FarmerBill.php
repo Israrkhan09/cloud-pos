@@ -28,6 +28,7 @@ class FarmerBill extends Model
         'mazdoori',
         'market_fee',
         'net_amount',
+        'paid_amount',
         'note',
         'created_by',
     ];
@@ -46,6 +47,7 @@ class FarmerBill extends Model
         'mazdoori'        => 'float',
         'market_fee'      => 'float',
         'net_amount'      => 'float',
+        'paid_amount'     => 'float',
     ];
 
     public function farmer()

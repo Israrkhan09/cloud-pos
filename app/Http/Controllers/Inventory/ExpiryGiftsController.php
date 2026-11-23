@@ -199,6 +199,16 @@ class ExpiryGiftsController extends Controller
         ]);
 
         $lot = ExpiryLot::findOrFail($validated['lot_id']);
+
+        if ($lot->action_taken === 'wastage' || $lot->quantity <= 0) {
+            return redirect()->back()->withErrors(['wastage' => 'Is lot par pehle hi wastage record ho chuki hai.']);
+        }
+
+        $existingWastage = Wastage::where('lot_id', $lot->id)->first();
+        if ($existingWastage) {
+            return redirect()->back()->withErrors(['wastage' => 'Is lot ka wastage voucher pehle se darj hai.']);
+        }
+
         $qty = min($lot->quantity, (float) $validated['quantity']);
         $loss = $qty * $lot->rate;
 
@@ -219,16 +229,15 @@ class ExpiryGiftsController extends Controller
             'approved_by' => 'Owner (Hajji Muhammad)',
         ]);
 
-        $lot->quantity = max(0, $lot->quantity - $qty);
-        $lot->nuqsan = $lot->quantity * $lot->rate;
-        if ($lot->quantity == 0) {
-            $lot->action_taken = 'wastage';
-        }
+        $lot->quantity = 0;
+        $lot->nuqsan = 0;
+        $lot->action_taken = 'wastage';
         $lot->save();
 
         // Update item stock
         if ($lot->item) {
-            $lot->item->current_stock = max(0, ($lot->item->current_stock ?? 0) - (int) $qty);
+            $lot->item->current_stock = 0;
+            $lot->item->status = 'khatam';
             $lot->item->save();
         }
 

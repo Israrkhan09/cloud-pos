@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/layouts/app-layout';
+import MandiPageHeader from '@/components/app/mandi-page-header';
 import { type BreadcrumbItem } from '@/types';
 import { toast } from 'sonner';
 import {
@@ -194,20 +195,16 @@ export default function DepositTransferPage() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={isUrdu ? 'ڈپازٹ / ٹرانسفر - ویجیٹیبل پی او ایس' : 'Deposit / Transfer - Vegetable POS'} />
 
-            <div className="max-w-6xl mx-auto w-full space-y-6 pb-12">
-                {/* Header Section */}
-                <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-                        {isUrdu ? 'ڈپازٹ / ٹرانسفر' : 'Deposit / Transfer'}
-                    </h1>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                        {isUrdu
-                            ? 'دن کے آخر میں گلہ سے بینک میں پیسے جمع کروائیں، یا بینک سے کیش نکالیں'
-                            : 'Din ke aakhir mein galla se bank mein paise jama karwayein, ya bank se cash nikalein'}
-                    </p>
-                </div>
+            <div className="-mt-4 -mx-4 -mb-4 pb-28 bg-[#eef2ee] min-h-full space-y-4">
+                {/* Green Header Section */}
+                <MandiPageHeader
+                    title={isUrdu ? t('banking.transfers_title') : 'Deposit / Transfer'}
+                    subtitle={isUrdu ? t('banking.transfers_subtitle') : 'Din ke aakhir mein galla se bank mein paise jama karwayein, ya bank se cash nikalein'}
+                    isUrdu={isUrdu}
+                />
 
-                {/* Empty Accounts Warning if no account exists yet */}
+                <div className="w-full px-4 md:px-6 -mt-6 md:-mt-8 space-y-6">
+                    {/* Empty Accounts Warning if no account exists yet */}
                 {accounts.length === 0 && (
                     <div className="p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl flex items-center justify-between">
                         <div className="flex items-center gap-2.5 text-amber-800 dark:text-amber-300 text-sm font-medium">
@@ -568,6 +565,7 @@ export default function DepositTransferPage() {
                             </tbody>
                         </table>
                     </div>
+                </div>
                 </div>
             </div>
         </AppLayout>
