@@ -152,7 +152,7 @@ export default function InvestmentPartnersPage({
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={isUrdu ? 'پارٹنرز - انویسٹمنٹ' : 'Partners - Investment'} />
 
-            <div className="-mt-4 -mx-4 -mb-4 pb-12 bg-[#eef2ee] min-h-full font-sans text-[#1F2937]">
+            <div className={`-mt-4 -mx-4 -mb-4 pb-12 bg-[#eef2ee] min-h-full font-sans text-[#1F2937] ${isUrdu ? 'font-urdu' : ''}`} dir={isUrdu ? 'rtl' : 'ltr'}>
                 {/* Header (Section B.5 short tabs & single alert line) */}
                 <InvestmentHeader
                     currentTab="partners"
@@ -175,7 +175,7 @@ export default function InvestmentPartnersPage({
                                 {formatRs(summary.net_capital)}
                             </span>
                             <span className="text-xs font-medium text-[#4B5563] block mt-1">
-                                2 shareek dar (Approved Equity)
+                                {isUrdu ? `${partners.length} شریک دار (منظور شدہ ایکویٹی)` : `${partners.length} shareek dar (Approved Equity)`}
                             </span>
                         </div>
 
@@ -188,7 +188,7 @@ export default function InvestmentPartnersPage({
                                 {formatRs(summary.partners_profit_share)}
                             </span>
                             <span className="text-xs font-medium text-[#4B5563] block mt-1">
-                                Bilal 2,000 + Ali 1,000 (Monthly Pool: Rs. 20k)
+                                {isUrdu ? `ماہانہ پول: ${formatRs(profitPool.total_pool)}` : `Monthly Pool: ${formatRs(profitPool.total_pool)}`}
                             </span>
                         </div>
 
@@ -202,11 +202,11 @@ export default function InvestmentPartnersPage({
                                     {summary.pending_approvals}
                                 </span>
                                 <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300">
-                                    Pending Owner
+                                    {isUrdu ? 'زیر التواء مالک' : 'Pending Owner'}
                                 </span>
                             </div>
                             <span className="text-xs font-medium text-[#4B5563] block mt-1">
-                                Bilal Drawing Rs. 100,000
+                                {isUrdu ? 'منظوری درکار' : 'Bilal Drawing Rs. 100,000'}
                             </span>
                         </div>
                     </div>
@@ -216,11 +216,11 @@ export default function InvestmentPartnersPage({
                         <div className="flex items-center gap-2">
                             <Icon name="Coins" className="size-4 text-[#14532d] shrink-0" />
                             <span className="font-bold text-[#1F2937]">
-                                Monthly Munafa Pool: <span className="text-[#14532d]">{formatRs(profitPool.total_pool)}</span>
+                                {isUrdu ? 'ماہانہ منافع پول:' : 'Monthly Munafa Pool:'} <span className="text-[#14532d]">{formatRs(profitPool.total_pool)}</span>
                             </span>
                         </div>
                         <div className="text-xs font-semibold text-[#4B5563]">
-                            Malik ka hissa: <span className="text-[#1F2937] font-bold">85% ({formatRs(profitPool.owner_share)})</span> · Shareekon ka hissa: <span className="text-[#1F2937] font-bold">15% ({formatRs(summary.partners_profit_share)})</span>
+                            {isUrdu ? 'مالک کا حصہ:' : 'Malik ka hissa:'} <span className="text-[#1F2937] font-bold">85% ({formatRs(profitPool.owner_share)})</span> · {isUrdu ? 'شریکوں کا حصہ:' : 'Shareekon ka hissa:'} <span className="text-[#1F2937] font-bold">15% ({formatRs(summary.partners_profit_share)})</span>
                         </div>
                     </div>
 
@@ -234,20 +234,20 @@ export default function InvestmentPartnersPage({
                                 <div className="flex items-center gap-2">
                                     <span className="font-bold text-[#1F2937]">{owner.name}</span>
                                     <span className="px-2 py-0.5 rounded text-xs font-bold bg-purple-100 text-purple-900">
-                                        Malik (Owner)
+                                        {isUrdu ? 'مالک (Owner)' : 'Malik (Owner)'}
                                     </span>
                                 </div>
-                                <span className="text-xs text-[#4B5563] block">Phone: {owner.phone}</span>
+                                <span className="text-xs text-[#4B5563] block">{isUrdu ? 'فون:' : 'Phone:'} {owner.phone}</span>
                             </div>
                         </div>
 
                         <div className="flex items-center gap-4 text-xs font-semibold">
                             <div>
-                                <span className="text-[#4B5563] block">Hissa:</span>
-                                <span className="text-[#1F2937] font-bold text-sm">{owner.ownership_percentage}% Mukammal Malik</span>
+                                <span className="text-[#4B5563] block">{isUrdu ? 'حصہ:' : 'Hissa:'}</span>
+                                <span className="text-[#1F2937] font-bold text-sm">{owner.ownership_percentage}% {isUrdu ? 'مکمل مالک' : 'Mukammal Malik'}</span>
                             </div>
                             <div>
-                                <span className="text-[#4B5563] block">Monthly Munafa:</span>
+                                <span className="text-[#4B5563] block">{isUrdu ? 'ماہانہ منافع:' : 'Monthly Munafa:'}</span>
                                 <span className="text-[#14532d] font-black text-sm">{formatRs(owner.profit_share)}</span>
                             </div>
                         </div>
@@ -283,7 +283,7 @@ export default function InvestmentPartnersPage({
                                             />
                                             <div className="absolute end-0 mt-1 w-64 bg-white border border-gray-200 rounded-xl shadow-xl z-30 py-1.5 font-sans animate-in fade-in slide-in-from-top-1 text-start">
                                                 <div className="px-3 py-1.5 text-[11px] font-bold text-[#4B5563] uppercase border-b border-gray-100 flex items-center justify-between">
-                                                    <span>Party / Hissedar Chunein</span>
+                                                    <span>{isUrdu ? 'پارٹی / حصہ دار منتخب کریں' : 'Party / Hissedar Chunein'}</span>
                                                     <span className="text-[10px] text-gray-400">CSV Export</span>
                                                 </div>
                                                 <button
@@ -294,7 +294,7 @@ export default function InvestmentPartnersPage({
                                                     }}
                                                     className="w-full text-start px-3.5 py-2 text-xs font-bold text-[#14532d] hover:bg-emerald-50 flex items-center justify-between cursor-pointer transition-colors"
                                                 >
-                                                    <span>Sab Partners (Mukammal Data)</span>
+                                                    <span>{isUrdu ? 'سب پارٹنرز (مکمل ڈیٹا)' : 'Sab Partners (Mukammal Data)'}</span>
                                                     <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800">
                                                         {partners.length}
                                                     </span>
@@ -313,7 +313,7 @@ export default function InvestmentPartnersPage({
                                                         >
                                                             <div>
                                                                 <span className="font-bold text-[#1F2937] block">{p.name}</span>
-                                                                <span className="text-[11px] text-[#4B5563]">Hissa: {p.profit_percentage}%</span>
+                                                                <span className="text-[11px] text-[#4B5563]">{isUrdu ? 'حصہ:' : 'Hissa:'} {p.profit_percentage}%</span>
                                                             </div>
                                                             <span className="text-xs font-bold text-[#14532d]">{formatRs(p.net_equity)}</span>
                                                         </button>
@@ -324,7 +324,7 @@ export default function InvestmentPartnersPage({
                                     )}
                                 </div>
                                 <span className="text-xs text-[#4B5563]">
-                                    {partners.length} Shareek
+                                    {isUrdu ? `${partners.length} شریک` : `${partners.length} Shareek`}
                                 </span>
                             </div>
                         </div>
@@ -333,13 +333,13 @@ export default function InvestmentPartnersPage({
                             <table className="w-full text-start text-sm border-collapse">
                                 <thead>
                                     <tr className="bg-gray-50/80 border-b border-gray-200 text-[#374151] uppercase tracking-wider text-xs font-bold">
-                                        <th className="py-3 px-4 text-start">Naam</th>
-                                        <th className="py-3 px-4 text-center">Hissa %</th>
-                                        <th className="py-3 px-4 text-end">Paisa Dala</th>
-                                        <th className="py-3 px-4 text-end">Nikala</th>
-                                        <th className="py-3 px-4 text-end">Equity</th>
-                                        <th className="py-3 px-4 text-center">Is Mahine Ka Munafa Share</th>
-                                        <th className="py-3 px-4 text-center">Tafseel</th>
+                                        <th className="py-3 px-4 text-start">{isUrdu ? 'نام' : 'Naam'}</th>
+                                        <th className="py-3 px-4 text-center">{isUrdu ? 'حصہ %' : 'Hissa %'}</th>
+                                        <th className="py-3 px-4 text-end">{isUrdu ? 'پیسہ ڈالا' : 'Paisa Dala'}</th>
+                                        <th className="py-3 px-4 text-end">{isUrdu ? 'نکالا' : 'Nikala'}</th>
+                                        <th className="py-3 px-4 text-end">{isUrdu ? 'ایکویٹی' : 'Equity'}</th>
+                                        <th className="py-3 px-4 text-center">{isUrdu ? 'اس مہینے کا منافع شیئر' : 'Is Mahine Ka Munafa Share'}</th>
+                                        <th className="py-3 px-4 text-center">{isUrdu ? 'تفصیل' : 'Tafseel'}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100 text-[#1F2937]">
@@ -377,7 +377,7 @@ export default function InvestmentPartnersPage({
                                                 </span>
                                                 {partner.pending_drawings > 0 && (
                                                     <span className="text-xs text-amber-800 font-bold block mt-0.5 leading-tight">
-                                                        Pending Drawing: -Rs. {formatNum(partner.pending_drawings)} (Manzoori baaki)
+                                                        {isUrdu ? `نکاسی زیرِ التواء: -Rs. ${formatNum(partner.pending_drawings)} (منظوری باقی)` : `Pending Drawing: -Rs. ${formatNum(partner.pending_drawings)} (Manzoori baaki)`}
                                                     </span>
                                                 )}
                                             </td>
@@ -386,7 +386,7 @@ export default function InvestmentPartnersPage({
                                             <td className="py-3.5 px-4 text-center font-bold text-sm">
                                                 {(partner.is_new_partner || partner.draw_preview === 0) ? (
                                                     <span className="text-gray-500 font-semibold text-xs inline-flex items-center gap-1 justify-center">
-                                                        Rs. 0 <span className="text-[11px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/60 font-medium">(1 mahine baad)</span>
+                                                        Rs. 0 <span className="text-[11px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/60 font-medium">{isUrdu ? '(1 مہینے بعد)' : '(1 mahine baad)'}</span>
                                                     </span>
                                                 ) : (
                                                     <span className="text-[#14532d]">
@@ -413,7 +413,7 @@ export default function InvestmentPartnersPage({
                                                     })}
                                                     className="px-2.5 py-1 text-xs font-bold text-[#374151] hover:text-black bg-gray-100 hover:bg-gray-200 rounded transition-colors cursor-pointer"
                                                 >
-                                                    Detail
+                                                    {isUrdu ? 'تفصیل' : 'Detail'}
                                                 </button>
                                             </td>
                                         </tr>

@@ -387,7 +387,7 @@ export default function ExpiryGiftsPage({
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={isUrdu ? 'ایکسپائری اور تحائف' : 'Expiry & Gifts - Vegetable POS'} />
 
-            <div className="-mt-4 -mx-4 -mb-4 pb-28 bg-[#eef2ee] min-h-full font-sans text-[#111827] space-y-4">
+            <div className={cn("-mt-4 -mx-4 -mb-4 pb-28 bg-[#eef2ee] min-h-full font-sans text-[#111827] space-y-4", isUrdu && "font-urdu")} dir={isUrdu ? "rtl" : "ltr"}>
                 {/* Green Header */}
                 <MandiPageHeader
                     title={isUrdu ? t('expiry_gifts_section.title') : 'Expiry & Gifts'}
@@ -399,9 +399,9 @@ export default function ExpiryGiftsPage({
                     isUrdu={isUrdu}
                 >
                     <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-900/60 border border-emerald-600/60 text-emerald-100 shadow-2xs">
-                            <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
-                            <span>Live · har minute update</span>
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-white text-[#14532d] border border-white shadow-xs">
+                            <span className="size-2 rounded-full bg-emerald-600 animate-pulse" />
+                            <span>{isUrdu ? 'لائیو · ہر منٹ اپ ڈیٹ' : 'Live · har minute update'}</span>
                         </span>
                     </div>
                 </MandiPageHeader>
@@ -413,10 +413,10 @@ export default function ExpiryGiftsPage({
                             type="button"
                             onClick={() => setActiveTab('expiry')}
                             className={cn(
-                                "px-5 py-2 text-sm rounded-xl transition-all cursor-pointer font-bold border",
+                                "px-5 py-2 text-sm rounded-xl transition-all cursor-pointer border",
                                 activeTab === 'expiry'
-                                    ? "bg-[#14532d] text-white border-[#14532d] shadow-xs"
-                                    : "bg-white text-[#374151] border-gray-200 hover:bg-gray-50 font-semibold"
+                                    ? "bg-[#0d3b1e] text-white border-2 border-white font-bold shadow-xs"
+                                    : "bg-white text-[#14532d] border border-white hover:bg-emerald-50 font-semibold shadow-2xs"
                             )}
                         >
                             {isUrdu ? t('expiry_gifts_section.expiry_tab') : 'Expiry'}
@@ -426,10 +426,10 @@ export default function ExpiryGiftsPage({
                             type="button"
                             onClick={() => setActiveTab('gifts')}
                             className={cn(
-                                "px-5 py-2 text-sm rounded-xl transition-all cursor-pointer font-bold border",
+                                "px-5 py-2 text-sm rounded-xl transition-all cursor-pointer border",
                                 activeTab === 'gifts'
-                                    ? "bg-[#14532d] text-white border-[#14532d] shadow-xs"
-                                    : "bg-white text-[#374151] border-gray-200 hover:bg-gray-50 font-semibold"
+                                    ? "bg-[#0d3b1e] text-white border-2 border-white font-bold shadow-xs"
+                                    : "bg-white text-[#14532d] border border-white hover:bg-emerald-50 font-semibold shadow-2xs"
                             )}
                         >
                             {isUrdu ? t('expiry_gifts_section.gifts_tab') : 'Gifts'}
@@ -443,9 +443,9 @@ export default function ExpiryGiftsPage({
                                 {/* Card 1: 24 ghante mein expire */}
                                 <div className="bg-white p-4.5 rounded-xl border border-gray-200 shadow-2xs">
                                     <span className="text-xs font-bold text-[#4B5563] block">
-                                        24 ghante mein expire
+                                        {isUrdu ? '24 گھنٹے میں ایکسپائر' : '24 ghante mein expire'}
                                     </span>
-                                    <span className="text-2xl font-black text-[#111827] block mt-2">
+                                    <span className="text-2xl font-black text-[#111827] block mt-2 font-mono">
                                         {formatRs(expirySummary.card_24h_amount)}
                                     </span>
                                     <span className="text-xs font-medium text-[#4B5563] block mt-1">
@@ -456,9 +456,9 @@ export default function ExpiryGiftsPage({
                                 {/* Card 2: 3 din mein expire */}
                                 <div className="bg-white p-4.5 rounded-xl border border-gray-200 shadow-2xs">
                                     <span className="text-xs font-bold text-[#4B5563] block">
-                                        3 din mein expire
+                                        {isUrdu ? '3 دن میں ایکسپائر' : '3 din mein expire'}
                                     </span>
-                                    <span className="text-2xl font-black text-[#111827] block mt-2">
+                                    <span className="text-2xl font-black text-[#111827] block mt-2 font-mono">
                                         {formatRs(expirySummary.card_3d_amount)}
                                     </span>
                                     <span className="text-xs font-medium text-[#4B5563] block mt-1">
@@ -469,9 +469,9 @@ export default function ExpiryGiftsPage({
                                 {/* Card 3: Is mahine ka wastage */}
                                 <div className="bg-white p-4.5 rounded-xl border border-gray-200 shadow-2xs">
                                     <span className="text-xs font-bold text-[#4B5563] block">
-                                        Is mahine ka wastage
+                                        {isUrdu ? 'اس مہینے کا ضیاع (Wastage)' : 'Is mahine ka wastage'}
                                     </span>
-                                    <span className="text-2xl font-black text-[#111827] block mt-2">
+                                    <span className="text-2xl font-black text-[#111827] block mt-2 font-mono">
                                         {formatRs(expirySummary.is_mahine_wastage)}
                                     </span>
                                 </div>
@@ -479,9 +479,9 @@ export default function ExpiryGiftsPage({
                                 {/* Card 4: Wastage % (aamad par) */}
                                 <div className="bg-white p-4.5 rounded-xl border border-gray-200 shadow-2xs">
                                     <span className="text-xs font-bold text-[#4B5563] block">
-                                        Wastage % (aamad par)
+                                        {isUrdu ? 'ضیاع کا فیصد (آمد پر)' : 'Wastage % (aamad par)'}
                                     </span>
-                                    <span className="text-2xl font-black text-[#111827] block mt-2">
+                                    <span className="text-2xl font-black text-[#111827] block mt-2 font-mono">
                                         {expirySummary.wastage_percent}
                                     </span>
                                 </div>
@@ -493,12 +493,12 @@ export default function ExpiryGiftsPage({
                                     <table className="w-full text-start text-sm border-collapse">
                                         <thead>
                                             <tr className="bg-gray-50 border-b border-gray-200 text-[#4B5563] uppercase tracking-wider text-[11px] font-bold">
-                                                <th className="py-3.5 px-4 text-start">ITEM / LOT</th>
-                                                <th className="py-3.5 px-4 text-start">EXPIRY MEIN</th>
-                                                <th className="py-3.5 px-4 text-start">BAAKI</th>
-                                                <th className="py-3.5 px-4 text-start">NUQSAN</th>
-                                                <th className="py-3.5 px-4 text-center">STATUS</th>
-                                                <th className="py-3.5 px-4 text-center">ACTION</th>
+                                                <th className="py-3.5 px-4 text-start">{isUrdu ? 'سبزی / لاٹ' : 'ITEM / LOT'}</th>
+                                                <th className="py-3.5 px-4 text-start">{isUrdu ? 'ایکسپائری میں' : 'EXPIRY MEIN'}</th>
+                                                <th className="py-3.5 px-4 text-start">{isUrdu ? 'باقی مال' : 'BAAKI'}</th>
+                                                <th className="py-3.5 px-4 text-start">{isUrdu ? 'نقصان' : 'NUQSAN'}</th>
+                                                <th className="py-3.5 px-4 text-center">{isUrdu ? 'اسٹیٹس' : 'STATUS'}</th>
+                                                <th className="py-3.5 px-4 text-center">{isUrdu ? 'کارروائی' : 'ACTION'}</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-100 text-[#111827]">
@@ -522,26 +522,32 @@ export default function ExpiryGiftsPage({
 
                                                         {/* EXPIRY MEIN: Pure dark readable text */}
                                                         <td className="py-3.5 px-4 font-bold text-sm text-[#111827]">
-                                                            {lot.expiry_countdown.text}
+                                                            {isUrdu
+                                                                ? (lot.expiry_countdown.text.includes('Expire ho chuka')
+                                                                    ? 'ایکسپائر ہو چکا'
+                                                                    : lot.expiry_countdown.text.includes('Wastage likha gaya')
+                                                                        ? 'ضیاع لکھا گیا'
+                                                                        : lot.expiry_countdown.text.replace('din', 'دن').replace('h', ' گھنٹے').replace('m', ' منٹ'))
+                                                                : lot.expiry_countdown.text}
                                                         </td>
 
                                                         {/* BAAKI */}
-                                                        <td className="py-3.5 px-4 text-sm font-medium text-[#111827]">
-                                                            {formatNum(lot.quantity)} {lot.unit}
+                                                        <td className="py-3.5 px-4 text-sm font-medium text-[#111827] font-mono">
+                                                            <span dir="ltr" className="inline-block">{formatNum(lot.quantity)} {lot.unit}</span>
                                                         </td>
 
                                                         {/* NUQSAN */}
-                                                        <td className="py-3.5 px-4 text-sm font-bold text-[#111827]">
+                                                        <td className="py-3.5 px-4 text-sm font-bold text-[#111827] font-mono">
                                                             {formatNum(lot.nuqsan)}
                                                         </td>
 
                                                         {/* STATUS: Plain text, no colored badge */}
                                                         <td className="py-3.5 px-4 text-center text-xs font-semibold text-[#111827]">
                                                             {lot.status === 'expired'
-                                                                ? 'Expired'
+                                                                ? (isUrdu ? 'ایکسپائرڈ' : 'Expired')
                                                                 : lot.status === 'jaldi_bechein'
-                                                                    ? 'Jaldi bechein'
-                                                                    : 'Fresh'}
+                                                                    ? (isUrdu ? 'جلدی بیچیں' : 'Jaldi bechein')
+                                                                    : (isUrdu ? 'تازہ' : 'Fresh')}
                                                         </td>
 
                                                         {/* ACTION COLUMN: If remaining is 0 kg, show "—". Otherwise "Kya karein" button */}
@@ -554,7 +560,7 @@ export default function ExpiryGiftsPage({
                                                                     onClick={() => openKyaKareinModal(lot)}
                                                                     className="px-3.5 py-1.5 text-xs font-bold text-[#111827] hover:bg-gray-100 rounded-lg border border-gray-300 transition-colors cursor-pointer"
                                                                 >
-                                                                    Kya karein
+                                                                    {isUrdu ? 'کیا کریں؟' : 'Kya karein'}
                                                                 </button>
                                                             )}
                                                         </td>
@@ -576,9 +582,9 @@ export default function ExpiryGiftsPage({
                                 {/* Card 1: Is mahine gift ki value */}
                                 <div className="bg-white p-4.5 rounded-xl border border-gray-200 shadow-2xs">
                                     <span className="text-xs font-bold text-[#4B5563] block">
-                                        Is mahine gift ki value
+                                        {isUrdu ? 'اس مہینے تحائف کی مالیت' : 'Is mahine gift ki value'}
                                     </span>
-                                    <span className="text-2xl font-black text-[#111827] block mt-2">
+                                    <span className="text-2xl font-black text-[#111827] block mt-2 font-mono">
                                         {formatRs(giftSummary.current_month_value)}
                                     </span>
                                 </div>
@@ -586,9 +592,9 @@ export default function ExpiryGiftsPage({
                                 {/* Card 2: Budget baaki */}
                                 <div className="bg-white p-4.5 rounded-xl border border-gray-200 shadow-2xs">
                                     <span className="text-xs font-bold text-[#4B5563] block">
-                                        Budget baaki
+                                        {isUrdu ? 'باقی بچا بجٹ' : 'Budget baaki'}
                                     </span>
-                                    <span className="text-2xl font-black text-[#14532d] block mt-2">
+                                    <span className="text-2xl font-black text-[#14532d] block mt-2 font-mono">
                                         {formatRs(giftSummary.budget_baaki)}
                                     </span>
                                     {/* Progress Bar */}
@@ -598,7 +604,7 @@ export default function ExpiryGiftsPage({
                                             style={{ width: `${giftSummary.budget_progress_pct}%` }}
                                         />
                                     </div>
-                                    <span className="text-xs font-medium text-[#4B5563] block mt-1.5">
+                                    <span className="text-xs font-medium text-[#4B5563] block mt-1.5 font-mono">
                                         {giftSummary.budget_used_label}
                                     </span>
                                 </div>
@@ -606,13 +612,13 @@ export default function ExpiryGiftsPage({
                                 {/* Card 3: Sab se zyada gift lene wale */}
                                 <div className="bg-white p-4.5 rounded-xl border border-gray-200 shadow-2xs">
                                     <span className="text-xs font-bold text-[#4B5563] block">
-                                        Sab se zyada gift lene wale
+                                        {isUrdu ? 'سب سے زیادہ تحفہ لینے والے' : 'Sab se zyada gift lene wale'}
                                     </span>
                                     <div className="mt-2 space-y-1 text-xs font-semibold text-[#111827]">
                                         {giftSummary.top_recipients.map((r, i) => (
                                             <div key={i} className="flex items-center justify-between">
                                                 <span>{i + 1}. {r.name}</span>
-                                                <span className="font-bold text-[#14532d]">{formatNum(r.value)}</span>
+                                                <span className="font-bold text-[#14532d] font-mono">{formatNum(r.value)}</span>
                                             </div>
                                         ))}
                                     </div>
@@ -624,21 +630,21 @@ export default function ExpiryGiftsPage({
                                 {/* Left Side: Naya Gift Form (Starts completely empty) */}
                                 <div className="lg:col-span-5 bg-white rounded-xl border border-gray-200 p-5 shadow-2xs">
                                     <h3 className="text-base font-bold text-[#111827] mb-4">
-                                        Naya Gift
+                                        {isUrdu ? 'نیا تحفہ' : 'Naya Gift'}
                                     </h3>
 
                                     <form onSubmit={handleSaveGift} className="space-y-4">
                                         {/* Field 1: Item (sirf fresh lot) */}
                                         <div>
                                             <label className="text-xs font-semibold text-[#374151] block mb-1">
-                                                Item (sirf fresh lot)
+                                                {isUrdu ? 'سبزی (صرف تازہ لاٹ)' : 'Item (sirf fresh lot)'}
                                             </label>
                                             <select
                                                 value={giftLotId}
                                                 onChange={(e) => setGiftLotId(e.target.value)}
                                                 className="w-full h-11 px-3.5 text-xs font-medium text-[#111827] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] transition-all cursor-pointer"
                                             >
-                                                <option value="" disabled>Item select karein</option>
+                                                <option value="" disabled>{isUrdu ? 'سبزی منتخب کریں' : 'Item select karein'}</option>
                                                 {freshLots.map((lot) => (
                                                     <option key={lot.id} value={lot.id}>
                                                         {lot.name}
@@ -651,33 +657,33 @@ export default function ExpiryGiftsPage({
                                         <div className="grid grid-cols-2 gap-3">
                                             <div>
                                                 <label className="text-xs font-semibold text-[#374151] block mb-1">
-                                                    Quantity
+                                                    {isUrdu ? 'مقدار' : 'Quantity'}
                                                 </label>
                                                 <input
                                                     type="number"
                                                     value={giftQty}
                                                     onChange={(e) => setGiftQty(e.target.value)}
-                                                    placeholder="Quantity likhein"
+                                                    placeholder={isUrdu ? 'مقدار درج کریں' : 'Quantity likhein'}
                                                     min="0.1"
                                                     step="any"
-                                                    className="w-full h-11 px-3.5 text-sm font-medium text-[#111827] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] transition-all"
+                                                    className="w-full h-11 px-3.5 text-sm font-medium text-[#111827] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] transition-all font-mono"
                                                 />
                                             </div>
                                             <div>
                                                 <label className="text-xs font-semibold text-[#374151] block mb-1">
-                                                    Wajah
+                                                    {isUrdu ? 'وجہ' : 'Wajah'}
                                                 </label>
                                                 <select
                                                     value={giftReason}
                                                     onChange={(e) => setGiftReason(e.target.value)}
                                                     className="w-full h-11 px-3.5 text-xs font-medium text-[#111827] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] transition-all cursor-pointer"
                                                 >
-                                                    <option value="" disabled>Wajah select karein</option>
-                                                    <option value="Loyalty">Loyalty</option>
-                                                    <option value="Eid">Eid</option>
-                                                    <option value="Muawza">Muawza</option>
-                                                    <option value="Sample">Sample</option>
-                                                    <option value="Taaluqat">Taaluqat</option>
+                                                    <option value="" disabled>{isUrdu ? 'وجہ منتخب کریں' : 'Wajah select karein'}</option>
+                                                    <option value="Loyalty">{isUrdu ? 'وفاداری (Loyalty)' : 'Loyalty'}</option>
+                                                    <option value="Eid">{isUrdu ? 'عید تحفہ (Eid)' : 'Eid'}</option>
+                                                    <option value="Muawza">{isUrdu ? 'معاوضہ (Compensation)' : 'Muawza'}</option>
+                                                    <option value="Sample">{isUrdu ? 'نمونہ (Sample)' : 'Sample'}</option>
+                                                    <option value="Taaluqat">{isUrdu ? 'تعلقات (PR)' : 'Taaluqat'}</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -685,13 +691,13 @@ export default function ExpiryGiftsPage({
                                         {/* Field 3: Kis ko (optional) */}
                                         <div>
                                             <label className="text-xs font-semibold text-[#374151] block mb-1">
-                                                Kis ko (optional)
+                                                {isUrdu ? 'کس کو (اختیاری)' : 'Kis ko (optional)'}
                                             </label>
                                             <input
                                                 type="text"
                                                 value={giftRecipient}
                                                 onChange={(e) => setGiftRecipient(e.target.value)}
-                                                placeholder="Naam likhein (optional)"
+                                                placeholder={isUrdu ? 'نام درج کریں (اختیاری)' : 'Naam likhein (optional)'}
                                                 className="w-full h-11 px-3.5 text-sm font-medium text-[#111827] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] transition-all"
                                             />
                                         </div>
@@ -700,22 +706,22 @@ export default function ExpiryGiftsPage({
                                         <div className="p-3.5 rounded-xl bg-gray-50 border border-gray-200 text-xs space-y-1">
                                             <div className="flex items-center justify-between">
                                                 <span className="font-semibold text-[#374151]">
-                                                    Value (rate se khud)
+                                                    {isUrdu ? 'مالیت (نرخ کے حساب سے)' : 'Value (rate se khud)'}
                                                 </span>
-                                                <span className="font-bold text-sm text-[#111827]">
+                                                <span className="font-bold text-sm text-[#111827] font-mono">
                                                     {hasValidItemAndQty ? formatRs(calculatedGiftValue) : '—'}
                                                 </span>
                                             </div>
                                             <div className="flex items-center justify-between">
                                                 <span className="font-semibold text-[#374151]">
-                                                    Budget baaki hoga
+                                                    {isUrdu ? 'باقی بجٹ رہے گا' : 'Budget baaki hoga'}
                                                 </span>
-                                                <span className="font-bold text-sm text-[#14532d]">
+                                                <span className="font-bold text-sm text-[#14532d] font-mono">
                                                     {hasValidItemAndQty ? formatNum(projectedBudgetBaaki) : '—'}
                                                 </span>
                                             </div>
                                             <p className="text-[11px] text-[#4B5563] pt-1">
-                                                Rs. 2,000 se upar ke gift par owner approval lagta hai.
+                                                {isUrdu ? '2,000 روپے سے اوپر کے تحفے پر مالک کی منظوری درکار ہے۔' : 'Rs. 2,000 se upar ke gift par owner approval lagta hai.'}
                                             </p>
                                         </div>
 
@@ -730,7 +736,9 @@ export default function ExpiryGiftsPage({
                                                     : "bg-[#14532d] hover:bg-[#166534] text-white cursor-pointer"
                                             )}
                                         >
-                                            {isSubmittingGift ? 'Gift Save ho raha hai...' : 'Gift Save karein'}
+                                            {isSubmittingGift
+                                                ? (isUrdu ? 'محفوظ ہو رہا ہے...' : 'Gift Save ho raha hai...')
+                                                : (isUrdu ? 'تحفہ محفوظ کریں' : 'Gift Save karein')}
                                         </button>
                                     </form>
                                 </div>
@@ -741,17 +749,17 @@ export default function ExpiryGiftsPage({
                                         <table className="w-full text-start text-sm border-collapse">
                                             <thead>
                                                 <tr className="bg-gray-50 border-b border-gray-200 text-[#4B5563] uppercase tracking-wider text-[11px] font-bold">
-                                                    <th className="py-3.5 px-4 text-start">TAREEKH</th>
-                                                    <th className="py-3.5 px-4 text-start">KIS KO / ITEM</th>
-                                                    <th className="py-3.5 px-4 text-end">VALUE</th>
-                                                    <th className="py-3.5 px-4 text-center">WAJAH</th>
-                                                    <th className="py-3.5 px-4 text-center">VOUCHER</th>
+                                                    <th className="py-3.5 px-4 text-start">{isUrdu ? 'تاریخ' : 'TAREEKH'}</th>
+                                                    <th className="py-3.5 px-4 text-start">{isUrdu ? 'کس کو / سبزی' : 'KIS KO / ITEM'}</th>
+                                                    <th className="py-3.5 px-4 text-end">{isUrdu ? 'مالیت (Rs)' : 'VALUE'}</th>
+                                                    <th className="py-3.5 px-4 text-center">{isUrdu ? 'وجہ' : 'WAJAH'}</th>
+                                                    <th className="py-3.5 px-4 text-center">{isUrdu ? 'واؤچر' : 'VOUCHER'}</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-100 text-[#111827]">
                                                 {gifts.map((gift) => (
                                                     <tr key={gift.id} className="hover:bg-gray-50/70 transition-colors">
-                                                        <td className="py-3.5 px-4 text-xs font-semibold text-[#374151]">
+                                                        <td className="py-3.5 px-4 text-xs font-semibold text-[#374151] font-mono">
                                                             {gift.date}
                                                         </td>
                                                         <td className="py-3.5 px-4">
@@ -759,10 +767,10 @@ export default function ExpiryGiftsPage({
                                                                 {gift.recipient_name}
                                                             </span>
                                                             <span className="text-xs text-[#4B5563] block mt-0.5">
-                                                                {gift.item_name} {formatNum(gift.quantity)} {gift.unit}
+                                                                {gift.item_name} <span className="font-mono">{formatNum(gift.quantity)} {gift.unit}</span>
                                                             </span>
                                                         </td>
-                                                        <td className="py-3.5 px-4 text-end font-bold text-sm text-[#111827]">
+                                                        <td className="py-3.5 px-4 text-end font-bold text-sm text-[#111827] font-mono">
                                                             {formatNum(gift.value)}
                                                         </td>
                                                         <td className="py-3.5 px-4 text-center text-xs font-medium text-[#374151]">
@@ -778,7 +786,9 @@ export default function ExpiryGiftsPage({
                                     </div>
 
                                     <div className="p-3 text-xs text-[#6B7280] border-t border-gray-100 bg-gray-50/40">
-                                        Filter: Mahina · Wajah · Party · Item. Gift ki value Reports ke "Kharcha" mein live jati hai.
+                                        {isUrdu
+                                            ? 'فلٹر: مہینہ · وجہ · پارٹی · سبزی۔ تحفے کی مالیت رپورٹس کے "خرچہ" میں براہ راست شامل ہوتی ہے۔'
+                                            : 'Filter: Mahina · Wajah · Party · Item. Gift ki value Reports ke "Kharcha" mein live jati hai.'}
                                     </div>
                                 </div>
                             </div>
@@ -788,15 +798,15 @@ export default function ExpiryGiftsPage({
 
                 {/* ===================== "KYA KAREIN?" MODAL (Points 10 & 11) ===================== */}
                 <Dialog open={Boolean(kyaKareinLot)} onOpenChange={(open) => { if (!open) closeKyaKareinModal(); }}>
-                    <DialogContent className="max-w-2xl sm:max-w-3xl w-full p-6 bg-white rounded-2xl shadow-xl border border-gray-200">
+                    <DialogContent className={cn("max-w-2xl sm:max-w-3xl w-full p-6 bg-white rounded-2xl shadow-xl border border-gray-200", isUrdu && "font-urdu")} dir={isUrdu ? "rtl" : "ltr"}>
                         {kyaKareinLot && (
                             <>
                                 <DialogHeader className="border-b border-gray-100 pb-3">
                                     <DialogTitle className="text-xl font-bold text-[#111827]">
-                                        Kya karein?
+                                        {isUrdu ? 'کیا کریں؟' : 'Kya karein?'}
                                     </DialogTitle>
                                     <DialogDescription className="text-xs font-medium text-[#1F2937]">
-                                        Chuni hui lot par fori karwayi karein.
+                                        {isUrdu ? 'منتخب شدہ لاٹ پر فوری کارروائی کریں۔' : 'Chuni hui lot par fori karwayi karein.'}
                                     </DialogDescription>
                                 </DialogHeader>
 
@@ -804,35 +814,35 @@ export default function ExpiryGiftsPage({
                                 <div className="mt-3 p-4 bg-gray-50 rounded-xl border border-gray-200 text-xs">
                                     <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-200/70 pb-2">
                                         <div>
-                                            <span className="text-xs font-semibold text-[#1F2937] block">Item / Lot</span>
+                                            <span className="text-xs font-semibold text-[#1F2937] block">{isUrdu ? 'سبزی / لاٹ' : 'Item / Lot'}</span>
                                             <span className="text-base font-extrabold text-[#111827]">
-                                                {kyaKareinLot.item_name} · {kyaKareinLot.lot_code}
+                                                {kyaKareinLot.item_name} · <span className="font-mono">{kyaKareinLot.lot_code}</span>
                                             </span>
                                         </div>
                                         <div className="text-end">
-                                            <span className="text-xs font-semibold text-[#1F2937] block">Status</span>
+                                            <span className="text-xs font-semibold text-[#1F2937] block">{isUrdu ? 'اسٹیٹس' : 'Status'}</span>
                                             <span className="text-sm font-extrabold text-[#111827]">
                                                 {kyaKareinLot.status === 'expired'
-                                                    ? 'Expired'
+                                                    ? (isUrdu ? 'ایکسپائرڈ' : 'Expired')
                                                     : kyaKareinLot.status === 'jaldi_bechein'
-                                                        ? 'Jaldi bechein'
-                                                        : 'Fresh'}
+                                                        ? (isUrdu ? 'جلدی بیچیں' : 'Jaldi bechein')
+                                                        : (isUrdu ? 'تازہ' : 'Fresh')}
                                             </span>
                                         </div>
                                     </div>
 
                                     <div className="grid grid-cols-3 gap-2 pt-2.5">
                                         <div>
-                                            <span className="text-xs font-semibold text-[#1F2937] block">Expiry mein:</span>
+                                            <span className="text-xs font-semibold text-[#1F2937] block">{isUrdu ? 'ایکسپائری میں:' : 'Expiry mein:'}</span>
                                             <span className="font-extrabold text-[#111827] text-sm">{kyaKareinLot.expiry_countdown.text}</span>
                                         </div>
                                         <div>
-                                            <span className="text-xs font-semibold text-[#1F2937] block">Baaki maal:</span>
-                                            <span className="font-extrabold text-[#111827] text-sm">{formatNum(kyaKareinLot.quantity)} {kyaKareinLot.unit}</span>
+                                            <span className="text-xs font-semibold text-[#1F2937] block">{isUrdu ? 'باقی مال:' : 'Baaki maal:'}</span>
+                                            <span className="font-extrabold text-[#111827] text-sm font-mono">{formatNum(kyaKareinLot.quantity)} {kyaKareinLot.unit}</span>
                                         </div>
                                         <div className="text-end">
-                                            <span className="text-xs font-semibold text-[#1F2937] block">Asal Rate:</span>
-                                            <span className="font-extrabold text-[#111827] text-sm">Rs. {kyaKareinLot.rate}</span>
+                                            <span className="text-xs font-semibold text-[#1F2937] block">{isUrdu ? 'اصل ریٹ:' : 'Asal Rate:'}</span>
+                                            <span className="font-extrabold text-[#111827] text-sm font-mono">Rs. {kyaKareinLot.rate}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -853,15 +863,15 @@ export default function ExpiryGiftsPage({
                                                     : "text-[#374151] hover:text-[#111827]"
                                         )}
                                     >
-                                        Aaj sasti bechein
+                                        {isUrdu ? 'آج سستی بیچیں' : 'Aaj sasti bechein'}
                                     </button>
 
                                     {/* Action 2: Gift mein dein (Only for fresh) */}
                                     <button
                                         type="button"
                                         disabled={kyaKareinLot.status !== 'fresh'}
-                                        title={kyaKareinLot.status !== 'fresh' ? "Gift sirf fresh lot ke liye hai. Expire hone wale maal par gift band hai." : "Gift mein dein"}
-                                        aria-label={kyaKareinLot.status !== 'fresh' ? "Gift sirf fresh lot ke liye hai. Expire hone wale maal par gift band hai." : "Gift mein dein"}
+                                        title={kyaKareinLot.status !== 'fresh' ? (isUrdu ? "تحفہ صرف تازہ لاٹ کے لیے ہے۔ ایکسپائر ہونے والے مال پر تحفہ بند ہے۔" : "Gift sirf fresh lot ke liye hai. Expire hone wale maal par gift band hai.") : (isUrdu ? "تحفے میں دیں" : "Gift mein dein")}
+                                        aria-label={kyaKareinLot.status !== 'fresh' ? (isUrdu ? "تحفہ صرف تازہ لاٹ کے لیے ہے۔ ایکسپائر ہونے والے مال پر تحفہ بند ہے۔" : "Gift sirf fresh lot ke liye hai. Expire hone wale maal par gift band hai.") : (isUrdu ? "تحفے میں دیں" : "Gift mein dein")}
                                         onClick={() => setModalActionTab('gift')}
                                         className={cn(
                                             "py-2.5 px-3 text-xs sm:text-sm font-bold rounded-lg transition-all text-center whitespace-nowrap",
@@ -872,7 +882,7 @@ export default function ExpiryGiftsPage({
                                                     : "text-[#374151] hover:text-[#111827]"
                                         )}
                                     >
-                                        Gift mein dein
+                                        {isUrdu ? 'تحفے میں دیں' : 'Gift mein dein'}
                                     </button>
 
                                     {/* Action 3: Farmer ko wapas karein */}
@@ -886,7 +896,7 @@ export default function ExpiryGiftsPage({
                                                 : "text-[#374151] hover:text-[#111827]"
                                         )}
                                     >
-                                        Farmer ko wapas
+                                        {isUrdu ? 'کسان کو واپسی' : 'Farmer ko wapas'}
                                     </button>
 
                                     {/* Action 4: Wastage likhein */}
@@ -900,19 +910,19 @@ export default function ExpiryGiftsPage({
                                                 : "text-[#374151] hover:text-[#111827]"
                                         )}
                                     >
-                                        Wastage likhein
+                                        {isUrdu ? 'ضیاع لکھیں' : 'Wastage likhein'}
                                     </button>
                                 </div>
 
                                 {/* Status Notice for Actions */}
                                 {kyaKareinLot.status !== 'fresh' && (
                                     <div className="mt-2.5 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium text-[#1F2937]">
-                                        <strong className="text-[#111827]">Gift option:</strong> Sirf Fresh lot ke liye hai. Expire hone wale maal par gift band hai.
+                                        <strong className="text-[#111827]">{isUrdu ? 'تحفہ آپشن:' : 'Gift option:'}</strong> {isUrdu ? 'صرف تازہ لاٹ کے لیے ہے۔ ایکسپائر ہونے والے مال پر تحفہ بند ہے۔' : 'Sirf Fresh lot ke liye hai. Expire hone wale maal par gift band hai.'}
                                     </div>
                                 )}
                                 {kyaKareinLot.status === 'expired' && (
                                     <div className="mt-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium text-[#1F2937]">
-                                        <strong className="text-[#111827]">Expired Maal:</strong> Sasti sale aur gift band hain. Sirf Wastage likhein ya Farmer ko wapas karein.
+                                        <strong className="text-[#111827]">{isUrdu ? 'ایکسپائرڈ مال:' : 'Expired Maal:'}</strong> {isUrdu ? 'سستی سیل اور تحفہ بند ہیں۔ صرف ضیاع لکھیں یا کسان کو واپس کریں۔' : 'Sasti sale aur gift band hain. Sirf Wastage likhein ya Farmer ko wapas karein.'}
                                     </div>
                                 )}
 
@@ -920,30 +930,30 @@ export default function ExpiryGiftsPage({
                                 {modalActionTab === 'discount' && (
                                     <form onSubmit={handleModalDiscountSubmit} className="mt-4 space-y-3.5">
                                         {kyaKareinLot.status === 'expired' ? (
-                                            <div className="p-3 bg-gray-50 border border-gray-200 text-xs text-[#4B5563] rounded-lg">
-                                                Expired lot par sasti sale lagana mana hai. Baraye meherbani Wastage likhein ya Farmer ko wapas karein.
+                                             <div className="p-3 bg-gray-50 border border-gray-200 text-xs text-[#4B5563] rounded-lg">
+                                                {isUrdu ? 'ایکسپائرڈ لاٹ پر سستی سیل لگانا منع ہے۔ برائے مہربانی ضیاع لکھیں یا کسان کو واپس کریں۔' : 'Expired lot par sasti sale lagana mana hai. Baraye meherbani Wastage likhein ya Farmer ko wapas karein.'}
                                             </div>
                                         ) : (
                                             <>
                                                 <div className="grid grid-cols-2 gap-3">
                                                     <div>
                                                         <label className="text-xs font-bold text-[#111827] block mb-1">
-                                                            Naya Sasta Rate (Rs./{kyaKareinLot.unit}):
+                                                            {isUrdu ? `نیا سستا ریٹ (Rs./${kyaKareinLot.unit}):` : `Naya Sasta Rate (Rs./${kyaKareinLot.unit}):`}
                                                         </label>
                                                         <input
                                                             type="number"
                                                             value={actionDiscountRate}
                                                             onChange={(e) => setActionDiscountRate(e.target.value)}
-                                                            placeholder="Rate likhein"
+                                                            placeholder={isUrdu ? 'ریٹ درج کریں' : 'Rate likhein'}
                                                             min="1"
                                                             step="any"
                                                             required
-                                                            className="w-full h-11 px-3.5 text-base font-bold text-[#111827] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d]"
+                                                            className="w-full h-11 px-3.5 text-base font-bold text-[#111827] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] font-mono"
                                                         />
                                                     </div>
                                                     <div>
                                                         <label className="text-xs font-bold text-[#111827] block mb-1">
-                                                            Kitna ({kyaKareinLot.unit}):
+                                                            {isUrdu ? `کتنا (${kyaKareinLot.unit}):` : `Kitna (${kyaKareinLot.unit}):`}
                                                         </label>
                                                         <input
                                                             type="number"
@@ -954,7 +964,7 @@ export default function ExpiryGiftsPage({
                                                             max={kyaKareinLot.quantity}
                                                             step="any"
                                                             required
-                                                            className="w-full h-11 px-3.5 text-base font-bold text-[#111827] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d]"
+                                                            className="w-full h-11 px-3.5 text-base font-bold text-[#111827] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] font-mono"
                                                         />
                                                     </div>
                                                 </div>
@@ -965,14 +975,14 @@ export default function ExpiryGiftsPage({
                                                         onClick={closeKyaKareinModal}
                                                         className="flex-1 py-2.5 rounded-lg border border-gray-300 text-xs font-semibold text-[#374151] hover:bg-gray-50 cursor-pointer"
                                                     >
-                                                        Cancel
+                                                        {isUrdu ? 'منسوخ' : 'Cancel'}
                                                     </button>
                                                     <button
                                                         type="submit"
                                                         disabled={isSubmittingAction}
                                                         className="flex-1 py-2.5 rounded-lg bg-[#14532d] hover:bg-[#166534] text-xs font-bold text-white shadow-xs cursor-pointer"
                                                     >
-                                                        {isSubmittingAction ? 'Lagaya ja raha hai...' : 'Sasti Rate Lagayein'}
+                                                        {isSubmittingAction ? (isUrdu ? 'لگایا جا رہا ہے...' : 'Lagaya ja raha hai...') : (isUrdu ? 'سستا ریٹ لگائیں' : 'Sasti Rate Lagayein')}
                                                     </button>
                                                 </div>
                                             </>
@@ -985,14 +995,14 @@ export default function ExpiryGiftsPage({
                                     <form onSubmit={handleModalGiftSubmit} className="mt-4 space-y-3.5">
                                         {kyaKareinLot.status !== 'fresh' ? (
                                             <div className="p-3 bg-gray-50 border border-gray-200 text-xs text-[#4B5563] rounded-lg">
-                                                Gift sirf fresh lot ke liye hai. Expire hone wale ya expired maal par gift band hai.
+                                                {isUrdu ? 'تحفہ صرف تازہ لاٹ کے لیے ہے۔ ایکسپائر ہونے والے یا ایکسپائرڈ مال پر تحفہ بند ہے۔' : 'Gift sirf fresh lot ke liye hai. Expire hone wale ya expired maal par gift band hai.'}
                                             </div>
                                         ) : (
                                             <>
                                                 <div className="grid grid-cols-2 gap-3">
                                                     <div>
                                                         <label className="text-xs font-bold text-[#111827] block mb-1">
-                                                            Kitna Gift ({kyaKareinLot.unit}):
+                                                            {isUrdu ? `کتنا تحفہ (${kyaKareinLot.unit}):` : `Kitna Gift (${kyaKareinLot.unit}):`}
                                                         </label>
                                                         <input
                                                             type="number"
@@ -1002,36 +1012,36 @@ export default function ExpiryGiftsPage({
                                                             max={kyaKareinLot.quantity}
                                                             step="any"
                                                             required
-                                                            className="w-full h-11 px-3.5 text-base font-bold text-[#111827] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d]"
+                                                            className="w-full h-11 px-3.5 text-base font-bold text-[#111827] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] font-mono"
                                                         />
                                                     </div>
                                                     <div>
                                                         <label className="text-xs font-bold text-[#111827] block mb-1">
-                                                            Wajah:
+                                                            {isUrdu ? 'وجہ:' : 'Wajah:'}
                                                         </label>
                                                         <select
                                                             value={actionGiftReason}
                                                             onChange={(e) => setActionGiftReason(e.target.value)}
                                                             className="w-full h-11 px-3.5 text-xs font-medium text-[#111827] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] cursor-pointer"
                                                         >
-                                                            <option value="Loyalty">Loyalty</option>
-                                                            <option value="Eid">Eid</option>
-                                                            <option value="Muawza">Muawza</option>
-                                                            <option value="Sample">Sample</option>
-                                                            <option value="Taaluqat">Taaluqat</option>
+                                                            <option value="Loyalty">{isUrdu ? 'وفاداری (Loyalty)' : 'Loyalty'}</option>
+                                                            <option value="Eid">{isUrdu ? 'عید تحفہ (Eid)' : 'Eid'}</option>
+                                                            <option value="Muawza">{isUrdu ? 'معاوضہ (Compensation)' : 'Muawza'}</option>
+                                                            <option value="Sample">{isUrdu ? 'نمونہ (Sample)' : 'Sample'}</option>
+                                                            <option value="Taaluqat">{isUrdu ? 'تعلقات (PR)' : 'Taaluqat'}</option>
                                                         </select>
                                                     </div>
                                                 </div>
 
                                                 <div>
                                                     <label className="text-xs font-bold text-[#111827] block mb-1">
-                                                        Kis ko (optional):
+                                                        {isUrdu ? 'کس کو (اختیاری):' : 'Kis ko (optional):'}
                                                     </label>
                                                     <input
                                                         type="text"
                                                         value={actionGiftRecipient}
                                                         onChange={(e) => setActionGiftRecipient(e.target.value)}
-                                                        placeholder="Naam likhein (optional)"
+                                                        placeholder={isUrdu ? 'نام درج کریں (اختیاری)' : 'Naam likhein (optional)'}
                                                         className="w-full h-11 px-3.5 text-sm font-medium text-[#111827] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d]"
                                                     />
                                                 </div>
@@ -1042,14 +1052,14 @@ export default function ExpiryGiftsPage({
                                                         onClick={closeKyaKareinModal}
                                                         className="flex-1 py-2.5 rounded-lg border border-gray-300 text-xs font-semibold text-[#374151] hover:bg-gray-50 cursor-pointer"
                                                     >
-                                                        Cancel
+                                                        {isUrdu ? 'منسوخ' : 'Cancel'}
                                                     </button>
                                                     <button
                                                         type="submit"
                                                         disabled={isSubmittingAction}
                                                         className="flex-1 py-2.5 rounded-lg bg-[#14532d] hover:bg-[#166534] text-xs font-bold text-white shadow-xs cursor-pointer"
                                                     >
-                                                        {isSubmittingAction ? 'Record ho raha hai...' : 'Gift Record Karein'}
+                                                        {isSubmittingAction ? (isUrdu ? 'ریکارڈ ہو رہا ہے...' : 'Record ho raha hai...') : (isUrdu ? 'تحفہ ریکارڈ کریں' : 'Gift Record Karein')}
                                                     </button>
                                                 </div>
                                             </>
@@ -1063,7 +1073,7 @@ export default function ExpiryGiftsPage({
                                         <div className="grid grid-cols-2 gap-3">
                                             <div>
                                                 <label className="text-xs font-bold text-[#111827] block mb-1">
-                                                    Kitna ({kyaKareinLot.unit}):
+                                                    {isUrdu ? `کتنا (${kyaKareinLot.unit}):` : `Kitna (${kyaKareinLot.unit}):`}
                                                 </label>
                                                 <input
                                                     type="number"
@@ -1074,18 +1084,18 @@ export default function ExpiryGiftsPage({
                                                     max={kyaKareinLot.quantity}
                                                     step="any"
                                                     required
-                                                    className="w-full h-11 px-3.5 text-base font-bold text-[#111827] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d]"
+                                                    className="w-full h-11 px-3.5 text-base font-bold text-[#111827] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] font-mono"
                                                 />
                                             </div>
                                             <div>
                                                 <label className="text-xs font-bold text-[#111827] block mb-1">
-                                                    Kis Kisan Ko:
+                                                    {isUrdu ? 'کس کسان کو:' : 'Kis Kisan Ko:'}
                                                 </label>
                                                 <input
                                                     type="text"
                                                     value={actionReturnFarmer}
                                                     onChange={(e) => setActionReturnFarmer(e.target.value)}
-                                                    placeholder="Kisan ka naam"
+                                                    placeholder={isUrdu ? 'کسان کا نام' : 'Kisan ka naam'}
                                                     required
                                                     className="w-full h-11 px-3.5 text-sm font-medium text-[#111827] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d]"
                                                 />
@@ -1098,14 +1108,14 @@ export default function ExpiryGiftsPage({
                                                 onClick={closeKyaKareinModal}
                                                 className="flex-1 py-2.5 rounded-lg border border-gray-300 text-xs font-semibold text-[#374151] hover:bg-gray-50 cursor-pointer"
                                             >
-                                                Cancel
+                                                {isUrdu ? 'منسوخ' : 'Cancel'}
                                             </button>
                                             <button
                                                 type="submit"
                                                 disabled={isSubmittingAction}
                                                 className="flex-1 py-2.5 rounded-lg bg-[#14532d] hover:bg-[#166534] text-xs font-bold text-white shadow-xs cursor-pointer"
                                             >
-                                                {isSubmittingAction ? 'Tasdeeq ho rahi hai...' : 'Kisan Ko Wapsi Tasdeeq Karein'}
+                                                {isSubmittingAction ? (isUrdu ? 'تصدیق ہو رہی ہے...' : 'Tasdeeq ho rahi hai...') : (isUrdu ? 'کسان کو واپسی کی تصدیق کریں' : 'Kisan Ko Wapsi Tasdeeq Karein')}
                                             </button>
                                         </div>
                                     </form>
@@ -1117,7 +1127,7 @@ export default function ExpiryGiftsPage({
                                         <div className="grid grid-cols-2 gap-3">
                                             <div>
                                                 <label className="text-xs font-bold text-[#111827] block mb-1">
-                                                    Quantity ({kyaKareinLot.unit}):
+                                                    {isUrdu ? `مقدار (${kyaKareinLot.unit}):` : `Quantity (${kyaKareinLot.unit}):`}
                                                 </label>
                                                 <input
                                                     type="number"
@@ -1128,29 +1138,29 @@ export default function ExpiryGiftsPage({
                                                     max={kyaKareinLot.quantity}
                                                     step="any"
                                                     required
-                                                    className="w-full h-11 px-3.5 text-base font-bold text-[#111827] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d]"
+                                                    className="w-full h-11 px-3.5 text-base font-bold text-[#111827] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] font-mono"
                                                 />
                                             </div>
                                             <div>
                                                 <label className="text-xs font-bold text-[#111827] block mb-1">
-                                                    Wajah (Reason):
+                                                    {isUrdu ? 'وجہ (Reason):' : 'Wajah (Reason):'}
                                                 </label>
                                                 <select
                                                     value={actionWastageReason}
                                                     onChange={(e) => setActionWastageReason(e.target.value)}
                                                     className="w-full h-11 px-3.5 text-xs font-medium text-[#111827] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] cursor-pointer"
                                                 >
-                                                    <option value="Expire Maal">Expire Maal (Shelf life over)</option>
-                                                    <option value="Gal Sad Gaya">Gal Sad Gaya (Moisture damage)</option>
-                                                    <option value="Sukh Gaya">Sukh Gaya (Heat damage)</option>
-                                                    <option value="Raste ka Nuqsan">Raste ka Nuqsan (Transit damage)</option>
+                                                    <option value="Expire Maal">{isUrdu ? 'ایکسپائرڈ مال (شیلف لائف ختم)' : 'Expire Maal (Shelf life over)'}</option>
+                                                    <option value="Gal Sad Gaya">{isUrdu ? 'گل سڑ گیا (نمی کی خرابی)' : 'Gal Sad Gaya (Moisture damage)'}</option>
+                                                    <option value="Sukh Gaya">{isUrdu ? 'سوکھ گیا (گرمی کی خرابی)' : 'Sukh Gaya (Heat damage)'}</option>
+                                                    <option value="Raste ka Nuqsan">{isUrdu ? 'راستے کا نقصان (ٹرانسپورٹ)' : 'Raste ka Nuqsan (Transit damage)'}</option>
                                                 </select>
                                             </div>
                                         </div>
 
                                         <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 text-xs flex justify-between items-center">
-                                            <span className="text-[#4B5563]">Nuqsan Amount:</span>
-                                            <span className="font-bold text-sm text-[#111827]">
+                                            <span className="text-[#4B5563]">{isUrdu ? 'نقصان کی رقم:' : 'Nuqsan Amount:'}</span>
+                                            <span className="font-bold text-sm text-[#111827] font-mono">
                                                 {formatRs((parseFloat(actionWastageQty) || 0) * kyaKareinLot.rate)}
                                             </span>
                                         </div>
@@ -1161,14 +1171,14 @@ export default function ExpiryGiftsPage({
                                                 onClick={closeKyaKareinModal}
                                                 className="flex-1 py-2.5 rounded-lg border border-gray-300 text-xs font-semibold text-[#374151] hover:bg-gray-50 cursor-pointer"
                                             >
-                                                Cancel
+                                                {isUrdu ? 'منسوخ' : 'Cancel'}
                                             </button>
                                             <button
                                                 type="submit"
                                                 disabled={isSubmittingAction}
                                                 className="flex-1 py-2.5 rounded-lg bg-[#14532d] hover:bg-[#166534] text-xs font-bold text-white shadow-xs cursor-pointer"
                                             >
-                                                {isSubmittingAction ? 'Record ho raha hai...' : 'Wastage Record Karein'}
+                                                {isSubmittingAction ? (isUrdu ? 'ریکارڈ ہو رہا ہے...' : 'Record ho raha hai...') : (isUrdu ? 'ضیاع ریکارڈ کریں' : 'Wastage Record Karein')}
                                             </button>
                                         </div>
                                     </form>

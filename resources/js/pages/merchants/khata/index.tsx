@@ -190,7 +190,7 @@ export default function MerchantKhataIndex({
             />
 
             {/* Screen UI */}
-            <div className="-mt-4 -mx-4 -mb-4 pb-28 bg-[#eef2ee] min-h-full font-sans text-[#1a211c] print:hidden">
+            <div className={`-mt-4 -mx-4 -mb-4 pb-28 bg-[#eef2ee] min-h-full font-sans text-[#1a211c] print:hidden ${isUrdu ? 'font-urdu' : ''}`} dir={isUrdu ? 'rtl' : 'ltr'}>
                 {/* 1. Header Banner */}
                 <MandiPageHeader
                     title={isUrdu ? t('gahak_khata.title') : 'Gahak Khata (Dukandar / Customer Ledger)'}
@@ -214,52 +214,52 @@ export default function MerchantKhataIndex({
                         {/* Card 1: Market Ka Kul Baqaya */}
                         <div className="bg-white border border-emerald-200 rounded-xl p-3.5 shadow-2xs">
                             <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">
-                                Market Ka Kul Baqaya (Lena):
+                                {isUrdu ? 'مارکیٹ کا کل بقایا (لینا):' : 'Market Ka Kul Baqaya (Lena):'}
                             </span>
                             <div className="text-xl font-bold text-red-700 mt-1">
                                 {formatRs(topSummary?.total_receivable || 0)}
                             </div>
                             <span className="text-[10px] text-gray-500 mt-0.5 block">
-                                Dukandaron se wasool karna hai
+                                {isUrdu ? 'دکانداروں سے وصول کرنا ہے' : 'Dukandaron se wasool karna hai'}
                             </span>
                         </div>
 
                         {/* Card 2: Udhaar Wale Gahak */}
                         <div className="bg-white border border-emerald-200 rounded-xl p-3.5 shadow-2xs">
                             <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">
-                                Udhaar Wale Gahak:
+                                {isUrdu ? 'ادھار والے گاہک:' : 'Udhaar Wale Gahak:'}
                             </span>
                             <div className="text-xl font-bold text-gray-900 mt-1">
                                 {topSummary?.debt_customers_count || 0} / {topSummary?.total_customers || 0}
                             </div>
                             <span className="text-[10px] text-gray-500 mt-0.5 block">
-                                Jinke zimmay baqaya hai
+                                {isUrdu ? 'جن کے ذمے بقایا ہے' : 'Jinke zimmay baqaya hai'}
                             </span>
                         </div>
 
                         {/* Card 3: Aaj Ki Udhaar Farokht */}
                         <div className="bg-white border border-emerald-200 rounded-xl p-3.5 shadow-2xs">
                             <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">
-                                Aaj Ki Udhaar Farokht:
+                                {isUrdu ? 'آج کی ادھار فروخت:' : 'Aaj Ki Udhaar Farokht:'}
                             </span>
                             <div className="text-xl font-bold text-gray-900 mt-1">
                                 {formatRs(topSummary?.today_credit_sale || 0)}
                             </div>
                             <span className="text-[10px] text-gray-500 mt-0.5 block">
-                                Aaj ka naya udhaar
+                                {isUrdu ? 'آج کا نیا ادھار' : 'Aaj ka naya udhaar'}
                             </span>
                         </div>
 
                         {/* Card 4: Aaj Ki Wasooli */}
                         <div className="bg-white border border-emerald-200 rounded-xl p-3.5 shadow-2xs">
                             <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">
-                                Aaj Ki Wasooli (Recovered):
+                                {isUrdu ? 'آج کی وصولی (Recovered):' : 'Aaj Ki Wasooli (Recovered):'}
                             </span>
                             <div className="text-xl font-bold text-emerald-800 mt-1">
                                 {formatRs(topSummary?.today_recovery || 0)}
                             </div>
                             <span className="text-[10px] text-gray-500 mt-0.5 block">
-                                Aaj wasool shuda naqad
+                                {isUrdu ? 'آج وصول شدہ نقد' : 'Aaj wasool shuda naqad'}
                             </span>
                         </div>
                     </div>
@@ -269,9 +269,9 @@ export default function MerchantKhataIndex({
                         {/* Left Panel: Customer List (4 cols) */}
                         <div className="lg:col-span-4 bg-white border border-emerald-200 rounded-xl p-3.5 space-y-3 shadow-2xs">
                             <div className="flex items-center justify-between pb-2 border-b border-gray-100">
-                                <span className="font-bold text-xs text-gray-900">Gahak Muntakhib Karein</span>
+                                <span className="font-bold text-xs text-gray-900">{isUrdu ? 'گاہک منتخب کریں' : 'Gahak Muntakhib Karein'}</span>
                                 <span className="text-[11px] text-gray-500 font-medium">
-                                    {filteredMerchants.length} Dukandar
+                                    {isUrdu ? `${filteredMerchants.length} دکاندار` : `${filteredMerchants.length} Dukandar`}
                                 </span>
                             </div>
 
@@ -280,19 +280,19 @@ export default function MerchantKhataIndex({
                                 <div className="relative">
                                     <Icon
                                         name="MagnifyingGlass"
-                                        className="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-2.5"
+                                        className={`w-3.5 h-3.5 text-gray-400 absolute ${isUrdu ? 'right-2.5' : 'left-2.5'} top-2.5`}
                                     />
                                     <input
                                         type="text"
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        placeholder="Gahak ka naam ya phone..."
-                                        className="w-full pl-8 pr-2.5 py-1.5 border border-gray-300 rounded-lg text-xs text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition"
+                                        placeholder={isUrdu ? 'گاہک کا نام یا فون...' : 'Gahak ka naam ya phone...'}
+                                        className={`w-full ${isUrdu ? 'pr-8 pl-2.5' : 'pl-8 pr-2.5'} py-1.5 border border-gray-300 rounded-lg text-xs text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition`}
                                     />
                                 </div>
 
                                 <div className="flex items-center justify-between text-[11px]">
-                                    <span className="text-gray-600 font-medium">Sirf Baqaya Wale:</span>
+                                    <span className="text-gray-600 font-medium">{isUrdu ? 'صرف بقایا والے:' : 'Sirf Baqaya Wale:'}</span>
                                     <button
                                         type="button"
                                         onClick={() => setDebtOnly(!debtOnly)}
@@ -302,7 +302,7 @@ export default function MerchantKhataIndex({
                                                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                         }`}
                                     >
-                                        {debtOnly ? 'Haan' : 'Nahi'}
+                                        {debtOnly ? (isUrdu ? 'ہاں' : 'Haan') : (isUrdu ? 'نہیں' : 'Nahi')}
                                     </button>
                                 </div>
                             </div>
@@ -311,7 +311,7 @@ export default function MerchantKhataIndex({
                             <div className="max-h-[540px] overflow-y-auto space-y-1.5 pr-1">
                                 {filteredMerchants.length === 0 ? (
                                     <div className="py-8 text-center text-gray-400 text-xs">
-                                        Koi gahak nahi mila.
+                                        {isUrdu ? 'کوئی گاہک نہیں ملا۔' : 'Koi gahak nahi mila.'}
                                     </div>
                                 ) : (
                                     filteredMerchants.map((m) => {
@@ -323,7 +323,7 @@ export default function MerchantKhataIndex({
                                                 key={m.id}
                                                 type="button"
                                                 onClick={() => handleMerchantSelect(m.id)}
-                                                className={`w-full p-2.5 rounded-lg border text-left transition flex items-center justify-between cursor-pointer ${
+                                                className={`w-full p-2.5 rounded-lg border text-start transition flex items-center justify-between cursor-pointer ${
                                                     isSelected
                                                         ? 'bg-emerald-50/70 border-emerald-600 ring-1 ring-emerald-600/30'
                                                         : 'bg-white border-gray-200 hover:bg-gray-50'
@@ -343,11 +343,11 @@ export default function MerchantKhataIndex({
                                                         )}
                                                     </div>
                                                     <span className="text-[10px] text-gray-500 block truncate mt-0.5">
-                                                        {m.phone || m.city || 'Mandi Dukandar'}
+                                                        {m.phone || m.city || (isUrdu ? 'منڈی دکاندار' : 'Mandi Dukandar')}
                                                     </span>
                                                 </div>
 
-                                                <div className="text-right flex-shrink-0">
+                                                <div className="text-end flex-shrink-0">
                                                     <span
                                                         className={`text-xs font-bold block ${
                                                             hasDebt ? 'text-red-700' : 'text-emerald-800'
@@ -356,7 +356,7 @@ export default function MerchantKhataIndex({
                                                         {formatRs(m.balance)}
                                                     </span>
                                                     <span className="text-[9px] text-gray-400 font-medium">
-                                                        {hasDebt ? 'Lena Hai' : 'Saaf'}
+                                                        {hasDebt ? (isUrdu ? 'لینا ہے' : 'Lena Hai') : (isUrdu ? 'صاف' : 'Saaf')}
                                                     </span>
                                                 </div>
                                             </button>
@@ -380,7 +380,7 @@ export default function MerchantKhataIndex({
                                                         selectedMerchant.name_ur}
                                                 </h3>
                                                 <span className="bg-emerald-100 text-emerald-900 text-[10px] font-bold px-2 py-0.5 rounded capitalize">
-                                                    {selectedMerchant.customer_type || 'Dukandar'}
+                                                    {selectedMerchant.customer_type || (isUrdu ? 'دکاندار' : 'Dukandar')}
                                                 </span>
                                             </div>
                                             <div className="text-[11px] text-gray-600 mt-1 flex flex-wrap gap-3">
@@ -396,13 +396,13 @@ export default function MerchantKhataIndex({
                                                         <span>{selectedMerchant.city}</span>
                                                     </span>
                                                 )}
-                                                <span>Credit Limit: {formatRs(selectedMerchant.credit_limit)}</span>
+                                                <span>{isUrdu ? 'کریڈٹ لمٹ:' : 'Credit Limit:'} {formatRs(selectedMerchant.credit_limit)}</span>
                                             </div>
                                         </div>
 
-                                        <div className="text-left sm:text-right bg-white px-3 py-1.5 rounded-lg border border-emerald-200">
+                                        <div className="text-start sm:text-end bg-white px-3 py-1.5 rounded-lg border border-emerald-200">
                                             <span className="text-[10px] uppercase font-bold text-gray-500 block">
-                                                Baqaya Udhaar (Lena Hai):
+                                                {isUrdu ? 'بقایا ادھار (لینا ہے):' : 'Baqaya Udhaar (Lena Hai):'}
                                             </span>
                                             <span
                                                 className={`text-base font-bold block ${
@@ -420,17 +420,17 @@ export default function MerchantKhataIndex({
                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
                                         <div className="flex items-center flex-wrap gap-2.5">
                                             <span className="font-bold text-xs text-gray-900">
-                                                Khata Roznamcha Statement:
+                                                {isUrdu ? 'کھاتہ روزنامچہ اسٹیٹمنٹ:' : 'Khata Roznamcha Statement:'}
                                             </span>
                                             <div className="flex items-center gap-1.5 text-xs">
-                                                <span className="text-gray-500 text-[11px] font-medium">Se:</span>
+                                                <span className="text-gray-500 text-[11px] font-medium">{isUrdu ? 'سے:' : 'Se:'}</span>
                                                 <input
                                                     type="date"
                                                     value={fromDate}
                                                     onChange={(e) => handleDateChange(e.target.value, toDate)}
                                                     className="h-7.5 px-2 border border-gray-300 rounded text-xs text-gray-800 focus:outline-none focus:border-emerald-600 bg-white"
                                                 />
-                                                <span className="text-gray-500 text-[11px] font-medium">Tak:</span>
+                                                <span className="text-gray-500 text-[11px] font-medium">{isUrdu ? 'تک:' : 'Tak:'}</span>
                                                 <input
                                                     type="date"
                                                     value={toDate}
@@ -447,29 +447,28 @@ export default function MerchantKhataIndex({
                                                 className="bg-white hover:bg-emerald-50 text-emerald-900 border border-emerald-300 font-bold px-3 py-1.5 rounded-lg transition flex items-center space-x-1.5 text-xs cursor-pointer shadow-2xs"
                                             >
                                                 <Icon name="Printer" className="w-3.5 h-3.5" />
-                                                <span>Print Khata</span>
+                                                <span>{isUrdu ? 'پرنٹ کھاتہ' : 'Print Khata'}</span>
                                             </button>
                                         </div>
                                     </div>
 
                                     {/* Statement Table (Simplified 3 Columns: Pese Lena, Wasooli, Baqaya) */}
                                     <div className="overflow-x-auto border border-emerald-200 rounded-lg">
-                                        <table className="w-full text-left text-xs">
+                                        <table className="w-full text-start text-xs">
                                             <thead className="bg-emerald-50 text-gray-900 border-b border-emerald-200 font-bold">
                                                 <tr>
-                                                    <th className="py-2.5 px-4 text-start">Tafseel</th>
-                                                    <th className="py-2.5 px-4 text-start">Hawala</th>
-                                                    <th className="py-2.5 px-4 text-end text-red-700">Pese Lena</th>
-                                                    <th className="py-2.5 px-4 text-end text-emerald-800">Wasooli</th>
-                                                    <th className="py-2.5 px-4 text-end">Baqaya</th>
+                                                    <th className="py-2.5 px-4 text-start">{isUrdu ? 'تفصیل' : 'Tafseel'}</th>
+                                                    <th className="py-2.5 px-4 text-start">{isUrdu ? 'حوالہ' : 'Hawala'}</th>
+                                                    <th className="py-2.5 px-4 text-end text-red-700">{isUrdu ? 'پیسے لینا' : 'Pese Lena'}</th>
+                                                    <th className="py-2.5 px-4 text-end text-emerald-800">{isUrdu ? 'وصولی' : 'Wasooli'}</th>
+                                                    <th className="py-2.5 px-4 text-end">{isUrdu ? 'بقایا' : 'Baqaya'}</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-100">
                                                 {entries.length === 0 ? (
                                                     <tr>
                                                         <td colSpan={5} className="py-8 text-center text-gray-400">
-                                                            Is gahak ke khate mein is muddad mein koi entry mojood nahi
-                                                            hai.
+                                                            {isUrdu ? 'اس گاہک کے کھاتے میں اس مدت میں کوئی اندراج موجود نہیں ہے۔' : 'Is gahak ke khate mein is muddad mein koi entry mojood nahi hai.'}
                                                         </td>
                                                     </tr>
                                                 ) : (
@@ -498,7 +497,7 @@ export default function MerchantKhataIndex({
                                                 <tfoot className="bg-gray-50 font-bold border-t border-gray-200 text-xs">
                                                     <tr>
                                                         <td colSpan={2} className="py-2.5 px-4 text-start font-bold text-gray-800">
-                                                            Kul Total
+                                                            {isUrdu ? 'کل ٹوٹل' : 'Kul Total'}
                                                         </td>
                                                         <td className="py-2.5 px-4 text-end text-red-700 font-bold whitespace-nowrap">
                                                             {formatRs(statement?.total_debit || 0)}
@@ -517,8 +516,7 @@ export default function MerchantKhataIndex({
                                 </>
                             ) : (
                                 <div className="py-12 text-center text-gray-400 text-xs">
-                                    Bayein (left) taraf se kisi bhi gahak par click karein uska mukammal khata dekhne ke
-                                    liye.
+                                    {isUrdu ? 'بائیں جانب سے کسی بھی گاہک پر کلک کریں اس کا مکمل کھاتہ دیکھنے کے لیے۔' : 'Bayein (left) taraf se kisi bhi gahak par click karein uska mukammal khata dekhne ke liye.'}
                                 </div>
                             )}
                         </div>

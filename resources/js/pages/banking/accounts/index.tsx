@@ -292,9 +292,9 @@ export default function BankAccountsPage({ liveCashGalla = 48813.6, dbTransactio
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Bank Khata & Naqad Galla (Banking & Cash Accounts) - Vegetable POS" />
+            <Head title={isUrdu ? 'بینک کھاتہ اور نقد گلہ' : 'Bank Khata & Naqad Galla (Banking & Cash Accounts) - Vegetable POS'} />
 
-            <div className="-mt-4 -mx-4 -mb-4 pb-28 bg-[#eef2ee] min-h-full space-y-4">
+            <div className="-mt-4 -mx-4 -mb-4 pb-28 bg-[#eef2ee] min-h-full space-y-4" dir={isUrdu ? 'rtl' : 'ltr'}>
                 {/* Green Header Section */}
                 <MandiPageHeader
                     title={isUrdu ? t('banking.accounts_title') : 'Bank Khata & Naqad Galla (Banking & Cash Accounts)'}
@@ -319,7 +319,7 @@ export default function BankAccountsPage({ liveCashGalla = 48813.6, dbTransactio
                             {/* Top Row: Type Badge and Cash Icon */}
                             <div className="flex items-center justify-between">
                                 <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-200/80">
-                                    CASH GALLA
+                                    {isUrdu ? 'نقد گلہ' : 'CASH GALLA'}
                                 </span>
                                 <div className="text-emerald-700/70 p-1">
                                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -333,7 +333,7 @@ export default function BankAccountsPage({ liveCashGalla = 48813.6, dbTransactio
                             {/* Account Name & Code */}
                             <div className="mt-2.5">
                                 <h3 className="font-bold text-sm sm:text-base text-gray-900 dark:text-white leading-snug">
-                                    Mandi Naqad Galla (Cash Counter)
+                                    {isUrdu ? 'منڈی نقد گلہ (کاؤنٹر)' : 'Mandi Naqad Galla (Cash Counter)'}
                                 </h3>
                                 <p className="text-xs text-gray-400 font-mono mt-0.5 tracking-tight">
                                     CASH-01
@@ -344,7 +344,7 @@ export default function BankAccountsPage({ liveCashGalla = 48813.6, dbTransactio
                         {/* Mojooda Balance */}
                         <div className="mt-3 pt-2 border-t border-gray-100 dark:border-border flex items-baseline justify-between">
                             <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-                                Mojooda Balance:
+                                {isUrdu ? 'موجودہ بیلنس:' : 'Mojooda Balance:'}
                             </span>
                             <span className="text-base sm:text-lg font-black text-gray-900 dark:text-white">
                                 {formatCurrency(liveCashGalla)}
@@ -355,7 +355,9 @@ export default function BankAccountsPage({ liveCashGalla = 48813.6, dbTransactio
                     {/* Cards 2+: Bank & Mobile Wallet Accounts */}
                     {accounts.map((acc) => {
                         const isWallet = acc.type === 'Wallet' || (acc.rawType && acc.rawType.includes('Wallet'));
-                        const typeLabel = isWallet ? 'MOBILE WALLET' : 'BANK ACCOUNT';
+                        const typeLabel = isWallet 
+                            ? (isUrdu ? 'موبائل والیٹ' : 'MOBILE WALLET') 
+                            : (isUrdu ? 'بینک اکاؤنٹ' : 'BANK ACCOUNT');
 
                         return (
                             <div
@@ -424,7 +426,7 @@ export default function BankAccountsPage({ liveCashGalla = 48813.6, dbTransactio
                                 {/* Mojooda Balance */}
                                 <div className="mt-3 pt-2 border-t border-gray-100 dark:border-border flex items-baseline justify-between">
                                     <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-                                        Mojooda Balance:
+                                        {isUrdu ? 'موجودہ بیلنس:' : 'Mojooda Balance:'}
                                     </span>
                                     <span className="text-base sm:text-lg font-black text-gray-900 dark:text-white">
                                         {formatCurrency(acc.current_balance)}

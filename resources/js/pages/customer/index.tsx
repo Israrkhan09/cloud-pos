@@ -219,7 +219,7 @@ export default function CustomerIndex({ customers = [], filters }: Props) {
             <Head title={isUrdu ? 'گاہک مینجمنٹ - جے کے سی' : 'Customer Management - Vegetable POS'} />
 
             {/* Main Outer Container */}
-            <div className="-mt-4 -mx-4 -mb-4 pb-28 bg-[#eef2ee] min-h-full font-sans text-gray-900" dir={isUrdu ? 'rtl' : 'ltr'}>
+            <div className={`-mt-4 -mx-4 -mb-4 pb-28 bg-[#eef2ee] min-h-full font-sans text-gray-900 ${isUrdu ? 'font-urdu' : ''}`} dir={isUrdu ? 'rtl' : 'ltr'}>
                 
                 {/* Green Header Banner */}
                 <MandiPageHeader
@@ -391,7 +391,7 @@ export default function CustomerIndex({ customers = [], filters }: Props) {
             {/* MODAL 1: NAYA GAHAK SHAMIL KAREIN / EDIT GAHAK */}
             {(isCreateOpen || editingCustomer) && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in duration-150">
-                    <div className="bg-white rounded-2xl border border-gray-200 shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+                    <div className={`bg-white rounded-2xl border border-gray-200 shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh] ${isUrdu ? 'font-urdu' : ''}`} dir={isUrdu ? 'rtl' : 'ltr'}>
                         {/* Modal Header */}
                         <div className="bg-[#1e713e] text-white px-5 py-3.5 flex items-center justify-between">
                             <h3 className="text-base font-bold">
@@ -548,7 +548,7 @@ export default function CustomerIndex({ customers = [], filters }: Props) {
             {/* MODAL 2: KHATA DEKHEIN */}
             {khataCustomer && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in duration-150">
-                    <div className="bg-white rounded-2xl border border-gray-200 shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                    <div className={`bg-white rounded-2xl border border-gray-200 shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] ${isUrdu ? 'font-urdu' : ''}`} dir={isUrdu ? 'rtl' : 'ltr'}>
                         {/* Header: Name, Phone, Area */}
                         <div className="bg-[#1e713e] text-white px-5 py-4 flex items-center justify-between">
                             <div>

@@ -99,9 +99,9 @@ export default function InvestmentHeader({
                         <button
                             type="button"
                             onClick={onOpenEntry}
-                            className="min-h-[36px] px-4 py-1.5 rounded-xl text-xs sm:text-sm font-semibold bg-white text-emerald-900 hover:bg-emerald-50 shadow-xs transition-colors flex items-center gap-2 cursor-pointer"
+                            className="min-h-[36px] px-4 py-1.5 rounded-xl text-xs sm:text-sm font-bold bg-white text-[#14532d] hover:bg-emerald-50 border border-white shadow-xs transition-colors flex items-center gap-2 cursor-pointer"
                         >
-                            <Icon name="Plus" className="size-4 stroke-[3] text-emerald-900" />
+                            <Icon name="Plus" className="size-4 stroke-[3] text-[#14532d]" />
                             <span>{isUrdu ? 'نئی اینٹری' : 'Nayi Entry'}</span>
                         </button>
                     </div>
@@ -120,8 +120,8 @@ export default function InvestmentHeader({
                             className={cn(
                                 "min-h-[34px] px-4 py-1.5 rounded-xl text-xs sm:text-sm transition-all whitespace-nowrap flex items-center gap-1.5 border",
                                 isActive
-                                    ? "bg-[#20693e] text-white border-emerald-500 font-bold shadow-xs"
-                                    : "bg-emerald-900/60 text-emerald-100 hover:bg-[#20693e]/60 border-emerald-700/50 font-medium"
+                                    ? "bg-[#0d3b1e] text-white border-2 border-white font-bold shadow-xs"
+                                    : "bg-white text-[#14532d] hover:bg-emerald-50 border border-white font-semibold shadow-2xs"
                             )}
                         >
                             <span>{tab.title}</span>

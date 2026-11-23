@@ -67,7 +67,7 @@ export function AppSidebar() {
     };
 
     return (
-        <Sidebar collapsible="icon" variant="sidebar" side={isUrdu ? "right" : "left"} className={cn("shadow-xs", isUrdu ? "border-s" : "border-e")}>
+        <Sidebar collapsible="icon" variant="sidebar" side={isUrdu ? "right" : "left"} className={cn("shadow-xs", isUrdu ? "border-s font-urdu" : "border-e")}>
             {/* Sidebar Branding Header */}
             <SidebarHeader className="border-b px-3 py-2.5">
                 <SidebarMenu>

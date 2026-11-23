@@ -344,9 +344,9 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Database Backup aur Restore - Vegetable POS" />
+            <Head title={isUrdu ? 'ڈیٹا بیس بیک اپ اور بحالی' : 'Database Backup aur Restore - Vegetable POS'} />
 
-            <div className="-mt-4 -mx-4 -mb-4 pb-28 bg-[#eef2ee] min-h-full space-y-4">
+            <div className={`-mt-4 -mx-4 -mb-4 pb-28 bg-[#eef2ee] min-h-full space-y-4 ${isUrdu ? 'font-urdu' : ''}`} dir={isUrdu ? 'rtl' : 'ltr'}>
                 {/* 1. Green Header Section */}
                 <MandiPageHeader
                     title={isUrdu ? t('backup_mandi.title') : 'Database Backup aur Restore'}
@@ -357,9 +357,9 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                     <button
                         type="button"
                         onClick={handleFullDbDownload}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-gray-50 text-gray-800 border border-gray-300 text-xs sm:text-sm font-semibold shadow-2xs transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-emerald-50 text-[#14532d] border border-white text-xs sm:text-sm font-bold shadow-xs transition-colors cursor-pointer"
                     >
-                        <Icon name="Database" className="size-4 text-gray-700" weight="bold" />
+                        <Icon name="Database" className="size-4 text-[#14532d]" weight="bold" />
                         <span>{isUrdu ? t('backup_mandi.full_db_backup') : 'Full Database Backup (DB)'}</span>
                     </button>
 
@@ -368,11 +368,11 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                         type="button"
                         onClick={handleCreateBackup}
                         disabled={creatingBackup}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#20693e] hover:bg-[#287d4a] text-white text-xs sm:text-sm font-bold shadow-xs transition-colors cursor-pointer disabled:opacity-50 border border-emerald-500/50"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white hover:bg-emerald-50 text-[#14532d] border border-white text-xs sm:text-sm font-bold shadow-xs transition-colors cursor-pointer disabled:opacity-50"
                     >
                         <Icon
                             name={creatingBackup ? "SpinnerGap" : "CloudArrowUp"}
-                            className={`size-4 ${creatingBackup ? 'animate-spin' : ''}`}
+                            className={`size-4 text-[#14532d] ${creatingBackup ? 'animate-spin' : ''}`}
                             weight="bold"
                         />
                         <span>{creatingBackup ? (isUrdu ? t('backup_mandi.backup_in_progress') : 'Backup Ban Raha Hai...') : (isUrdu ? t('backup_mandi.new_backup') : 'Abhi Naya Backup Banayein')}</span>
@@ -421,10 +421,12 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                     </div>
                     <div className="space-y-1">
                         <h4 className="font-bold text-emerald-950 dark:text-emerald-200 text-sm">
-                            Khud-kaar (Automatic) Backup Nizam Fa-aal Hai
+                            {isUrdu ? 'خودکار (Automatic) بیک اپ نظام فعال ہے' : 'Khud-kaar (Automatic) Backup Nizam Fa-aal Hai'}
                         </h4>
                         <p className="text-emerald-900/90 dark:text-emerald-300/90 leading-relaxed text-xs sm:text-[13px]">
-                            Aap ka POS system har 6 ghante baad SQLite database ka mukammal snapshot backup banata hai aur aakhri 15 backups mehfooz rakhta hai. Kisi bhi waqt aap manual backup create karke apne computer ya USB drive par download kar sakte hain.
+                            {isUrdu
+                                ? 'آپ کا POS سسٹم ہر 6 گھنٹے بعد SQLite ڈیٹا بیس کا مکمل اسنیپ شاٹ بیک اپ بناتا ہے اور آخری 15 بیک اپ محفوظ رکھتا ہے۔ کسی بھی وقت آپ خود بیک اپ بنا کر اپنے کمپیوٹر یا USB ڈرائیو پر ڈاؤن لوڈ کر سکتے ہیں۔'
+                                : 'Aap ka POS system har 6 ghante baad SQLite database ka mukammal snapshot backup banata hai aur aakhri 15 backups mehfooz rakhta hai. Kisi bhi waqt aap manual backup create karke apne computer ya USB drive par download kar sakte hain.'}
                         </p>
                     </div>
                 </div>
@@ -435,7 +437,7 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                     <div className="lg:col-span-8 bg-white dark:bg-card border border-emerald-200/80 dark:border-border rounded-2xl p-4 sm:p-5 shadow-xs space-y-3.5">
                         <div className="flex items-center justify-between pb-1 border-b border-gray-100 dark:border-gray-800">
                             <h3 className="font-bold text-sm sm:text-base text-gray-900 dark:text-white">
-                                Server Par Mojood Backups List
+                                {isUrdu ? 'سرور پر موجود بیک اپ لسٹ' : 'Server Par Mojood Backups List'}
                             </h3>
                             <button
                                 type="button"
@@ -448,25 +450,27 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                                     className={`size-3.5 ${loadingBackups ? 'animate-spin' : ''}`}
                                     weight="bold"
                                 />
-                                <span>Taaza Karein</span>
+                                <span>{isUrdu ? 'تازہ کریں' : 'Taaza Karein'}</span>
                             </button>
                         </div>
 
                         <div className="overflow-x-auto border border-gray-200 dark:border-gray-800 rounded-xl">
-                            <table className="w-full text-left text-xs sm:text-[13px]">
+                            <table className="w-full text-start text-xs sm:text-[13px]">
                                 <thead className="bg-emerald-50/70 dark:bg-muted text-gray-800 dark:text-gray-200 border-b border-emerald-100 dark:border-border font-bold">
                                     <tr>
-                                        <th className="py-2.5 px-3.5">File Ka Naam</th>
-                                        <th className="py-2.5 px-3.5">Size</th>
-                                        <th className="py-2.5 px-3.5">Banane Ka Waqt</th>
-                                        <th className="py-2.5 px-3.5 text-center">Download</th>
+                                        <th className="py-2.5 px-3.5 text-start">{isUrdu ? 'فائل کا نام' : 'File Ka Naam'}</th>
+                                        <th className="py-2.5 px-3.5 text-start">{isUrdu ? 'سائز' : 'Size'}</th>
+                                        <th className="py-2.5 px-3.5 text-start">{isUrdu ? 'بنانے کا وقت' : 'Banane Ka Waqt'}</th>
+                                        <th className="py-2.5 px-3.5 text-center">{isUrdu ? 'ڈاؤن لوڈ' : 'Download'}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                                     {backupsList.length === 0 ? (
                                         <tr>
                                             <td colSpan={4} className="py-8 text-center text-gray-400 dark:text-gray-500 text-xs">
-                                                Abhi koi backup file server par mojood nahi hai. Upar diye gaye button se backup banayein.
+                                                {isUrdu
+                                                    ? 'ابھی کوئی بیک اپ فائل سرور پر موجود نہیں ہے۔ اوپر دیے گئے بٹن سے بیک اپ بنائیں۔'
+                                                    : 'Abhi koi backup file server par mojood nahi hai. Upar diye gaye button se backup banayein.'}
                                             </td>
                                         </tr>
                                     ) : (
@@ -475,20 +479,20 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                                                 <td className="py-2.5 px-3.5 font-mono font-bold text-emerald-900 dark:text-emerald-400">
                                                     {b.filename}
                                                 </td>
-                                                <td className="py-2.5 px-3.5 text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                                                <td className="py-2.5 px-3.5 text-gray-600 dark:text-gray-400 whitespace-nowrap font-mono">
                                                     {b.size_kb} KB
                                                 </td>
-                                                <td className="py-2.5 px-3.5 text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                                                <td className="py-2.5 px-3.5 text-gray-600 dark:text-gray-400 whitespace-nowrap font-mono">
                                                     {b.formatted_time || new Date(b.created_at).toLocaleString('ur-PK')}
                                                 </td>
-                                                <td className="py-2.5 px-3.5 text-center">
+                                                <td className="py-2.5 px-3.5 text-center whitespace-nowrap">
                                                     <button
                                                         type="button"
                                                         onClick={() => handleDownloadServerBackup(b.filename)}
-                                                        className="bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 px-3 py-1 rounded-lg text-xs font-bold transition inline-flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                                                        className="bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 px-3 py-1 rounded-lg text-xs font-bold transition inline-flex items-center gap-1.5 cursor-pointer shadow-2xs whitespace-nowrap"
                                                     >
                                                         <Icon name="DownloadSimple" className="size-3.5" weight="bold" />
-                                                        <span>Download</span>
+                                                        <span>{isUrdu ? 'ڈاؤن لوڈ' : 'Download'}</span>
                                                     </button>
                                                 </td>
                                             </tr>
@@ -502,24 +506,26 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                     {/* Right Card: Database Restore Karein (4 cols) */}
                     <div className="lg:col-span-4 bg-white dark:bg-card border border-emerald-200/90 dark:border-border rounded-2xl p-4 sm:p-5 shadow-xs space-y-4">
                         <h3 className="font-bold text-sm sm:text-base text-gray-900 dark:text-white border-b border-gray-100 dark:border-gray-800 pb-2">
-                            Database Restore Karein
+                            {isUrdu ? 'ڈیٹا بیس بحال کریں (Restore)' : 'Database Restore Karein'}
                         </h3>
 
                         {/* Ihtiyaat Warning Box */}
                         <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60 p-3 rounded-xl text-amber-900 dark:text-amber-300 text-xs space-y-1 shadow-2xs">
                             <div className="flex items-center gap-1.5 font-bold text-amber-950 dark:text-amber-200">
                                 <Icon name="Warning" className="size-4 text-amber-600 shrink-0" weight="fill" />
-                                <span>Ihtiyaat:</span>
+                                <span>{isUrdu ? 'احتیاط:' : 'Ihtiyaat:'}</span>
                             </div>
                             <p className="leading-relaxed">
-                                Restore karne se aap ki purani database file tabdeel ho jayegi. System hifazat ke liye pehle mojooda database ka safety backup khud bana lega.
+                                {isUrdu
+                                    ? 'بحال کرنے سے آپ کی پرانی ڈیٹا بیس فائل تبدیل ہو جائے گی۔ سسٹم حفاظت کے لیے پہلے موجودہ ڈیٹا بیس کا سیفٹی بیک اپ خود بنا لے گا۔'
+                                    : 'Restore karne se aap ki purani database file tabdeel ho jayegi. System hifazat ke liye pehle mojooda database ka safety backup khud bana lega.'}
                             </p>
                         </div>
 
                         <form onSubmit={handleRestoreClick} className="space-y-3.5 text-xs sm:text-sm">
                             <div>
                                 <label className="block font-bold text-gray-900 dark:text-gray-100 mb-1.5 text-xs sm:text-[13px]">
-                                    Backup File (.db) Muntakhib Karein:
+                                    {isUrdu ? 'بیک اپ فائل (.db) منتخب کریں:' : 'Backup File (.db) Muntakhib Karein:'}
                                 </label>
                                 <input
                                     type="file"
@@ -529,7 +535,7 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                                 />
                                 {selectedFile && (
                                     <div className="mt-1.5 text-[11px] text-emerald-800 dark:text-emerald-400 font-mono font-medium">
-                                        Muntakhib: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
+                                        {isUrdu ? 'منتخب شدہ: ' : 'Muntakhib: '}{selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
                                     </div>
                                 )}
                             </div>
@@ -544,7 +550,7 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                                     className={`size-4 ${restoring ? 'animate-spin' : ''}`}
                                     weight="bold"
                                 />
-                                <span>{restoring ? 'Restore Ho Raha Hai...' : 'Database Restore Karein'}</span>
+                                <span>{restoring ? (isUrdu ? 'بحال ہو رہا ہے...' : 'Restore Ho Raha Hai...') : (isUrdu ? 'ڈیٹا بیس بحال کریں' : 'Database Restore Karein')}</span>
                             </button>
                         </form>
                     </div>
@@ -556,23 +562,23 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-800 gap-2">
                         <div>
                             <h3 className="font-bold text-base sm:text-lg text-gray-900 dark:text-white">
-                                Category-wise Data Backup
+                                {isUrdu ? 'کیٹیگری وار ڈیٹا بیک اپ' : 'Category-wise Data Backup'}
                             </h3>
                             <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                                Har category alag se preview karein, phir Excel ya DB file download karein
+                                {isUrdu ? 'ہر کیٹیگری الگ سے پریویو کریں، پھر ایکسل یا DB فائل ڈاؤن لوڈ کریں' : 'Har category alag se preview karein, phir Excel ya DB file download karein'}
                             </p>
                         </div>
 
                         <div className="flex items-center gap-2 self-start sm:self-auto">
                             <span className="bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-xs font-bold px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
-                                5 Categories
+                                {categoryList.length} {isUrdu ? 'کیٹیگریز' : 'Categories'}
                             </span>
                             <button
                                 type="button"
                                 onClick={fetchCategories}
                                 disabled={loadingCategories}
                                 className="text-gray-500 hover:text-emerald-800 dark:hover:text-emerald-300 p-1 rounded-lg transition cursor-pointer"
-                                title="Category counts taaza karein"
+                                title={isUrdu ? 'کیٹیگری کی تعداد تازہ کریں' : 'Category counts taaza karein'}
                             >
                                 <Icon
                                     name="ArrowClockwise"
@@ -610,8 +616,8 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                                                 <span className="font-bold text-sm sm:text-base text-gray-900 dark:text-white">
                                                     {cat.name}
                                                 </span>
-                                                <span className="text-[11px] font-semibold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-muted px-2.5 py-0.5 rounded-full border border-gray-200 dark:border-gray-700">
-                                                    {cat.record_count} records
+                                                <span className="text-[11px] font-semibold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-muted px-2.5 py-0.5 rounded-full border border-gray-200 dark:border-gray-700 font-mono">
+                                                    {cat.record_count} {isUrdu ? 'ریکارڈز' : 'records'}
                                                 </span>
                                             </div>
                                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
@@ -621,7 +627,7 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                                     </div>
 
                                     {/* Right: 3 Buttons (Preview, Excel, DB) */}
-                                    <div className="flex items-center gap-2 self-start md:self-auto pl-13 md:pl-0">
+                                    <div className="flex items-center gap-2 self-start md:self-auto">
                                         {/* Button 1: Preview */}
                                         <button
                                             type="button"
@@ -634,7 +640,7 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                                                 className={`size-3.5 ${previewLoading ? 'animate-spin' : ''}`}
                                                 weight="bold"
                                             />
-                                            <span>Preview</span>
+                                            <span>{isUrdu ? 'پریویو' : 'Preview'}</span>
                                         </button>
 
                                         {/* Button 2: Excel */}
@@ -676,25 +682,25 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
 
                 {/* 6. Confirmation Modal for Database Restore */}
                 <Dialog open={confirmModalOpen} onOpenChange={setConfirmModalOpen}>
-                    <DialogContent className="max-w-md p-6 bg-white dark:bg-card rounded-2xl border border-red-300 dark:border-red-900 shadow-2xl">
+                    <DialogContent className={`max-w-md p-6 bg-white dark:bg-card rounded-2xl border border-red-300 dark:border-red-900 shadow-2xl ${isUrdu ? 'font-urdu' : ''}`} dir={isUrdu ? 'rtl' : 'ltr'}>
                         <DialogHeader>
                             <div className="flex items-center gap-2.5 text-red-600 mb-2">
                                 <Icon name="WarningCircle" className="size-6 text-red-600" weight="fill" />
                                 <DialogTitle className="text-lg font-bold text-gray-900 dark:text-white">
-                                    Restore Ki Tasdeeq (Confirmation)
+                                    {isUrdu ? 'بحالی کی تصدیق (Confirmation)' : 'Restore Ki Tasdeeq (Confirmation)'}
                                 </DialogTitle>
                             </div>
                         </DialogHeader>
 
                         <div className="space-y-3 text-xs sm:text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
                             <p className="font-bold text-red-700 dark:text-red-400">
-                                Kya aap waqai restore karna chahte hain? Maujooda data badal jayega.
+                                {isUrdu ? 'کیا آپ واقعی بحال کرنا چاہتے ہیں؟ موجودہ ڈیٹا بدل جائے گا۔' : 'Kya aap waqai restore karna chahte hain? Maujooda data badal jayega.'}
                             </p>
                             <p className="text-gray-500 text-xs">
-                                Muntakhib file: <strong className="font-mono text-gray-800 dark:text-gray-200">{selectedFile?.name}</strong>
+                                {isUrdu ? 'منتخب فائل: ' : 'Muntakhib file: '}<strong className="font-mono text-gray-800 dark:text-gray-200">{selectedFile?.name}</strong>
                             </p>
                             <p className="text-xs text-gray-500 bg-gray-50 dark:bg-muted p-2.5 rounded-xl border border-gray-200 dark:border-gray-700">
-                                System hifazat ke liye pehle maujooda database ka safety backup automatically bana lega.
+                                {isUrdu ? 'سسٹم حفاظت کے لیے پہلے موجودہ ڈیٹا بیس کا سیفٹی بیک اپ خودکار طریقے سے بنا لے گا۔' : 'System hifazat ke liye pehle maujooda database ka safety backup automatically bana lega.'}
                             </p>
                         </div>
 
@@ -704,14 +710,14 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                                 onClick={() => setConfirmModalOpen(false)}
                                 className="px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-muted font-bold text-xs cursor-pointer"
                             >
-                                Mansookh (Cancel)
+                                {isUrdu ? 'منسوخ (Cancel)' : 'Mansookh (Cancel)'}
                             </button>
                             <button
                                 type="button"
                                 onClick={executeRestore}
                                 className="px-4 py-2 rounded-xl bg-red-700 hover:bg-red-800 text-white font-bold text-xs cursor-pointer shadow-xs"
                             >
-                                Haan, Restore Karein
+                                {isUrdu ? 'ہاں، بحال کریں' : 'Haan, Restore Karein'}
                             </button>
                         </div>
                     </DialogContent>
@@ -720,7 +726,7 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                 {/* 7. Category Preview Table Modal */}
                 {previewCategory && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 overflow-y-auto">
-                        <div className="bg-white dark:bg-card rounded-2xl max-w-5xl w-full border border-emerald-300 dark:border-border overflow-hidden shadow-2xl my-6 flex flex-col max-h-[90vh]">
+                        <div className={`bg-white dark:bg-card rounded-2xl max-w-5xl w-full border border-emerald-300 dark:border-border overflow-hidden shadow-2xl my-6 flex flex-col max-h-[90vh] ${isUrdu ? 'font-urdu' : ''}`} dir={isUrdu ? 'rtl' : 'ltr'}>
                             {/* Modal Header */}
                             <div className="bg-[#14532d] px-5 py-3.5 text-white flex justify-between items-center shrink-0">
                                 <div className="flex items-center gap-2.5">
@@ -732,9 +738,9 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                                         />
                                     </div>
                                     <div>
-                                        <h3 className="font-bold text-sm">Preview: {previewCategory.name}</h3>
+                                        <h3 className="font-bold text-sm">{isUrdu ? 'پریویو: ' : 'Preview: '}{previewCategory.name}</h3>
                                         <p className="text-[11px] text-emerald-100">
-                                            Database se live data ({previewData ? previewData.rows.length : '...'} records)
+                                            {isUrdu ? 'ڈیٹا بیس سے لائیو ڈیٹا ' : 'Database se live data '}({previewData ? previewData.rows.length : '...'} {isUrdu ? 'ریکارڈز' : 'records'})
                                         </p>
                                     </div>
                                 </div>
@@ -749,7 +755,7 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                                             (previewData && previewData.rows.length === 0)
                                         }
                                         className="bg-white hover:bg-emerald-50 text-emerald-950 font-bold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1 transition disabled:opacity-50 shadow-2xs cursor-pointer"
-                                        title="Excel file download karein"
+                                        title={isUrdu ? 'ایکسل فائل ڈاؤن لوڈ کریں' : 'Excel file download karein'}
                                     >
                                         <Icon name="FileXls" className="size-3.5 text-emerald-800" weight="bold" />
                                         <span>Excel (.xlsx)</span>
@@ -763,7 +769,7 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                                             (previewData && previewData.rows.length === 0)
                                         }
                                         className="bg-white hover:bg-emerald-50 text-emerald-950 font-bold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1 transition disabled:opacity-50 shadow-2xs cursor-pointer"
-                                        title="SQLite database file download karein"
+                                        title={isUrdu ? 'SQLite ڈیٹا بیس فائل ڈاؤن لوڈ کریں' : 'SQLite database file download karein'}
                                     >
                                         <Icon name="Database" className="size-3.5 text-emerald-800" weight="bold" />
                                         <span>DB (.db)</span>
@@ -784,25 +790,27 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                                 {loadingPreview ? (
                                     <div className="py-16 text-center text-xs text-gray-500 space-y-2">
                                         <Icon name="SpinnerGap" className="size-6 animate-spin text-emerald-700 mx-auto" />
-                                        <p className="font-bold">Database se data load ho raha hai...</p>
+                                        <p className="font-bold">{isUrdu ? 'ڈیٹا بیس سے ڈیٹا لوڈ ہو رہا ہے...' : 'Database se data load ho raha hai...'}</p>
                                     </div>
                                 ) : !previewData || previewData.rows.length === 0 ? (
                                     <div className="py-16 text-center text-xs text-gray-500 space-y-2 bg-gray-50 dark:bg-muted/40 rounded-xl border border-dashed border-gray-300 dark:border-gray-700 p-8">
                                         <Icon name="WarningCircle" className="size-8 text-amber-600 mx-auto" weight="fill" />
                                         <p className="font-bold text-sm text-gray-900 dark:text-white">
-                                            Is category mein koi record nahi
+                                            {isUrdu ? 'اس کیٹیگری میں کوئی ریکارڈ نہیں' : 'Is category mein koi record nahi'}
                                         </p>
                                         <p className="text-gray-400">
-                                            Database mein is category se mutaliq koi data mojood nahi hai, is liye file download nahi ho sakti.
+                                            {isUrdu
+                                                ? 'ڈیٹا بیس میں اس کیٹیگری سے متعلق کوئی ڈیٹا موجود نہیں ہے، اس لیے فائل ڈاؤن لوڈ نہیں ہو سکتی۔'
+                                                : 'Database mein is category se mutaliq koi data mojood nahi hai, is liye file download nahi ho sakti.'}
                                         </p>
                                     </div>
                                 ) : (
                                     <div className="overflow-x-auto border border-emerald-200 dark:border-border rounded-xl">
-                                        <table className="w-full text-left text-xs">
+                                        <table className="w-full text-start text-xs">
                                             <thead className="bg-emerald-50 dark:bg-muted text-gray-900 dark:text-gray-100 border-b border-emerald-200 dark:border-border font-bold sticky top-0">
                                                 <tr>
                                                     {previewData.columns.map((col) => (
-                                                        <th key={col.key} className="py-2.5 px-3 whitespace-nowrap">
+                                                        <th key={col.key} className="py-2.5 px-3 whitespace-nowrap text-start">
                                                             {col.label}
                                                         </th>
                                                     ))}
@@ -855,14 +863,14 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                             {/* Modal Footer */}
                             <div className="bg-gray-50 dark:bg-muted/40 px-5 py-3 border-t border-gray-200 dark:border-gray-800 flex justify-between items-center text-xs shrink-0">
                                 <span className="text-gray-600 dark:text-gray-400 font-medium">
-                                    Kul Records: <strong className="text-gray-900 dark:text-white">{previewData?.rows?.length || 0}</strong>
+                                    {isUrdu ? 'کل ریکارڈز: ' : 'Kul Records: '}<strong className="text-gray-900 dark:text-white font-mono">{previewData?.rows?.length || 0}</strong>
                                 </span>
                                 <button
                                     type="button"
                                     onClick={() => setPreviewCategory(null)}
                                     className="px-4 py-1.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-bold rounded-lg transition cursor-pointer"
                                 >
-                                    Band Karein
+                                    {isUrdu ? 'بند کریں' : 'Band Karein'}
                                 </button>
                             </div>
                         </div>

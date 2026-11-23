@@ -363,11 +363,11 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                 <MandiPageHeader
                     title={
                         <span className="flex items-center gap-2">
-                            <span>Kisan ka Bill (Bijak)</span>
-                            <span className="font-normal font-sans text-emerald-100 text-xl md:text-2xl">بیجک</span>
+                            <span>{isUrdu ? 'کسان کا بل (بیجک)' : 'Kisan ka Bill (Bijak)'}</span>
+                            {!isUrdu && <span className="font-normal font-sans text-emerald-100 text-xl md:text-2xl">بیجک</span>}
                         </span>
                     }
-                    subtitle="Kisan ke maal ka bill banayein"
+                    subtitle={isUrdu ? 'کسان کے مال کا بل بنائیں' : 'Kisan ke maal ka bill banayein'}
                     isUrdu={isUrdu}
                 />
 
@@ -380,14 +380,14 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                             {/* Kisan */}
                             <div>
                                 <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                                    Kisan
+                                    {isUrdu ? 'کسان' : 'Kisan'}
                                 </label>
                                 <select
                                     value={farmerId}
                                     onChange={e => setFarmerId(e.target.value)}
                                     className="w-full h-10 px-3 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#14532d]"
                                 >
-                                    <option value="">-- Select Kisan --</option>
+                                    <option value="">{isUrdu ? '-- کسان منتخب کریں --' : '-- Select Kisan --'}</option>
                                     {farmers.map(f => (
                                         <option key={f.id} value={f.id}>
                                             {farmerTitle(f)}
@@ -399,7 +399,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                             {/* Truck No */}
                             <div>
                                 <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                                    Truck No (zaroori nahi)
+                                    {isUrdu ? 'ٹرک نمبر (اختیاری)' : 'Truck No (zaroori nahi)'}
                                 </label>
                                 <input
                                     type="text"
@@ -413,7 +413,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                             {/* Tareekh */}
                             <div>
                                 <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                                    Tareekh
+                                    {isUrdu ? 'تاریخ' : 'Tareekh'}
                                 </label>
                                 <input
                                     type="date"
@@ -433,15 +433,15 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                             
                             {/* Card Header */}
                             <div className="flex items-center justify-between">
-                                <h2 className="text-base font-bold text-gray-900">Maal</h2>
+                                <h2 className="text-base font-bold text-gray-900">{isUrdu ? 'مال' : 'Maal'}</h2>
                                 <span className="text-xs text-gray-500 font-medium">
-                                    {billItems.length} item · {calculations.totalNag} bori
+                                    {billItems.length} {isUrdu ? 'آئٹم' : 'item'} · {calculations.totalNag} {isUrdu ? 'بوری' : 'bori'}
                                 </span>
                             </div>
 
                             {/* Quick Add Pills */}
                             <div className="flex items-center gap-1.5 flex-wrap text-xs">
-                                <span className="text-gray-500 font-medium mr-1">Jaldi add karein:</span>
+                                <span className="text-gray-500 font-medium mr-1">{isUrdu ? 'جلدی شامل کریں:' : 'Jaldi add karein:'}</span>
                                 {['Tamatar', 'Aloo', 'Pyaz', 'Gobi', 'Bhindi', 'Hari Mirch'].map(pill => (
                                     <button
                                         key={pill}
@@ -458,10 +458,10 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                             <div className="w-full">
                                 {/* Table Header */}
                                 <div className="grid grid-cols-12 gap-2 px-2 py-2.5 bg-gray-50/90 rounded-lg text-xs font-semibold text-gray-600 mb-2 items-center">
-                                    <div className="col-span-4">Maal</div>
-                                    <div className="col-span-3 text-center">Bori (Tadaad)</div>
-                                    <div className="col-span-2 text-center">Rate (Rs/bori)</div>
-                                    <div className="col-span-2 text-right pr-1">Raqam</div>
+                                    <div className="col-span-4">{isUrdu ? 'مال' : 'Maal'}</div>
+                                    <div className="col-span-3 text-center">{isUrdu ? 'بوری (تعداد)' : 'Bori (Tadaad)'}</div>
+                                    <div className="col-span-2 text-center">{isUrdu ? 'ریٹ (روپے/بوری)' : 'Rate (Rs/bori)'}</div>
+                                    <div className="col-span-2 text-right pr-1">{isUrdu ? 'رقم' : 'Raqam'}</div>
                                     <div className="col-span-1 text-center"></div>
                                 </div>
 
@@ -469,7 +469,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                                 <div className="space-y-2">
                                     {billItems.length === 0 ? (
                                         <div className="py-8 text-center text-gray-400 text-xs font-medium border border-dashed border-gray-200 rounded-lg">
-                                            Koi maal shamil nahi hai. Upar diye gaye buttons (+ Tamatar, + Aloo waghera) par click karke maal shamil karein.
+                                            {isUrdu ? 'کوئی مال شامل نہیں ہے۔ اوپر دیے گئے بٹنوں (+ ٹماٹر، + آلو وغیرہ) پر کلک کرکے مال شامل کریں۔' : 'Koi maal shamil nahi hai. Upar diye gaye buttons (+ Tamatar, + Aloo waghera) par click karke maal shamil karein.'}
                                         </div>
                                     ) : (
                                         billItems.map((row, idx) => {
@@ -541,7 +541,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
 
                                 {/* Table Footer / Totals Row */}
                                 <div className="grid grid-cols-12 gap-2 px-2 py-3 border-t border-gray-200 mt-3 font-bold text-xs md:text-sm text-gray-900 items-center">
-                                    <div className="col-span-4">Total</div>
+                                    <div className="col-span-4">{isUrdu ? 'کل' : 'Total'}</div>
                                     <div className="col-span-3 text-center">{calculations.totalNag}</div>
                                     <div className="col-span-2"></div>
                                     <div className="col-span-2 text-right whitespace-nowrap pr-1">Rs. {calculations.totalGross.toLocaleString()}</div>
@@ -555,13 +555,13 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                             
                             {/* Charges Card */}
                             <div className="bg-white rounded-xl shadow-xs border border-gray-200/90 p-5 space-y-4">
-                                <h2 className="text-base font-bold text-gray-900">Charges</h2>
+                                <h2 className="text-base font-bold text-gray-900">{isUrdu ? 'اخراجات / چارجز' : 'Charges'}</h2>
 
                                 <div className="space-y-3 text-sm">
                                     {/* 1. Commission (Arhat) */}
                                     <div className="flex items-center justify-between pb-3 border-b border-gray-100">
                                         <div>
-                                            <div className="font-medium text-gray-800">Commission (Arhat)</div>
+                                            <div className="font-medium text-gray-800">{isUrdu ? 'کمیشن (آڑھت)' : 'Commission (Arhat)'}</div>
                                             <div className="text-xs text-gray-500">Rs. {calculations.commAmount.toLocaleString()}</div>
                                         </div>
                                         <div className="flex items-center gap-1.5">
@@ -579,7 +579,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                                     {/* 2. Mazdoori */}
                                     <div className="flex items-center justify-between pb-3 border-b border-gray-100">
                                         <div>
-                                            <div className="font-medium text-gray-800">Mazdoori</div>
+                                            <div className="font-medium text-gray-800">{isUrdu ? 'مزدوری' : 'Mazdoori'}</div>
                                             <div className="text-xs text-gray-500">Rs. {calculations.mazdooriAmount.toLocaleString()}</div>
                                         </div>
                                         <div className="flex items-center gap-1.5">
@@ -597,7 +597,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                                     {/* 3. Kiraya (Freight) */}
                                     <div className="flex items-center justify-between pb-3 border-b border-gray-100">
                                         <div>
-                                            <div className="font-medium text-gray-800">Kiraya (Freight)</div>
+                                            <div className="font-medium text-gray-800">{isUrdu ? 'کرایہ' : 'Kiraya (Freight)'}</div>
                                             <div className="text-xs text-gray-500">Rs. {calculations.kirayaAmount.toLocaleString()}</div>
                                         </div>
                                         <div className="flex items-center gap-1.5">
@@ -615,7 +615,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                                     {/* 4. Market fee */}
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <div className="font-medium text-gray-800">Market fee</div>
+                                            <div className="font-medium text-gray-800">{isUrdu ? 'مارکیٹ فیس' : 'Market fee'}</div>
                                             <div className="text-xs text-gray-500">Rs. {calculations.marketFeeAmount.toLocaleString()}</div>
                                         </div>
                                         <div className="flex items-center gap-1.5">
@@ -637,11 +637,11 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                             <div className="bg-white rounded-xl shadow-xs border border-gray-200/90 p-5 space-y-4">
                                 <div className="space-y-2 text-sm font-medium">
                                     <div className="flex justify-between items-center text-gray-800">
-                                        <span>Gross sale</span>
+                                        <span>{isUrdu ? 'کل فروخت' : 'Gross sale'}</span>
                                         <span className="font-bold">Rs. {calculations.totalGross.toLocaleString()}</span>
                                     </div>
                                     <div className="flex justify-between items-center text-amber-600">
-                                        <span>Total charges</span>
+                                        <span>{isUrdu ? 'کل اخراجات' : 'Total charges'}</span>
                                         <span className="font-bold">- Rs. {calculations.totalCharges.toLocaleString()}</span>
                                     </div>
                                 </div>
@@ -649,7 +649,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                                 {/* Big Green Box: Net Payable */}
                                 <div className="bg-[#14532d] text-white rounded-xl p-4 space-y-1">
                                     <div className="text-xs text-emerald-100 font-medium">
-                                        Kisan ko dena hai (Net payable)
+                                        {isUrdu ? 'کسان کو دینا ہے (خالص واجب الادا)' : 'Kisan ko dena hai (Net payable)'}
                                     </div>
                                     <div className="text-2xl font-bold tracking-tight">
                                         Rs. {calculations.netPayable.toLocaleString()}
@@ -663,7 +663,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                                     disabled={isSaving || billItems.length === 0}
                                     className="w-full py-3 bg-[#14532d] hover:bg-[#0f3f22] text-white font-semibold rounded-xl text-center shadow-xs transition-colors cursor-pointer disabled:opacity-50 text-sm"
                                 >
-                                    {isSaving ? 'Bachaya ja raha hai...' : 'Bill save karein'}
+                                    {isSaving ? (isUrdu ? 'محفوظ ہو رہا ہے...' : 'Bachaya ja raha hai...') : (isUrdu ? 'بیجک محفوظ کریں' : 'Bill save karein')}
                                 </button>
                             </div>
                         </div>

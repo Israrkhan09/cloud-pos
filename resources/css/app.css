@@ -207,7 +207,8 @@ html[lang="ur"] label,
 html[lang="ur"] [data-slot="sidebar"],
 html[lang="ur"] [data-slot="dialog-content"],
 html[lang="ur"] [data-slot="badge"],
-html[lang="ur"] .font-nastaliq {
+html[lang="ur"] .font-nastaliq,
+.font-urdu {
     font-family: 'Noto Naskh Arabic', 'Noto Sans Arabic', serif;
 }
 

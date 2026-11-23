@@ -414,7 +414,7 @@ export default function ReportsPage({
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Mandi Rapoort (Reports, Audits & Profit/Loss) - Vegetable POS" />
 
-            <div className="-mt-4 -mx-4 -mb-4 pb-28 bg-[#eef2ee] min-h-full space-y-4">
+            <div className={`-mt-4 -mx-4 -mb-4 pb-28 bg-[#eef2ee] min-h-full space-y-4 ${isUrdu ? 'font-urdu' : ''}`} dir={isUrdu ? 'rtl' : 'ltr'}>
                 {/* 1. Green Header Section */}
                 <MandiPageHeader
                     title={isUrdu ? t('reports_mandi.title') : 'Mandi Rapoort (Reports, Audits & Profit/Loss)'}
@@ -424,18 +424,18 @@ export default function ReportsPage({
                     <button
                         type="button"
                         onClick={handlePrintActiveTab}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-gray-50 text-gray-800 border border-gray-300 text-xs sm:text-sm font-semibold shadow-2xs transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-emerald-50 text-[#14532d] border border-white text-xs sm:text-sm font-bold shadow-xs transition-colors cursor-pointer"
                     >
-                        <Icon name="Printer" className="size-4 text-gray-700" />
+                        <Icon name="Printer" className="size-4 text-[#14532d]" weight="bold" />
                         <span>{isUrdu ? t('reports_mandi.print_btn') : 'Print Karein'}</span>
                     </button>
 
                     <button
                         type="button"
                         onClick={handleCsvExportActiveTab}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#20693e] hover:bg-[#287d4a] text-white text-xs sm:text-sm font-semibold shadow-xs transition-colors cursor-pointer border border-emerald-500/50"
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-emerald-50 text-[#14532d] border border-white text-xs sm:text-sm font-bold shadow-xs transition-colors cursor-pointer"
                     >
-                        <Icon name="DownloadSimple" className="size-4 text-white" weight="bold" />
+                        <Icon name="DownloadSimple" className="size-4 text-[#14532d]" weight="bold" />
                         <span>{getCsvButtonText()}</span>
                     </button>
                 </MandiPageHeader>
@@ -455,10 +455,10 @@ export default function ReportsPage({
                             type="button"
                             onClick={() => handleTabChange(t.id)}
                             className={cn(
-                                "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer shrink-0",
+                                "px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm transition-all whitespace-nowrap cursor-pointer shrink-0 border",
                                 activeTab === t.id
-                                    ? "bg-[#14532d] text-white shadow-xs"
-                                    : "bg-white dark:bg-card text-gray-700 dark:text-gray-300 border border-gray-200 hover:bg-gray-50 dark:hover:bg-muted"
+                                    ? "bg-[#0d3b1e] text-white border-2 border-white font-bold shadow-xs"
+                                    : "bg-white text-[#14532d] border border-white hover:bg-emerald-50 font-semibold shadow-2xs"
                             )}
                         >
                             {t.label}
@@ -475,10 +475,10 @@ export default function ReportsPage({
                         <form onSubmit={handleApplyDateFilter} className="bg-white dark:bg-card border border-gray-200/90 dark:border-border rounded-xl p-3 flex flex-wrap items-center gap-3 no-print">
                             <div className="flex items-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-300">
                                 <Icon name="Calendar" className="size-4 text-emerald-800" />
-                                <span>Tareekh Filter:</span>
+                                <span>{isUrdu ? 'تاریخ فلٹر:' : 'Tareekh Filter:'}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <span className="text-xs text-gray-500">Shuru:</span>
+                                <span className="text-xs text-gray-500">{isUrdu ? 'شروع:' : 'Shuru:'}</span>
                                 <input
                                     type="date"
                                     value={filterFromDate}
@@ -487,7 +487,7 @@ export default function ReportsPage({
                                 />
                             </div>
                             <div className="flex items-center gap-2">
-                                <span className="text-xs text-gray-500">Aakhir:</span>
+                                <span className="text-xs text-gray-500">{isUrdu ? 'آخر:' : 'Aakhir:'}</span>
                                 <input
                                     type="date"
                                     value={filterToDate}
@@ -499,7 +499,7 @@ export default function ReportsPage({
                                 type="submit"
                                 className="h-9 px-4 rounded-lg bg-[#14532d] hover:bg-[#0f3d21] text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
                             >
-                                Filter Lagayein
+                                {isUrdu ? 'فلٹر لگائیں' : 'Filter Lagayein'}
                             </button>
                         </form>
 
@@ -507,16 +507,16 @@ export default function ReportsPage({
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
                             <div className="bg-white dark:bg-card border border-gray-200/90 dark:border-border rounded-xl p-4.5 shadow-2xs">
                                 <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 block">
-                                    Kul Bills Count:
+                                    {isUrdu ? 'کل بلز تعداد:' : 'Kul Bills Count:'}
                                 </span>
                                 <span className="text-2xl font-black text-gray-900 dark:text-white block mt-1.5">
-                                    {rozanaData.bills_count} Bills
+                                    {rozanaData.bills_count} {isUrdu ? 'بلز' : 'Bills'}
                                 </span>
                             </div>
 
                             <div className="bg-white dark:bg-card border border-gray-200/90 dark:border-border rounded-xl p-4.5 shadow-2xs">
                                 <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 block">
-                                    Kul Farokht (Sales):
+                                    {isUrdu ? 'کل فروخت (Sales):' : 'Kul Farokht (Sales):'}
                                 </span>
                                 <span className="text-2xl font-black text-gray-900 dark:text-white block mt-1.5">
                                     {formatRs(rozanaData.total_gross)}
@@ -525,7 +525,7 @@ export default function ReportsPage({
 
                             <div className="bg-white dark:bg-card border border-gray-200/90 dark:border-border rounded-xl p-4.5 shadow-2xs">
                                 <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 block">
-                                    Naqad Wasooli:
+                                    {isUrdu ? 'نقد وصولی:' : 'Naqad Wasooli:'}
                                 </span>
                                 <span className="text-2xl font-black text-emerald-800 dark:text-emerald-400 block mt-1.5">
                                     {formatRs(rozanaData.total_cash)}
@@ -534,7 +534,7 @@ export default function ReportsPage({
 
                             <div className="bg-white dark:bg-card border border-gray-200/90 dark:border-border rounded-xl p-4.5 shadow-2xs">
                                 <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 block">
-                                    Udhaar Baqaya:
+                                    {isUrdu ? 'ادھار بقایا:' : 'Udhaar Baqaya:'}
                                 </span>
                                 <span className="text-2xl font-black text-red-700 dark:text-red-400 block mt-1.5">
                                     {formatRs(rozanaData.total_udhaar)}
@@ -548,21 +548,21 @@ export default function ReportsPage({
                                 <table className="w-full text-start border-collapse text-xs sm:text-sm">
                                     <thead>
                                         <tr className="border-b border-gray-100 dark:border-border bg-emerald-50/40 dark:bg-muted/30">
-                                            <th className="py-3 px-3.5 text-start font-bold text-gray-700 dark:text-gray-300">Bill #</th>
-                                            <th className="py-3 px-3.5 text-start font-bold text-gray-700 dark:text-gray-300">Gahak Ka Naam</th>
-                                            <th className="py-3 px-3.5 text-start font-bold text-gray-700 dark:text-gray-300">Tareekh</th>
-                                            <th className="py-3 px-3.5 text-start font-bold text-gray-700 dark:text-gray-300">Sabzi Items</th>
-                                            <th className="py-3 px-3.5 text-end font-bold text-gray-700 dark:text-gray-300">Kul Bill</th>
-                                            <th className="py-3 px-3.5 text-end font-bold text-gray-700 dark:text-gray-300">Naqad Ada</th>
-                                            <th className="py-3 px-3.5 text-end font-bold text-gray-700 dark:text-gray-300">Udhaar Baqaya</th>
-                                            <th className="py-3 px-3.5 text-center font-bold text-gray-700 dark:text-gray-300">Tariqa</th>
+                                            <th className="py-3 px-3.5 text-start font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'بل #' : 'Bill #'}</th>
+                                            <th className="py-3 px-3.5 text-start font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'گاہک کا نام' : 'Gahak Ka Naam'}</th>
+                                            <th className="py-3 px-3.5 text-start font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'تاریخ' : 'Tareekh'}</th>
+                                            <th className="py-3 px-3.5 text-start font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'سبزی جنس' : 'Sabzi Items'}</th>
+                                            <th className="py-3 px-3.5 text-end font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'کل بل' : 'Kul Bill'}</th>
+                                            <th className="py-3 px-3.5 text-end font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'نقد ادا' : 'Naqad Ada'}</th>
+                                            <th className="py-3 px-3.5 text-end font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'ادھار بقایا' : 'Udhaar Baqaya'}</th>
+                                            <th className="py-3 px-3.5 text-center font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'طریقہ' : 'Tariqa'}</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100 dark:divide-border">
                                         {rozanaData.rows.length === 0 ? (
                                             <tr>
                                                 <td colSpan={8} className="py-12 text-center text-xs text-gray-400">
-                                                    Is tareekh ka koi record nahi
+                                                    {isUrdu ? 'اس تاریخ کا کوئی ریکارڈ نہیں' : 'Is tareekh ka koi record nahi'}
                                                 </td>
                                             </tr>
                                         ) : (
@@ -621,10 +621,10 @@ export default function ReportsPage({
                         {/* Heading & Year Selector */}
                         <div className="bg-white dark:bg-card border border-gray-200/90 dark:border-border rounded-xl p-3.5 flex items-center justify-between no-print">
                             <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200">
-                                Mahana Farokht Summary ({selectedYear})
+                                {isUrdu ? `ماہانہ فروخت سمری (${selectedYear})` : `Mahana Farokht Summary (${selectedYear})`}
                             </h3>
                             <div className="flex items-center gap-2">
-                                <span className="text-xs text-gray-500 font-medium">Saal chunein:</span>
+                                <span className="text-xs text-gray-500 font-medium">{isUrdu ? 'سال چنیں:' : 'Saal chunein:'}</span>
                                 <select
                                     value={selectedYear}
                                     onChange={(e) => handleYearChange(Number(e.target.value))}
@@ -643,19 +643,19 @@ export default function ReportsPage({
                                 <table className="w-full text-start border-collapse text-xs sm:text-sm">
                                     <thead>
                                         <tr className="border-b border-gray-100 dark:border-border bg-emerald-50/40 dark:bg-muted/30">
-                                            <th className="py-3 px-4 text-start font-bold text-gray-700 dark:text-gray-300">Mahina (Month)</th>
-                                            <th className="py-3 px-4 text-center font-bold text-gray-700 dark:text-gray-300">Kul Bills</th>
-                                            <th className="py-3 px-4 text-end font-bold text-gray-700 dark:text-gray-300">Kul Sale (Rs)</th>
-                                            <th className="py-3 px-4 text-end font-bold text-gray-700 dark:text-gray-300">Naqad Wasooli (Rs)</th>
-                                            <th className="py-3 px-4 text-end font-bold text-gray-700 dark:text-gray-300">Udhaar Baqaya (Rs)</th>
-                                            <th className="py-3 px-4 text-end font-bold text-gray-700 dark:text-gray-300">Riaayat / Discount (Rs)</th>
+                                            <th className="py-3 px-4 text-start font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'مہینہ (Month)' : 'Mahina (Month)'}</th>
+                                            <th className="py-3 px-4 text-center font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'کل بلز' : 'Kul Bills'}</th>
+                                            <th className="py-3 px-4 text-end font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'کل سیل (Rs)' : 'Kul Sale (Rs)'}</th>
+                                            <th className="py-3 px-4 text-end font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'نقد وصولی (Rs)' : 'Naqad Wasooli (Rs)'}</th>
+                                            <th className="py-3 px-4 text-end font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'ادھار بقایا (Rs)' : 'Udhaar Baqaya (Rs)'}</th>
+                                            <th className="py-3 px-4 text-end font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'رعایت / ڈسکاؤنٹ (Rs)' : 'Riaayat / Discount (Rs)'}</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100 dark:divide-border">
                                         {mahanaData.rows.length === 0 ? (
                                             <tr>
                                                 <td colSpan={6} className="py-12 text-center text-xs text-gray-400">
-                                                    Is saal ka koi record nahi
+                                                    {isUrdu ? 'اس سال کا کوئی ریکارڈ نہیں' : 'Is saal ka koi record nahi'}
                                                 </td>
                                             </tr>
                                         ) : (
@@ -686,7 +686,7 @@ export default function ReportsPage({
                                     {mahanaData.rows.length > 0 && (
                                         <tfoot>
                                             <tr className="border-t-2 border-gray-200 dark:border-border bg-gray-50 dark:bg-muted/40 font-bold">
-                                                <td className="py-3 px-4 text-gray-900 dark:text-white">Total</td>
+                                                <td className="py-3 px-4 text-gray-900 dark:text-white">{isUrdu ? 'کل ٹوٹل' : 'Total'}</td>
                                                 <td className="py-3 px-4 text-center text-gray-900 dark:text-white">{mahanaData.totals.bills_count}</td>
                                                 <td className="py-3 px-4 text-end text-gray-900 dark:text-white">Rs {mahanaData.totals.total_sale.toFixed(2)}</td>
                                                 <td className="py-3 px-4 text-end text-emerald-800 dark:text-emerald-400">Rs {mahanaData.totals.cash_wasooli.toFixed(2)}</td>
@@ -708,16 +708,16 @@ export default function ReportsPage({
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
                             <div className="bg-white dark:bg-card border border-gray-200/90 dark:border-border rounded-xl p-4.5 shadow-2xs">
                                 <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 block">
-                                    Kul Sabzi Items:
+                                    {isUrdu ? 'کل سبزی جنس:' : 'Kul Sabzi Items:'}
                                 </span>
                                 <span className="text-2xl font-black text-gray-900 dark:text-white block mt-1.5">
-                                    {stockData.items_count} Items
+                                    {stockData.items_count} {isUrdu ? 'اجناس' : 'Items'}
                                 </span>
                             </div>
 
                             <div className="bg-white dark:bg-card border border-gray-200/90 dark:border-border rounded-xl p-4.5 shadow-2xs">
                                 <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 block">
-                                    Khareed Malyaat (Cost):
+                                    {isUrdu ? 'خرید مالیت (Cost):' : 'Khareed Malyaat (Cost):'}
                                 </span>
                                 <span className="text-2xl font-black text-gray-900 dark:text-white block mt-1.5">
                                     Rs {Math.round(stockData.cost_valuation).toLocaleString()}
@@ -726,7 +726,7 @@ export default function ReportsPage({
 
                             <div className="bg-white dark:bg-card border border-gray-200/90 dark:border-border rounded-xl p-4.5 shadow-2xs">
                                 <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 block">
-                                    Farokht Malyaat (Expected):
+                                    {isUrdu ? 'فروخت مالیت (متوقع):' : 'Farokht Malyaat (Expected):'}
                                 </span>
                                 <span className="text-2xl font-black text-emerald-800 dark:text-emerald-400 block mt-1.5">
                                     Rs {Math.round(stockData.sale_valuation).toLocaleString()}
@@ -735,7 +735,7 @@ export default function ReportsPage({
 
                             <div className="bg-white dark:bg-card border border-gray-200/90 dark:border-border rounded-xl p-4.5 shadow-2xs">
                                 <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 block">
-                                    Mutawaqqe Munafa:
+                                    {isUrdu ? 'متوقع منافع:' : 'Mutawaqqe Munafa:'}
                                 </span>
                                 <span className="text-2xl font-black text-emerald-900 dark:text-emerald-300 block mt-1.5">
                                     Rs {Math.round(stockData.expected_profit).toLocaleString()}
@@ -749,19 +749,19 @@ export default function ReportsPage({
                                 <table className="w-full text-start border-collapse text-xs sm:text-sm">
                                     <thead>
                                         <tr className="border-b border-gray-100 dark:border-border bg-emerald-50/40 dark:bg-muted/30">
-                                            <th className="py-3 px-4 text-start font-bold text-gray-700 dark:text-gray-300">Sabzi Ka Naam</th>
-                                            <th className="py-3 px-4 text-center font-bold text-gray-700 dark:text-gray-300">Mojooda Stock</th>
-                                            <th className="py-3 px-4 text-end font-bold text-gray-700 dark:text-gray-300">Khareed Rate</th>
-                                            <th className="py-3 px-4 text-end font-bold text-gray-700 dark:text-gray-300">Kul Khareed Cost</th>
-                                            <th className="py-3 px-4 text-end font-bold text-gray-700 dark:text-gray-300">Sale Rate</th>
-                                            <th className="py-3 px-4 text-end font-bold text-gray-700 dark:text-gray-300">Kul Sale Malyaat</th>
+                                            <th className="py-3 px-4 text-start font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'سبزی کا نام' : 'Sabzi Ka Naam'}</th>
+                                            <th className="py-3 px-4 text-center font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'موجودہ اسٹاک' : 'Mojooda Stock'}</th>
+                                            <th className="py-3 px-4 text-end font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'خرید ریٹ' : 'Khareed Rate'}</th>
+                                            <th className="py-3 px-4 text-end font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'کل خرید لاگت' : 'Kul Khareed Cost'}</th>
+                                            <th className="py-3 px-4 text-end font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'فروخت ریٹ' : 'Sale Rate'}</th>
+                                            <th className="py-3 px-4 text-end font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'کل فروخت مالیت' : 'Kul Sale Malyaat'}</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100 dark:divide-border">
                                         {stockData.rows.length === 0 ? (
                                             <tr>
                                                 <td colSpan={6} className="py-12 text-center text-xs text-gray-400">
-                                                    Koi stock data dastiyab nahi hai
+                                                    {isUrdu ? 'کوئی اسٹاک ڈیٹا دستیاب نہیں ہے' : 'Koi stock data dastiyab nahi hai'}
                                                 </td>
                                             </tr>
                                         ) : (
@@ -792,8 +792,8 @@ export default function ReportsPage({
                                     {stockData.rows.length > 0 && (
                                         <tfoot>
                                             <tr className="border-t-2 border-gray-200 dark:border-border bg-gray-50 dark:bg-muted/40 font-bold">
-                                                <td className="py-3 px-4 text-gray-900 dark:text-white">Total</td>
-                                                <td className="py-3 px-4 text-center text-gray-900 dark:text-white">{stockData.items_count} Items</td>
+                                                <td className="py-3 px-4 text-gray-900 dark:text-white">{isUrdu ? 'کل ٹوٹل' : 'Total'}</td>
+                                                <td className="py-3 px-4 text-center text-gray-900 dark:text-white">{stockData.items_count} {isUrdu ? 'اجناس' : 'Items'}</td>
                                                 <td className="py-3 px-4 text-end text-gray-400">—</td>
                                                 <td className="py-3 px-4 text-end text-gray-900 dark:text-white">Rs {Math.round(stockData.cost_valuation).toLocaleString()}</td>
                                                 <td className="py-3 px-4 text-end text-gray-400">—</td>
@@ -814,17 +814,17 @@ export default function ReportsPage({
                         <div className="bg-white dark:bg-card border border-gray-200/90 dark:border-border rounded-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-2xs">
                             <div>
                                 <h3 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white">
-                                    Market Mein Phansa Kul Udhaar (Receivables)
+                                    {isUrdu ? 'مارکیٹ میں پھنسا کل ادھار (Receivables)' : 'Market Mein Phansa Kul Udhaar (Receivables)'}
                                 </h3>
                                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                                    Baqaya udhaar wale tamam gahak aur dukandar
+                                    {isUrdu ? 'بقایا ادھار والے تمام گاہک اور دکاندار' : 'Baqaya udhaar wale tamam gahak aur dukandar'}
                                 </p>
                             </div>
                             <div className="text-start sm:text-end">
                                 <span className="text-xs text-gray-500 dark:text-gray-400 block font-medium">
-                                    Kul Baqaya Udhaar:
+                                    {isUrdu ? 'کل بقایا ادھار:' : 'Kul Baqaya Udhaar:'}
                                 </span>
-                                <span className="text-xl sm:text-2xl font-black text-red-700 dark:text-red-400 block mt-0.5">
+                                <span className="text-xl sm:text-2xl font-black text-red-700 dark:text-red-400 block mt-0.5 font-mono">
                                     Rs {Math.round(gahakData.total_market_udhaar).toLocaleString()}
                                 </span>
                             </div>
@@ -836,20 +836,20 @@ export default function ReportsPage({
                                 <table className="w-full text-start border-collapse text-xs sm:text-sm">
                                     <thead>
                                         <tr className="border-b border-gray-100 dark:border-border bg-emerald-50/40 dark:bg-muted/30">
-                                            <th className="py-3 px-4 text-start font-bold text-gray-700 dark:text-gray-300">Gahak Ka Naam</th>
-                                            <th className="py-3 px-3 text-start font-bold text-gray-700 dark:text-gray-300">Phone</th>
-                                            <th className="py-3 px-3 text-start font-bold text-gray-700 dark:text-gray-300">Ilaqa</th>
-                                            <th className="py-3 px-3 text-end font-bold text-gray-700 dark:text-gray-300">Credit Limit</th>
-                                            <th className="py-3 px-4 text-end font-bold text-gray-700 dark:text-gray-300">Baqaya Udhaar (Rs)</th>
-                                            <th className="py-3 px-3 text-center font-bold text-gray-700 dark:text-gray-300">Aakhri Sale</th>
-                                            <th className="py-3 px-3 text-center font-bold text-gray-700 dark:text-gray-300">Aakhri Wasooli</th>
+                                            <th className="py-3 px-4 text-start font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'گاہک کا نام' : 'Gahak Ka Naam'}</th>
+                                            <th className="py-3 px-3 text-start font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'فون' : 'Phone'}</th>
+                                            <th className="py-3 px-3 text-start font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'علاقہ' : 'Ilaqa'}</th>
+                                            <th className="py-3 px-3 text-end font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'کریڈٹ لمٹ' : 'Credit Limit'}</th>
+                                            <th className="py-3 px-4 text-end font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'بقایا ادھار (Rs)' : 'Baqaya Udhaar (Rs)'}</th>
+                                            <th className="py-3 px-3 text-center font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'آخری سیل' : 'Aakhri Sale'}</th>
+                                            <th className="py-3 px-3 text-center font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'آخری وصولی' : 'Aakhri Wasooli'}</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100 dark:divide-border">
                                         {gahakData.rows.length === 0 ? (
                                             <tr>
                                                 <td colSpan={7} className="py-12 text-center text-xs text-gray-400">
-                                                    Koi baqaya udhaar nahi hai
+                                                    {isUrdu ? 'کوئی بقایا ادھار نہیں ہے' : 'Koi baqaya udhaar nahi hai'}
                                                 </td>
                                             </tr>
                                         ) : (
@@ -864,16 +864,16 @@ export default function ReportsPage({
                                                     <td className="py-3 px-3 text-gray-700 dark:text-gray-300 whitespace-nowrap">
                                                         {row.area}
                                                     </td>
-                                                    <td className="py-3 px-3 text-end text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                                                    <td className="py-3 px-3 text-end text-gray-600 dark:text-gray-400 whitespace-nowrap font-mono">
                                                         Rs {Math.round(row.credit_limit).toLocaleString()}
                                                     </td>
-                                                    <td className="py-3 px-4 text-end font-black text-red-700 dark:text-red-400 whitespace-nowrap text-sm">
+                                                    <td className="py-3 px-4 text-end font-black text-red-700 dark:text-red-400 whitespace-nowrap text-sm font-mono">
                                                         Rs {Math.round(row.balance).toLocaleString()}
                                                     </td>
-                                                    <td className="py-3 px-3 text-center text-gray-600 dark:text-gray-400 text-xs whitespace-nowrap">
+                                                    <td className="py-3 px-3 text-center text-gray-600 dark:text-gray-400 text-xs whitespace-nowrap font-mono">
                                                         {row.last_sale}
                                                     </td>
-                                                    <td className="py-3 px-3 text-center text-gray-600 dark:text-gray-400 text-xs whitespace-nowrap">
+                                                    <td className="py-3 px-3 text-center text-gray-600 dark:text-gray-400 text-xs whitespace-nowrap font-mono">
                                                         {row.last_wasooli}
                                                     </td>
                                                 </tr>
@@ -883,8 +883,8 @@ export default function ReportsPage({
                                     {gahakData.rows.length > 0 && (
                                         <tfoot>
                                             <tr className="border-t-2 border-gray-200 dark:border-border bg-gray-50 dark:bg-muted/40 font-bold">
-                                                <td colSpan={4} className="py-3 px-4 text-gray-900 dark:text-white text-end">Kul Baqaya Udhaar:</td>
-                                                <td className="py-3 px-4 text-end font-black text-red-700 dark:text-red-400 text-sm">
+                                                <td colSpan={4} className="py-3 px-4 text-gray-900 dark:text-white text-end">{isUrdu ? 'کل بقایا ادھار:' : 'Kul Baqaya Udhaar:'}</td>
+                                                <td className="py-3 px-4 text-end font-black text-red-700 dark:text-red-400 text-sm font-mono">
                                                     Rs {Math.round(gahakData.total_market_udhaar).toLocaleString()}
                                                 </td>
                                                 <td colSpan={2}></td>
@@ -904,31 +904,31 @@ export default function ReportsPage({
                         <form onSubmit={handleApplyDateFilter} className="bg-white dark:bg-card border border-gray-200/90 dark:border-border rounded-xl p-3 flex flex-wrap items-center gap-3 no-print">
                             <div className="flex items-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-300">
                                 <Icon name="Calendar" className="size-4 text-emerald-800" />
-                                <span>Tareekh Filter:</span>
+                                <span>{isUrdu ? 'تاریخ فلٹر:' : 'Tareekh Filter:'}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <span className="text-xs text-gray-500">Shuru:</span>
+                                <span className="text-xs text-gray-500">{isUrdu ? 'شروع:' : 'Shuru:'}</span>
                                 <input
                                     type="date"
                                     value={filterFromDate}
                                     onChange={(e) => setFilterFromDate(e.target.value)}
-                                    className="h-9 px-3 text-xs border border-gray-300 rounded-lg bg-white dark:bg-background text-gray-900 dark:text-white"
+                                    className="h-9 px-3 text-xs border border-gray-300 rounded-lg bg-white dark:bg-background text-gray-900 dark:text-white font-mono"
                                 />
                             </div>
                             <div className="flex items-center gap-2">
-                                <span className="text-xs text-gray-500">Aakhir:</span>
+                                <span className="text-xs text-gray-500">{isUrdu ? 'آخر:' : 'Aakhir:'}</span>
                                 <input
                                     type="date"
                                     value={filterToDate}
                                     onChange={(e) => setFilterToDate(e.target.value)}
-                                    className="h-9 px-3 text-xs border border-gray-300 rounded-lg bg-white dark:bg-background text-gray-900 dark:text-white"
+                                    className="h-9 px-3 text-xs border border-gray-300 rounded-lg bg-white dark:bg-background text-gray-900 dark:text-white font-mono"
                                 />
                             </div>
                             <button
                                 type="submit"
                                 className="h-9 px-4 rounded-lg bg-[#14532d] hover:bg-[#0f3d21] text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
                             >
-                                Filter Lagayein
+                                {isUrdu ? 'فلٹر لگائیں' : 'Filter Lagayein'}
                             </button>
                         </form>
 
@@ -940,10 +940,10 @@ export default function ReportsPage({
                                     Vegetable POS
                                 </h3>
                                 <p className="text-xs sm:text-sm font-semibold text-gray-600 dark:text-gray-300">
-                                    Nafa-Nuqsan Statement (Profit & Loss Statement)
+                                    {isUrdu ? 'نفع و نقصان اسٹیٹمنٹ (Profit & Loss Statement)' : 'Nafa-Nuqsan Statement (Profit & Loss Statement)'}
                                 </p>
                                 <p className="text-xs text-gray-400 font-mono mt-0.5">
-                                    Muddad: {filterFromDate} Ta {filterToDate}
+                                    {isUrdu ? 'مدت: ' : 'Muddad: '}{filterFromDate} {isUrdu ? 'تا' : 'Ta'} {filterToDate}
                                 </p>
                             </div>
 
@@ -952,9 +952,9 @@ export default function ReportsPage({
                                 {/* Row 1: Kul Farokht */}
                                 <div className="flex items-center justify-between py-1">
                                     <span className="font-semibold text-gray-800 dark:text-gray-200">
-                                        Kul Farokht (Gross Sales Revenue):
+                                        {isUrdu ? 'کل فروخت (Gross Sales Revenue):' : 'Kul Farokht (Gross Sales Revenue):'}
                                     </span>
-                                    <span className="font-black text-gray-900 dark:text-white">
+                                    <span className="font-black text-gray-900 dark:text-white font-mono">
                                         Rs {formatNum(pnlData.gross_revenue)}
                                     </span>
                                 </div>
@@ -962,9 +962,9 @@ export default function ReportsPage({
                                 {/* Row 2: Maal Khareed Cost */}
                                 <div className="flex items-center justify-between py-1 text-gray-600 dark:text-gray-400">
                                     <span>
-                                        Maal Khareed Cost (Purchase Cost of Goods Sold):
+                                        {isUrdu ? 'مال خرید لاگت (Purchase Cost of Goods Sold):' : 'Maal Khareed Cost (Purchase Cost of Goods Sold):'}
                                     </span>
-                                    <span className="font-semibold text-red-600 dark:text-red-400">
+                                    <span className="font-semibold text-red-600 dark:text-red-400 font-mono">
                                         - Rs {formatNum(pnlData.cogs)}
                                     </span>
                                 </div>
@@ -972,9 +972,9 @@ export default function ReportsPage({
                                 {/* Row 3: Kham Munafa */}
                                 <div className="flex items-center justify-between py-2 border-y border-gray-100 dark:border-border bg-gray-50/60 dark:bg-muted/20 px-3 rounded-lg">
                                     <span className="font-bold text-gray-900 dark:text-white">
-                                        Kham Munafa (Gross Profit on Sales):
+                                        {isUrdu ? 'خام منافع (Gross Profit on Sales):' : 'Kham Munafa (Gross Profit on Sales):'}
                                     </span>
-                                    <span className="font-black text-gray-900 dark:text-white text-base">
+                                    <span className="font-black text-gray-900 dark:text-white text-base font-mono">
                                         Rs {formatNum(pnlData.gross_profit)}
                                     </span>
                                 </div>
@@ -982,9 +982,9 @@ export default function ReportsPage({
                                 {/* Row 4: Mandi Commission */}
                                 <div className="flex items-center justify-between py-1 text-emerald-800 dark:text-emerald-400">
                                     <span className="font-semibold">
-                                        Mandi Commission Aamdani (Farmer Commission Earned):
+                                        {isUrdu ? 'منڈی کمیشن آمدنی (Farmer Commission Earned):' : 'Mandi Commission Aamdani (Farmer Commission Earned):'}
                                     </span>
-                                    <span className="font-bold">
+                                    <span className="font-bold font-mono">
                                         + Rs {formatNum(pnlData.farmer_commission)}
                                     </span>
                                 </div>
@@ -992,9 +992,9 @@ export default function ReportsPage({
                                 {/* Row 5: Spoilage / Wastage */}
                                 <div className="flex items-center justify-between py-1 text-gray-600 dark:text-gray-400">
                                     <span>
-                                        Kharab / Zaya Sabzi Nuqsan (Spoilage Loss):
+                                        {isUrdu ? 'خراب / ضائع سبزی نقصان (Spoilage Loss):' : 'Kharab / Zaya Sabzi Nuqsan (Spoilage Loss):'}
                                     </span>
-                                    <span className="font-semibold text-red-600 dark:text-red-400">
+                                    <span className="font-semibold text-red-600 dark:text-red-400 font-mono">
                                         - Rs {formatNum(pnlData.wastage_loss)}
                                     </span>
                                 </div>
@@ -1002,9 +1002,9 @@ export default function ReportsPage({
                                 {/* Row 6: Discounts */}
                                 <div className="flex items-center justify-between py-1 text-gray-600 dark:text-gray-400">
                                     <span>
-                                        Kul Riaayat / Discounts:
+                                        {isUrdu ? 'کل رعایت / Discounts:' : 'Kul Riaayat / Discounts:'}
                                     </span>
-                                    <span className="font-semibold text-red-600 dark:text-red-400">
+                                    <span className="font-semibold text-red-600 dark:text-red-400 font-mono">
                                         - Rs {formatNum(pnlData.total_discounts)}
                                     </span>
                                 </div>
@@ -1014,14 +1014,14 @@ export default function ReportsPage({
                             <div className="bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                                 <div>
                                     <h4 className="text-sm font-black text-emerald-950 dark:text-emerald-200 tracking-wide uppercase">
-                                        SAAF MUNAFA (NET PROFIT):
+                                        {isUrdu ? 'صاف منافع (NET PROFIT):' : 'SAAF MUNAFA (NET PROFIT):'}
                                     </h4>
                                     <p className="text-xs text-emerald-800/80 dark:text-emerald-400 mt-0.5">
-                                        Tamam aamdani aur nuqsanat ke baad
+                                        {isUrdu ? 'تمام آمدنی اور نقصانات کے بعد' : 'Tamam aamdani aur nuqsanat ke baad'}
                                     </p>
                                 </div>
                                 <div className="text-start sm:text-end">
-                                    <span className="text-2xl sm:text-3xl font-black text-emerald-900 dark:text-emerald-300">
+                                    <span className="text-2xl sm:text-3xl font-black text-emerald-900 dark:text-emerald-300 font-mono">
                                         Rs {formatNum(pnlData.net_profit)}
                                     </span>
                                 </div>
@@ -1035,10 +1035,10 @@ export default function ReportsPage({
                     <div className="flex items-center justify-between">
                         <div>
                             <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200">
-                                Baqi Reports (Merchants, Farmers & Ledger Documents)
+                                {isUrdu ? 'باقی رپورٹس (گاہک، کسان اور لیجر دستاویزی)' : 'Baqi Reports (Merchants, Farmers & Ledger Documents)'}
                             </h3>
                             <p className="text-xs text-gray-500 dark:text-gray-400">
-                                Roznamcha, Parchi, Amroza, aur Khata ke alag alag prints
+                                {isUrdu ? 'روزنامچہ، پرچی، امروزہ اور کھاتہ کے الگ الگ پرنٹس' : 'Roznamcha, Parchi, Amroza, aur Khata ke alag alag prints'}
                             </p>
                         </div>
                         <button
@@ -1046,7 +1046,7 @@ export default function ReportsPage({
                             onClick={() => setShowBaqiReports(!showBaqiReports)}
                             className="px-3 py-1.5 rounded-lg border border-gray-300 text-xs font-semibold text-gray-700 hover:bg-gray-50 dark:hover:bg-muted cursor-pointer transition-colors"
                         >
-                            {showBaqiReports ? 'Chhupayein' : 'Dikhayein'}
+                            {showBaqiReports ? (isUrdu ? 'چھپائیں' : 'Chhupayein') : (isUrdu ? 'دکھائیں' : 'Dikhayein')}
                         </button>
                     </div>
 
@@ -1092,7 +1092,7 @@ export default function ReportsPage({
                                                 onClick={() => handleLegacyPreview(rep)}
                                                 className="px-2.5 py-1 rounded text-[11px] font-semibold border border-gray-300 hover:bg-gray-50 cursor-pointer"
                                             >
-                                                Preview
+                                                {isUrdu ? 'پریویو' : 'Preview'}
                                             </button>
                                             <button
                                                 type="button"
@@ -1362,11 +1362,11 @@ export default function ReportsPage({
                             </DialogTitle>
                         </DialogHeader>
                         {legacyLoading ? (
-                            <div className="py-12 text-center text-xs text-gray-500">Loading...</div>
+                            <div className="py-12 text-center text-xs text-gray-500">{isUrdu ? 'لوڈ ہو رہا ہے...' : 'Loading...'}</div>
                         ) : legacyReportData ? (
                             <div className="space-y-4">
                                 <div className="text-xs text-gray-500">
-                                    Tareekh: {legacyReportData.from_date || legacyReportData.date}
+                                    {isUrdu ? 'تاریخ: ' : 'Tareekh: '}{legacyReportData.from_date || legacyReportData.date}
                                 </div>
                                 <div className="border border-gray-200 rounded-lg overflow-x-auto">
                                     <table className="w-full text-xs">

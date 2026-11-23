@@ -195,7 +195,7 @@ export default function DepositTransferPage() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={isUrdu ? 'ڈپازٹ / ٹرانسفر - ویجیٹیبل پی او ایس' : 'Deposit / Transfer - Vegetable POS'} />
 
-            <div className="-mt-4 -mx-4 -mb-4 pb-28 bg-[#eef2ee] min-h-full space-y-4">
+            <div className="-mt-4 -mx-4 -mb-4 pb-28 bg-[#eef2ee] min-h-full space-y-4" dir={isUrdu ? 'rtl' : 'ltr'}>
                 {/* Green Header Section */}
                 <MandiPageHeader
                     title={isUrdu ? t('banking.transfers_title') : 'Deposit / Transfer'}
@@ -531,10 +531,10 @@ export default function DepositTransferPage() {
                         <table className="w-full text-start text-sm border-collapse">
                             <thead>
                                 <tr className="bg-gray-50 dark:bg-muted/50 border-b border-gray-200 dark:border-border text-[#4B5563] dark:text-gray-300 uppercase tracking-wider text-[11px] font-bold">
-                                    <th className="py-3 px-4 text-start">QISAM / DETAIL</th>
-                                    <th className="py-3 px-4 text-start">BANK ACCOUNT</th>
-                                    <th className="py-3 px-4 text-start">TAREEKH / SLIP</th>
-                                    <th className="py-3 px-4 text-end">RAQAM (RS.)</th>
+                                    <th className="py-3 px-4 text-start">{isUrdu ? 'قسم / تفصیل' : 'QISAM / DETAIL'}</th>
+                                    <th className="py-3 px-4 text-start">{isUrdu ? 'بینک اکاؤنٹ' : 'BANK ACCOUNT'}</th>
+                                    <th className="py-3 px-4 text-start">{isUrdu ? 'تاریخ / سلپ' : 'TAREEKH / SLIP'}</th>
+                                    <th className="py-3 px-4 text-end">{isUrdu ? 'رقم (روپے)' : 'RAQAM (RS.)'}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100 dark:divide-border text-[#111827] dark:text-gray-100 font-medium">

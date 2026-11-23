@@ -80,8 +80,8 @@ export default function FarmersIndex({ farmers = [], areas = [], filters }: Prop
     const [khataData, setKhataData] = useState<KhataData | null>(null);
 
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Daily Kaam', href: '#' },
-        { title: 'Farmers (Kisan)', href: '/farmers' },
+        { title: isUrdu ? 'روزانہ کام' : 'Daily Kaam', href: '#' },
+        { title: isUrdu ? 'کسان' : 'Farmers (Kisan)', href: '/farmers' },
     ];
 
     // Filtered farmers list
@@ -215,9 +215,9 @@ export default function FarmersIndex({ farmers = [], areas = [], filters }: Prop
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Farmers Management (Kisan aur Bopari Khata)" />
+            <Head title={isUrdu ? 'کسان کھاتہ' : 'Farmers Management (Kisan aur Bopari Khata)'} />
 
-            <div className="-mt-4 -mx-4 -mb-4 pb-28 bg-[#eef2ee] min-h-full font-sans text-gray-900">
+            <div className="-mt-4 -mx-4 -mb-4 pb-28 bg-[#eef2ee] min-h-full font-sans text-gray-900" dir={isUrdu ? 'rtl' : 'ltr'}>
                 {/* 1. Header Banner */}
                 <MandiPageHeader
                     title={isUrdu ? t('farmers_management.title') : 'Farmers Management (Kisan aur Bopari Khata)'}
@@ -244,14 +244,14 @@ export default function FarmersIndex({ farmers = [], areas = [], filters }: Prop
                                 type="text"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Kisan ka naam, phone ya ilaqa talash karein..."
+                                placeholder={isUrdu ? 'کسان کا نام، فون یا علاقہ تلاش کریں...' : 'Kisan ka naam, phone ya ilaqa talash karein...'}
                                 className="w-full h-10 px-3.5 rounded-xl border border-gray-200 text-xs md:text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#1e713e] focus:ring-1 focus:ring-[#1e713e] transition-all bg-white"
                             />
                             <button
                                 type="button"
                                 className="h-10 px-5 rounded-xl bg-[#1e713e] hover:bg-[#165a31] text-white text-xs md:text-sm font-semibold transition-colors cursor-pointer shrink-0"
                             >
-                                Search
+                                {isUrdu ? 'تلاش کریں' : 'Search'}
                             </button>
                         </div>
 
@@ -265,7 +265,7 @@ export default function FarmersIndex({ farmers = [], areas = [], filters }: Prop
                                     : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
                             }`}
                         >
-                            Sirf Baqaya Wale Kisan
+                            {isUrdu ? 'صرف بقایا والے کسان' : 'Sirf Baqaya Wale Kisan'}
                         </button>
                     </div>
 
@@ -275,21 +275,21 @@ export default function FarmersIndex({ farmers = [], areas = [], filters }: Prop
                             <table className="w-full text-start text-xs border-collapse">
                                 <thead>
                                     <tr className="bg-[#f8faf8] border-b border-gray-200 text-gray-700 font-bold">
-                                        <th className="py-3 px-3.5 text-start whitespace-nowrap">Kisan Ka Naam</th>
-                                        <th className="py-3 px-3 text-start whitespace-nowrap">Phone</th>
-                                        <th className="py-3 px-3 text-start whitespace-nowrap">Ilaqa / Area</th>
-                                        <th className="py-3 px-3 text-start whitespace-nowrap">Code</th>
-                                        <th className="py-3 px-3 text-end whitespace-nowrap">Opening (Rs.)</th>
-                                        <th className="py-3 px-3 text-end whitespace-nowrap">Baqaya (Dena Hai)</th>
-                                        <th className="py-3 px-3 text-center whitespace-nowrap">Status</th>
-                                        <th className="py-3 px-3.5 text-center whitespace-nowrap">Actions</th>
+                                        <th className="py-3 px-3.5 text-start whitespace-nowrap">{isUrdu ? 'کسان کا نام' : 'Kisan Ka Naam'}</th>
+                                        <th className="py-3 px-3 text-start whitespace-nowrap">{isUrdu ? 'فون' : 'Phone'}</th>
+                                        <th className="py-3 px-3 text-start whitespace-nowrap">{isUrdu ? 'علاقہ' : 'Ilaqa / Area'}</th>
+                                        <th className="py-3 px-3 text-start whitespace-nowrap">{isUrdu ? 'کوڈ' : 'Code'}</th>
+                                        <th className="py-3 px-3 text-end whitespace-nowrap">{isUrdu ? 'ابتدائی رقم (روپے)' : 'Opening (Rs.)'}</th>
+                                        <th className="py-3 px-3 text-end whitespace-nowrap">{isUrdu ? 'بقایا (دینا ہے)' : 'Baqaya (Dena Hai)'}</th>
+                                        <th className="py-3 px-3 text-center whitespace-nowrap">{isUrdu ? 'حالت' : 'Status'}</th>
+                                        <th className="py-3 px-3.5 text-center whitespace-nowrap">{isUrdu ? 'کارروائی' : 'Actions'}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100 bg-white">
                                     {filteredFarmers.length === 0 ? (
                                         <tr>
                                             <td colSpan={8} className="py-12 text-center text-gray-400 text-sm">
-                                                Koi kisan nahi mila.
+                                                {isUrdu ? 'کوئی کسان نہیں ملا۔' : 'Koi kisan nahi mila.'}
                                             </td>
                                         </tr>
                                     ) : (
@@ -351,7 +351,7 @@ export default function FarmersIndex({ farmers = [], areas = [], filters }: Prop
                                                                     : 'bg-gray-100 text-gray-600 border border-gray-200'
                                                             }`}
                                                         >
-                                                            {f.status}
+                                                            {isUrdu ? (f.status === 'active' ? 'فعال' : 'غیر فعال') : f.status}
                                                         </span>
                                                     </td>
 
@@ -364,7 +364,7 @@ export default function FarmersIndex({ farmers = [], areas = [], filters }: Prop
                                                                 className="h-8 px-2.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1"
                                                             >
                                                                 <Icon name="BookOpen" className="size-3.5" />
-                                                                <span>Khata Dekhein</span>
+                                                                <span>{isUrdu ? 'کھاتہ دیکھیں' : 'Khata Dekhein'}</span>
                                                             </button>
 
                                                             <button
@@ -373,7 +373,7 @@ export default function FarmersIndex({ farmers = [], areas = [], filters }: Prop
                                                                 className="h-8 px-2.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1"
                                                             >
                                                                 <Icon name="PencilSimple" className="size-3.5" />
-                                                                <span>Edit</span>
+                                                                <span>{isUrdu ? 'تبدیل کریں' : 'Edit'}</span>
                                                             </button>
                                                         </div>
                                                     </td>
@@ -391,10 +391,12 @@ export default function FarmersIndex({ farmers = [], areas = [], filters }: Prop
             {/* Modal 1: Naya Kisan Form */}
             {isCreateOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                    <div className="bg-white rounded-2xl max-w-md w-full border border-gray-200 shadow-xl overflow-hidden">
+                    <div className="bg-white rounded-2xl max-w-md w-full border border-gray-200 shadow-xl overflow-hidden" dir={isUrdu ? 'rtl' : 'ltr'}>
                         <div className="bg-[#14532d] px-5 py-4 text-white flex justify-between items-center">
                             <h3 className="font-bold text-base">
-                                {editingFarmer ? 'Kisan Ki Maloomat Edit Karein' : 'Naya Kisan Shamil Karein'}
+                                {isUrdu 
+                                    ? (editingFarmer ? 'کسان کی معلومات تبدیل کریں' : 'نیا کسان شامل کریں')
+                                    : (editingFarmer ? 'Kisan Ki Maloomat Edit Karein' : 'Naya Kisan Shamil Karein')}
                             </h3>
                             <button
                                 type="button"
@@ -410,13 +412,13 @@ export default function FarmersIndex({ farmers = [], areas = [], filters }: Prop
                             {/* 1. Kisan ka Naam * */}
                             <div>
                                 <label className="block font-bold text-gray-700 mb-1">
-                                    Kisan ka Naam <span className="text-red-500">*</span>
+                                    {isUrdu ? 'کسان کا نام' : 'Kisan ka Naam'} <span className="text-red-500">*</span>
                                 </label>
                                 <input
                                     type="text"
                                     value={formName}
                                     onChange={(e) => setFormName(e.target.value)}
-                                    placeholder="Jaise: Haji Bashir Kisan"
+                                    placeholder={isUrdu ? 'مثلاً: حاجی بشیر کسان' : 'Jaise: Haji Bashir Kisan'}
                                     required
                                     className="w-full h-9 px-3 border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:border-[#1e713e]"
                                 />
@@ -424,7 +426,7 @@ export default function FarmersIndex({ farmers = [], areas = [], filters }: Prop
 
                             {/* 2. Phone Number */}
                             <div>
-                                <label className="block font-bold text-gray-700 mb-1">Phone Number</label>
+                                <label className="block font-bold text-gray-700 mb-1">{isUrdu ? 'فون نمبر' : 'Phone Number'}</label>
                                 <input
                                     type="text"
                                     value={formPhone}
@@ -436,12 +438,12 @@ export default function FarmersIndex({ farmers = [], areas = [], filters }: Prop
 
                             {/* 3. Ilaqa / Area */}
                             <div>
-                                <label className="block font-bold text-gray-700 mb-1">Ilaqa / Area</label>
+                                <label className="block font-bold text-gray-700 mb-1">{isUrdu ? 'علاقہ' : 'Ilaqa / Area'}</label>
                                 <input
                                     type="text"
                                     value={formArea}
                                     onChange={(e) => setFormArea(e.target.value)}
-                                    placeholder="Jaise: Okara, Depalpur, Mandi Bahauddin"
+                                    placeholder={isUrdu ? 'مثلاً: اوکاڑہ، دیپالپور، منڈی بہاؤالدین' : 'Jaise: Okara, Depalpur, Mandi Bahauddin'}
                                     className="w-full h-9 px-3 border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:border-[#1e713e]"
                                 />
                             </div>
@@ -450,7 +452,7 @@ export default function FarmersIndex({ farmers = [], areas = [], filters }: Prop
                             {!editingFarmer && (
                                 <div>
                                     <label className="block font-bold text-gray-700 mb-1">
-                                        Opening Balance (Rs.)
+                                        {isUrdu ? 'ابتدائی رقم (روپے)' : 'Opening Balance (Rs.)'}
                                     </label>
                                     <input
                                         type="number"
@@ -465,11 +467,11 @@ export default function FarmersIndex({ farmers = [], areas = [], filters }: Prop
 
                             {/* 5. Wazaahat / Notes */}
                             <div>
-                                <label className="block font-bold text-gray-700 mb-1">Wazaahat / Notes</label>
+                                <label className="block font-bold text-gray-700 mb-1">{isUrdu ? 'وضاحت / نوٹس' : 'Wazaahat / Notes'}</label>
                                 <textarea
                                     value={formNotes}
                                     onChange={(e) => setFormNotes(e.target.value)}
-                                    placeholder="Kisan ke mutalliq koi khas tafseel..."
+                                    placeholder={isUrdu ? 'کسان کے متعلق کوئی خاص تفصیل...' : 'Kisan ke mutalliq koi khas tafseel...'}
                                     rows={2}
                                     className="w-full p-2.5 border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:border-[#1e713e]"
                                 />
@@ -483,14 +485,14 @@ export default function FarmersIndex({ farmers = [], areas = [], filters }: Prop
                                     disabled={submitting}
                                     className="h-9 px-4 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 font-bold text-xs transition cursor-pointer"
                                 >
-                                    Mansookh
+                                    {isUrdu ? 'منسوخ' : 'Mansookh'}
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={submitting}
                                     className="h-9 px-5 rounded-lg bg-[#14532d] hover:bg-[#0f3d21] text-white font-bold text-xs transition shadow-xs cursor-pointer disabled:opacity-50"
                                 >
-                                    {submitting ? 'Save ho raha hai...' : 'Save Karein'}
+                                    {submitting ? (isUrdu ? 'محفوظ ہو رہا ہے...' : 'Save ho raha hai...') : (isUrdu ? 'محفوظ کریں' : 'Save Karein')}
                                 </button>
                             </div>
                         </form>
@@ -501,13 +503,13 @@ export default function FarmersIndex({ farmers = [], areas = [], filters }: Prop
             {/* Modal 2: Khata Dekhein */}
             {khataFarmer && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                    <div className="bg-white rounded-2xl max-w-2xl w-full border border-gray-200 shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
+                    <div className="bg-white rounded-2xl max-w-2xl w-full border border-gray-200 shadow-xl overflow-hidden flex flex-col max-h-[90vh]" dir={isUrdu ? 'rtl' : 'ltr'}>
                         {/* Header */}
                         <div className="bg-[#14532d] px-5 py-4 text-white flex justify-between items-center shrink-0">
                             <div>
                                 <h3 className="font-bold text-base">{khataFarmer.name}</h3>
                                 <p className="text-[11px] text-emerald-100 mt-0.5">
-                                    Phone: {khataFarmer.phone} | Ilaqa: {khataFarmer.area}
+                                    {isUrdu ? 'فون:' : 'Phone:'} {khataFarmer.phone} | {isUrdu ? 'علاقہ:' : 'Ilaqa:'} {khataFarmer.area}
                                 </p>
                             </div>
                             <button
@@ -525,34 +527,36 @@ export default function FarmersIndex({ farmers = [], areas = [], filters }: Prop
                             <div className="bg-emerald-50/70 border border-emerald-200 rounded-xl p-3.5 flex justify-between items-center">
                                 <div>
                                     <span className="text-[10px] font-bold text-gray-500 uppercase block">
-                                        Mojooda Baqaya (Dena Hai)
+                                        {isUrdu ? 'موجودہ بقایا (دینا ہے)' : 'Mojooda Baqaya (Dena Hai)'}
                                     </span>
                                     <span className="text-xl font-bold text-red-700 mt-0.5 block">
                                         {formatRs(khataData?.farmer?.current_balance ?? khataFarmer.current_balance)}
                                     </span>
                                 </div>
-                                <span className="text-[11px] text-gray-500">Mandi ki taraf se kisan ko dena hai</span>
+                                <span className="text-[11px] text-gray-500">
+                                    {isUrdu ? 'منڈی کی طرف سے کسان کو دینا ہے' : 'Mandi ki taraf se kisan ko dena hai'}
+                                </span>
                             </div>
 
                             {/* Entries Table */}
                             {khataLoading ? (
                                 <div className="py-8 text-center text-gray-400 text-xs">
-                                    Khata load ho raha hai...
+                                    {isUrdu ? 'کھاتہ لوڈ ہو رہا ہے...' : 'Khata load ho raha hai...'}
                                 </div>
                             ) : !khataData || khataData.entries.length === 0 ? (
                                 <div className="py-8 text-center text-gray-400 text-xs">
-                                    Is kisan ke khate mein koi entry mojood nahi hai.
+                                    {isUrdu ? 'اس کسان کے کھاتے میں کوئی اندراج موجود نہیں ہے۔' : 'Is kisan ke khate mein koi entry mojood nahi hai.'}
                                 </div>
                             ) : (
                                 <div className="overflow-x-auto border border-gray-200 rounded-lg">
                                     <table className="w-full text-start text-xs border-collapse">
                                         <thead className="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
                                             <tr>
-                                                <th className="py-2 px-3 text-start">Tareekh</th>
-                                                <th className="py-2 px-3 text-start">Tafseel</th>
-                                                <th className="py-2 px-3 text-end text-red-700">Banam (Debit)</th>
-                                                <th className="py-2 px-3 text-end text-emerald-800">Jama (Credit)</th>
-                                                <th className="py-2 px-3 text-end">Baqaya</th>
+                                                <th className="py-2 px-3 text-start">{isUrdu ? 'تاریخ' : 'Tareekh'}</th>
+                                                <th className="py-2 px-3 text-start">{isUrdu ? 'تفصیل' : 'Tafseel'}</th>
+                                                <th className="py-2 px-3 text-end text-red-700">{isUrdu ? 'بنام (ڈیبٹ)' : 'Banam (Debit)'}</th>
+                                                <th className="py-2 px-3 text-end text-emerald-800">{isUrdu ? 'جمع (کریڈٹ)' : 'Jama (Credit)'}</th>
+                                                <th className="py-2 px-3 text-end">{isUrdu ? 'بقایا' : 'Baqaya'}</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-100 bg-white">
@@ -588,7 +592,7 @@ export default function FarmersIndex({ farmers = [], areas = [], filters }: Prop
                                 onClick={closeKhataModal}
                                 className="h-9 px-5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs transition cursor-pointer"
                             >
-                                Band Karein
+                                {isUrdu ? 'بند کریں' : 'Band Karein'}
                             </button>
                         </div>
                     </div>

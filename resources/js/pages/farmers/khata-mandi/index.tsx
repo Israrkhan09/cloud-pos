@@ -234,7 +234,7 @@ export default function FarmerKhataPage({
             />
 
             {/* Screen UI */}
-            <div className="-mt-4 -mx-4 -mb-4 pb-28 bg-[#eef2ee] min-h-full font-sans text-gray-900 print:hidden">
+            <div className={`-mt-4 -mx-4 -mb-4 pb-28 bg-[#eef2ee] min-h-full font-sans text-gray-900 print:hidden ${isUrdu ? 'font-urdu' : ''}`} dir={isUrdu ? 'rtl' : 'ltr'}>
                 {/* 1. Top Header Banner */}
                 <MandiPageHeader
                     title={isUrdu ? t('farmer_khata.title') : 'Farmer Khata (Kisan Mandi Hisaab)'}
@@ -258,49 +258,49 @@ export default function FarmerKhataPage({
                         {/* Card 1: Kisan ka Kul Dena (Payable) */}
                         <div className="bg-white border border-emerald-200 rounded-xl p-3.5 shadow-2xs">
                             <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">
-                                Kisan Ka Kul Dena (Payable):
+                                {isUrdu ? 'کسان کا کل دینا (Payable):' : 'Kisan Ka Kul Dena (Payable):'}
                             </span>
                             <div className="text-xl font-bold text-red-700 mt-1">
                                 {formatRs(kisanSummary?.total_balance_due || 0)}
                             </div>
                             <span className="text-[10px] text-gray-500 mt-0.5 block">
-                                Mandi ne kisan ko ada karna hai
+                                {isUrdu ? 'منڈی نے کسان کو ادا کرنا ہے' : 'Mandi ne kisan ko ada karna hai'}
                             </span>
                         </div>
 
                         {/* Card 2: Kul Mandi Aamad Nag */}
                         <div className="bg-white border border-emerald-200 rounded-xl p-3.5 shadow-2xs">
                             <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">
-                                Kul Mandi Aamad Nag:
+                                {isUrdu ? 'کل منڈی آمد نگ:' : 'Kul Mandi Aamad Nag:'}
                             </span>
                             <div className="text-xl font-bold text-gray-900 mt-1">
-                                {kisanSummary?.total_nags || 0} Nag / Borian
+                                {kisanSummary?.total_nags || 0} {isUrdu ? 'نگ / بوریاں' : 'Nag / Borian'}
                             </div>
                             <span className="text-[10px] text-gray-500 mt-0.5 block">
-                                {kisanSummary?.total_entries || 0} Aamad Lots
+                                {kisanSummary?.total_entries || 0} {isUrdu ? 'آمد لاٹس' : 'Aamad Lots'}
                             </span>
                         </div>
 
                         {/* Card 3: Mandi Commission */}
                         <div className="bg-white border border-emerald-200 rounded-xl p-3.5 shadow-2xs">
                             <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">
-                                Mandi Commission (Aamdani):
+                                {isUrdu ? 'منڈی کمیشن (آمدنی):' : 'Mandi Commission (Aamdani):'}
                             </span>
                             <div className="text-xl font-bold text-emerald-800 mt-1">
                                 {formatRs(kisanSummary?.total_commission || 0)}
                             </div>
-                            <span className="text-[10px] text-gray-500 mt-0.5 block">Arht munafa</span>
+                            <span className="text-[10px] text-gray-500 mt-0.5 block">{isUrdu ? 'آڑھت منافع' : 'Arht munafa'}</span>
                         </div>
 
                         {/* Card 4: Kisan ko Ada Shuda */}
                         <div className="bg-white border border-emerald-200 rounded-xl p-3.5 shadow-2xs">
                             <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">
-                                Kisan Ko Ada Shuda (Paid):
+                                {isUrdu ? 'کسان کو ادا شدہ (Paid):' : 'Kisan Ko Ada Shuda (Paid):'}
                             </span>
                             <div className="text-xl font-bold text-gray-900 mt-1">
                                 {formatRs(kisanSummary?.total_paid || 0)}
                             </div>
-                            <span className="text-[10px] text-gray-500 mt-0.5 block">Cash / Bank adaigi</span>
+                            <span className="text-[10px] text-gray-500 mt-0.5 block">{isUrdu ? 'کیش / بینک ادائیگی' : 'Cash / Bank adaigi'}</span>
                         </div>
                     </div>
 
@@ -309,9 +309,9 @@ export default function FarmerKhataPage({
                         {/* Left Panel: Farmers Selector (4 cols) */}
                         <div className="lg:col-span-4 bg-white border border-emerald-200 rounded-xl p-3.5 space-y-3 shadow-2xs">
                             <div className="flex items-center justify-between pb-2 border-b border-gray-100">
-                                <span className="font-bold text-xs text-gray-900">Kisan Muntakhib Karein</span>
+                                <span className="font-bold text-xs text-gray-900">{isUrdu ? 'کسان منتخب کریں' : 'Kisan Muntakhib Karein'}</span>
                                 <span className="text-[11px] text-gray-500 font-medium">
-                                    {filteredFarmers.length} Kisan
+                                    {isUrdu ? `${filteredFarmers.length} کسان` : `${filteredFarmers.length} Kisan`}
                                 </span>
                             </div>
 
@@ -320,19 +320,19 @@ export default function FarmerKhataPage({
                                 <div className="relative">
                                     <Icon
                                         name="MagnifyingGlass"
-                                        className="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-2.5"
+                                        className={`w-3.5 h-3.5 text-gray-400 absolute ${isUrdu ? 'right-2.5' : 'left-2.5'} top-2.5`}
                                     />
                                     <input
                                         type="text"
                                         value={farmerSearch}
                                         onChange={(e) => setFarmerSearch(e.target.value)}
-                                        placeholder="Kisan ka naam ya phone..."
-                                        className="w-full pl-8 pr-2.5 py-1.5 border border-gray-300 rounded-lg text-xs text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition"
+                                        placeholder={isUrdu ? 'کسان کا نام یا فون...' : 'Kisan ka naam ya phone...'}
+                                        className={`w-full ${isUrdu ? 'pr-8 pl-2.5' : 'pl-8 pr-2.5'} py-1.5 border border-gray-300 rounded-lg text-xs text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition`}
                                     />
                                 </div>
 
                                 <div className="flex items-center justify-between text-[11px]">
-                                    <span className="text-gray-600 font-medium">Sirf Baqaya Dena Wale:</span>
+                                    <span className="text-gray-600 font-medium">{isUrdu ? 'صرف بقایا دینا والے:' : 'Sirf Baqaya Dena Wale:'}</span>
                                     <button
                                         type="button"
                                         onClick={() => setFarmerPayableOnly(!farmerPayableOnly)}
@@ -342,7 +342,7 @@ export default function FarmerKhataPage({
                                                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                         }`}
                                     >
-                                        {farmerPayableOnly ? 'Haan' : 'Nahi'}
+                                        {farmerPayableOnly ? (isUrdu ? 'ہاں' : 'Haan') : (isUrdu ? 'نہیں' : 'Nahi')}
                                     </button>
                                 </div>
                             </div>
@@ -353,7 +353,7 @@ export default function FarmerKhataPage({
                                 <button
                                     type="button"
                                     onClick={() => handleSelectFarmer('all')}
-                                    className={`w-full p-2.5 rounded-lg border text-left transition flex items-center justify-between cursor-pointer ${
+                                    className={`w-full p-2.5 rounded-lg border text-start transition flex items-center justify-between cursor-pointer ${
                                         selectedFarmerId === 'all'
                                             ? 'bg-emerald-50/70 border-emerald-600 ring-1 ring-emerald-600/30'
                                             : 'bg-white border-gray-200 hover:bg-gray-50'
@@ -362,7 +362,7 @@ export default function FarmerKhataPage({
                                     <div>
                                         <div className="flex items-center space-x-1.5">
                                             <span className="font-bold text-xs text-gray-900">
-                                                Tamam Kisan (Kul Record)
+                                                {isUrdu ? 'تمام کسان (کل ریکارڈ)' : 'Tamam Kisan (Kul Record)'}
                                             </span>
                                             {selectedFarmerId === 'all' && (
                                                 <Icon
@@ -373,14 +373,14 @@ export default function FarmerKhataPage({
                                             )}
                                         </div>
                                         <span className="text-[10px] text-gray-500 block mt-0.5">
-                                            Kul Mandi Parchiyan ({entries.length})
+                                            {isUrdu ? `کل منڈی پرچیاں (${entries.length})` : `Kul Mandi Parchiyan (${entries.length})`}
                                         </span>
                                     </div>
-                                    <div className="text-right flex-shrink-0">
+                                    <div className="text-end flex-shrink-0">
                                         <span className="text-xs font-bold text-red-700 block">
                                             {formatRs(kisanSummary?.total_balance_due || 0)}
                                         </span>
-                                        <span className="text-[9px] text-gray-400 font-medium">Kul Dena</span>
+                                        <span className="text-[9px] text-gray-400 font-medium">{isUrdu ? 'کل دینا' : 'Kul Dena'}</span>
                                     </div>
                                 </button>
 
@@ -394,7 +394,7 @@ export default function FarmerKhataPage({
                                             key={f.id}
                                             type="button"
                                             onClick={() => handleSelectFarmer(f.id)}
-                                            className={`w-full p-2.5 rounded-lg border text-left transition flex items-center justify-between cursor-pointer ${
+                                            className={`w-full p-2.5 rounded-lg border text-start transition flex items-center justify-between cursor-pointer ${
                                                 isSelected
                                                     ? 'bg-emerald-50/70 border-emerald-600 ring-1 ring-emerald-600/30'
                                                     : 'bg-white border-gray-200 hover:bg-gray-50'
@@ -414,11 +414,11 @@ export default function FarmerKhataPage({
                                                     )}
                                                 </div>
                                                 <span className="text-[10px] text-gray-500 block truncate mt-0.5">
-                                                    {f.phone || f.area || 'Kisan'}
+                                                    {f.phone || f.area || (isUrdu ? 'کسان' : 'Kisan')}
                                                 </span>
                                             </div>
 
-                                            <div className="text-right flex-shrink-0">
+                                            <div className="text-end flex-shrink-0">
                                                 <span
                                                     className={`text-xs font-bold block ${
                                                         hasDue ? 'text-red-700' : 'text-emerald-800'
@@ -427,7 +427,7 @@ export default function FarmerKhataPage({
                                                     {formatRs(f.balance)}
                                                 </span>
                                                 <span className="text-[9px] text-gray-400 font-medium">
-                                                    {hasDue ? 'Dena Hai' : 'Saaf'}
+                                                    {hasDue ? (isUrdu ? 'دینا ہے' : 'Dena Hai') : (isUrdu ? 'صاف' : 'Saaf')}
                                                 </span>
                                             </div>
                                         </button>
@@ -445,10 +445,10 @@ export default function FarmerKhataPage({
                                         <h3 className="font-bold text-base text-gray-900">
                                             {selectedFarmer
                                                 ? selectedFarmer.name
-                                                : 'Tamam Kisano Ki Mandi Parchiyan'}
+                                                : (isUrdu ? 'تمام کسانوں کی منڈی پرچیاں' : 'Tamam Kisano Ki Mandi Parchiyan')}
                                         </h3>
                                         <span className="bg-emerald-100 text-emerald-900 text-[10px] font-bold px-2 py-0.5 rounded capitalize">
-                                            {selectedFarmer ? 'Registered Kisan' : 'Kul Mandi Record'}
+                                            {selectedFarmer ? (isUrdu ? 'رجسٹرڈ کسان' : 'Registered Kisan') : (isUrdu ? 'کل منڈی ریکارڈ' : 'Kul Mandi Record')}
                                         </span>
                                     </div>
                                     <div className="text-[11px] text-gray-600 mt-1 flex flex-wrap gap-3">
@@ -467,11 +467,11 @@ export default function FarmerKhataPage({
                                     </div>
                                 </div>
 
-                                <div className="text-left sm:text-right bg-white px-3 py-1.5 rounded-lg border border-emerald-200">
+                                <div className="text-start sm:text-end bg-white px-3 py-1.5 rounded-lg border border-emerald-200">
                                     <span className="text-[10px] uppercase font-bold text-gray-500 block">
                                         {selectedFarmer
-                                            ? 'Kisan Ka Baqaya Dena:'
-                                            : 'Mandi Ka Kul Baqaya Dena:'}
+                                            ? (isUrdu ? 'کسان کا بقایا دینا:' : 'Kisan Ka Baqaya Dena:')
+                                            : (isUrdu ? 'منڈی کا کل بقایا دینا:' : 'Mandi Ka Kul Baqaya Dena:')}
                                     </span>
                                     <span className="text-base font-bold text-red-700 block">
                                         {formatRs(
@@ -486,7 +486,7 @@ export default function FarmerKhataPage({
                             {/* Action Ribbon: Title & Print */}
                             <div className="flex items-center justify-between pt-1 text-xs">
                                 <span className="font-bold text-gray-900">
-                                    Mandi Aamad & Parchi Hisaab ({currentEntries.length} Parchiyan):
+                                    {isUrdu ? `منڈی آمد و پرچی حساب (${currentEntries.length} پرچیاں):` : `Mandi Aamad & Parchi Hisaab (${currentEntries.length} Parchiyan):`}
                                 </span>
 
                                 <div>
@@ -496,33 +496,33 @@ export default function FarmerKhataPage({
                                         className="bg-white hover:bg-emerald-50 text-emerald-900 border border-emerald-300 font-bold px-3 py-1.5 rounded-lg transition flex items-center space-x-1.5 text-xs cursor-pointer shadow-2xs"
                                     >
                                         <Icon name="Printer" className="w-3.5 h-3.5" />
-                                        <span>Print Khata</span>
+                                        <span>{isUrdu ? 'پرنٹ کھاتہ' : 'Print Khata'}</span>
                                     </button>
                                 </div>
                             </div>
 
                             {/* Statement Table */}
                             <div className="overflow-x-auto border border-emerald-200 rounded-lg">
-                                <table className="w-full text-left text-xs">
+                                <table className="w-full text-start text-xs">
                                     <thead className="bg-emerald-50 text-gray-900 border-b border-emerald-200 font-bold">
                                         <tr>
-                                            <th className="py-2.5 px-3">Parchi #</th>
-                                            <th className="py-2.5 px-3">Name</th>
-                                            <th className="py-2.5 px-3">Tareekh</th>
-                                            <th className="py-2.5 px-3">Sabzi Jins</th>
-                                            <th className="py-2.5 px-3 text-right">Nag</th>
-                                            <th className="py-2.5 px-3 text-right">Kul Bikri (Gross)</th>
-                                            <th className="py-2.5 px-3 text-right">Commission</th>
-                                            <th className="py-2.5 px-3 text-right">Raqam (Net)</th>
-                                            <th className="py-2.5 px-3 text-right">Baqaya Dena</th>
-                                            <th className="py-2.5 px-3 text-center">Actions</th>
+                                            <th className="py-2.5 px-3 text-start">{isUrdu ? 'پرچی #' : 'Parchi #'}</th>
+                                            <th className="py-2.5 px-3 text-start">{isUrdu ? 'نام' : 'Name'}</th>
+                                            <th className="py-2.5 px-3 text-start">{isUrdu ? 'تاریخ' : 'Tareekh'}</th>
+                                            <th className="py-2.5 px-3 text-start">{isUrdu ? 'سبزی جنس' : 'Sabzi Jins'}</th>
+                                            <th className="py-2.5 px-3 text-end">{isUrdu ? 'نگ' : 'Nag'}</th>
+                                            <th className="py-2.5 px-3 text-end">{isUrdu ? 'کل بکری (خام)' : 'Kul Bikri (Gross)'}</th>
+                                            <th className="py-2.5 px-3 text-end">{isUrdu ? 'کمیشن' : 'Commission'}</th>
+                                            <th className="py-2.5 px-3 text-end">{isUrdu ? 'صافی رقم (Net)' : 'Raqam (Net)'}</th>
+                                            <th className="py-2.5 px-3 text-end">{isUrdu ? 'بقایا دینا' : 'Baqaya Dena'}</th>
+                                            <th className="py-2.5 px-3 text-center">{isUrdu ? 'کارروائی' : 'Actions'}</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100">
                                         {currentEntries.length === 0 ? (
                                             <tr>
                                                 <td colSpan={10} className="py-8 text-center text-gray-400">
-                                                    Is kisan ki koi aamad parchi mojood nahi hai.
+                                                    {isUrdu ? 'اس کسان کی کوئی آمد پرچی موجود نہیں ہے۔' : 'Is kisan ki koi aamad parchi mojood nahi hai.'}
                                                 </td>
                                             </tr>
                                         ) : (
@@ -542,19 +542,19 @@ export default function FarmerKhataPage({
                                                         <td className="py-2.5 px-3 font-medium text-gray-900">
                                                             {entry.item_name}
                                                         </td>
-                                                        <td className="py-2.5 px-3 text-right font-bold text-gray-900">
+                                                        <td className="py-2.5 px-3 text-end font-bold text-gray-900">
                                                             {entry.nag_quantity}
                                                         </td>
-                                                        <td className="py-2.5 px-3 text-right font-bold text-gray-900 whitespace-nowrap">
+                                                        <td className="py-2.5 px-3 text-end font-bold text-gray-900 whitespace-nowrap">
                                                             {formatRs(entry.gross_sale)}
                                                         </td>
-                                                        <td className="py-2.5 px-3 text-right font-bold text-emerald-800 whitespace-nowrap">
+                                                        <td className="py-2.5 px-3 text-end font-bold text-emerald-800 whitespace-nowrap">
                                                             {formatRs(entry.commission_amount)} ({entry.commission_percent}%)
                                                         </td>
-                                                        <td className="py-2.5 px-3 text-right font-bold text-gray-900 whitespace-nowrap">
+                                                        <td className="py-2.5 px-3 text-end font-bold text-gray-900 whitespace-nowrap">
                                                             {formatRs(entry.net_payable)}
                                                         </td>
-                                                        <td className="py-2.5 px-3 text-right font-bold whitespace-nowrap">
+                                                        <td className="py-2.5 px-3 text-end font-bold whitespace-nowrap">
                                                             <span className={hasDue ? 'text-red-700' : 'text-emerald-800'}>
                                                                 {formatRs(entry.remaining_balance)}
                                                             </span>
@@ -566,7 +566,7 @@ export default function FarmerKhataPage({
                                                                 className="bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 px-2 py-1 rounded text-[11px] font-bold transition inline-flex items-center space-x-1 cursor-pointer"
                                                             >
                                                                 <Icon name="Printer" className="w-3 h-3" />
-                                                                <span>Parchi</span>
+                                                                <span>{isUrdu ? 'پرچی' : 'Parchi'}</span>
                                                             </button>
 
                                                             {hasDue && (
@@ -575,7 +575,7 @@ export default function FarmerKhataPage({
                                                                     onClick={() => handleOpenPay(entry)}
                                                                     className="bg-[#14532d] hover:bg-[#0f3d21] text-white px-2 py-1 rounded text-[11px] font-bold transition cursor-pointer"
                                                                 >
-                                                                    Ada Karein
+                                                                    {isUrdu ? 'ادائیگی کریں' : 'Ada Karein'}
                                                                 </button>
                                                             )}
                                                         </td>
@@ -589,20 +589,20 @@ export default function FarmerKhataPage({
                                             <tr>
                                                 <td
                                                     colSpan={5}
-                                                    className="py-2.5 px-3 text-right text-gray-900 font-bold"
+                                                    className="py-2.5 px-3 text-end text-gray-900 font-bold"
                                                 >
-                                                    Kul Mizan (Totals):
+                                                    {isUrdu ? 'کل میزان:' : 'Kul Mizan (Totals):'}
                                                 </td>
-                                                <td className="py-2.5 px-3 text-right text-gray-900 font-bold whitespace-nowrap">
+                                                <td className="py-2.5 px-3 text-end text-gray-900 font-bold whitespace-nowrap">
                                                     {formatRs(totalGross)}
                                                 </td>
-                                                <td className="py-2.5 px-3 text-right text-emerald-800 font-bold whitespace-nowrap">
+                                                <td className="py-2.5 px-3 text-end text-emerald-800 font-bold whitespace-nowrap">
                                                     {formatRs(totalComm)}
                                                 </td>
-                                                <td className="py-2.5 px-3 text-right text-gray-900 font-bold whitespace-nowrap">
+                                                <td className="py-2.5 px-3 text-end text-gray-900 font-bold whitespace-nowrap">
                                                     {formatRs(totalNet)}
                                                 </td>
-                                                <td className="py-2.5 px-3 text-right text-red-700 font-bold whitespace-nowrap">
+                                                <td className="py-2.5 px-3 text-end text-red-700 font-bold whitespace-nowrap">
                                                     {formatRs(totalRemaining)}
                                                 </td>
                                                 <td></td>
@@ -751,7 +751,7 @@ export default function FarmerKhataPage({
 
                         <form onSubmit={handlePaySubmit} className="p-5 space-y-4 text-xs">
                             <div className="bg-emerald-50/70 p-3.5 rounded-xl border border-emerald-200 flex justify-between items-center">
-                                <span className="font-bold text-gray-700">Kisan Ka Baqaya Dena:</span>
+                                <span className="font-bold text-gray-700">{isUrdu ? 'کسان کا بقایا دینا:' : 'Kisan Ka Baqaya Dena:'}</span>
                                 <span className="text-red-700 text-lg font-black">
                                     {formatRs(selectedEntry.remaining_balance)}
                                 </span>
@@ -759,7 +759,7 @@ export default function FarmerKhataPage({
 
                             <div>
                                 <label className="block font-bold text-gray-700 mb-1">
-                                    Adaigi Raqam (Rs) <span className="text-red-500">*</span>
+                                    {isUrdu ? 'ادائیگی رقم (روپے)' : 'Adaigi Raqam (Rs)'} <span className="text-red-500">*</span>
                                 </label>
                                 <input
                                     type="number"
@@ -774,7 +774,7 @@ export default function FarmerKhataPage({
 
                             <div>
                                 <label className="block font-bold text-gray-700 mb-1">
-                                    Khaata (Payment Account)
+                                    {isUrdu ? 'کھاتہ (ادائیگی ذریعہ)' : 'Khaata (Payment Account)'}
                                 </label>
                                 <select
                                     value={payAccount}
@@ -796,14 +796,16 @@ export default function FarmerKhataPage({
                                     disabled={submittingPayment}
                                     className="h-9 px-4 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 font-bold text-xs"
                                 >
-                                    Mansookh
+                                    {isUrdu ? 'منسوخ' : 'Mansookh'}
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={submittingPayment}
                                     className="h-9 px-5 rounded-lg bg-[#14532d] hover:bg-[#0f3d21] text-white font-bold text-xs transition shadow-xs disabled:opacity-50"
                                 >
-                                    {submittingPayment ? 'Adaigi ho rahi hai...' : 'Adaigi Mehfooz Karein'}
+                                    {submittingPayment
+                                        ? (isUrdu ? 'ادائیگی ہو رہی ہے...' : 'Adaigi ho rahi hai...')
+                                        : (isUrdu ? 'ادائیگی محفوظ کریں' : 'Adaigi Mehfooz Karein')}
                                 </button>
                             </div>
                         </form>

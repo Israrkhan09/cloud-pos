@@ -48,8 +48,8 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
     });
 
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Dashboard', href: '/dashboard' },
-        { title: 'Discount Rules', href: '/discount-rules' },
+        { title: isUrdu ? 'ڈیش بورڈ' : 'Dashboard', href: '/dashboard' },
+        { title: isUrdu ? 'ڈسکاؤنٹ رولز' : 'Discount Rules', href: '/discount-rules' },
     ];
 
     const formatRs = (val: number | string) => {
@@ -93,7 +93,7 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
 
             const data = await res.json();
             if (res.ok && data.success) {
-                const msg = 'Discount rule kamyabi se shamil kar lia gaya!';
+                const msg = isUrdu ? 'ڈسکاؤنٹ رول کامیابی سے شامل کر لیا گیا!' : 'Discount rule kamyabi se shamil kar lia gaya!';
                 setSuccessMessage(msg);
                 toast.success(msg);
                 setIsModalOpen(false);
@@ -132,7 +132,7 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
                 setRules((prev) =>
                     prev.map((r) => (r.id === id ? { ...r, is_active: !r.is_active } : r))
                 );
-                toast.success(data.message || 'Status tabdeel kar diya gaya');
+                toast.success(data.message || (isUrdu ? 'اسٹیٹس تبدیل کر دیا گیا' : 'Status tabdeel kar diya gaya'));
             } else {
                 toast.error(data.message || 'Error toggling rule status');
             }
@@ -144,7 +144,7 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
     };
 
     const handleDelete = async (id: number) => {
-        if (!window.confirm('Kya aap waqai is discount rule ko delete karna chahte hain?')) {
+        if (!window.confirm(isUrdu ? 'کیا آپ واقعی اس ڈسکاؤنٹ رول کو ڈیلیٹ کرنا چاہتے ہیں؟' : 'Kya aap waqai is discount rule ko delete karna chahte hain?')) {
             return;
         }
 
@@ -163,7 +163,7 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
             const data = await res.json();
             if (res.ok && data.success) {
                 setRules((prev) => prev.filter((r) => r.id !== id));
-                toast.success(data.message || 'Rule delete ho gaya');
+                toast.success(data.message || (isUrdu ? 'رول حذف ہو گیا' : 'Rule delete ho gaya'));
             } else {
                 toast.error(data.message || 'Error deleting rule');
             }
@@ -176,9 +176,9 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Discount Rules & Payment Settlement - Vegetable POS" />
+            <Head title={isUrdu ? 'ڈسکاؤنٹ رولز اور ادائیگی کا تصفیہ' : 'Discount Rules & Payment Settlement - Vegetable POS'} />
 
-            <div className="-mt-4 -mx-4 -mb-4 pb-28 bg-[#eef2ee] min-h-full space-y-4">
+            <div className={`-mt-4 -mx-4 -mb-4 pb-28 bg-[#eef2ee] min-h-full space-y-4 ${isUrdu ? 'font-urdu' : ''}`} dir={isUrdu ? 'rtl' : 'ltr'}>
                 {/* 1. Green Header Section */}
                 <MandiPageHeader
                     title={
@@ -211,7 +211,7 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
                         <button
                             type="button"
                             onClick={() => setSuccessMessage(null)}
-                            className="text-emerald-700 hover:text-emerald-950 p-1"
+                            className="text-emerald-700 hover:text-emerald-950 p-1 cursor-pointer"
                         >
                             <Icon name="X" className="size-3.5" />
                         </button>
@@ -240,14 +240,16 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
                                                     : 'bg-gray-100 text-gray-600'
                                             }`}
                                         >
-                                            {rule.is_active ? 'FA-AAL (ACTIVE)' : 'GHAIR FA-AAL'}
+                                            {rule.is_active
+                                                ? (isUrdu ? 'فعال (ACTIVE)' : 'FA-AAL (ACTIVE)')
+                                                : (isUrdu ? 'غیر فعال' : 'GHAIR FA-AAL')}
                                         </span>
                                         <button
                                             type="button"
                                             onClick={() => handleDelete(rule.id)}
                                             disabled={submitting}
                                             className="text-gray-400 hover:text-red-600 p-1 rounded transition-colors disabled:opacity-40 cursor-pointer"
-                                            title="Rule delete karein"
+                                            title={isUrdu ? 'رول حذف کریں' : 'Rule delete karein'}
                                         >
                                             <Icon name="Trash" className="size-4" weight="bold" />
                                         </button>
@@ -257,15 +259,15 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
                                         {rule.rule_name}
                                     </h3>
 
-                                    <div className="text-xl font-bold text-[#14532d] mt-1">
+                                    <div className="text-xl font-bold text-[#14532d] mt-1 font-mono">
                                         {isPct
-                                            ? `${rule.discount_value}% Riaayat`
-                                            : `Rs ${Number(rule.discount_value).toLocaleString('en-PK')} Kam`}
+                                            ? (isUrdu ? `${rule.discount_value}% رعایت` : `${rule.discount_value}% Riaayat`)
+                                            : (isUrdu ? `Rs ${Number(rule.discount_value).toLocaleString('en-PK')} کم` : `Rs ${Number(rule.discount_value).toLocaleString('en-PK')} Kam`)}
                                     </div>
 
                                     <p className="text-[11px] text-gray-600 mt-1">
-                                        Kam az kam order:{' '}
-                                        <span className="font-bold text-gray-900">
+                                        {isUrdu ? 'کم از کم آرڈر: ' : 'Kam az kam order: '}
+                                        <span className="font-bold text-gray-900 font-mono">
                                             {formatRs(rule.min_order_amount)}
                                         </span>
                                     </p>
@@ -279,7 +281,7 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
 
                                 <div className="mt-4 pt-3 border-t border-gray-100 flex justify-between items-center text-xs">
                                     <span className="text-gray-500 text-[11px]">
-                                        Fast POS Billing mein Dastiyab
+                                        {isUrdu ? 'فاسٹ پی او ایس بلنگ میں دستیاب' : 'Fast POS Billing mein Dastiyab'}
                                     </span>
                                     <button
                                         type="button"
@@ -291,7 +293,9 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
                                                 : 'bg-emerald-100 text-emerald-900 hover:bg-emerald-200'
                                         }`}
                                     >
-                                        {rule.is_active ? 'Band Karein' : 'Fa-aal Karein'}
+                                        {rule.is_active
+                                            ? (isUrdu ? 'بند کریں' : 'Band Karein')
+                                            : (isUrdu ? 'فعال کریں' : 'Fa-aal Karein')}
                                     </button>
                                 </div>
                             </div>
@@ -300,7 +304,7 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
 
                     {rules.length === 0 && (
                         <div className="col-span-full py-12 text-center text-gray-400 text-sm bg-white rounded-2xl border border-dashed border-gray-200">
-                            Koi discount rule mojood nahi hai. Naya rule shamil karne ke liye upar diye gaye button par click karein.
+                            {isUrdu ? 'کوئی ڈسکاؤنٹ رول موجود نہیں ہے۔ نیا رول شامل کرنے کے لیے اوپر دیے گئے بٹن پر کلک کریں۔' : 'Koi discount rule mojood nahi hai. Naya rule shamil karne ke liye upar diye gaye button par click karein.'}
                         </div>
                     )}
                 </div>
@@ -308,16 +312,16 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
 
                 {/* 3. Add Rule Modal */}
                 <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                    <DialogContent className="max-w-md p-0 overflow-hidden rounded-2xl border border-emerald-300">
+                    <DialogContent className={`max-w-md p-0 overflow-hidden rounded-2xl border border-emerald-300 ${isUrdu ? 'font-urdu' : ''}`} dir={isUrdu ? 'rtl' : 'ltr'}>
                         <div className="bg-[#14532d] px-4 py-3 text-white flex justify-between items-center">
-                            <h2 className="font-bold text-sm">Naya Discount Rule Shamil Karein</h2>
+                            <h2 className="font-bold text-sm">{isUrdu ? 'نیا ڈسکاؤنٹ رول شامل کریں' : 'Naya Discount Rule Shamil Karein'}</h2>
                         </div>
 
                         <form onSubmit={handleSave} className="p-4 space-y-3.5 text-xs">
                             {/* 1. Rule Ka Naam * */}
                             <div>
                                 <label className="block font-bold text-gray-900 mb-1">
-                                    Rule Ka Naam *
+                                    {isUrdu ? 'رول کا نام *' : 'Rule Ka Naam *'}
                                 </label>
                                 <input
                                     type="text"
@@ -325,7 +329,7 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
                                     onChange={(e) =>
                                         setFormData({ ...formData, rule_name: e.target.value })
                                     }
-                                    placeholder="Maslan: Thok Khareedar 3%"
+                                    placeholder={isUrdu ? 'مثلاً: تھوک خریدار 3%' : 'Maslan: Thok Khareedar 3%'}
                                     className="w-full p-2 border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:border-emerald-600"
                                     required
                                 />
@@ -335,7 +339,7 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
                             <div className="grid grid-cols-2 gap-2.5">
                                 <div>
                                     <label className="block font-bold text-gray-900 mb-1">
-                                        Riaayat Qism
+                                        {isUrdu ? 'رعایت کی قسم' : 'Riaayat Qism'}
                                     </label>
                                     <select
                                         value={formData.discount_type}
@@ -345,16 +349,16 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
                                                 discount_type: e.target.value as 'percentage' | 'fixed',
                                             })
                                         }
-                                        className="w-full p-2 border border-gray-300 rounded-lg text-xs text-gray-900 font-semibold focus:outline-none focus:border-emerald-600 bg-white"
+                                        className="w-full p-2 border border-gray-300 rounded-lg text-xs text-gray-900 font-semibold focus:outline-none focus:border-emerald-600 bg-white cursor-pointer"
                                     >
-                                        <option value="percentage">Feesad (Percentage %)</option>
-                                        <option value="fixed">Rupay (Fixed Rs)</option>
+                                        <option value="percentage">{isUrdu ? 'فیصد (Percentage %)' : 'Feesad (Percentage %)'}</option>
+                                        <option value="fixed">{isUrdu ? 'روپے (Fixed Rs)' : 'Rupay (Fixed Rs)'}</option>
                                     </select>
                                 </div>
 
                                 <div>
                                     <label className="block font-bold text-gray-900 mb-1">
-                                        Discount Value *
+                                        {isUrdu ? 'ڈسکاؤنٹ ویلیو *' : 'Discount Value *'}
                                     </label>
                                     <input
                                         type="number"
@@ -363,8 +367,8 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
                                         onChange={(e) =>
                                             setFormData({ ...formData, discount_value: e.target.value })
                                         }
-                                        placeholder="Maslan: 3 (yaani 3%) ya 200"
-                                        className="w-full p-2 border border-emerald-400 rounded-lg text-xs font-bold text-gray-900 focus:outline-none focus:border-emerald-600"
+                                        placeholder={isUrdu ? 'مثلاً: 3 (یعنی 3%) یا 200' : 'Maslan: 3 (yaani 3%) ya 200'}
+                                        className="w-full p-2 border border-emerald-400 rounded-lg text-xs font-bold text-gray-900 focus:outline-none focus:border-emerald-600 font-mono"
                                         required
                                     />
                                 </div>
@@ -373,7 +377,7 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
                             {/* 4. Kam az kam Order Raqam (Rs) */}
                             <div>
                                 <label className="block font-bold text-gray-900 mb-1">
-                                    Kam az kam Order Raqam (Rs)
+                                    {isUrdu ? 'کم از کم آرڈر رقم (Rs)' : 'Kam az kam Order Raqam (Rs)'}
                                 </label>
                                 <input
                                     type="number"
@@ -385,14 +389,14 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
                                         })
                                     }
                                     placeholder="5000"
-                                    className="w-full p-2 border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:border-emerald-600"
+                                    className="w-full p-2 border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:border-emerald-600 font-mono"
                                 />
                             </div>
 
                             {/* 5. Wazaahat (Description) */}
                             <div>
                                 <label className="block font-bold text-gray-900 mb-1">
-                                    Wazaahat (Description)
+                                    {isUrdu ? 'وضاحت (تفصیل)' : 'Wazaahat (Description)'}
                                 </label>
                                 <input
                                     type="text"
@@ -400,7 +404,7 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
                                     onChange={(e) =>
                                         setFormData({ ...formData, description: e.target.value })
                                     }
-                                    placeholder="Is rule ki wazaahat..."
+                                    placeholder={isUrdu ? 'اس رول کی وضاحت...' : 'Is rule ki wazaahat...'}
                                     className="w-full p-2 border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:border-emerald-600"
                                 />
                             </div>
@@ -413,14 +417,14 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
                                     disabled={submitting}
                                     className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold rounded-lg text-xs transition cursor-pointer disabled:opacity-50"
                                 >
-                                    Mansookh
+                                    {isUrdu ? 'منسوخ' : 'Mansookh'}
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={submitting}
                                     className="px-5 py-2 bg-[#14532d] hover:bg-[#0f3d21] text-white font-bold rounded-lg text-xs shadow-xs transition cursor-pointer disabled:opacity-50"
                                 >
-                                    {submitting ? 'Save ho raha hai...' : 'Save Karein'}
+                                    {submitting ? (isUrdu ? 'محفوظ ہو رہا ہے...' : 'Save ho raha hai...') : (isUrdu ? 'محفوظ کریں' : 'Save Karein')}
                                 </button>
                             </div>
                         </form>

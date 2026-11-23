@@ -445,8 +445,8 @@ export default function ItemsIndex({
                 
                 {/* 1. Dark Green Top Header Banner */}
                 <MandiPageHeader
-                    title={isUrdu ? 'مال اور اسٹاک (پروڈکٹس)' : 'Maal aur Stock (Sabzi Products & Inventory)'}
-                    subtitle={isUrdu ? 'سبزی جنس کا ریکارڈ، خرید و فروخت ریٹ، اور اسٹاک لیول' : 'Sabzi jins ka record, khareed o farokht rate, aur stock level alerts'}
+                    title={isUrdu ? t('products_page.title') : 'Maal aur Stock (Sabzi Products & Inventory)'}
+                    subtitle={isUrdu ? t('products_page.subtitle') : 'Sabzi jins ka record, khareed o farokht rate, aur stock level alerts'}
                     isUrdu={isUrdu}
                 >
                     <button
@@ -455,7 +455,7 @@ export default function ItemsIndex({
                         className="h-9 px-4 rounded-xl text-xs md:text-sm font-semibold bg-white text-emerald-900 hover:bg-emerald-50 shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
                     >
                         <Icon name="Plus" className="size-4 text-emerald-800" weight="bold" />
-                        <span>Nayi Sabzi Shamil Karein</span>
+                        <span>{isUrdu ? t('products_page.add_new') : 'Nayi Sabzi Shamil Karein'}</span>
                     </button>
                 </MandiPageHeader>
 
@@ -469,13 +469,13 @@ export default function ItemsIndex({
                                 <Input
                                     value={search}
                                     onChange={e => setSearch(e.target.value)}
-                                    placeholder="Sabzi ka naam ya code talash karein..."
+                                    placeholder={isUrdu ? t('products_page.search_placeholder') : 'Sabzi ka naam ya code talash karein...'}
                                     className="h-10 text-xs md:text-sm ps-9 rounded-xl border-gray-200 bg-white"
                                 />
                                 <Icon name="MagnifyingGlass" className="size-4 text-gray-400 absolute start-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                             </div>
                             <Button type="submit" className="h-10 px-4 bg-[#14532d] hover:bg-[#0e3b20] text-white text-xs font-semibold rounded-xl cursor-pointer">
-                                Search
+                                {isUrdu ? 'تلاش کریں' : 'Search'}
                             </Button>
                         </form>
                     </div>
@@ -493,7 +493,7 @@ export default function ItemsIndex({
                                     : "bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50/50"
                             )}
                         >
-                            <span>Products</span>
+                            <span>{isUrdu ? t('products_page.products') : 'Products'}</span>
                             <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-extrabold">
                                 {stats.total}
                             </span>
@@ -510,7 +510,7 @@ export default function ItemsIndex({
                                     : "bg-white text-amber-900 border-amber-200/80 hover:border-amber-300 hover:bg-amber-50/40"
                             )}
                         >
-                            <span>Low Stock</span>
+                            <span>{isUrdu ? t('products_page.low_stock') : 'Low Stock'}</span>
                             <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-200 text-amber-950 font-extrabold">
                                 {stats.lowStock}
                             </span>
@@ -527,7 +527,7 @@ export default function ItemsIndex({
                                     : "bg-white text-amber-900 border-amber-200/80 hover:border-amber-300 hover:bg-amber-50/40"
                             )}
                         >
-                            <span>24h expiry</span>
+                            <span>{isUrdu ? t('products_page.expiring_24h') : '24h expiry'}</span>
                             <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-200 text-amber-950 font-extrabold">
                                 {stats.expiring}
                             </span>
@@ -544,7 +544,7 @@ export default function ItemsIndex({
                                     : "bg-white text-red-900 border-red-200/80 hover:border-red-300 hover:bg-red-50/40"
                             )}
                         >
-                            <span>Expired</span>
+                            <span>{isUrdu ? t('products_page.expired') : 'Expired'}</span>
                             <span className="text-[11px] px-2 py-0.5 rounded-full bg-red-200 text-red-950 font-extrabold">
                                 {stats.expired}
                             </span>
@@ -561,7 +561,7 @@ export default function ItemsIndex({
                                     : "bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50/50"
                             )}
                         >
-                            <span>Khatam</span>
+                            <span>{isUrdu ? t('products_page.khatam') : 'Khatam'}</span>
                             <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-200 text-gray-800 font-extrabold">
                                 {stats.khatam}
                             </span>
@@ -574,22 +574,22 @@ export default function ItemsIndex({
                             <table className="w-full text-xs sm:text-[13px] font-sans">
                                 <thead>
                                     <tr className="bg-[#14532d] text-white font-bold select-none text-xs">
-                                        <th className="px-2.5 py-3 text-start w-16">Code</th>
-                                        <th className="px-2.5 py-3 text-start min-w-[150px]">Sabzi Ka Naam</th>
-                                        <th className="px-2 py-3 text-end w-24">Khareed Rate</th>
-                                        <th className="px-2 py-3 text-end w-24">Farokht Rate</th>
-                                        <th className="px-2 py-3 text-end w-28">Mojooda Stock</th>
-                                        <th className="px-2 py-3 text-start w-20">Shelf Life</th>
-                                        <th className="px-1.5 py-3 text-center w-20">Status</th>
-                                        <th className="px-2 py-3 text-start w-32">Expiry</th>
-                                        <th className="px-2 py-3 text-center w-36">Action</th>
+                                        <th className="px-2.5 py-3 text-start w-16">{isUrdu ? t('products_page.code') : 'Code'}</th>
+                                        <th className="px-2.5 py-3 text-start min-w-[150px]">{isUrdu ? t('products_page.item_name') : 'Sabzi Ka Naam'}</th>
+                                        <th className="px-2 py-3 text-end w-24">{isUrdu ? t('products_page.purchase_rate') : 'Khareed Rate'}</th>
+                                        <th className="px-2 py-3 text-end w-24">{isUrdu ? t('products_page.sale_rate') : 'Farokht Rate'}</th>
+                                        <th className="px-2 py-3 text-end w-28">{isUrdu ? t('products_page.current_stock') : 'Mojooda Stock'}</th>
+                                        <th className="px-2 py-3 text-start w-20">{isUrdu ? t('products_page.shelf_life') : 'Shelf Life'}</th>
+                                        <th className="px-1.5 py-3 text-center w-20">{isUrdu ? t('products_page.status') : 'Status'}</th>
+                                        <th className="px-2 py-3 text-start w-32">{isUrdu ? t('products_page.expiry') : 'Expiry'}</th>
+                                        <th className="px-2 py-3 text-center w-36">{isUrdu ? t('products_page.action') : 'Action'}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
                                     {filteredItems.length === 0 ? (
                                         <tr>
                                             <td colSpan={9} className="px-4 py-8 text-center text-gray-400 text-sm">
-                                                No items found in this view
+                                                {isUrdu ? 'اس ویو میں کوئی پروڈکٹ نہیں ملی' : 'No items found in this view'}
                                             </td>
                                         </tr>
                                     ) : (
@@ -661,31 +661,31 @@ export default function ItemsIndex({
                                                     {/* 5. Mojooda Stock (Bold & Right-Aligned with Unit) */}
                                                     <td className="px-2 py-2.5 text-end font-bold text-gray-900 whitespace-nowrap text-xs sm:text-[13px] tabular-nums w-28">
                                                         <span>{formatNum(currentStock)}</span>{' '}
-                                                        <span className="text-[11px] text-gray-500 font-medium">{unitName.toLowerCase()}</span>
+                                                        <span className="text-[11px] text-gray-500 font-medium">{isUrdu ? (unitName.toLowerCase().includes('peti') ? 'پیٹی' : 'بوری') : unitName.toLowerCase()}</span>
                                                     </td>
 
                                                     {/* 6. Shelf Life */}
                                                     <td className="px-2 py-2.5 text-start text-gray-700 whitespace-nowrap text-xs font-medium w-20">
-                                                        {it.shelf_life || (it.shelf_life_days ? `${it.shelf_life_days} din` : '4-5 din')}
+                                                        {it.shelf_life || (it.shelf_life_days ? `${it.shelf_life_days} ${isUrdu ? 'دن' : 'din'}` : isUrdu ? '4-5 دن' : '4-5 din')}
                                                     </td>
 
                                                     {/* 7. Status */}
                                                     <td className="px-1.5 py-2.5 text-center whitespace-nowrap w-20">
                                                         {isKhatam ? (
                                                             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-100 text-rose-800 border border-rose-200">
-                                                                Khatam
+                                                                {isUrdu ? 'ختم' : 'Khatam'}
                                                             </span>
                                                         ) : isExpired ? (
                                                             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-red-100 text-red-800 border border-red-200">
-                                                                Expired
+                                                                {isUrdu ? 'ایکسپائرڈ' : 'Expired'}
                                                             </span>
                                                         ) : isLowStock ? (
                                                             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-800 border border-amber-200">
-                                                                Kam
+                                                                {isUrdu ? 'کم' : 'Kam'}
                                                             </span>
                                                         ) : (
                                                             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                                                                Dastiyab
+                                                                {isUrdu ? 'دستیاب' : 'Dastiyab'}
                                                             </span>
                                                         )}
                                                     </td>
@@ -693,17 +693,17 @@ export default function ItemsIndex({
                                                     {/* 8. Expiry (lot-wise, exactly like existing POS) */}
                                                     <td className="px-2 py-2.5 whitespace-nowrap text-xs w-32 text-start">
                                                         {isKhatam ? (
-                                                            <span className="text-gray-500 font-medium text-[11px]">Timer band (0)</span>
+                                                            <span className="text-gray-500 font-medium text-[11px]">{isUrdu ? 'ٹائمر بند (0)' : 'Timer band (0)'}</span>
                                                         ) : isExpired ? (
                                                             <div className="flex items-center gap-1">
-                                                                <span className="text-red-700 font-medium text-[11px]">3h pehle</span>
+                                                                <span className="text-red-700 font-medium text-[11px]">{isUrdu ? '3 گھنٹے پہلے' : '3h pehle'}</span>
                                                                 {(it.current_stock ?? 0) > 0 && it.status !== 'khatam' ? (
                                                                     <button
                                                                         type="button"
                                                                         onClick={() => handleWastage(it)}
                                                                         className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#991b1b] hover:bg-[#7f1d1d] text-white shadow-2xs transition-colors cursor-pointer"
                                                                     >
-                                                                        Wastage
+                                                                        {isUrdu ? 'ضائع' : 'Wastage'}
                                                                     </button>
                                                                 ) : (
                                                                     <span className="text-gray-400 font-bold select-none text-[11px]">—</span>
@@ -722,7 +722,7 @@ export default function ItemsIndex({
                                                                         onClick={() => handleOpenDiscount(it)}
                                                                         className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#854d0e] hover:bg-[#713f12] text-white shadow-2xs transition-colors cursor-pointer"
                                                                     >
-                                                                        Discount
+                                                                        {isUrdu ? 'رعایت' : 'Discount'}
                                                                     </button>
                                                                 )}
                                                             </div>
@@ -731,7 +731,7 @@ export default function ItemsIndex({
                                                                 <span className="text-emerald-900 font-medium text-xs">
                                                                     {it.expiry_countdown?.text && it.expiry_countdown.text !== '-'
                                                                         ? it.expiry_countdown.text
-                                                                        : (it.shelf_life ? `${it.shelf_life} baaki` : '-')}
+                                                                        : (it.shelf_life ? `${it.shelf_life} ${isUrdu ? 'باقی' : 'baaki'}` : '-')}
                                                                 </span>
                                                                 {it.lot_date && (
                                                                     <div className="text-[10px] text-gray-400">{it.lot_date}</div>
@@ -749,7 +749,7 @@ export default function ItemsIndex({
                                                                     onClick={() => openPurchaseModal(it)}
                                                                     className="px-2 py-1 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-gray-900 text-[11px] font-semibold transition-all shadow-2xs cursor-pointer"
                                                                 >
-                                                                    Purchase
+                                                                    {isUrdu ? t('products_page.purchase_btn') : 'Purchase'}
                                                                 </button>
                                                             ) : (
                                                                 <>
@@ -758,14 +758,14 @@ export default function ItemsIndex({
                                                                         onClick={() => openStockAddModal(it)}
                                                                         className="px-2 py-1 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-gray-900 text-[11px] font-semibold transition-all shadow-2xs cursor-pointer"
                                                                     >
-                                                                        Stock add
+                                                                        {isUrdu ? t('products_page.stock_add_btn') : 'Stock add'}
                                                                     </button>
                                                                     <button
                                                                         type="button"
                                                                         onClick={() => openStockAdjustModal(it)}
                                                                         className="px-2 py-1 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-gray-900 text-[11px] font-semibold transition-all shadow-2xs cursor-pointer"
                                                                     >
-                                                                        Adjust
+                                                                        {isUrdu ? t('products_page.adjust_btn') : 'Adjust'}
                                                                     </button>
                                                                 </>
                                                             )}
@@ -806,17 +806,19 @@ export default function ItemsIndex({
 
                     {/* Explanatory footer note */}
                     <div className="bg-[#f0f4f0] border border-emerald-200/80 rounded-xl p-3 text-xs text-gray-700 leading-relaxed">
-                        <strong>Kaise chalta hai:</strong> Stock = Aamad - Sale · Timer lot-wise, stock 0 par band · Low Stock (10 ya kam): notification save · Expiry alert 5 second mein hat jata hai
+                        <strong>{isUrdu ? 'طریقہ کار:' : 'Kaise chalta hai:'}</strong> {isUrdu ? 'اسٹاک = آمد - فروخت · ٹائمر لاٹ کے مطابق، اسٹاک 0 ہونے پر بند · کم اسٹاک (10 یا کم): الرٹ محفوظ · ایکسپائری الرٹ 5 سیکنڈ میں ہٹ جاتا ہے' : 'Stock = Aamad - Sale · Timer lot-wise, stock 0 par band · Low Stock (10 ya kam): notification save · Expiry alert 5 second mein hat jata hai'}
                     </div>
                 </div>
             </div>
 
             {/* Naya Product Form Modal (Nayi Sabzi Shamil Karein) - Requirement 6 */}
             <Dialog open={itemModalOpen} onOpenChange={setItemModalOpen}>
-                <DialogContent className="max-w-lg font-sans p-6 bg-white rounded-2xl">
+                <DialogContent className="max-w-lg font-sans p-6 bg-white rounded-2xl" dir={isUrdu ? 'rtl' : 'ltr'}>
                     <DialogHeader>
                         <DialogTitle className="text-lg font-bold text-gray-900">
-                            {editingItem ? 'Sabzi Edit Karein' : 'Nayi Sabzi Shamil Karein'}
+                            {editingItem 
+                                ? (isUrdu ? 'سبزی تبدیل کریں' : 'Sabzi Edit Karein') 
+                                : (isUrdu ? 'نئی سبزی شامل کریں' : 'Nayi Sabzi Shamil Karein')}
                         </DialogTitle>
                     </DialogHeader>
 
@@ -825,7 +827,7 @@ export default function ItemsIndex({
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <Label className="text-xs font-semibold text-gray-700 block mb-1">
-                                    Sabzi Ka Naam *
+                                    {isUrdu ? 'سبزی کا نام *' : 'Sabzi Ka Naam *'}
                                 </Label>
                                 <Input
                                     required
@@ -838,14 +840,14 @@ export default function ItemsIndex({
                                             name_ur: val,
                                         });
                                     }}
-                                    placeholder="e.g. Tamatar"
+                                    placeholder={isUrdu ? 'مثلاً: ٹماٹر' : 'e.g. Tamatar'}
                                     className="h-9.5 text-sm border-gray-200 rounded-lg focus:border-[#14532d]"
                                     autoFocus
                                 />
                             </div>
                             <div>
                                 <Label className="text-xs font-semibold text-gray-700 block mb-1">
-                                    Code
+                                    {isUrdu ? 'کوڈ' : 'Code'}
                                 </Label>
                                 <Input
                                     value={itemForm.data.code}
@@ -860,7 +862,7 @@ export default function ItemsIndex({
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <Label className="text-xs font-semibold text-gray-700 block mb-1">
-                                    Khareed Rate (Rs.)
+                                    {isUrdu ? 'خرید ریٹ (روپے)' : 'Khareed Rate (Rs.)'}
                                 </Label>
                                 <Input
                                     type="number"
@@ -873,7 +875,7 @@ export default function ItemsIndex({
                             </div>
                             <div>
                                 <Label className="text-xs font-semibold text-gray-700 block mb-1">
-                                    Farokht Rate (Rs.) *
+                                    {isUrdu ? 'فروخت ریٹ (روپے) *' : 'Farokht Rate (Rs.) *'}
                                 </Label>
                                 <Input
                                     type="number"
@@ -890,7 +892,7 @@ export default function ItemsIndex({
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <Label className="text-xs font-semibold text-gray-700 block mb-1">
-                                    Mojooda / Ibtidayi Stock
+                                    {isUrdu ? 'موجودہ / ابتدائی اسٹاک' : 'Mojooda / Ibtidayi Stock'}
                                 </Label>
                                 <Input
                                     type="number"
@@ -902,12 +904,12 @@ export default function ItemsIndex({
                             </div>
                             <div>
                                 <Label className="text-xs font-semibold text-gray-700 block mb-1">
-                                    Shelf Life
+                                    {isUrdu ? 'شیلف لائف' : 'Shelf Life'}
                                 </Label>
                                 <Input
                                     value={itemForm.data.shelf_life}
                                     onChange={e => itemForm.setData('shelf_life', e.target.value)}
-                                    placeholder="e.g. 4-5 din"
+                                    placeholder={isUrdu ? 'مثلاً: 4-5 دن' : 'e.g. 4-5 din'}
                                     className="h-9.5 text-sm border-gray-200 rounded-lg focus:border-[#14532d]"
                                 />
                             </div>
@@ -917,7 +919,7 @@ export default function ItemsIndex({
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <Label className="text-xs font-semibold text-gray-700 block mb-1">
-                                    Stock Alert Limit
+                                    {isUrdu ? 'اسٹاک الرٹ حد' : 'Stock Alert Limit'}
                                 </Label>
                                 <Input
                                     type="number"
@@ -929,12 +931,12 @@ export default function ItemsIndex({
                             </div>
                             <div>
                                 <Label className="text-xs font-semibold text-gray-700 block mb-1">
-                                    Notes / Subtitle Description
+                                    {isUrdu ? 'نوٹس / وضاحتی تفصیل' : 'Notes / Subtitle Description'}
                                 </Label>
                                 <Input
                                     value={itemForm.data.stock_note}
                                     onChange={e => itemForm.setData('stock_note', e.target.value)}
-                                    placeholder="e.g. Kasur Special, A-Class Farm"
+                                    placeholder={isUrdu ? 'مثلاً: قصور اسپیشل، اے کلاس فارم' : 'e.g. Kasur Special, A-Class Farm'}
                                     className="h-9.5 text-sm border-gray-200 rounded-lg focus:border-[#14532d]"
                                 />
                             </div>
@@ -947,14 +949,14 @@ export default function ItemsIndex({
                                 onClick={() => setItemModalOpen(false)}
                                 className="min-h-[40px] px-5 py-2 border border-gray-200 text-gray-700 hover:bg-gray-50 text-xs font-semibold rounded-xl transition-colors cursor-pointer"
                             >
-                                Mansookh (Cancel)
+                                {isUrdu ? 'منسوخ (Cancel)' : 'Mansookh (Cancel)'}
                             </button>
                             <button
                                 type="submit"
                                 disabled={itemForm.processing}
                                 className="min-h-[40px] px-6 py-2 bg-[#14532d] hover:bg-[#166534] active:bg-[#0f3d21] text-white font-bold text-xs sm:text-sm rounded-xl shadow-xs transition-colors cursor-pointer"
                             >
-                                Mehfooz Karein (Save)
+                                {isUrdu ? 'محفوظ کریں (Save)' : 'Mehfooz Karein (Save)'}
                             </button>
                         </DialogFooter>
                     </form>
@@ -964,28 +966,28 @@ export default function ItemsIndex({
             {/* Discount Modal */}
             {discountModalItem && (
                 <Dialog open={!!discountModalItem} onOpenChange={(open) => !open && setDiscountModalItem(null)}>
-                    <DialogContent className="max-w-sm font-sans p-6 bg-white rounded-2xl">
+                    <DialogContent className="max-w-sm font-sans p-6 bg-white rounded-2xl" dir={isUrdu ? 'rtl' : 'ltr'}>
                         <DialogHeader>
                             <DialogTitle className="text-base font-bold text-gray-900">
-                                {discountModalItem.name_en} par Discount Lagayein
+                                {isUrdu ? `${cleanItemName(discountModalItem.name_en)} پر رعایت لگائیں` : `${discountModalItem.name_en} par Discount Lagayein`}
                             </DialogTitle>
                         </DialogHeader>
 
                         <form onSubmit={handleApplyDiscountSubmit} className="space-y-4 pt-2">
                             <div className="text-xs space-y-1 text-gray-600">
                                 <div className="flex justify-between">
-                                    <span>Mawjooda Rate:</span>
+                                    <span>{isUrdu ? 'موجودہ ریٹ:' : 'Mawjooda Rate:'}</span>
                                     <span className="font-bold text-gray-900">Rs. {formatNum(discountModalItem.default_rate)}</span>
                                 </div>
                                 <div className="flex justify-between text-amber-800">
-                                    <span>Suggested (15% off):</span>
+                                    <span>{isUrdu ? 'تجویز کردہ (15٪ رعایت):' : 'Suggested (15% off):'}</span>
                                     <span className="font-bold">Rs. {formatNum(Math.round((discountModalItem.default_rate || 850) * 0.85))}</span>
                                 </div>
                             </div>
 
                             <div>
                                 <Label className="text-xs font-semibold text-gray-700 block mb-1">
-                                    Naya Discount Rate (Rs.)
+                                    {isUrdu ? 'نیا رعایت ریٹ (روپے)' : 'Naya Discount Rate (Rs.)'}
                                 </Label>
                                 <Input
                                     type="number"
@@ -1004,13 +1006,13 @@ export default function ItemsIndex({
                                     onClick={() => setDiscountModalItem(null)}
                                     className="px-4 py-2 border border-gray-200 text-gray-700 hover:bg-gray-50 text-xs font-semibold rounded-lg cursor-pointer"
                                 >
-                                    Cancel
+                                    {isUrdu ? 'منسوخ' : 'Cancel'}
                                 </button>
                                 <button
                                     type="submit"
                                     className="px-5 py-2 bg-[#854d0e] hover:bg-[#713f12] text-white text-xs font-bold rounded-lg shadow-xs cursor-pointer"
                                 >
-                                    Discount Save Karein
+                                    {isUrdu ? 'رعایت محفوظ کریں' : 'Discount Save Karein'}
                                 </button>
                             </DialogFooter>
                         </form>
@@ -1021,24 +1023,24 @@ export default function ItemsIndex({
             {/* Stock Add Modal */}
             {stockAddModalItem && (
                 <Dialog open={stockAddModalOpen} onOpenChange={setStockAddModalOpen}>
-                    <DialogContent className="max-w-md font-sans p-6 bg-white rounded-2xl">
+                    <DialogContent className="max-w-md font-sans p-6 bg-white rounded-2xl" dir={isUrdu ? 'rtl' : 'ltr'}>
                         <DialogHeader>
                             <DialogTitle className="text-base font-bold text-gray-900">
-                                Stock Add Karein · {cleanItemName(stockAddModalItem.name_en)}
+                                {isUrdu ? `اسٹاک شامل کریں · ${cleanItemName(stockAddModalItem.name_en)}` : `Stock Add Karein · ${cleanItemName(stockAddModalItem.name_en)}`}
                             </DialogTitle>
                         </DialogHeader>
 
                         <form onSubmit={handleStockAddSubmit} className="space-y-4 pt-2">
                             <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200/80 flex items-center justify-between text-xs">
-                                <span className="text-emerald-900 font-semibold">Mojooda Stock:</span>
+                                <span className="text-emerald-900 font-semibold">{isUrdu ? 'موجودہ اسٹاک:' : 'Mojooda Stock:'}</span>
                                 <span className="font-extrabold text-emerald-950 text-sm">
-                                    {stockAddModalItem.current_stock ?? stockAddModalItem.opening_stock ?? 0} {stockAddModalItem.unit || 'Bori'}
+                                    {stockAddModalItem.current_stock ?? stockAddModalItem.opening_stock ?? 0} {isUrdu ? (stockAddModalItem.unit?.toLowerCase().includes('peti') ? 'پیٹی' : 'بوری') : (stockAddModalItem.unit || 'Bori')}
                                 </span>
                             </div>
 
                             <div>
                                 <Label className="text-xs font-semibold text-gray-700 block mb-1">
-                                    Kitna Stock Add Karna Hai? ({stockAddModalItem.unit || 'Bori'}) *
+                                    {isUrdu ? `کتنا اسٹاک شامل کرنا ہے؟ (${stockAddModalItem.unit?.toLowerCase().includes('peti') ? 'پیٹی' : 'بوری'}) *` : `Kitna Stock Add Karna Hai? (${stockAddModalItem.unit || 'Bori'}) *`}
                                 </Label>
                                 <Input
                                     type="number"
@@ -1055,31 +1057,31 @@ export default function ItemsIndex({
 
                             {Number(stockAddQuantity) > 0 && (
                                 <div className="p-2.5 bg-gray-50 rounded-lg text-xs flex justify-between items-center text-gray-700">
-                                    <span>Naya Kul Stock Hoga:</span>
+                                    <span>{isUrdu ? 'نیا کل اسٹاک ہوگا:' : 'Naya Kul Stock Hoga:'}</span>
                                     <span className="font-bold text-emerald-900 text-sm">
-                                        {(stockAddModalItem.current_stock ?? 0) + Number(stockAddQuantity)} {stockAddModalItem.unit || 'Bori'}
+                                        {(stockAddModalItem.current_stock ?? 0) + Number(stockAddQuantity)} {isUrdu ? (stockAddModalItem.unit?.toLowerCase().includes('peti') ? 'پیٹی' : 'بوری') : (stockAddModalItem.unit || 'Bori')}
                                     </span>
                                 </div>
                             )}
 
                             <div>
                                 <Label className="text-xs font-semibold text-gray-700 block mb-1">
-                                    Wajah / Note (Optional)
+                                    {isUrdu ? 'وجہ / نوٹ (اختیاری)' : 'Wajah / Note (Optional)'}
                                 </Label>
                                 <Input
                                     value={stockAddNote}
                                     onChange={e => setStockAddNote(e.target.value)}
-                                    placeholder="e.g. Mandi gaari aamad, Warehouse stock"
+                                    placeholder={isUrdu ? 'مثلاً: منڈی گاڑی آمد، گودام اسٹاک' : 'e.g. Mandi gaari aamad, Warehouse stock'}
                                     className="h-9 text-xs border-gray-200 rounded-lg focus:border-[#14532d]"
                                 />
                             </div>
 
                             <DialogFooter className="pt-2 gap-2">
                                 <Button type="button" variant="outline" onClick={() => setStockAddModalOpen(false)} className="text-xs">
-                                    Cancel
+                                    {isUrdu ? 'منسوخ' : 'Cancel'}
                                 </Button>
                                 <Button type="submit" className="bg-[#14532d] hover:bg-[#0e3b20] text-white text-xs font-bold px-4">
-                                    Stock Add Karein
+                                    {isUrdu ? 'اسٹاک شامل کریں' : 'Stock Add Karein'}
                                 </Button>
                             </DialogFooter>
                         </form>
@@ -1090,24 +1092,24 @@ export default function ItemsIndex({
             {/* Stock Adjust Modal */}
             {stockAdjustModalItem && (
                 <Dialog open={stockAdjustModalOpen} onOpenChange={setStockAdjustModalOpen}>
-                    <DialogContent className="max-w-md font-sans p-6 bg-white rounded-2xl">
+                    <DialogContent className="max-w-md font-sans p-6 bg-white rounded-2xl" dir={isUrdu ? 'rtl' : 'ltr'}>
                         <DialogHeader>
                             <DialogTitle className="text-base font-bold text-gray-900">
-                                Stock Adjust Karein · {cleanItemName(stockAdjustModalItem.name_en)}
+                                {isUrdu ? `اسٹاک ایڈجسٹ کریں · ${cleanItemName(stockAdjustModalItem.name_en)}` : `Stock Adjust Karein · ${cleanItemName(stockAdjustModalItem.name_en)}`}
                             </DialogTitle>
                         </DialogHeader>
 
                         <form onSubmit={handleStockAdjustSubmit} className="space-y-4 pt-2">
                             <div className="p-3 bg-amber-50 rounded-xl border border-amber-200/80 flex items-center justify-between text-xs">
-                                <span className="text-amber-900 font-semibold">System Stock:</span>
+                                <span className="text-amber-900 font-semibold">{isUrdu ? 'سسٹم اسٹاک:' : 'System Stock:'}</span>
                                 <span className="font-extrabold text-amber-950 text-sm">
-                                    {stockAdjustModalItem.current_stock ?? stockAdjustModalItem.opening_stock ?? 0} {stockAdjustModalItem.unit || 'Bori'}
+                                    {stockAdjustModalItem.current_stock ?? stockAdjustModalItem.opening_stock ?? 0} {isUrdu ? (stockAdjustModalItem.unit?.toLowerCase().includes('peti') ? 'پیٹی' : 'بوری') : (stockAdjustModalItem.unit || 'Bori')}
                                 </span>
                             </div>
 
                             <div>
                                 <Label className="text-xs font-semibold text-gray-700 block mb-1">
-                                    Naya Asal Stock (Physical Count) *
+                                    {isUrdu ? `نیا اصل اسٹاک (فزیکل گنتی) *` : `Naya Asal Stock (Physical Count) *`}
                                 </Label>
                                 <Input
                                     type="number"
@@ -1124,7 +1126,7 @@ export default function ItemsIndex({
 
                             {stockAdjustNewStock !== '' && (
                                 <div className="p-2.5 bg-gray-50 rounded-lg text-xs flex justify-between items-center text-gray-700">
-                                    <span>Stock Me Farq:</span>
+                                    <span>{isUrdu ? 'اسٹاک میں فرق:' : 'Stock Me Farq:'}</span>
                                     <span className={cn(
                                         "font-bold text-sm",
                                         Number(stockAdjustNewStock) - (stockAdjustModalItem.current_stock ?? 0) >= 0
@@ -1132,33 +1134,33 @@ export default function ItemsIndex({
                                             : "text-rose-800"
                                     )}>
                                         {Number(stockAdjustNewStock) - (stockAdjustModalItem.current_stock ?? 0) > 0 ? '+' : ''}
-                                        {Number(stockAdjustNewStock) - (stockAdjustModalItem.current_stock ?? 0)} {stockAdjustModalItem.unit || 'Bori'}
+                                        {Number(stockAdjustNewStock) - (stockAdjustModalItem.current_stock ?? 0)} {isUrdu ? (stockAdjustModalItem.unit?.toLowerCase().includes('peti') ? 'پیٹی' : 'بوری') : (stockAdjustModalItem.unit || 'Bori')}
                                     </span>
                                 </div>
                             )}
 
                             <div>
                                 <Label className="text-xs font-semibold text-gray-700 block mb-1">
-                                    Wajah (Reason) *
+                                    {isUrdu ? 'وجہ (Reason) *' : 'Wajah (Reason) *'}
                                 </Label>
                                 <select
                                     value={stockAdjustReason}
                                     onChange={e => setStockAdjustReason(e.target.value)}
                                     className="w-full h-9.5 px-3 text-xs border border-gray-200 rounded-lg bg-white font-medium focus:border-[#14532d] cursor-pointer"
                                 >
-                                    <option value="Ginti me farq (Count error)">Ginti me farq (Count error)</option>
-                                    <option value="Kharab maal / Wastage">Kharab maal / Wastage</option>
-                                    <option value="Wazan kam nikla">Wazan kam nikla</option>
-                                    <option value="Digar (Other)">Digar (Other)</option>
+                                    <option value="Ginti me farq (Count error)">{isUrdu ? 'گنتی میں فرق (Count error)' : 'Ginti me farq (Count error)'}</option>
+                                    <option value="Kharab maal / Wastage">{isUrdu ? 'خراب مال / ضائع (Wastage)' : 'Kharab maal / Wastage'}</option>
+                                    <option value="Wazan kam nikla">{isUrdu ? 'وزن کم نکلا' : 'Wazan kam nikla'}</option>
+                                    <option value="Digar (Other)">{isUrdu ? 'دیگر (Other)' : 'Digar (Other)'}</option>
                                 </select>
                             </div>
 
                             <DialogFooter className="pt-2 gap-2">
                                 <Button type="button" variant="outline" onClick={() => setStockAdjustModalOpen(false)} className="text-xs">
-                                    Cancel
+                                    {isUrdu ? 'منسوخ' : 'Cancel'}
                                 </Button>
                                 <Button type="submit" className="bg-[#14532d] hover:bg-[#0e3b20] text-white text-xs font-bold px-4">
-                                    Stock Adjust Karein
+                                    {isUrdu ? 'اسٹاک ایڈجسٹ کریں' : 'Stock Adjust Karein'}
                                 </Button>
                             </DialogFooter>
                         </form>
@@ -1169,29 +1171,29 @@ export default function ItemsIndex({
             {/* Purchase Modal */}
             {purchaseModalItem && (
                 <Dialog open={purchaseModalOpen} onOpenChange={setPurchaseModalOpen}>
-                    <DialogContent className="max-w-md font-sans p-6 bg-white rounded-2xl">
+                    <DialogContent className="max-w-md font-sans p-6 bg-white rounded-2xl" dir={isUrdu ? 'rtl' : 'ltr'}>
                         <DialogHeader>
                             <DialogTitle className="text-base font-bold text-gray-900">
-                                Nayi Purchase (Bijak) · {cleanItemName(purchaseModalItem.name_en)}
+                                {isUrdu ? `نئی خریداری (بیجک) · ${cleanItemName(purchaseModalItem.name_en)}` : `Nayi Purchase (Bijak) · ${cleanItemName(purchaseModalItem.name_en)}`}
                             </DialogTitle>
                         </DialogHeader>
 
                         <form onSubmit={handlePurchaseSubmit} className="space-y-4 pt-2">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
-                                    <Label className="text-xs font-semibold text-gray-700 block mb-1">Jins (Item)</Label>
+                                    <Label className="text-xs font-semibold text-gray-700 block mb-1">{isUrdu ? 'جنس' : 'Jins (Item)'}</Label>
                                     <Input
                                         disabled
-                                        value={`${cleanItemName(purchaseModalItem.name_en)} (${purchaseModalItem.unit || 'Bori'})`}
+                                        value={`${cleanItemName(purchaseModalItem.name_en)} (${isUrdu ? (purchaseModalItem.unit?.toLowerCase().includes('peti') ? 'پیٹی' : 'بوری') : (purchaseModalItem.unit || 'Bori')})`}
                                         className="h-9.5 text-xs bg-gray-50 border-gray-200 rounded-lg text-gray-900 font-bold"
                                     />
                                 </div>
                                 <div>
-                                    <Label className="text-xs font-semibold text-gray-700 block mb-1">Kisan / Supplier</Label>
+                                    <Label className="text-xs font-semibold text-gray-700 block mb-1">{isUrdu ? 'کسان / بیوپاری' : 'Kisan / Supplier'}</Label>
                                     <Input
                                         value={purchaseFarmerName}
                                         onChange={e => setPurchaseFarmerName(e.target.value)}
-                                        placeholder="e.g. Aslam Khan (Kisan)"
+                                        placeholder={isUrdu ? 'مثلاً: اسلم خان (کسان)' : 'e.g. Aslam Khan (Kisan)'}
                                         className="h-9.5 text-xs border-gray-200 rounded-lg focus:border-[#14532d]"
                                     />
                                 </div>
@@ -1200,7 +1202,7 @@ export default function ItemsIndex({
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
                                     <Label className="text-xs font-semibold text-gray-700 block mb-1">
-                                        Tadaad ({purchaseModalItem.unit || 'Bori'}) *
+                                        {isUrdu ? `تعداد (${purchaseModalItem.unit?.toLowerCase().includes('peti') ? 'پیٹی' : 'بوری'}) *` : `Tadaad (${purchaseModalItem.unit || 'Bori'}) *`}
                                     </Label>
                                     <Input
                                         type="number"
@@ -1216,7 +1218,7 @@ export default function ItemsIndex({
                                 </div>
                                 <div>
                                     <Label className="text-xs font-semibold text-gray-700 block mb-1">
-                                        Rate per {purchaseModalItem.unit || 'Bori'} (Rs.)
+                                        {isUrdu ? `ریٹ فی ${purchaseModalItem.unit?.toLowerCase().includes('peti') ? 'پیٹی' : 'بوری'} (روپے)` : `Rate per ${purchaseModalItem.unit || 'Bori'} (Rs.)`}
                                     </Label>
                                     <Input
                                         type="number"
@@ -1231,7 +1233,7 @@ export default function ItemsIndex({
 
                             {Number(purchaseQuantity) > 0 && (
                                 <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200/80 flex items-center justify-between text-xs">
-                                    <span className="text-emerald-900 font-semibold">Kul Purchase Rakam:</span>
+                                    <span className="text-emerald-900 font-semibold">{isUrdu ? 'کل خریداری رقم:' : 'Kul Purchase Rakam:'}</span>
                                     <span className="font-extrabold text-emerald-950 text-base">
                                         Rs. {(Number(purchaseQuantity || 0) * (Number(purchaseRate) || 0)).toLocaleString()}
                                     </span>
@@ -1240,10 +1242,10 @@ export default function ItemsIndex({
 
                             <DialogFooter className="pt-2 gap-2">
                                 <Button type="button" variant="outline" onClick={() => setPurchaseModalOpen(false)} className="text-xs">
-                                    Cancel
+                                    {isUrdu ? 'منسوخ' : 'Cancel'}
                                 </Button>
                                 <Button type="submit" className="bg-[#14532d] hover:bg-[#0e3b20] text-white text-xs font-bold px-4">
-                                    Purchase Save Karein
+                                    {isUrdu ? 'خریداری محفوظ کریں' : 'Purchase Save Karein'}
                                 </Button>
                             </DialogFooter>
                         </form>
