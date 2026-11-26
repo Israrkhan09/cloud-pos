@@ -56,9 +56,19 @@ interface ReceiptItem {
     } | null;
 }
 
+interface ActiveMerchant {
+    id: number;
+    code: number;
+    name_en?: string;
+    name_ur?: string;
+    name?: string;
+    current_balance?: number;
+}
+
 interface Props {
     rows: WasooliRow[];
     totals: Totals;
+    merchants?: ActiveMerchant[];
     receipts?: ReceiptItem[];
     filters: {
         date: string;
@@ -66,7 +76,7 @@ interface Props {
     };
 }
 
-export default function WasooliIndex({ rows, totals, receipts = [], filters }: Props) {
+export default function WasooliIndex({ rows, totals, merchants = [], receipts = [], filters }: Props) {
     const { t, i18n } = useTranslation();
     const isUrdu = i18n.language === 'ur';
 
@@ -118,11 +128,55 @@ export default function WasooliIndex({ rows, totals, receipts = [], filters }: P
         { title: isUrdu ? 'وصولی' : 'Wasooli', href: '/wasooli' },
     ];
 
+    // Dropdown list for selecting any active customer to record a payment/wasooli
+    const dropdownMerchants = useMemo(() => {
+        if (merchants && merchants.length > 0) {
+            return merchants;
+        }
+        return rows.map(r => ({
+            id: r.merchant_id,
+            code: r.code,
+            name: r.name,
+            name_ur: r.name_ur,
+            name_en: r.name_en,
+            current_balance: r.total_baqaya,
+        }));
+    }, [merchants, rows]);
+
     // Selected merchant calculations
     const selectedMerchant = useMemo(() => {
         if (!selectedMerchantId) return null;
-        return rows.find(r => r.merchant_id === Number(selectedMerchantId)) || null;
-    }, [rows, selectedMerchantId]);
+        const inRow = rows.find(r => r.merchant_id === Number(selectedMerchantId));
+        if (inRow) {
+            return {
+                merchant_id: inRow.merchant_id,
+                code: inRow.code,
+                name: inRow.name,
+                name_ur: inRow.name_ur,
+                name_en: inRow.name_en,
+                sabiqa: inRow.sabiqa,
+                amroza: inRow.amroza,
+                wasooli: inRow.wasooli,
+                total_baqaya: inRow.total_baqaya,
+            };
+        }
+        const m = dropdownMerchants.find(m => m.id === Number(selectedMerchantId));
+        if (m) {
+            const bal = Number(m.current_balance) || 0;
+            return {
+                merchant_id: m.id,
+                code: m.code,
+                name: m.name || m.name_ur || m.name_en || '',
+                name_ur: m.name_ur || '',
+                name_en: m.name_en || '',
+                sabiqa: bal,
+                amroza: 0,
+                wasooli: 0,
+                total_baqaya: bal,
+            };
+        }
+        return null;
+    }, [rows, dropdownMerchants, selectedMerchantId]);
 
     const sabiqa = selectedMerchant ? Number(selectedMerchant.sabiqa) : 0;
     const amroza = selectedMerchant ? Number(selectedMerchant.amroza) : 0;
@@ -130,7 +184,8 @@ export default function WasooliIndex({ rows, totals, receipts = [], filters }: P
     const totalOutstanding = Math.max(0, sabiqa + amroza - wasooliMili);
 
     const numAmount = parseFloat(amount) || 0;
-    const isOverLimit = selectedMerchant ? numAmount > totalOutstanding : false;
+    // Over-limit check only warns/restricts when there is positive outstanding debt to prevent overpayment
+    const isOverLimit = selectedMerchant && totalOutstanding > 0 ? numAmount > totalOutstanding : false;
 
     // Reset current form fields
     function handleReset() {
@@ -171,7 +226,7 @@ export default function WasooliIndex({ rows, totals, receipts = [], filters }: P
             return;
         }
 
-        if (numAmount > totalOutstanding) {
+        if (totalOutstanding > 0 && numAmount > totalOutstanding) {
             toast.error(
                 isUrdu
                     ? `وصولی کی رقم کل بقایا (Rs. ${Number(totalOutstanding).toLocaleString()}) سے زیادہ نہیں ہو سکتی۔`
@@ -323,13 +378,16 @@ export default function WasooliIndex({ rows, totals, receipts = [], filters }: P
                                         <option value="">
                                             {isUrdu ? 'گاہک چنیں...' : 'Gahak chunein...'}
                                         </option>
-                                        {rows.map(m => {
-                                            const mBaqaya = Math.round((Number(m.sabiqa) + Number(m.amroza) - Number(m.wasooli)) * 100) / 100;
+                                        {dropdownMerchants.map(m => {
+                                            const inRow = rows.find(r => r.merchant_id === m.id);
+                                            const mBaqaya = inRow
+                                                ? Math.round((Number(inRow.sabiqa) + Number(inRow.amroza) - Number(inRow.wasooli)) * 100) / 100
+                                                : (Number(m.current_balance) || 0);
                                             const displayName = isUrdu
                                                 ? (m.name_ur || m.name_en || m.name)
                                                 : (m.name_en || m.name_ur || m.name);
                                             return (
-                                                <option key={m.merchant_id} value={m.merchant_id}>
+                                                <option key={m.id} value={m.id}>
                                                     {displayName} (Rs. {Number(mBaqaya).toLocaleString()})
                                                 </option>
                                             );

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Merchants;
 
 use App\Http\Controllers\Controller;
+use App\Models\Merchant;
 use App\Models\MerchantReceipt;
 use App\Services\WasooliService;
 use Illuminate\Http\Request;
@@ -21,6 +22,21 @@ class WasooliController extends Controller
 
         $sheet = $this->wasooliService->getWasooliSheet($date, $search);
 
+        $merchants = Merchant::where('status', 'active')
+            ->where(function ($q) {
+                $q->where(function ($sub) {
+                    $sub->where('customer_type', '!=', 'naqdi')
+                        ->orWhereNull('customer_type');
+                })->where(function ($sub) {
+                    $sub->where('name_en', 'not like', '%Naqdi%')
+                        ->where('name_ur', 'not like', '%نقدی%')
+                        ->orWhereNull('name_en');
+                });
+            })
+            ->select('id', 'code', 'name_en', 'name_ur', 'current_balance')
+            ->orderBy('code', 'asc')
+            ->get();
+
         $receipts = MerchantReceipt::with(['merchant', 'creator'])
             ->where('type', 'recovery')
             ->latest('id')
@@ -30,6 +46,7 @@ class WasooliController extends Controller
         return Inertia::render('merchants/wasooli/index', [
             'rows' => $sheet['rows'],
             'totals' => $sheet['totals'],
+            'merchants' => $merchants,
             'receipts' => $receipts,
             'filters' => [
                 'date' => $date,
