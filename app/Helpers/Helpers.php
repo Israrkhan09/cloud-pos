@@ -15,4 +15,9 @@ class Helpers
     {
         return number_format($number, 2, '.', ',');
     }
+
+    public static function deviceId(): string
+    {
+        return \App\Services\DeviceService::id();
+    }
 }

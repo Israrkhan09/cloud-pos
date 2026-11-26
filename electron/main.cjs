@@ -1,8 +1,10 @@
 const { app, BrowserWindow, Menu } = require('electron');
 const path = require('path');
 const http = require('http');
-const { spawn } = require('child_process');
+const { spawn, spawnSync } = require('child_process');
 const fs = require('fs');
+const crypto = require('crypto');
+const os = require('os');
 
 let mainWindow = null;
 let splashWindow = null;
@@ -171,6 +173,7 @@ async function ensureServerRunning() {
         path.join(storagePath, 'framework', 'cache', 'data'),
         path.join(storagePath, 'framework', 'sessions'),
         path.join(storagePath, 'logs'),
+        path.join(storagePath, 'app'),
     ];
     for (const dir of storageDirs) {
         if (!fs.existsSync(dir)) {
@@ -178,6 +181,74 @@ async function ensureServerRunning() {
                 fs.mkdirSync(dir, { recursive: true });
             } catch (e) {}
         }
+    }
+
+    // Resolve or generate persistent Device ID
+    let deviceIdFile = path.join(storagePath, 'app', 'device_id.json');
+    if (app.isPackaged) {
+        const userDataDir = app.getPath('userData');
+        deviceIdFile = path.join(userDataDir, 'device_id.json');
+    }
+
+    let deviceId = null;
+    try {
+        if (fs.existsSync(deviceIdFile)) {
+            const fileData = JSON.parse(fs.readFileSync(deviceIdFile, 'utf8'));
+            if (fileData && fileData.device_id) {
+                deviceId = fileData.device_id;
+            }
+        }
+    } catch (e) {
+        console.error('[Vegetable POS Desktop] Could not read device_id file:', e);
+    }
+
+    if (!deviceId) {
+        const randomUuid = crypto.randomUUID ? crypto.randomUUID().toUpperCase() : Math.random().toString(36).substring(2, 10).toUpperCase();
+        deviceId = 'POS-' + randomUuid;
+        try {
+            const dir = path.dirname(deviceIdFile);
+            if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+            fs.writeFileSync(deviceIdFile, JSON.stringify({
+                device_id: deviceId,
+                hostname: os.hostname(),
+                created_at: new Date().toISOString()
+            }, null, 2), 'utf8');
+            console.log('[Vegetable POS Desktop] Generated persistent Device ID:', deviceId);
+        } catch (e) {
+            console.error('[Vegetable POS Desktop] Could not save device_id file:', e);
+        }
+    } else {
+        console.log('[Vegetable POS Desktop] Loaded existing Device ID:', deviceId);
+    }
+
+    const macExtraPath = '/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin';
+    const sharedEnv = {
+        ...process.env,
+        DB_DATABASE: dbPath,
+        LARAVEL_STORAGE_PATH: storagePath,
+        DEVICE_ID: deviceId,
+        PATH: isMac
+            ? `${macExtraPath}:${process.env.PATH || ''}`
+            : process.env.PATH,
+    };
+
+    // Auto-run pending database migrations safely before launching web server
+    try {
+        const migrateArgs = [];
+        if (phpInfo.ini && fs.existsSync(phpInfo.ini)) {
+            migrateArgs.push('-c', phpInfo.ini);
+        }
+        migrateArgs.push('artisan', 'migrate', '--force');
+        console.log('[Vegetable POS Desktop] Running startup database migrations...');
+        const migResult = spawnSync(phpInfo.binary, migrateArgs, {
+            cwd: appRoot,
+            windowsHide: true,
+            shell: false,
+            env: sharedEnv,
+        });
+        console.log('[Vegetable POS Desktop] Migration exit code:', migResult.status);
+    } catch (migErr) {
+        console.warn('[Vegetable POS Desktop] Startup migration warning:', migErr);
     }
 
     const args = [];
@@ -191,20 +262,12 @@ async function ensureServerRunning() {
         args.push('artisan', 'serve', `--host=${HOST}`, `--port=${PORT}`);
     }
 
-    const macExtraPath = '/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin';
     phpProcess = spawn(phpInfo.binary, args, {
         cwd: appRoot,
         stdio: 'ignore',
         windowsHide: true,
         shell: false,
-        env: {
-            ...process.env,
-            DB_DATABASE: dbPath,
-            LARAVEL_STORAGE_PATH: storagePath,
-            PATH: isMac
-                ? `${macExtraPath}:${process.env.PATH || ''}`
-                : process.env.PATH,
-        }
+        env: sharedEnv
     });
 
     phpProcess.on('error', (err) => {

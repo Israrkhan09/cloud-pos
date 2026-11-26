@@ -36,7 +36,14 @@ export function AppSidebar() {
     const isUrdu = i18n.language === 'ur';
 
     const showLegacyPos = (props as any)?.showLegacyPos ?? false;
-    const { sideNav } = useMemo(() => getNavigationItems(showLegacyPos), [showLegacyPos]);
+    const auth = (props as any)?.auth;
+    const userRole = auth?.role || auth?.user?.role || 'Admin';
+    const permissions = (auth?.permissions as string[]) || [];
+
+    const { sideNav } = useMemo(
+        () => getNavigationItems(showLegacyPos, userRole, permissions),
+        [showLegacyPos, userRole, permissions]
+    );
     const currentRouteName = (route().current() as string) || '';
 
     // Track which groups are expanded

@@ -2,7 +2,10 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToBusiness;
+
 use App\Helpers\Helpers;
+use App\Traits\HasSyncUuid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -10,12 +13,14 @@ use Illuminate\Support\Facades\Auth;
 
 class Employee extends Model
 {
-    use HasFactory, SoftDeletes;
+    use BelongsToBusiness, HasFactory, SoftDeletes, HasSyncUuid;
 
     /**
      * The attributes that are mass assignable.
      */
     protected $fillable = [
+        'business_id',
+        'uuid',
         'name',
         'code',
         'phone',

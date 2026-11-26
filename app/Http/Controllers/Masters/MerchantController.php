@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Merchant;
 use App\Models\Farmer;
 use App\Models\Area;
+use App\Services\TenantContext;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -76,8 +78,16 @@ class MerchantController extends Controller
 
     public function store(Request $request)
     {
+        $businessId = app(TenantContext::class)->getBusinessId();
+
         $validated = $request->validate([
-            'code' => 'nullable|integer|unique:merchants,code',
+            'code' => [
+                'nullable',
+                'integer',
+                Rule::unique('merchants', 'code')->where(function ($q) use ($businessId) {
+                    return $businessId ? $q->where('business_id', $businessId) : $q;
+                }),
+            ],
             'name_ur' => 'nullable|string|max:255',
             'name_en' => 'nullable|string|max:255',
             'phone' => 'nullable|string|max:50',
@@ -93,6 +103,7 @@ class MerchantController extends Controller
         }
 
         $validated['current_balance'] = $validated['opening_balance'] ?? 0;
+        $validated['business_id'] = $businessId;
         Merchant::create($validated);
 
         return back()->with('success', 'Merchant created successfully.');
@@ -101,9 +112,16 @@ class MerchantController extends Controller
     public function update(Request $request, int $id)
     {
         $merchant = Merchant::findOrFail($id);
+        $businessId = app(TenantContext::class)->getBusinessId() ?? $merchant->business_id;
 
         $validated = $request->validate([
-            'code' => "required|integer|unique:merchants,code,{$id}",
+            'code' => [
+                'required',
+                'integer',
+                Rule::unique('merchants', 'code')->ignore($id)->where(function ($q) use ($businessId) {
+                    return $businessId ? $q->where('business_id', $businessId) : $q;
+                }),
+            ],
             'name_ur' => 'nullable|string|max:255',
             'name_en' => 'nullable|string|max:255',
             'phone' => 'nullable|string|max:50',

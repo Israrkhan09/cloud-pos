@@ -2,15 +2,18 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToBusiness;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
 
 class ExpiryLot extends Model
 {
-    use HasFactory;
+    use BelongsToBusiness, HasFactory;
 
     protected $fillable = [
+        'business_id',
         'item_id',
         'item_name',
         'lot_code',

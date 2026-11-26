@@ -234,9 +234,55 @@ const footerNav: NavItem[] = [
     }
 ];
 
-export const getNavigationItems = (showLegacyPos = false) => {
+export const URL_FEATURE_MAP: Record<string, string> = {
+    '/amroza': 'new_sale',
+    '/wasooli': 'wasooli',
+    '/masters/items': 'stock_management',
+    '/customers': 'customers',
+    '/farmers': 'farmers',
+    '/banking/accounts': 'bank_accounts',
+    '/banking/transfers': 'deposit_transfer',
+    '/banking/cheques': 'cheques',
+    '/investment/partners': 'investment_capital',
+    '/merchant-khata': 'merchant_khata',
+    '/farmer-khata': 'farmer_khata',
+    '/reports': 'reports',
+    '/expiry-gifts': 'expiry_gifts',
+    '/discount-rules': 'discount_rules',
+    '/backup': 'backup_restore',
+};
+
+export const filterNavForUser = (
+    groups: NavGroup[],
+    role: string = 'Admin',
+    permissions: string[] = []
+): NavGroup[] => {
+    const isEmployee = role.toLowerCase() === 'employee';
+    if (!isEmployee) {
+        return groups;
+    }
+
+    return groups
+        .map(group => {
+            if (!group.items) return group;
+            const filteredItems = group.items.filter(item => {
+                const requiredFeature = URL_FEATURE_MAP[item.url];
+                if (!requiredFeature) return true; // baseline/unmapped items like /dashboard
+                return permissions.includes(requiredFeature);
+            });
+
+            return {
+                ...group,
+                items: filteredItems,
+            };
+        })
+        .filter(group => group.items && group.items.length > 0);
+};
+
+export const getNavigationItems = (showLegacyPos = false, role = 'Admin', permissions: string[] = []) => {
+    const baseNav = showLegacyPos ? [...jkcSidebarNav, ...legacySidebarNav] : [...jkcSidebarNav];
     return {
-        sideNav: showLegacyPos ? [...jkcSidebarNav, ...legacySidebarNav] : [...jkcSidebarNav],
+        sideNav: filterNavForUser(baseNav, role, permissions),
         footerNav: [...footerNav],
     };
 };

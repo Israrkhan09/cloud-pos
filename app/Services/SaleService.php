@@ -15,16 +15,15 @@ class SaleService
 
     public function createSaleDetail(array $data, int $saleId)
     {
-        $products = array_map(function ($product) use ($saleId) {
-            return [
+        foreach ($data['products'] as $product) {
+            $this->saleDetailModel->create([
                 'product_id' => $product['id'] ?? null,
                 'sub_total' => ($product['price'] ?? 0) * ($product['qty'] ?? 0),
                 'sale_id' => $saleId,
                 'price' => $product['price'] ?? 0,
-                'qty' => $product['qty'] ?? 0
-            ];
-        }, $data['products']);
-        $this->saleDetailModel->insert($products);
+                'qty' => $product['qty'] ?? 0,
+            ]);
+        }
     }
 
 
@@ -41,6 +40,8 @@ class SaleService
         $this->saleDetailModel
             ->where('sale_id', $saleId)
             ->whereNotIn('product_id', $productIds)
+            ->get()
+            ->each
             ->delete();
 
         foreach ($data['products'] as $product) {

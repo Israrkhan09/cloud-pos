@@ -25,7 +25,16 @@ class NaqdiService
         $allMerchantIds = array_unique(array_merge($merchantIdsFromSales, $merchantIdsFromReceipts));
 
         $merchants = Merchant::whereIn('id', $allMerchantIds)
-            ->where('code', '!=', 1)
+            ->where(function ($q) {
+                $q->where(function ($sub) {
+                    $sub->where('customer_type', '!=', 'naqdi')
+                        ->orWhereNull('customer_type');
+                })->where(function ($sub) {
+                    $sub->where('name_en', 'not like', '%Naqdi%')
+                        ->where('name_ur', 'not like', '%نقدی%')
+                        ->orWhereNull('name_en');
+                });
+            })
             ->orderBy('code', 'asc')
             ->get();
 

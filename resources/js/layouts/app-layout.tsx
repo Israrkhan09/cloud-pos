@@ -2,8 +2,9 @@ import { AppConfirmModal } from '@/components/app/app-confirm-modal';
 import { useAppearance } from '@/hooks/use-appearance';
 import AppLayoutTemplate from '@/layouts/app/app-sidebar-layout';
 import { type BreadcrumbItem } from '@/types';
-import { type ReactNode } from 'react';
-import { Toaster } from 'sonner';
+import { useEffect, type ReactNode } from 'react';
+import { usePage } from '@inertiajs/react';
+import { Toaster, toast } from 'sonner';
 
 interface AppLayoutProps {
     children: ReactNode;
@@ -12,6 +13,18 @@ interface AppLayoutProps {
 
 export default ({ children, breadcrumbs, ...props }: AppLayoutProps) => {
     const { appearance } = useAppearance();
+    const { props: pageProps } = usePage();
+    const flash = (pageProps as any)?.flash;
+
+    useEffect(() => {
+        if (flash?.error) {
+            toast.error(flash.error);
+        }
+        if (flash?.success) {
+            toast.success(flash.success);
+        }
+    }, [flash]);
+
     return (
         <AppLayoutTemplate
             breadcrumbs={breadcrumbs}
@@ -21,5 +34,5 @@ export default ({ children, breadcrumbs, ...props }: AppLayoutProps) => {
             <Toaster theme={appearance} />
             <AppConfirmModal />
         </AppLayoutTemplate>
-    )
-}
+    );
+};

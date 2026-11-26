@@ -15,7 +15,17 @@ class WasooliService
      */
     public function getWasooliSheet(string $date, ?string $search = null): array
     {
-        $query = Merchant::where('status', 'active')->where('code', '!=', 1);
+        $query = Merchant::where('status', 'active')
+            ->where(function ($q) {
+                $q->where(function ($sub) {
+                    $sub->where('customer_type', '!=', 'naqdi')
+                        ->orWhereNull('customer_type');
+                })->where(function ($sub) {
+                    $sub->where('name_en', 'not like', '%Naqdi%')
+                        ->where('name_ur', 'not like', '%نقدی%')
+                        ->orWhereNull('name_en');
+                });
+            });
 
         if ($search) {
             $query->where(function ($q) use ($search) {

@@ -2,17 +2,22 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToBusiness;
+
+use App\Traits\HasSyncUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class InvestmentSurplus extends Model
 {
-    use HasFactory;
+    use BelongsToBusiness, HasFactory, HasSyncUuid;
 
     protected $table = 'investment_surplus';
 
     protected $fillable = [
+        'business_id',
+        'uuid',
         'fund_name',
         'fund_name_ur',
         'kaha_lagaya',

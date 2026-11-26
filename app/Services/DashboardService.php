@@ -182,7 +182,9 @@ class DashboardService
         // Bank balance from active bank sales & wasooli + default bank accounts
         $bankSales = (float)AmrozaSale::where('payment_type', 'bank')->sum('gross_amount');
         $bankWasooli = (float)MerchantReceipt::where('type', 'recovery')->where('payment_method', 'bank')->sum('amount');
-        $bankAccountsOpening = 760000; // Meezan (500k) + HBL (250k) + EasyPaisa (10k)
+        // Opening bank accounts balance: only applies to legacy test business
+        $currentBizId = app(\App\Services\TenantContext::class)->getBusinessId();
+        $bankAccountsOpening = ($currentBizId === 'biz-test-business') ? 760000 : 0;
         $bankBalance = $bankAccountsOpening + $bankSales + $bankWasooli;
         $totalCashAndBank = $cashGalla + $bankBalance;
 

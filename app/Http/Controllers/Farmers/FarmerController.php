@@ -101,8 +101,10 @@ class FarmerController extends Controller
         $maxCode = (int) (Farmer::max('code') ?? 0);
         $nextCode = $maxCode > 0 ? $maxCode + 1 : 101;
         $openBal = (float) ($validated['opening_balance'] ?? 0);
+        $businessId = app(\App\Services\TenantContext::class)->getBusinessId();
 
         Farmer::create([
+            'business_id' => $businessId,
             'code' => $nextCode,
             'name_en' => $validated['name'],
             'name_ur' => $validated['name'],

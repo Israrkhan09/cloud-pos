@@ -2,15 +2,20 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToBusiness;
+
+use App\Traits\HasSyncUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Farmer extends Model
 {
-    use HasFactory, SoftDeletes;
+    use BelongsToBusiness, HasFactory, SoftDeletes, HasSyncUuid;
 
     protected $fillable = [
+        'business_id',
+        'uuid',
         'code',
         'name_en',
         'name_ur',

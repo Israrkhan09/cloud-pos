@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Search;
 use App\Http\Controllers\Controller;
 use App\Models\Farmer;
 use App\Models\Merchant;
+use App\Services\PermissionService;
 use Illuminate\Http\Request;
 
 class GlobalSearchController extends Controller
@@ -30,44 +31,56 @@ class GlobalSearchController extends Controller
 
     public function search(Request $request)
     {
+        $user = $request->user();
         $q = trim((string) $request->input('q', ''));
+
+        // Filter allowed pages for current user
+        $allowedPages = array_values(array_filter($this->pages, function ($page) use ($user) {
+            return PermissionService::isRouteAllowed($user, $page['url']);
+        }));
 
         // Match pages
         $matchingPages = [];
         if ($q !== '') {
-            $matchingPages = array_values(array_filter($this->pages, function ($page) use ($q) {
+            $matchingPages = array_values(array_filter($allowedPages, function ($page) use ($q) {
                 return stripos($page['title'], $q) !== false
                     || stripos($page['title_ur'], $q) !== false
                     || stripos($page['url'], $q) !== false
                     || stripos($page['category'], $q) !== false;
             }));
         } else {
-            $matchingPages = array_slice($this->pages, 0, 6);
+            $matchingPages = array_slice($allowedPages, 0, 6);
         }
 
-        // Match merchants
-        $merchantQuery = Merchant::query();
-        if ($q !== '') {
-            $merchantQuery->where(function ($sub) use ($q) {
-                $sub->where('name_en', 'like', "%{$q}%")
-                    ->orWhere('name_ur', 'like', "%{$q}%")
-                    ->orWhere('phone', 'like', "%{$q}%")
-                    ->orWhere('code', 'like', "%{$q}%");
-            });
+        // Match merchants (only if merchant_khata is allowed)
+        $merchants = collect();
+        if (PermissionService::isFeatureAllowed($user, 'merchant_khata')) {
+            $merchantQuery = Merchant::query();
+            if ($q !== '') {
+                $merchantQuery->where(function ($sub) use ($q) {
+                    $sub->where('name_en', 'like', "%{$q}%")
+                        ->orWhere('name_ur', 'like', "%{$q}%")
+                        ->orWhere('phone', 'like', "%{$q}%")
+                        ->orWhere('code', 'like', "%{$q}%");
+                });
+            }
+            $merchants = $merchantQuery->orderBy('name_en', 'asc')->take(8)->get(['id', 'code', 'name_en', 'name_ur', 'phone', 'city', 'current_balance']);
         }
-        $merchants = $merchantQuery->orderBy('name_en', 'asc')->take(8)->get(['id', 'code', 'name_en', 'name_ur', 'phone', 'city', 'current_balance']);
 
-        // Match farmers
-        $farmerQuery = Farmer::with('area');
-        if ($q !== '') {
-            $farmerQuery->where(function ($sub) use ($q) {
-                $sub->where('name_en', 'like', "%{$q}%")
-                    ->orWhere('name_ur', 'like', "%{$q}%")
-                    ->orWhere('phone', 'like', "%{$q}%")
-                    ->orWhere('code', 'like', "%{$q}%");
-            });
+        // Match farmers (only if farmer_khata is allowed)
+        $farmers = collect();
+        if (PermissionService::isFeatureAllowed($user, 'farmer_khata')) {
+            $farmerQuery = Farmer::with('area');
+            if ($q !== '') {
+                $farmerQuery->where(function ($sub) use ($q) {
+                    $sub->where('name_en', 'like', "%{$q}%")
+                        ->orWhere('name_ur', 'like', "%{$q}%")
+                        ->orWhere('phone', 'like', "%{$q}%")
+                        ->orWhere('code', 'like', "%{$q}%");
+                });
+            }
+            $farmers = $farmerQuery->orderBy('name_en', 'asc')->take(8)->get(['id', 'code', 'name_en', 'name_ur', 'phone', 'area_id', 'current_balance']);
         }
-        $farmers = $farmerQuery->orderBy('name_en', 'asc')->take(8)->get(['id', 'code', 'name_en', 'name_ur', 'phone', 'area_id', 'current_balance']);
 
         return response()->json([
             'success' => true,

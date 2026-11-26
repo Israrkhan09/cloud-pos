@@ -2,21 +2,26 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToBusiness;
+
 use App\Builders\ProductBuilder;
 use App\Helpers\Helpers;
 use App\Traits\AppendsToggle;
+use App\Traits\HasSyncUuid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Product extends Model
 {
-    use HasFactory, SoftDeletes, AppendsToggle;
+    use BelongsToBusiness, HasFactory, SoftDeletes, AppendsToggle, HasSyncUuid;
 
     /**
      * The attributes that are mass assignable.
      */
     protected $fillable = [
+        'business_id',
+        'uuid',
         'title',
         'sku',
         'bar_code',

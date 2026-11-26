@@ -2,15 +2,20 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToBusiness;
+
+use App\Traits\HasSyncUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class InvestmentAlert extends Model
 {
-    use HasFactory;
+    use BelongsToBusiness, HasFactory, HasSyncUuid;
 
     protected $fillable = [
+        'business_id',
+        'uuid',
         'partner_id',
         'partner_name',
         'attempted_amount',

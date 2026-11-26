@@ -2,15 +2,20 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToBusiness;
+
+use App\Traits\HasSyncUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class InvestmentLoan extends Model
 {
-    use HasFactory;
+    use BelongsToBusiness, HasFactory, HasSyncUuid;
 
     protected $fillable = [
+        'business_id',
+        'uuid',
         'lender_name',
         'lender_name_ur',
         'phone',

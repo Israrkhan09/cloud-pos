@@ -16,7 +16,17 @@ class CustomerController extends Controller
 {
     public function index(Request $request): Response
     {
-        $query = Merchant::where('status', 'active')->where('code', '!=', 1);
+        $query = Merchant::where('status', 'active');
+        $query->where(function ($q) {
+            $q->where(function ($sub) {
+                $sub->where('customer_type', '!=', 'naqdi')
+                    ->orWhereNull('customer_type');
+            })->where(function ($sub) {
+                $sub->where('name_en', 'not like', '%Naqdi%')
+                    ->where('name_ur', 'not like', '%نقدی%')
+                    ->orWhereNull('name_en');
+            });
+        });
 
         $search = $request->query('search', $request->query('qry'));
         if (!empty($search)) {
@@ -76,8 +86,10 @@ class CustomerController extends Controller
         $maxCode = (int) (Merchant::max('code') ?? 0);
         $nextCode = $maxCode + 1;
         $openBal = (float) ($validated['opening_balance'] ?? 0);
+        $businessId = app(\App\Services\TenantContext::class)->getBusinessId();
 
         Merchant::create([
+            'business_id' => $businessId,
             'code' => $nextCode,
             'name_en' => $validated['name'],
             'name_ur' => $validated['name'],
@@ -94,8 +106,9 @@ class CustomerController extends Controller
 
         try {
             Customer::create([
+                'business_id' => $businessId,
                 'name' => $validated['name'],
-                'phone' => $validated['phone'] ?? '0300-0000000',
+                'phone' => $validated['phone'] ?? null,
                 'address' => $validated['city'] ?? null,
                 'status' => 'active',
             ]);

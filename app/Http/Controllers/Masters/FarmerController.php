@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Masters;
 use App\Http\Controllers\Controller;
 use App\Models\Area;
 use App\Models\Farmer;
+use App\Services\TenantContext;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -57,8 +59,16 @@ class FarmerController extends Controller
 
     public function store(Request $request)
     {
+        $businessId = app(TenantContext::class)->getBusinessId();
+
         $validated = $request->validate([
-            'code' => 'nullable|integer|unique:farmers,code',
+            'code' => [
+                'nullable',
+                'integer',
+                Rule::unique('farmers', 'code')->where(function ($q) use ($businessId) {
+                    return $businessId ? $q->where('business_id', $businessId) : $q;
+                }),
+            ],
             'name_ur' => 'nullable|string|max:255',
             'name_en' => 'nullable|string|max:255',
             'phone' => 'nullable|string|max:50',
@@ -75,6 +85,7 @@ class FarmerController extends Controller
         }
 
         $validated['current_balance'] = $validated['opening_balance'] ?? 0;
+        $validated['business_id'] = $businessId;
         Farmer::create($validated);
 
         return back()->with('success', 'Farmer created successfully.');
@@ -83,9 +94,16 @@ class FarmerController extends Controller
     public function update(Request $request, int $id)
     {
         $farmer = Farmer::findOrFail($id);
+        $businessId = app(TenantContext::class)->getBusinessId() ?? $farmer->business_id;
 
         $validated = $request->validate([
-            'code' => "required|integer|unique:farmers,code,{$id}",
+            'code' => [
+                'required',
+                'integer',
+                Rule::unique('farmers', 'code')->ignore($id)->where(function ($q) use ($businessId) {
+                    return $businessId ? $q->where('business_id', $businessId) : $q;
+                }),
+            ],
             'name_ur' => 'nullable|string|max:255',
             'name_en' => 'nullable|string|max:255',
             'phone' => 'nullable|string|max:50',

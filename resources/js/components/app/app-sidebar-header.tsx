@@ -7,11 +7,13 @@ import { LanguageToggle } from '@/components/app/language-toggle';
 import { useTranslation } from 'react-i18next';
 import { MagnifyingGlassIcon } from '@phosphor-icons/react';
 import { GlobalSearchDialog } from '@/components/app/global-search-dialog';
+import { usePage, router } from '@inertiajs/react';
 
 export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: BreadcrumbItemType[] }) {
     const { t, i18n } = useTranslation();
     const isUrdu = i18n.language === 'ur';
     const [searchOpen, setSearchOpen] = useState(false);
+    const { auth, business } = usePage().props as any;
 
     // Global shortcut Ctrl+K / Cmd+K
     useEffect(() => {
@@ -24,6 +26,10 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, []);
+
+    const handleLogout = () => {
+        router.post(route('logout'));
+    };
 
     return (
         <header className="sticky top-0 z-20 bg-[#eef2ee]/95 backdrop-blur-md border-b border-[#d8e0d8] flex h-14 shrink-0 items-center gap-3 px-4 md:px-6">
@@ -47,8 +53,26 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
                     </button>
                 </div>
 
-                {/* Right: Language toggle + Notifications */}
+                {/* Right: Business Badge + User Info + Language toggle + Notifications + Direct Logout */}
                 <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+                    {/* Active Business Badge */}
+                    {business?.name && (
+                        <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-semibold text-emerald-800 shadow-2xs">
+                            <Icon name="Storefront" className="size-3.5 text-emerald-700" />
+                            <span className="truncate max-w-[160px]">{business.name}</span>
+                        </div>
+                    )}
+
+                    {/* Authenticated User Badge */}
+                    {auth?.user && (
+                        <div className="hidden md:flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white border border-[#d8e0d8] text-xs text-[#2e3831] shadow-2xs">
+                            <span className="font-semibold truncate max-w-[120px]">{auth.user.name}</span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#f0f4f0] text-emerald-800 font-mono font-medium">
+                                {auth.role || auth.user.role || 'User'}
+                            </span>
+                        </div>
+                    )}
+
                     {/* Language toggle */}
                     <LanguageToggle />
 
@@ -56,6 +80,19 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
                     <Button variant="ghost" size="icon" className="relative size-8 text-[#68736b] hover:text-[#1a211c] hover:bg-[#e2e8e2] rounded-lg cursor-pointer" title="Notifications">
                         <Icon name="Bell" className="size-4.5" />
                         <span className="absolute top-1.5 end-1.5 size-2 rounded-full bg-[#b42318] ring-2 ring-white" />
+                    </Button>
+
+                    {/* Highly Visible Dedicated Logout Button */}
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleLogout}
+                        className="h-8 gap-1.5 border-rose-300 text-rose-700 bg-white hover:bg-rose-50 hover:text-rose-800 hover:border-rose-400 font-medium text-xs px-2.5 cursor-pointer shadow-2xs transition-colors"
+                        title={isUrdu ? 'لاگ آؤٹ کریں' : 'Logout'}
+                    >
+                        <Icon name="SignOut" className="size-4 text-rose-600" />
+                        <span className="hidden sm:inline">{isUrdu ? 'لاگ آؤٹ' : 'Logout'}</span>
                     </Button>
                 </div>
             </div>

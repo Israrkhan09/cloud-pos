@@ -45,11 +45,18 @@ class HandleInertiaRequests extends Middleware
             'name' => config('app.name'),
             'auth' => [
                 'user' => $request->user(),
+                'role' => $request->user()?->role ?? 'Admin',
+                'permissions' => \App\Services\PermissionService::getAllowedFeaturesForUser($request->user()),
+            ],
+            'flash' => [
+                'error' => fn () => $request->session()->get('error'),
+                'success' => fn () => $request->session()->get('success'),
             ],
             'ziggy' => fn(): array => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),
             ],
+            'business' => fn() => app(\App\Services\TenantContext::class)->getBusinessSummary(),
             'currencySymbol' => fn(): string => Currency::where('is_current', true)->first()?->label ?? 'Rs',
             'locale' => fn(): string => $request->user()?->locale ?? session('locale', 'en'),
             'showLegacyPos' => config('jkc.show_legacy_pos', false),

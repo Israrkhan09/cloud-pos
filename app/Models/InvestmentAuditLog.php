@@ -2,17 +2,22 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToBusiness;
+
+use App\Traits\HasSyncUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class InvestmentAuditLog extends Model
 {
-    use HasFactory;
+    use BelongsToBusiness, HasFactory, HasSyncUuid;
 
     public $timestamps = false;
 
     protected $fillable = [
+        'business_id',
+        'uuid',
         'action',
         'transaction_id',
         'ref_no',

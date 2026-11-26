@@ -2,14 +2,17 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToBusiness;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Gift extends Model
 {
-    use HasFactory;
+    use BelongsToBusiness, HasFactory;
 
     protected $fillable = [
+        'business_id',
         'voucher_no',
         'date',
         'recipient_name',

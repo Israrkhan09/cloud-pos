@@ -34,7 +34,7 @@ export function UserMenuContent({ user }: UserMenuContentProps) {
                     <Link className="block w-full cursor-pointer" href={route('profile.edit')} as="button" prefetch onClick={cleanup}>
                         <div className="flex items-center gap-2">
                             <Icon
-                                name="GearSixIcon"
+                                name="GearSix"
                                 weight='duotone'
                                 className="size-4"
                             />
@@ -44,10 +44,10 @@ export function UserMenuContent({ user }: UserMenuContentProps) {
                 </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuItem asChild>
-                <Link className="block w-full cursor-pointer text-destructive focus:text-destructive" method="post" href={route('logout')} as="button" onClick={cleanup}>
-                    <div className="flex items-center gap-2">
+                <Link className="block w-full cursor-pointer text-destructive focus:text-destructive font-medium" method="post" href={route('logout')} as="button" onClick={cleanup}>
+                    <div className="flex items-center gap-2 text-rose-600">
                         <Icon
-                            name="SignOutIcon"
+                            name="SignOut"
                             weight='duotone'
                             className="size-4"
                         />
