@@ -24,7 +24,16 @@ class AmrozaController extends Controller
         $summary = $this->amrozaService->getDailySummary($date);
 
         $merchants = Merchant::where('status', 'active')
-            ->where('code', '!=', 1)
+            ->where(function ($q) {
+                $q->where(function ($sub) {
+                    $sub->where('customer_type', '!=', 'naqdi')
+                        ->orWhereNull('customer_type');
+                })->where(function ($sub) {
+                    $sub->where('name_en', 'not like', '%Naqdi%')
+                        ->where('name_ur', 'not like', '%نقدی%')
+                        ->orWhereNull('name_en');
+                });
+            })
             ->select('id', 'code', 'name_en', 'name_ur', 'current_balance')
             ->orderBy('code', 'asc')
             ->get();
