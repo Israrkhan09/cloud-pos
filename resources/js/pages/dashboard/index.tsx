@@ -81,6 +81,8 @@ export default function Dashboard() {
     const { t, i18n } = useTranslation();
     const isUrdu = i18n.language === 'ur';
     const pageProps = usePage().props as any;
+    const isTestBiz = pageProps.business?.id === 'biz-test-business';
+    const defaultDemoBank = isTestBiz ? 760000 : 0;
 
     const stats: DashboardStatsData = pageProps.stats || {
         todaysSale: 0,
@@ -95,8 +97,8 @@ export default function Dashboard() {
         merchantsBalance: 0,
         farmersBalance: 0,
         cashGalla: 0,
-        bankBalance: 760000,
-        totalCashAndBank: 760000,
+        bankBalance: defaultDemoBank,
+        totalCashAndBank: defaultDemoBank,
         lowStockCount: 0,
         cashInHand: 0,
         expectedCash: 0,
@@ -176,7 +178,7 @@ export default function Dashboard() {
 
     // Calculate dynamic Card 5: Naqad Galla + Bank
     const cashAmount = stats.cashGalla !== undefined && stats.cashGalla !== null ? stats.cashGalla : (stats.cashInHand || stats.cashSale || 0);
-    const bankAmount = bankAccountsTotal > 0 ? bankAccountsTotal : (stats.bankBalance || 760000);
+    const bankAmount = bankAccountsTotal > 0 ? bankAccountsTotal : (stats.bankBalance !== undefined ? stats.bankBalance : defaultDemoBank);
     const totalCashAndBank = stats.totalCashAndBank !== undefined && stats.totalCashAndBank !== null ? stats.totalCashAndBank : (cashAmount + bankAmount);
 
     // Range titles

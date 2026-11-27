@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class CentralEventProcessor
 {
@@ -319,6 +320,13 @@ class CentralEventProcessor
         $existing = $this->newModelQuery($modelClass, true)->where('uuid', $entityUuid)->first();
 
         if ($existing) {
+            // Strict tenant ownership validation: prevent cross-tenant UUID collision / hijacking
+            if (!empty($existing->business_id) && !empty($attributes['business_id']) && (string) $existing->business_id !== (string) $attributes['business_id']) {
+                throw new \RuntimeException(
+                    "Cross-tenant violation: {$entityType} with UUID '{$entityUuid}' belongs to business '{$existing->business_id}' and cannot be modified by '{$attributes['business_id']}'."
+                );
+            }
+
             if ($this->usesSoftDeletes($modelClass) && $existing->trashed()) {
                 $existing->restore();
             }
@@ -405,15 +413,19 @@ class CentralEventProcessor
 
             if (!empty($relationships[$uuidKey])) {
                 $parentUuid = $relationships[$uuidKey];
-                $centralId = DB::table($targetTable)->where('uuid', $parentUuid)->value('id');
+                $parentQuery = DB::table($targetTable)->where('uuid', $parentUuid);
+                if (Schema::hasColumn($targetTable, 'business_id') && !empty($attributes['business_id'])) {
+                    $parentQuery->where('business_id', $attributes['business_id']);
+                }
+                $centralId = $parentQuery->value('id');
 
                 if (!empty($centralId)) {
                     $attributes[$fkColumn] = $centralId;
                 } else {
-                    // Parent record not yet synchronized
+                    // Parent record not yet synchronized or belongs to different tenant
                     throw new \RuntimeException(
                         "Unresolved foreign key dependency: {$targetTable} with UUID '{$parentUuid}' " .
-                        "was not found on central database for {$entityType}."
+                        "was not found on central database for {$entityType} under business '{$attributes['business_id']}'."
                     );
                 }
             } elseif (array_key_exists($fkColumn, $attributes)) {

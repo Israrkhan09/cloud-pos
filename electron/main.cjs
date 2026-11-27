@@ -120,15 +120,35 @@ function getAppRoot() {
     return path.join(__dirname, '..');
 }
 
+function runStartupMigrations(phpInfo, appRoot, sharedEnv) {
+    try {
+        const migrateArgs = [];
+        if (phpInfo.ini && fs.existsSync(phpInfo.ini)) {
+            migrateArgs.push('-c', phpInfo.ini);
+        }
+        migrateArgs.push('artisan', 'migrate', '--force');
+        console.log('[Vegetable POS Desktop] Running startup database migrations...');
+        const migResult = spawnSync(phpInfo.binary, migrateArgs, {
+            cwd: appRoot,
+            windowsHide: true,
+            shell: false,
+            env: sharedEnv,
+        });
+        if (migResult.error) {
+            console.error('[Vegetable POS Desktop] Startup migration process error:', migResult.error);
+        } else if (migResult.status !== 0) {
+            console.error('[Vegetable POS Desktop] Startup migration failed with exit code ' + migResult.status + ':', migResult.stderr?.toString());
+        } else {
+            console.log('[Vegetable POS Desktop] Startup database migrations completed successfully (code 0).');
+        }
+    } catch (migErr) {
+        console.warn('[Vegetable POS Desktop] Startup migration warning:', migErr);
+    }
+}
+
 // Start PHP artisan serve silently
 async function ensureServerRunning() {
-    const isRunning = await checkServer();
-    if (isRunning) {
-        console.log('[Vegetable POS Desktop] PHP server is already running on port ' + PORT);
-        return true;
-    }
-
-    console.log('[Vegetable POS Desktop] Starting local PHP server...');
+    console.log('[Vegetable POS Desktop] Initializing local environment and database...');
     const phpInfo = getPhpBinaryInfo();
     const appRoot = getAppRoot();
     const isMac = process.platform === 'darwin';
@@ -232,24 +252,16 @@ async function ensureServerRunning() {
             : process.env.PATH,
     };
 
-    // Auto-run pending database migrations safely before launching web server
-    try {
-        const migrateArgs = [];
-        if (phpInfo.ini && fs.existsSync(phpInfo.ini)) {
-            migrateArgs.push('-c', phpInfo.ini);
-        }
-        migrateArgs.push('artisan', 'migrate', '--force');
-        console.log('[Vegetable POS Desktop] Running startup database migrations...');
-        const migResult = spawnSync(phpInfo.binary, migrateArgs, {
-            cwd: appRoot,
-            windowsHide: true,
-            shell: false,
-            env: sharedEnv,
-        });
-        console.log('[Vegetable POS Desktop] Migration exit code:', migResult.status);
-    } catch (migErr) {
-        console.warn('[Vegetable POS Desktop] Startup migration warning:', migErr);
+    // Always auto-run pending database migrations safely before launching or attaching
+    runStartupMigrations(phpInfo, appRoot, sharedEnv);
+
+    const isRunning = await checkServer();
+    if (isRunning) {
+        console.log('[Vegetable POS Desktop] PHP server is already running on port ' + PORT);
+        return true;
     }
+
+    console.log('[Vegetable POS Desktop] Starting local PHP server process...');
 
     const args = [];
     if (phpInfo.ini && fs.existsSync(phpInfo.ini)) {

@@ -32,7 +32,8 @@ class CheckPosPermission
         // Check if the current request path is allowed for this Employee
         $path = $request->path();
         if (!PermissionService::isRouteAllowed($user, $path)) {
-            if ($request->expectsJson() || $request->is('api/*')) {
+            // Pure API requests (non-Inertia) return JSON error
+            if ($request->is('api/*') && !$request->header('X-Inertia')) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Access Denied: You do not have permission to access this module.',

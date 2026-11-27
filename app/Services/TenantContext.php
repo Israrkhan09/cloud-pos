@@ -91,7 +91,7 @@ class TenantContext
 
         $bizId = $this->getBusinessId();
         if ($bizId) {
-            $defaultName = ($bizId === 'biz-test-business') ? 'Test Business' : 'Kashmir Sabzi Mandi';
+            $defaultName = ($bizId === 'biz-test-business') ? 'Test Business' : 'Sabzi Mandi Station';
             return [
                 'id'             => $bizId,
                 'name'           => $defaultName,

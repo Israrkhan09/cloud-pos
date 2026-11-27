@@ -97,9 +97,20 @@ class PermissionService
             return self::ALL_FEATURES;
         }
 
-        // Employee: look up in local SQLite pos_permissions table
+        // Employee: look up in local SQLite pos_permissions table, strictly scoped to user's business
+        $businessId = $user->business_id;
+
         try {
-            $perm = PosPermission::where('role', 'Employee')->latest('updated_at')->first();
+            $query = PosPermission::withoutGlobalScopes();
+            if (!empty($businessId)) {
+                $query->where('business_id', $businessId);
+            }
+            $perm = $query->where(function ($q) use ($role) {
+                $q->where('role', $role)
+                  ->orWhere('role', 'Employee')
+                  ->orWhereRaw('LOWER(role) = ?', [strtolower($role)]);
+            })->latest('updated_at')->first();
+
             if ($perm && is_array($perm->allowed_features) && count($perm->allowed_features) > 0) {
                 // Ensure only valid features are returned
                 return array_values(array_intersect(self::ALL_FEATURES, $perm->allowed_features));
@@ -260,10 +271,12 @@ class PermissionService
                 $features = array_values(array_intersect(self::ALL_FEATURES, (array) $raw));
             }
 
-            PosPermission::updateOrCreate(
-                ['role' => $norm],
+            PosPermission::withoutGlobalScopes()->updateOrCreate(
                 [
-                    'business_id'      => $businessId,
+                    'role'        => $norm,
+                    'business_id' => $businessId,
+                ],
+                [
                     'allowed_features' => $features,
                     'synced_at'        => $timestamp,
                     'version'          => '1.0',
@@ -271,11 +284,13 @@ class PermissionService
             );
         }
 
-        // Ensure Admin entry always exists locally
-        PosPermission::updateOrCreate(
-            ['role' => 'Admin'],
+        // Ensure Admin entry always exists locally for this business
+        PosPermission::withoutGlobalScopes()->updateOrCreate(
             [
-                'business_id'      => $businessId,
+                'role'        => 'Admin',
+                'business_id' => $businessId,
+            ],
+            [
                 'allowed_features' => self::ALL_FEATURES,
                 'synced_at'        => $timestamp,
                 'version'          => '1.0',

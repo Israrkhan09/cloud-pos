@@ -33,6 +33,7 @@ class CentralSyncService
 
             if ($existing) {
                 $existing->update([
+                    'business_id'    => $data['business_id'] ?? $existing->business_id,
                     'device_name'    => $data['device_name'] ?? $existing->device_name,
                     'hostname'       => $data['hostname'] ?? $existing->hostname,
                     'os'             => $data['os'] ?? $existing->os,
@@ -51,6 +52,7 @@ class CentralSyncService
 
             $device = SyncDevice::create([
                 'uuid'           => (string) Str::uuid(),
+                'business_id'    => $data['business_id'] ?? null,
                 'device_id'      => $deviceId,
                 'device_name'    => $data['device_name'] ?? null,
                 'api_token_hash' => $tokenHash,
@@ -93,9 +95,19 @@ class CentralSyncService
 
             $seenInBatch[$eventUuid] = true;
 
+            // Validate tenant consistency: reject cross-tenant event injection
+            $eventBusinessId = $eventData['payload']['business_id'] ?? null;
+            if (!empty($device->business_id) && !empty($eventBusinessId) && $device->business_id !== $eventBusinessId) {
+                Log::warning("Cross-tenant sync event injection attempt blocked: device {$device->device_id} ({$device->business_id}) pushed payload for {$eventBusinessId}");
+                $duplicateUuids[] = $eventUuid;
+                continue;
+            }
+
             try {
+                $targetBusinessId = $device->business_id ?: ($eventBusinessId ?: null);
                 $createdEvent = SyncEvent::create([
                     'event_uuid'      => $eventUuid,
+                    'business_id'     => $targetBusinessId,
                     'device_id'       => $device->device_id,
                     'entity_type'     => $eventData['entity_type'],
                     'entity_uuid'     => $entityUuid,
@@ -204,6 +216,11 @@ class CentralSyncService
         bool $includeSelf = false
     ): array {
         $query = SyncEvent::query()->where('id', '>', $sinceCursor);
+
+        // Strict tenant isolation: device can only pull changes belonging to its business
+        if (!empty($device->business_id)) {
+            $query->where('business_id', $device->business_id);
+        }
 
         if (!$includeSelf) {
             $query->where('device_id', '!=', $device->device_id);

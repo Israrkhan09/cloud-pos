@@ -43,6 +43,10 @@ $app = Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->shouldRenderJsonWhen(function (Request $request, Throwable $e) {
+            if ($request->header('X-Inertia')) {
+                return false;
+            }
+
             if ($request->is('api/*')) {
                 return true;
             }
@@ -51,7 +55,7 @@ $app = Application::configure(basePath: dirname(__DIR__))
         });
 
         $exceptions->respond(function (Response $response, Throwable $exception, Request $request) {
-            if (!$request->is('api/*') && !$request->expectsJson() && in_array($response->getStatusCode(), [500, 503, 404, 403])) {
+            if (!$request->is('api/*') && ($request->header('X-Inertia') || !$request->expectsJson()) && in_array($response->getStatusCode(), [500, 503, 404, 403])) {
                 return Inertia::render('error/index', [
                     'status' => $response->getStatusCode(),
                     'message' => $exception->getMessage()
