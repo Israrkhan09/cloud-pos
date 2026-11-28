@@ -812,7 +812,7 @@ export default function ItemsIndex({
 
                     {/* Explanatory footer note */}
                     <div className="bg-[#f0f4f0] border border-emerald-200/80 rounded-xl p-3 text-xs text-gray-700 leading-relaxed">
-                        <strong>{isUrdu ? 'طریقہ کار:' : 'How it works:'}</strong> {isUrdu ? 'اسٹاک = آمد - فروخت · ٹائمر لاٹ کے مطابق، اسٹاک 0 ہونے پر بند · کم اسٹاک (10 یا کم): الرٹ محفوظ · ایکسپائری الرٹ 5 سیکنڈ میں ہٹ جاتا ہے' : 'Stock = Aamad - Sale · Timer lot-wise, stock 0 par band · Low Stock (10 ya kam): notification save · Expiry alert 5 second mein hat jata hai'}
+                        <strong>{isUrdu ? 'طریقہ کار:' : 'How it works:'}</strong> {isUrdu ? 'اسٹاک = آمد - فروخت · ٹائمر لاٹ کے مطابق، اسٹاک 0 ہونے پر بند · کم اسٹاک (10 یا کم): الرٹ محفوظ · ایکسپائری الرٹ 5 سیکنڈ میں ہٹ جاتا ہے' : 'Current Stock = Arrivals - Sales · Lot-based expiry timer, turns off at 0 stock · Low Stock (10 or less): alert triggered · Expiry alerts auto-dismiss in 5s'}
                     </div>
                 </div>
             </div>

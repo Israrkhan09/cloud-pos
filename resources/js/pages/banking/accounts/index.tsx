@@ -213,6 +213,19 @@ export default function BankAccountsPage({ liveCashGalla = 0, dbTransactions = [
     // Stored transfers from local banking store
     const storedTransfers = getStoredTransfers();
 
+    const cleanDescription = (desc?: string) => {
+        return (desc || '')
+            .replace(/Merchant Wasooli/gi, 'Customer Recovery')
+            .replace(/Online Sale Wasooli/gi, 'Online Sale Recovery')
+            .replace(/Wasooli/gi, 'Recovery');
+    };
+
+    const cleanAccountName = (acc?: string) => {
+        return (acc || '')
+            .replace(/Naqad \/ Counter/gi, 'Cash / Counter')
+            .replace(/Gahak \(Wasooli\)/gi, 'Customer (Recovery)');
+    };
+
     // Combined unified transactions list for the table
     const allTransactions = useMemo(() => {
         const list: Array<{
@@ -251,24 +264,25 @@ export default function BankAccountsPage({ liveCashGalla = 0, dbTransactions = [
                 date: st.date || '2026-11-23',
                 type: typeLabel,
                 typeBadge: badge,
-                from: fromAcc,
-                to: toAcc,
+                from: cleanAccountName(fromAcc),
+                to: cleanAccountName(toAcc),
                 amount: st.amount,
-                description: st.title || 'Bank / Cash Transfer',
+                description: cleanDescription(st.title || 'Bank / Cash Transfer'),
             });
         });
 
         // 2. Real DB transactions
         dbTransactions.forEach((dt) => {
+            const typeLabel = dt.type === 'Jama' ? 'Recovery' : (dt.type || 'Deposit');
             list.push({
                 id: dt.id,
                 date: dt.date,
-                type: dt.type || 'Deposit',
+                type: typeLabel,
                 typeBadge: 'jama',
-                from: dt.from,
-                to: dt.to,
+                from: cleanAccountName(dt.from),
+                to: cleanAccountName(dt.to),
                 amount: dt.amount,
-                description: dt.description,
+                description: cleanDescription(dt.description),
             });
         });
 

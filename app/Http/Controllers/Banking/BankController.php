@@ -25,7 +25,7 @@ class BankController extends Controller
                 $noteLower = strtolower($r->note ?? '');
                 $isBank = str_contains($noteLower, 'bank') || str_contains($noteLower, 'online') || str_contains($noteLower, 'easypaisa') || str_contains($noteLower, 'jazzcash');
                 
-                $targetAccount = 'Naqad / Counter';
+                $targetAccount = 'Cash / Counter';
                 if ($isBank) {
                     if (str_contains($noteLower, 'easypaisa israr')) {
                         $targetAccount = 'EasyPaisa Israr';
@@ -41,8 +41,8 @@ class BankController extends Controller
                 return [
                     'id' => 'rcpt_' . $r->id,
                     'date' => $r->date ? date('Y-m-d', strtotime($r->date)) : date('Y-m-d'),
-                    'type' => 'Jama',
-                    'from' => $r->merchant?->name ?? 'Gahak (Wasooli)',
+                    'type' => 'Recovery',
+                    'from' => $r->merchant?->name ?? 'Customer (Recovery)',
                     'to' => $targetAccount,
                     'amount' => (float) $r->amount,
                     'description' => $r->note ?: 'Customer Recovery (Receipt #' . $r->id . ')',

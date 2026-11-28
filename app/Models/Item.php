@@ -69,7 +69,7 @@ class Item extends Model
     {
         if ($this->status === 'khatam' || (isset($this->current_stock) && $this->current_stock === 0)) {
             return [
-                'text'       => 'Timer band (stock 0)',
+                'text'       => 'Timer off (stock 0)',
                 'type'       => 'khatam',
                 'hours_left' => null,
             ];
@@ -89,7 +89,7 @@ class Item extends Model
         if ($diffMinutes <= 0) {
             $absMin = abs($diffMinutes);
             $hours = (int) floor($absMin / 60);
-            $pehle = $hours > 0 ? "{$hours}h pehle" : "{$absMin}m pehle";
+            $pehle = $hours > 0 ? "{$hours}h ago" : "{$absMin}m ago";
             return [
                 'text'       => "Expired — {$pehle}",
                 'type'       => 'expired',
@@ -106,7 +106,7 @@ class Item extends Model
         if ($hours > 0) $parts[] = "{$hours}h";
         $parts[] = sprintf('%02dm', $mins);
 
-        $text = implode(' ', $parts) . ' baaki';
+        $text = implode(' ', $parts) . ' remaining';
         $type = $diffMinutes <= (24 * 60) ? 'expiring_soon' : 'active';
 
         return [
