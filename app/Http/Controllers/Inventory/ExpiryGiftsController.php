@@ -172,7 +172,7 @@ class ExpiryGiftsController extends Controller
         $lot = ExpiryLot::findOrFail($validated['lot_id']);
 
         if ($lot->computed_status === 'expired') {
-            return redirect()->back()->withErrors(['discount' => 'Expired maal sasti sale par nahi becha ja sakta.']);
+            return redirect()->back()->withErrors(['discount' => 'Expired stock cannot be put on discounted sale.']);
         }
 
         $newRate = (float) $validated['discount_rate'];
@@ -187,7 +187,7 @@ class ExpiryGiftsController extends Controller
             $lot->item->save();
         }
 
-        return redirect()->back()->with('success', "{$lot->item_name} ({$qty} {$lot->unit}) par sasti sale rate Rs. {$newRate} muqarrar ho gayi.");
+        return redirect()->back()->with('success', "Discount rate of Rs. {$newRate} applied to {$lot->item_name} ({$qty} {$lot->unit}).");
     }
 
     public function recordWastage(Request $request)
@@ -201,12 +201,12 @@ class ExpiryGiftsController extends Controller
         $lot = ExpiryLot::findOrFail($validated['lot_id']);
 
         if ($lot->action_taken === 'wastage' || $lot->quantity <= 0) {
-            return redirect()->back()->withErrors(['wastage' => 'Is lot par pehle hi wastage record ho chuki hai.']);
+            return redirect()->back()->withErrors(['wastage' => 'Wastage has already been recorded for this lot.']);
         }
 
         $existingWastage = Wastage::where('lot_id', $lot->id)->first();
         if ($existingWastage) {
-            return redirect()->back()->withErrors(['wastage' => 'Is lot ka wastage voucher pehle se darj hai.']);
+            return redirect()->back()->withErrors(['wastage' => 'Wastage voucher already exists for this lot.']);
         }
 
         $qty = min($lot->quantity, (float) $validated['quantity']);
@@ -224,7 +224,7 @@ class ExpiryGiftsController extends Controller
             'quantity' => $qty,
             'unit' => $lot->unit,
             'loss_amount' => $loss,
-            'reason' => $validated['reason'] ?: 'Expire Maal (Wastage)',
+            'reason' => $validated['reason'] ?: 'Expired Stock (Wastage)',
             'status' => 'approved',
             'approved_by' => 'Owner (Hajji Muhammad)',
         ]);
@@ -284,12 +284,12 @@ class ExpiryGiftsController extends Controller
         $qty = (float) $validated['quantity'];
 
         if ($lot->computed_status === 'expired') {
-            return redirect()->back()->withErrors(['gift' => 'Expired maal gift mein nahi diya ja sakta. Sirf fresh lot se gift mumkin hai.']);
+            return redirect()->back()->withErrors(['gift' => 'Expired items cannot be gifted. Only fresh stock can be gifted.']);
         }
 
         $rate = $lot->rate;
         $value = $qty * $rate;
-        $recipient = trim($validated['recipient_name'] ?: 'Naya customer');
+        $recipient = trim($validated['recipient_name'] ?: 'New Customer');
 
         $lastGiftId = Gift::max('id') ?? 0;
         $voucherNo = sprintf('G-%04d', $lastGiftId + 1);

@@ -94,24 +94,24 @@ export default function DepositTransferPage() {
             toast.error(
                 isUrdu
                     ? 'پہلے بینک اکاؤنٹس پیج پر اکاؤنٹ شامل کریں'
-                    : 'Pehle Bank Accounts page par account shamil karein'
+                    : 'Please add a bank account first on the Bank Accounts page'
             );
             return;
         }
 
         if (activeTab === 'deposit' && !selectedBank) {
-            toast.error(isUrdu ? 'برائے مہربانی بینک اکاؤنٹ منتخب کریں' : 'Barahe karam bank account select karein');
+            toast.error(isUrdu ? 'برائے مہربانی بینک اکاؤنٹ منتخب کریں' : 'Please select a bank account');
             return;
         }
 
         if (activeTab === 'withdraw' && !selectedBank) {
-            toast.error(isUrdu ? 'برائے مہربانی بینک اکاؤنٹ منتخب کریں' : 'Barahe karam bank account select karein');
+            toast.error(isUrdu ? 'برائے مہربانی بینک اکاؤنٹ منتخب کریں' : 'Please select a bank account');
             return;
         }
 
         if (activeTab === 'transfer') {
             if (!fromBank || !toBank) {
-                toast.error(isUrdu ? 'دونوں بینک اکاؤنٹس منتخب کریں' : 'Dono bank accounts select karein');
+                toast.error(isUrdu ? 'دونوں بینک اکاؤنٹس منتخب کریں' : 'Please select both source and destination accounts');
                 return;
             }
             if (fromBank === toBank) {
@@ -199,7 +199,7 @@ export default function DepositTransferPage() {
                 {/* Green Header Section */}
                 <MandiPageHeader
                     title={isUrdu ? t('banking.transfers_title') : 'Deposit / Transfer'}
-                    subtitle={isUrdu ? t('banking.transfers_subtitle') : 'Din ke aakhir mein galla se bank mein paise jama karwayein, ya bank se cash nikalein'}
+                    subtitle={isUrdu ? t('banking.transfers_subtitle') : 'End-of-day cash deposit to bank, or cash withdrawal from bank'}
                     isUrdu={isUrdu}
                 />
 
@@ -216,7 +216,7 @@ export default function DepositTransferPage() {
                             <span>
                                 {isUrdu
                                     ? 'ابھی تک کوئی بینک اکاؤنٹ شامل نہیں ہے۔ ڈپازٹ یا ٹرانسفر کے لیے پہلے بینک اکاؤنٹ ایڈ کریں۔'
-                                    : 'Abhi koi bank account mojood nahi hai. Pehle Bank Accounts page se account add karein.'}
+                                    : 'No bank accounts available. Please add an account on the Bank Accounts page first.'}
                             </span>
                         </div>
                         <Link
@@ -279,7 +279,7 @@ export default function DepositTransferPage() {
                                     {/* Kahan se */}
                                     <div>
                                         <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                                            {isUrdu ? 'کہاں سے' : 'Kahan se'}
+                                            {isUrdu ? 'کہاں سے' : 'From'}
                                         </label>
                                         <div className="w-full px-3.5 py-2.5 text-sm bg-gray-50 dark:bg-muted/40 border border-gray-200 dark:border-border rounded-lg text-gray-800 dark:text-gray-200 font-medium">
                                             {isUrdu ? 'کیش ڈراور (گلہ)' : 'Cash Drawer / Register'}
@@ -289,7 +289,7 @@ export default function DepositTransferPage() {
                                     {/* Kis bank account mein */}
                                     <div>
                                         <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                                            {isUrdu ? 'کس بینک اکاؤنٹ میں' : 'Kis bank account mein'}
+                                            {isUrdu ? 'کس بینک اکاؤنٹ میں' : 'To Bank Account'}
                                         </label>
                                         <select
                                             value={selectedBank}
@@ -297,7 +297,7 @@ export default function DepositTransferPage() {
                                             className="w-full px-3.5 py-2.5 text-sm border border-gray-200 dark:border-border rounded-lg bg-white dark:bg-background text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#166534] focus:border-[#166534] transition-all cursor-pointer font-medium"
                                         >
                                             <option value="" disabled>
-                                                {isUrdu ? 'اکاؤنٹ منتخب کریں' : 'Account select karein'}
+                                                {isUrdu ? 'اکاؤنٹ منتخب کریں' : 'Select Bank Account'}
                                             </option>
                                             {accounts.map((acc) => (
                                                 <option key={acc.id} value={acc.name}>
@@ -314,7 +314,7 @@ export default function DepositTransferPage() {
                                     {/* Kis bank account se */}
                                     <div>
                                         <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                                            {isUrdu ? 'کس بینک اکاؤنٹ سے' : 'Kis bank account se'}
+                                            {isUrdu ? 'کس بینک اکاؤنٹ سے' : 'From Bank Account'}
                                         </label>
                                         <select
                                             value={selectedBank}
@@ -322,7 +322,7 @@ export default function DepositTransferPage() {
                                             className="w-full px-3.5 py-2.5 text-sm border border-gray-200 dark:border-border rounded-lg bg-white dark:bg-background text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#166534] focus:border-[#166534] transition-all cursor-pointer font-medium"
                                         >
                                             <option value="" disabled>
-                                                {isUrdu ? 'اکاؤنٹ منتخب کریں' : 'Account select karein'}
+                                                {isUrdu ? 'اکاؤنٹ منتخب کریں' : 'Select Bank Account'}
                                             </option>
                                             {accounts.map((acc) => (
                                                 <option key={acc.id} value={acc.name}>
@@ -335,7 +335,7 @@ export default function DepositTransferPage() {
                                     {/* Kahan jama hoga */}
                                     <div>
                                         <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                                            {isUrdu ? 'کہاں جمع ہوگا' : 'Kahan jama hoga'}
+                                            {isUrdu ? 'کہاں جمع ہوگا' : 'Destination'}
                                         </label>
                                         <div className="w-full px-3.5 py-2.5 text-sm bg-gray-50 dark:bg-muted/40 border border-gray-200 dark:border-border rounded-lg text-gray-800 dark:text-gray-200 font-medium">
                                             {isUrdu ? 'کیش ڈراور (گلہ)' : 'Cash Drawer / Register'}
@@ -349,7 +349,7 @@ export default function DepositTransferPage() {
                                     {/* From bank */}
                                     <div>
                                         <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                                            {isUrdu ? 'کس بینک اکاؤنٹ سے (From)' : 'Kis bank account se (From)'}
+                                            {isUrdu ? 'کس بینک اکاؤنٹ سے (From)' : 'From Bank Account'}
                                         </label>
                                         <select
                                             value={fromBank}
@@ -363,7 +363,7 @@ export default function DepositTransferPage() {
                                             className="w-full px-3.5 py-2.5 text-sm border border-gray-200 dark:border-border rounded-lg bg-white dark:bg-background text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#166534] focus:border-[#166534] transition-all cursor-pointer font-medium"
                                         >
                                             <option value="" disabled>
-                                                {isUrdu ? 'اکاؤنٹ منتخب کریں' : 'Account select karein'}
+                                                {isUrdu ? 'اکاؤنٹ منتخب کریں' : 'Select Bank Account'}
                                             </option>
                                             {accounts.map((acc) => (
                                                 <option key={acc.id} value={acc.name}>
@@ -376,7 +376,7 @@ export default function DepositTransferPage() {
                                     {/* To bank: exclude selected fromBank */}
                                     <div>
                                         <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                                            {isUrdu ? 'کس بینک اکاؤنٹ میں (To)' : 'Kis bank account mein (To)'}
+                                            {isUrdu ? 'کس بینک اکاؤنٹ میں (To)' : 'To Bank Account'}
                                         </label>
                                         <select
                                             value={toBank}
@@ -384,7 +384,7 @@ export default function DepositTransferPage() {
                                             className="w-full px-3.5 py-2.5 text-sm border border-gray-200 dark:border-border rounded-lg bg-white dark:bg-background text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#166534] focus:border-[#166534] transition-all cursor-pointer font-medium"
                                         >
                                             <option value="" disabled>
-                                                {isUrdu ? 'اکاؤنٹ منتخب کریں' : 'Account select karein'}
+                                                {isUrdu ? 'اکاؤنٹ منتخب کریں' : 'Select Bank Account'}
                                             </option>
                                             {accounts
                                                 .filter((acc) => acc.name !== fromBank)
@@ -477,7 +477,7 @@ export default function DepositTransferPage() {
                                 type="text"
                                 value={remark}
                                 onChange={(e) => setRemark(e.target.value)}
-                                placeholder="e.g. Din ka cash galla se jama"
+                                placeholder="e.g. Daily cash register deposit"
                                 className="w-full px-3.5 py-2.5 text-sm border border-gray-200 dark:border-border rounded-lg bg-white dark:bg-background text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#166534] focus:border-[#166534] transition-all"
                             />
                         </div>
@@ -496,7 +496,7 @@ export default function DepositTransferPage() {
                             >
                                 {isUrdu
                                     ? (activeTab === 'deposit' ? 'ڈپازٹ محفوظ کریں' : activeTab === 'withdraw' ? 'کیش نکالنا محفوظ کریں' : 'ٹرانسفر محفوظ کریں')
-                                    : (activeTab === 'deposit' ? 'Deposit Save karein' : activeTab === 'withdraw' ? 'Withdrawal Save karein' : 'Transfer Save karein')}
+                                    : (activeTab === 'deposit' ? 'Save Deposit' : activeTab === 'withdraw' ? 'Save Withdrawal' : 'Save Transfer')}
                             </button>
                             <button
                                 type="button"

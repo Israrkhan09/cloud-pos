@@ -107,7 +107,7 @@ export default function MarksIndex({ marks, farmers, filters }: Props) {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!data.name_ur && !data.name_en) {
-            toast.error(isUrdu ? 'براہ کرم مارکہ کا نام درج کریں' : 'Barae meherbani mark ka naam darj karein');
+            toast.error(isUrdu ? 'براہ کرم مارکہ کا نام درج کریں' : 'Please enter mark name');
             return;
         }
 
@@ -125,7 +125,7 @@ export default function MarksIndex({ marks, farmers, filters }: Props) {
         } else {
             post('/masters/marks', {
                 onSuccess: () => {
-                    toast.success(isUrdu ? 'مارکہ کامیابی سے شامل ہو گیا' : 'Mark kamyabi se shamil ho gaya');
+                    toast.success(isUrdu ? 'مارکہ کامیابی سے شامل ہو گیا' : 'Mark added successfully');
                     setModalOpen(false);
                     reset();
                 },

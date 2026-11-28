@@ -203,7 +203,7 @@ export default function WasooliIndex({ rows, totals, merchants = [], receipts = 
         if (e) e.preventDefault();
 
         if (!selectedMerchant) {
-            toast.error(isUrdu ? 'براہ کرم پہلے گاہک منتخب کریں۔' : 'Baraye meherbani pehle gahak muntakhib karein.');
+            toast.error(isUrdu ? 'براہ کرم پہلے گاہک منتخب کریں۔' : 'Please select a customer first.');
             return;
         }
 
@@ -211,7 +211,7 @@ export default function WasooliIndex({ rows, totals, merchants = [], receipts = 
             toast.error(
                 isUrdu
                     ? 'براہ کرم بینک یا والٹ اکاؤنٹ منتخب کریں۔'
-                    : 'Baraye meherbani bank ya wallet account muntakhib karein.'
+                    : 'Please select a bank or wallet account.'
             );
             return;
         }
@@ -220,7 +220,7 @@ export default function WasooliIndex({ rows, totals, merchants = [], receipts = 
             toast.error(
                 isUrdu
                     ? 'براہ کرم وصولی کی درست رقم درج کریں۔'
-                    : 'Baraye meherbani wasooli ki raqam darj karein.'
+                    : 'Please enter a valid recovery amount.'
             );
             amountInputRef.current?.focus();
             return;
@@ -273,7 +273,7 @@ export default function WasooliIndex({ rows, totals, merchants = [], receipts = 
                 toast.success(
                     isUrdu
                         ? `Rs. ${numAmount.toLocaleString()} کی وصولی کامیابی سے محفوظ ہو گئی!`
-                        : `Rs. ${numAmount.toLocaleString()} ki wasooli kamyabi se save ho gayi!`
+                        : `Payment recovery of Rs. ${numAmount.toLocaleString()} saved successfully!`
                 );
 
                 handleReset();
@@ -524,7 +524,7 @@ export default function WasooliIndex({ rows, totals, merchants = [], receipts = 
                                             className="w-full min-h-[40px] h-10 rounded-xl border border-gray-200 px-2.5 text-xs font-semibold bg-white text-gray-900 focus:outline-none focus:border-[#1e713e] focus:ring-1 focus:ring-[#1e713e] cursor-pointer"
                                         >
                                             <option value="">
-                                                {isUrdu ? 'اکاؤنٹ منتخب کریں' : 'Account select karein'}
+                                                {isUrdu ? 'اکاؤنٹ منتخب کریں' : 'Select Bank Account'}
                                             </option>
                                             {accounts.length === 0 ? (
                                                 <option value="" disabled>
@@ -612,7 +612,7 @@ export default function WasooliIndex({ rows, totals, merchants = [], receipts = 
                                             type="text"
                                             value={tableSearch}
                                             onChange={e => setTableSearch(e.target.value)}
-                                            placeholder={isUrdu ? 'تلاش کریں...' : 'Search wasooli...'}
+                                            placeholder={isUrdu ? 'تلاش کریں...' : 'Search recoveries...'}
                                             className="w-full h-8 px-2.5 rounded-lg border border-gray-200 text-xs text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#1e713e] focus:ring-1 focus:ring-[#1e713e] transition-all bg-white"
                                         />
                                     </div>

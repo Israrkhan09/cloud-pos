@@ -124,7 +124,7 @@ export default function ChequesPage() {
                 {/* Green Header Section */}
                 <MandiPageHeader
                     title={isUrdu ? t('banking.cheques_title') : 'Cheques'}
-                    subtitle={isUrdu ? t('banking.cheques_subtitle') : 'Merchant se mile aur kisan ko diye gaye cheques ka status yahan track karein'}
+                    subtitle={isUrdu ? t('banking.cheques_subtitle') : 'Track status of cheques received from customers and issued to farmers'}
                     isUrdu={isUrdu}
                 />
 
@@ -145,7 +145,7 @@ export default function ChequesPage() {
                                         : 'bg-white dark:bg-card border border-gray-200 dark:border-border text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-muted'
                                 }`}
                             >
-                                {isUrdu ? `سب (${totalCount})` : `Sab (${totalCount})`}
+                                {isUrdu ? `سب (${totalCount})` : `All (${totalCount})`}
                             </button>
 
                             {/* Pending */}
@@ -356,7 +356,7 @@ export default function ChequesPage() {
                                         className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-border rounded-lg bg-white dark:bg-background text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 transition-all"
                                     />
                                     <p className="text-xs text-gray-400 mt-1">
-                                        {isUrdu ? 'بینک جو کٹوتی کرتا ہے' : 'Bank jo deduction karta hai'}
+                                        {isUrdu ? 'بینک جو کٹوتی کرتا ہے' : 'Deduction charged by the bank'}
                                     </p>
                                 </div>
 

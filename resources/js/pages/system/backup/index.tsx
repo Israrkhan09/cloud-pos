@@ -181,7 +181,7 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
             const file = e.target.files[0];
             const name = file.name.toLowerCase();
             if (!name.endsWith('.db') && !name.endsWith('.sqlite') && !name.endsWith('.sqlite3')) {
-                setErrorMessage('Sirf .db backup file muntakhib karein! Dusri files qabool nahi hain.');
+                setErrorMessage('Please select a valid .db backup file! Other formats are not supported.');
                 setSelectedFile(null);
                 e.target.value = '';
                 return;
@@ -194,7 +194,7 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
     function handleRestoreClick(e: React.FormEvent) {
         e.preventDefault();
         if (!selectedFile) {
-            setErrorMessage('Barah-e-karam pehle backup file (.db) muntakhib karein!');
+            setErrorMessage('Please select a .db backup file first!');
             return;
         }
         setErrorMessage('');
@@ -350,7 +350,7 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                 {/* 1. Green Header Section */}
                 <MandiPageHeader
                     title={isUrdu ? t('backup_mandi.title') : 'Database Backup aur Restore'}
-                    subtitle={isUrdu ? t('backup_mandi.subtitle') : 'SQLite database ka mehfooz backup, timestamped files download aur restore ki sahulat'}
+                    subtitle={isUrdu ? t('backup_mandi.subtitle') : 'SQLite database backup, timestamped downloads and system restore'}
                     isUrdu={isUrdu}
                 >
                     {/* Full Database Backup (.db) Button */}
@@ -426,7 +426,7 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                         <p className="text-emerald-900/90 dark:text-emerald-300/90 leading-relaxed text-xs sm:text-[13px]">
                             {isUrdu
                                 ? 'آپ کا POS سسٹم ہر 6 گھنٹے بعد SQLite ڈیٹا بیس کا مکمل اسنیپ شاٹ بیک اپ بناتا ہے اور آخری 15 بیک اپ محفوظ رکھتا ہے۔ کسی بھی وقت آپ خود بیک اپ بنا کر اپنے کمپیوٹر یا USB ڈرائیو پر ڈاؤن لوڈ کر سکتے ہیں۔'
-                                : 'Aap ka POS system har 6 ghante baad SQLite database ka mukammal snapshot backup banata hai aur aakhri 15 backups mehfooz rakhta hai. Kisi bhi waqt aap manual backup create karke apne computer ya USB drive par download kar sakte hain.'}
+                                : 'Your POS automatically creates full snapshot backups of your SQLite database every 6 hours and retains the last 15 backups. You can create a manual backup anytime to download to your computer or USB drive.'}
                         </p>
                     </div>
                 </div>
@@ -518,7 +518,7 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                             <p className="leading-relaxed">
                                 {isUrdu
                                     ? 'بحال کرنے سے آپ کی پرانی ڈیٹا بیس فائل تبدیل ہو جائے گی۔ سسٹم حفاظت کے لیے پہلے موجودہ ڈیٹا بیس کا سیفٹی بیک اپ خود بنا لے گا۔'
-                                    : 'Restore karne se aap ki purani database file tabdeel ho jayegi. System hifazat ke liye pehle mojooda database ka safety backup khud bana lega.'}
+                                    : 'Restoring will overwrite current database records. The system will automatically create a safety backup of your existing database before restoring.'}
                             </p>
                         </div>
 
@@ -535,7 +535,7 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                                 />
                                 {selectedFile && (
                                     <div className="mt-1.5 text-[11px] text-emerald-800 dark:text-emerald-400 font-mono font-medium">
-                                        {isUrdu ? 'منتخب شدہ: ' : 'Muntakhib: '}{selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
+                                        {isUrdu ? 'منتخب شدہ: ' : 'Selected: '}{selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
                                     </div>
                                 )}
                             </div>
@@ -565,7 +565,7 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                                 {isUrdu ? 'کیٹیگری وار ڈیٹا بیک اپ' : 'Category-wise Data Backup'}
                             </h3>
                             <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                                {isUrdu ? 'ہر کیٹیگری الگ سے پریویو کریں، پھر ایکسل یا DB فائل ڈاؤن لوڈ کریں' : 'Har category alag se preview karein, phir Excel ya DB file download karein'}
+                                {isUrdu ? 'ہر کیٹیگری الگ سے پریویو کریں، پھر ایکسل یا DB فائل ڈاؤن لوڈ کریں' : 'Preview each category separately, then download Excel or DB files'}
                             </p>
                         </div>
 
@@ -578,7 +578,7 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                                 onClick={fetchCategories}
                                 disabled={loadingCategories}
                                 className="text-gray-500 hover:text-emerald-800 dark:hover:text-emerald-300 p-1 rounded-lg transition cursor-pointer"
-                                title={isUrdu ? 'کیٹیگری کی تعداد تازہ کریں' : 'Category counts taaza karein'}
+                                title={isUrdu ? 'کیٹیگری کی تعداد تازہ کریں' : 'Refresh category counts'}
                             >
                                 <Icon
                                     name="ArrowClockwise"
@@ -697,10 +697,10 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                                 {isUrdu ? 'کیا آپ واقعی بحال کرنا چاہتے ہیں؟ موجودہ ڈیٹا بدل جائے گا۔' : 'Kya aap waqai restore karna chahte hain? Maujooda data badal jayega.'}
                             </p>
                             <p className="text-gray-500 text-xs">
-                                {isUrdu ? 'منتخب فائل: ' : 'Muntakhib file: '}<strong className="font-mono text-gray-800 dark:text-gray-200">{selectedFile?.name}</strong>
+                                {isUrdu ? 'منتخب فائل: ' : 'Selected file: '}<strong className="font-mono text-gray-800 dark:text-gray-200">{selectedFile?.name}</strong>
                             </p>
                             <p className="text-xs text-gray-500 bg-gray-50 dark:bg-muted p-2.5 rounded-xl border border-gray-200 dark:border-gray-700">
-                                {isUrdu ? 'سسٹم حفاظت کے لیے پہلے موجودہ ڈیٹا بیس کا سیفٹی بیک اپ خودکار طریقے سے بنا لے گا۔' : 'System hifazat ke liye pehle maujooda database ka safety backup automatically bana lega.'}
+                                {isUrdu ? 'سسٹم حفاظت کے لیے پہلے موجودہ ڈیٹا بیس کا سیفٹی بیک اپ خودکار طریقے سے بنا لے گا۔' : 'The system will automatically create a safety backup of your current database before proceeding.'}
                             </p>
                         </div>
 
@@ -710,7 +710,7 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                                 onClick={() => setConfirmModalOpen(false)}
                                 className="px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-muted font-bold text-xs cursor-pointer"
                             >
-                                {isUrdu ? 'منسوخ (Cancel)' : 'Mansookh (Cancel)'}
+                                {isUrdu ? 'منسوخ (Cancel)' : 'Cancel'}
                             </button>
                             <button
                                 type="button"
@@ -755,7 +755,7 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                                             (previewData && previewData.rows.length === 0)
                                         }
                                         className="bg-white hover:bg-emerald-50 text-emerald-950 font-bold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1 transition disabled:opacity-50 shadow-2xs cursor-pointer"
-                                        title={isUrdu ? 'ایکسل فائل ڈاؤن لوڈ کریں' : 'Excel file download karein'}
+                                        title={isUrdu ? 'ایکسل فائل ڈاؤن لوڈ کریں' : 'Download Excel file'}
                                     >
                                         <Icon name="FileXls" className="size-3.5 text-emerald-800" weight="bold" />
                                         <span>Excel (.xlsx)</span>
@@ -769,7 +769,7 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                                             (previewData && previewData.rows.length === 0)
                                         }
                                         className="bg-white hover:bg-emerald-50 text-emerald-950 font-bold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1 transition disabled:opacity-50 shadow-2xs cursor-pointer"
-                                        title={isUrdu ? 'SQLite ڈیٹا بیس فائل ڈاؤن لوڈ کریں' : 'SQLite database file download karein'}
+                                        title={isUrdu ? 'SQLite ڈیٹا بیس فائل ڈاؤن لوڈ کریں' : 'Download SQLite database file'}
                                     >
                                         <Icon name="Database" className="size-3.5 text-emerald-800" weight="bold" />
                                         <span>DB (.db)</span>

@@ -185,7 +185,7 @@ export default function GeneralLedgerIndex({ date, dayMonth, rows, summary }: Pr
                                 Rs. {Number(summary.balance).toLocaleString()}
                             </div>
                             <span className="text-xs font-semibold text-[#374151] block pt-0.5">
-                                {dayMonth} {isUrdu ? 'کا حساب' : 'ka hisaab'}
+                                {dayMonth} {isUrdu ? 'کا حساب' : 'Summary'}
                             </span>
                         </div>
 
@@ -229,7 +229,7 @@ export default function GeneralLedgerIndex({ date, dayMonth, rows, summary }: Pr
                                         <th className="px-4 py-3 text-start w-24">{isUrdu ? 'تاریخ' : 'Tarikh'}</th>
                                         <th className="px-4 py-3 text-start w-52">{isUrdu ? 'کھاتہ / نام' : 'Khata / Naam'}</th>
                                         <th className="px-4 py-3 text-start">{isUrdu ? 'تفصیل' : 'Tafseel'}</th>
-                                        <th className="px-4 py-3 text-end w-32">{isUrdu ? 'جمع' : 'Jama'}</th>
+                                        <th className="px-4 py-3 text-end w-32">{isUrdu ? 'جمع' : 'Credit'}</th>
                                         <th className="px-4 py-3 text-end w-32">{isUrdu ? 'بنام' : 'Banam'}</th>
                                         <th className="px-4 py-3 text-end w-36">{isUrdu ? 'بقایا' : 'Baqaya'}</th>
                                     </tr>
@@ -313,7 +313,7 @@ export default function GeneralLedgerIndex({ date, dayMonth, rows, summary }: Pr
                         Rs. {Number(summary.balance).toLocaleString()}
                     </strong>
                     <div className="flex justify-between text-[10px] pt-1 mt-1 border-t border-gray-300">
-                        <span>Jama: Rs. {Number(summary.total_jama).toLocaleString()}</span>
+                        <span>Credit: Rs. {Number(summary.total_jama).toLocaleString()}</span>
                         <span>Banam: Rs. {Number(summary.total_banam).toLocaleString()}</span>
                     </div>
                 </div>

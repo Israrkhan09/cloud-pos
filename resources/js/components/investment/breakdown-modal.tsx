@@ -49,7 +49,7 @@ export default function BreakdownModal({ isOpen, onClose, data }: BreakdownModal
                     {data.total !== undefined && (
                         <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 flex items-center justify-between">
                             <span className="text-xs font-bold text-[#374151]">
-                                Kul Total Rakam:
+                                Total Amount:
                             </span>
                             <span className="text-lg font-black text-[#14532d]">
                                 {formatRs(data.total)}
@@ -108,7 +108,7 @@ export default function BreakdownModal({ isOpen, onClose, data }: BreakdownModal
                         onClick={onClose}
                         className="min-h-[38px] px-5 py-2 text-xs font-bold text-white bg-[#14532d] hover:bg-[#166534] rounded-lg shadow-xs transition-colors cursor-pointer"
                     >
-                        Band Karein
+                        Close
                     </button>
                 </div>
             </DialogContent>

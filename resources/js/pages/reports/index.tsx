@@ -279,24 +279,24 @@ export default function ReportsPage({
         } else if (activeTab === 'gahak') {
             fileName = `Gahak_Baqaya_Udhaar_${new Date().toISOString().split('T')[0]}.csv`;
             if (!gahakData.rows || gahakData.rows.length === 0) {
-                csvContent = 'Koi baqaya udhaar nahi hai\n';
+                csvContent = 'No outstanding balances found\n';
             } else {
                 csvContent = 'Customer Name,Phone,Area,Credit Limit (Rs),Outstanding Due (Rs),Last Sale,Last Recovery\n';
                 gahakData.rows.forEach(r => {
                     csvContent += `"${r.name}","${r.phone}","${r.area}","${r.credit_limit.toFixed(2)}","${r.balance.toFixed(2)}","${r.last_sale}","${r.last_wasooli}"\n`;
                 });
-                csvContent += `Total Market Udhaar,,,,${gahakData.total_market_udhaar.toFixed(2)},,\n`;
+                csvContent += `Total Outstanding Balance,,,,${gahakData.total_market_udhaar.toFixed(2)},,\n`;
             }
         } else if (activeTab === 'pnl') {
             fileName = `Nafa_Nuqsan_Statement_${filterFromDate}_to_${filterToDate}.csv`;
             csvContent = 'Mad (Statement Line),Raqam (Rs)\n';
             csvContent += `"Gross Sales Revenue","${pnlData.gross_revenue.toFixed(2)}"\n`;
             csvContent += `"Cost of Goods Sold (Purchases)","-${pnlData.cogs.toFixed(2)}"\n`;
-            csvContent += `"Kham Munafa (Gross Profit on Sales)","${pnlData.gross_profit.toFixed(2)}"\n`;
+            csvContent += `"Gross Profit on Sales","${pnlData.gross_profit.toFixed(2)}"\n`;
             csvContent += `"Farmer Commission Earned","+${pnlData.farmer_commission.toFixed(2)}"\n`;
             csvContent += `"Spoilage and Wastage Loss","-${pnlData.wastage_loss.toFixed(2)}"\n`;
             csvContent += `"Total Discounts","-${pnlData.total_discounts.toFixed(2)}"\n`;
-            csvContent += `"SAAF MUNAFA (NET PROFIT)","${pnlData.net_profit.toFixed(2)}"\n`;
+            csvContent += `"NET PROFIT","${pnlData.net_profit.toFixed(2)}"\n`;
         }
 
         const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -321,13 +321,13 @@ export default function ReportsPage({
             reports: [
                 { id: 'amroza_print', title: 'Amroza Print', title_ur: 'امروزہ پرنٹ', desc: 'Aaj ki sale ki list', desc_ur: 'آج کی سیل کی لسٹ', url: '/amroza' },
                 { id: 'amroza_parchi', title: 'Amroza Parchi', title_ur: 'امروزہ پرچی', desc: 'Merchant ko dene ki parchi', desc_ur: 'مرچنٹ کو دینے کی پرچی', url: '/amroza' },
-                { id: 'naqdi_print', title: 'Naqdi Print', title_ur: 'نقدی پرنٹ', desc: 'Naqdi wasooli ki list', desc_ur: 'نقدی وصولی کی لسٹ', url: '/naqdi' },
-                { id: 'wasooli_print', title: 'Wasooli Print', title_ur: 'وصولی پرنٹ', desc: 'Wasooli (recovery) ki list', desc_ur: 'وصولی (ریکوری) کی لسٹ', url: '/wasooli' },
+                { id: 'naqdi_print', title: 'Cash Collections Print', title_ur: 'نقدی پرنٹ', desc: 'Daily cash collections list', desc_ur: 'نقدی وصولی کی لسٹ', url: '/naqdi' },
+                { id: 'wasooli_print', title: 'Payment Recovery Print', title_ur: 'وصولی پرنٹ', desc: 'Customer recoveries list', desc_ur: 'وصولی (ریکوری) کی لسٹ', url: '/wasooli' },
                 { id: 'merchant_amroza', title: 'Merchant Amroza', title_ur: 'مرچنٹ امروزہ', desc: 'Merchant wise sale', desc_ur: 'مرچنٹ کے مطابق سیل', url: '/merchant-amroza' },
-                { id: 'merchant_wasooli', title: 'Merchant Wasooli', title_ur: 'مرچنٹ وصولی', desc: 'Merchant wise wasooli', desc_ur: 'مرچنٹ کے مطابق وصولی', url: '/merchant-wasooli' },
+                { id: 'merchant_wasooli', title: 'Customer Recovery', title_ur: 'مرچنٹ وصولی', desc: 'Customer-wise payment recoveries', desc_ur: 'مرچنٹ کے مطابق وصولی', url: '/merchant-wasooli' },
                 { id: 'amroza_tafseel', title: 'Amroza Tafseel', title_ur: 'امروزہ تفصیل', desc: 'Sale ki poori tafseel', desc_ur: 'سیل کی پوری تفصیل', url: '/amroza-detail', isRange: true },
-                { id: 'wasooli_tafseel', title: 'Wasooli Tafseel', title_ur: 'وصولی تفصیل', desc: 'Wasooli ki poori tafseel', desc_ur: 'وصولی کی پوری تفصیل', url: '/wasooli-detail', isRange: true },
-                { id: 'amroza_wasooli', title: 'Amroza / Wasooli', title_ur: 'امروزہ / وصولی سمری', desc: 'Sale aur wasooli ek saath', desc_ur: 'سیل اور وصولی ایک ساتھ', url: '/amroza-wasooli', isRange: true },
+                { id: 'wasooli_tafseel', title: 'Recovery Detail', title_ur: 'وصولی تفصیل', desc: 'Itemized recovery transactions', desc_ur: 'وصولی کی پوری تفصیل', url: '/wasooli-detail', isRange: true },
+                { id: 'amroza_wasooli', title: 'Daily Sales & Recovery', title_ur: 'امروزہ / وصولی سمری', desc: 'Combined daily sales and recoveries', desc_ur: 'سیل اور وصولی ایک ساتھ', url: '/amroza-wasooli', isRange: true },
             ],
         },
         {
@@ -336,8 +336,8 @@ export default function ReportsPage({
             name_ur: 'زمیندار (کسان)',
             icon: 'Tractor',
             reports: [
-                { id: 'farmer_bill', title: 'Farmer Bill (Bijak)', title_ur: 'کسان بل (بیجک)', desc: 'Kisan ka rozana ka hisab', desc_ur: 'کسان کا روزانہ کا حساب', url: '/bijak' },
-                { id: 'farmer_khata', title: 'Farmer Khata', title_ur: 'کسان کھاتہ', desc: 'Farmer ka Jama / Banam (Fard Hisab)', desc_ur: 'کسان کا جمع / بنام (فرد حساب)', url: '/khata' },
+                { id: 'farmer_bill', title: 'Farmer Invoice (Bijak)', title_ur: 'کسان بل (بیجک)', desc: 'Daily farmer invoice accounts', desc_ur: 'کسان کا روزانہ کا حساب', url: '/bijak' },
+                { id: 'farmer_khata', title: 'Farmer Ledger', title_ur: 'کسان کھاتہ', desc: 'Farmer account statement and balance', desc_ur: 'کسان کا جمع / بنام (فرد حساب)', url: '/khata' },
                 { id: 'farmer_list', title: 'Farmer List', title_ur: 'کسان لسٹ', desc: 'Tamaam farmers ki fehrist', desc_ur: 'تمام کسانوں کی فہرست', url: '/masters/farmers' },
                 { id: 'farmer_marks', title: 'Farmer Marks', title_ur: 'کسان مارکس', desc: 'Farmer marks aur bariyan', desc_ur: 'کسان مارکس اور باڑیاں', url: '/masters/marks' },
                 { id: 'farmer_balances', title: 'Farmer Balances', title_ur: 'کسان بقایا جات', desc: 'Farmer baqaya jaat', desc_ur: 'کسان کے بقایا جات', url: '/khata' },
@@ -350,10 +350,10 @@ export default function ReportsPage({
             icon: 'BookBookmark',
             reports: [
                 { id: 'sale_report', title: 'Sale Report', title_ur: 'سیل رپورٹ', desc: 'aaj ki list', desc_ur: 'آج کی لسٹ', url: '/amroza' },
-                { id: 'munafa_nuqsan', title: 'Munafa / Nuqsan', title_ur: 'منافع / نقصان', desc: 'item wise', desc_ur: 'آئٹم کے مطابق', url: '/reports' },
-                { id: 'udhaar_report', title: 'Udhaar Report', title_ur: 'ادھار رپورٹ', desc: 'kis se kitna lena', desc_ur: 'کس سے کتنا لینا', url: '/merchant-khata' },
+                { id: 'munafa_nuqsan', title: 'Profit & Loss', title_ur: 'منافع / نقصان', desc: 'Item-wise profit and loss', desc_ur: 'آئٹم کے مطابق', url: '/reports' },
+                { id: 'udhaar_report', title: 'Customer Receivables Report', title_ur: 'ادھار رپورٹ', desc: 'Customer outstanding balances', desc_ur: 'کس سے کتنا لینا', url: '/merchant-khata' },
                 { id: 'stock_report', title: 'Stock Report', title_ur: 'اسٹاک رپورٹ', desc: 'value aur kam stock', desc_ur: 'ویلیو اور کم اسٹاک', url: '/masters/items' },
-                { id: 'kisan_hisaab', title: 'Kisan Hisaab', title_ur: 'کسان حساب', desc: 'dena baqi', desc_ur: 'دینا باقی', url: '/khata' },
+                { id: 'kisan_hisaab', title: 'Farmer Account Report', title_ur: 'کسان حساب', desc: 'Payable balance to suppliers', desc_ur: 'دینا باقی', url: '/khata' },
             ],
         },
     ];
@@ -427,7 +427,7 @@ export default function ReportsPage({
                         className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-emerald-50 text-[#14532d] border border-white text-xs sm:text-sm font-bold shadow-xs transition-colors cursor-pointer"
                     >
                         <Icon name="Printer" className="size-4 text-[#14532d]" weight="bold" />
-                        <span>{isUrdu ? t('reports_mandi.print_btn') : 'Print Karein'}</span>
+                        <span>{isUrdu ? t('reports_mandi.print_btn') : 'Print'}</span>
                     </button>
 
                     <button
@@ -478,7 +478,7 @@ export default function ReportsPage({
                                 <span>{isUrdu ? 'تاریخ فلٹر:' : 'Date Filter:'}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <span className="text-xs text-gray-500">{isUrdu ? 'شروع:' : 'Shuru:'}</span>
+                                <span className="text-xs text-gray-500">{isUrdu ? 'شروع:' : 'Start:'}</span>
                                 <input
                                     type="date"
                                     value={filterFromDate}
@@ -487,7 +487,7 @@ export default function ReportsPage({
                                 />
                             </div>
                             <div className="flex items-center gap-2">
-                                <span className="text-xs text-gray-500">{isUrdu ? 'آخر:' : 'Aakhir:'}</span>
+                                <span className="text-xs text-gray-500">{isUrdu ? 'آخر:' : 'End:'}</span>
                                 <input
                                     type="date"
                                     value={filterToDate}
@@ -516,7 +516,7 @@ export default function ReportsPage({
 
                             <div className="bg-white dark:bg-card border border-gray-200/90 dark:border-border rounded-xl p-4.5 shadow-2xs">
                                 <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 block">
-                                    {isUrdu ? 'کل فروخت (Sales):' : 'Kul Farokht (Sales):'}
+                                    {isUrdu ? 'کل فروخت (Sales):' : 'Total Sales:'}
                                 </span>
                                 <span className="text-2xl font-black text-gray-900 dark:text-white block mt-1.5">
                                     {formatRs(rozanaData.total_gross)}
@@ -525,7 +525,7 @@ export default function ReportsPage({
 
                             <div className="bg-white dark:bg-card border border-gray-200/90 dark:border-border rounded-xl p-4.5 shadow-2xs">
                                 <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 block">
-                                    {isUrdu ? 'نقد وصولی:' : 'Naqad Wasooli:'}
+                                    {isUrdu ? 'نقد وصولی:' : 'Cash Recoveries:'}
                                 </span>
                                 <span className="text-2xl font-black text-emerald-800 dark:text-emerald-400 block mt-1.5">
                                     {formatRs(rozanaData.total_cash)}
@@ -621,7 +621,7 @@ export default function ReportsPage({
                         {/* Heading & Year Selector */}
                         <div className="bg-white dark:bg-card border border-gray-200/90 dark:border-border rounded-xl p-3.5 flex items-center justify-between no-print">
                             <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200">
-                                {isUrdu ? `ماہانہ فروخت سمری (${selectedYear})` : `Mahana Farokht Summary (${selectedYear})`}
+                                {isUrdu ? `ماہانہ فروخت سمری (${selectedYear})` : `Monthly Sales Summary (${selectedYear})`}
                             </h3>
                             <div className="flex items-center gap-2">
                                 <span className="text-xs text-gray-500 font-medium">{isUrdu ? 'سال چنیں:' : 'Saal chunein:'}</span>
@@ -646,7 +646,7 @@ export default function ReportsPage({
                                             <th className="py-3 px-4 text-start font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'مہینہ (Month)' : 'Mahina (Month)'}</th>
                                             <th className="py-3 px-4 text-center font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'کل بلز' : 'Total Invoices'}</th>
                                             <th className="py-3 px-4 text-end font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'کل سیل (Rs)' : 'Kul Sale (Rs)'}</th>
-                                            <th className="py-3 px-4 text-end font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'نقد وصولی (Rs)' : 'Naqad Wasooli (Rs)'}</th>
+                                            <th className="py-3 px-4 text-end font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'نقد وصولی (Rs)' : 'Cash Recovery (Rs)'}</th>
                                             <th className="py-3 px-4 text-end font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'ادھار بقایا (Rs)' : 'Balance Due (Rs)'}</th>
                                             <th className="py-3 px-4 text-end font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'رعایت / ڈسکاؤنٹ (Rs)' : 'Riaayat / Discount (Rs)'}</th>
                                         </tr>
@@ -726,7 +726,7 @@ export default function ReportsPage({
 
                             <div className="bg-white dark:bg-card border border-gray-200/90 dark:border-border rounded-xl p-4.5 shadow-2xs">
                                 <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 block">
-                                    {isUrdu ? 'فروخت مالیت (متوقع):' : 'Farokht Malyaat (Expected):'}
+                                    {isUrdu ? 'فروخت مالیت (متوقع):' : 'Expected Sales Value:'}
                                 </span>
                                 <span className="text-2xl font-black text-emerald-800 dark:text-emerald-400 block mt-1.5">
                                     Rs {Math.round(stockData.sale_valuation).toLocaleString()}
@@ -735,7 +735,7 @@ export default function ReportsPage({
 
                             <div className="bg-white dark:bg-card border border-gray-200/90 dark:border-border rounded-xl p-4.5 shadow-2xs">
                                 <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 block">
-                                    {isUrdu ? 'متوقع منافع:' : 'Mutawaqqe Munafa:'}
+                                    {isUrdu ? 'متوقع منافع:' : 'Expected Profit:'}
                                 </span>
                                 <span className="text-2xl font-black text-emerald-900 dark:text-emerald-300 block mt-1.5">
                                     Rs {Math.round(stockData.expected_profit).toLocaleString()}
@@ -814,10 +814,10 @@ export default function ReportsPage({
                         <div className="bg-white dark:bg-card border border-gray-200/90 dark:border-border rounded-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-2xs">
                             <div>
                                 <h3 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white">
-                                    {isUrdu ? 'مارکیٹ میں پھنسا کل ادھار (Receivables)' : 'Market Mein Phansa Kul Udhaar (Receivables)'}
+                                    {isUrdu ? 'مارکیٹ میں پھنسا کل ادھار (Receivables)' : 'Total Outstanding Market Receivables'}
                                 </h3>
                                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                                    {isUrdu ? 'بقایا ادھار والے تمام گاہک اور دکاندار' : 'Baqaya udhaar wale tamam gahak aur dukandar'}
+                                    {isUrdu ? 'بقایا ادھار والے تمام گاہک اور دکاندار' : 'All customers and shopkeepers with outstanding balances'}
                                 </p>
                             </div>
                             <div className="text-start sm:text-end">
@@ -842,14 +842,14 @@ export default function ReportsPage({
                                             <th className="py-3 px-3 text-end font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'کریڈٹ لمٹ' : 'Credit Limit'}</th>
                                             <th className="py-3 px-4 text-end font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'بقایا ادھار (Rs)' : 'Outstanding Due (Rs)'}</th>
                                             <th className="py-3 px-3 text-center font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'آخری سیل' : 'Aakhri Sale'}</th>
-                                            <th className="py-3 px-3 text-center font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'آخری وصولی' : 'Aakhri Wasooli'}</th>
+                                            <th className="py-3 px-3 text-center font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'آخری وصولی' : 'Last Recovery'}</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100 dark:divide-border">
                                         {gahakData.rows.length === 0 ? (
                                             <tr>
                                                 <td colSpan={7} className="py-12 text-center text-xs text-gray-400">
-                                                    {isUrdu ? 'کوئی بقایا ادھار نہیں ہے' : 'Koi baqaya udhaar nahi hai'}
+                                                    {isUrdu ? 'کوئی بقایا ادھار نہیں ہے' : 'No outstanding balances found'}
                                                 </td>
                                             </tr>
                                         ) : (
@@ -907,7 +907,7 @@ export default function ReportsPage({
                                 <span>{isUrdu ? 'تاریخ فلٹر:' : 'Date Filter:'}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <span className="text-xs text-gray-500">{isUrdu ? 'شروع:' : 'Shuru:'}</span>
+                                <span className="text-xs text-gray-500">{isUrdu ? 'شروع:' : 'Start:'}</span>
                                 <input
                                     type="date"
                                     value={filterFromDate}
@@ -916,7 +916,7 @@ export default function ReportsPage({
                                 />
                             </div>
                             <div className="flex items-center gap-2">
-                                <span className="text-xs text-gray-500">{isUrdu ? 'آخر:' : 'Aakhir:'}</span>
+                                <span className="text-xs text-gray-500">{isUrdu ? 'آخر:' : 'End:'}</span>
                                 <input
                                     type="date"
                                     value={filterToDate}
@@ -943,7 +943,7 @@ export default function ReportsPage({
                                     {isUrdu ? 'نفع و نقصان اسٹیٹمنٹ (Profit & Loss Statement)' : 'Profit & Loss Statement'}
                                 </p>
                                 <p className="text-xs text-gray-400 font-mono mt-0.5">
-                                    {isUrdu ? 'مدت: ' : 'Muddad: '}{filterFromDate} {isUrdu ? 'تا' : 'Ta'} {filterToDate}
+                                    {isUrdu ? 'مدت: ' : 'Period: '}{filterFromDate} {isUrdu ? 'تا' : 'to'} {filterToDate}
                                 </p>
                             </div>
 
@@ -952,7 +952,7 @@ export default function ReportsPage({
                                 {/* Row 1: Kul Farokht */}
                                 <div className="flex items-center justify-between py-1">
                                     <span className="font-semibold text-gray-800 dark:text-gray-200">
-                                        {isUrdu ? 'کل فروخت (Gross Sales Revenue):' : 'Kul Farokht (Gross Sales Revenue):'}
+                                        {isUrdu ? 'کل فروخت (Gross Sales Revenue):' : 'Gross Sales Revenue:'}
                                     </span>
                                     <span className="font-black text-gray-900 dark:text-white font-mono">
                                         Rs {formatNum(pnlData.gross_revenue)}
@@ -962,7 +962,7 @@ export default function ReportsPage({
                                 {/* Row 2: Maal Khareed Cost */}
                                 <div className="flex items-center justify-between py-1 text-gray-600 dark:text-gray-400">
                                     <span>
-                                        {isUrdu ? 'مال خرید لاگت (Purchase Cost of Goods Sold):' : 'Maal Khareed Cost (Purchase Cost of Goods Sold):'}
+                                        {isUrdu ? 'مال خرید لاگت (Purchase Cost of Goods Sold):' : 'Cost of Goods Sold (COGS):'}
                                     </span>
                                     <span className="font-semibold text-red-600 dark:text-red-400 font-mono">
                                         - Rs {formatNum(pnlData.cogs)}
@@ -972,7 +972,7 @@ export default function ReportsPage({
                                 {/* Row 3: Kham Munafa */}
                                 <div className="flex items-center justify-between py-2 border-y border-gray-100 dark:border-border bg-gray-50/60 dark:bg-muted/20 px-3 rounded-lg">
                                     <span className="font-bold text-gray-900 dark:text-white">
-                                        {isUrdu ? 'خام منافع (Gross Profit on Sales):' : 'Kham Munafa (Gross Profit on Sales):'}
+                                        {isUrdu ? 'خام منافع (Gross Profit on Sales):' : 'Gross Profit on Sales:'}
                                     </span>
                                     <span className="font-black text-gray-900 dark:text-white text-base font-mono">
                                         Rs {formatNum(pnlData.gross_profit)}
@@ -982,7 +982,7 @@ export default function ReportsPage({
                                 {/* Row 4: Mandi Commission */}
                                 <div className="flex items-center justify-between py-1 text-emerald-800 dark:text-emerald-400">
                                     <span className="font-semibold">
-                                        {isUrdu ? 'منڈی کمیشن آمدنی (Farmer Commission Earned):' : 'Mandi Commission Aamdani (Farmer Commission Earned):'}
+                                        {isUrdu ? 'منڈی کمیشن آمدنی (Farmer Commission Earned):' : 'Market Commission Earned:'}
                                     </span>
                                     <span className="font-bold font-mono">
                                         + Rs {formatNum(pnlData.farmer_commission)}
@@ -1002,7 +1002,7 @@ export default function ReportsPage({
                                 {/* Row 6: Discounts */}
                                 <div className="flex items-center justify-between py-1 text-gray-600 dark:text-gray-400">
                                     <span>
-                                        {isUrdu ? 'کل رعایت / Discounts:' : 'Kul Riaayat / Discounts:'}
+                                        {isUrdu ? 'کل رعایت / Discounts:' : 'Total Discounts Allowed:'}
                                     </span>
                                     <span className="font-semibold text-red-600 dark:text-red-400 font-mono">
                                         - Rs {formatNum(pnlData.total_discounts)}
@@ -1014,10 +1014,10 @@ export default function ReportsPage({
                             <div className="bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                                 <div>
                                     <h4 className="text-sm font-black text-emerald-950 dark:text-emerald-200 tracking-wide uppercase">
-                                        {isUrdu ? 'صاف منافع (NET PROFIT):' : 'SAAF MUNAFA (NET PROFIT):'}
+                                        {isUrdu ? 'صاف منافع (NET PROFIT):' : 'NET PROFIT:'}
                                     </h4>
                                     <p className="text-xs text-emerald-800/80 dark:text-emerald-400 mt-0.5">
-                                        {isUrdu ? 'تمام آمدنی اور نقصانات کے بعد' : 'Tamam aamdani aur nuqsanat ke baad'}
+                                        {isUrdu ? 'تمام آمدنی اور نقصانات کے بعد' : 'After all revenues and deductions'}
                                     </p>
                                 </div>
                                 <div className="text-start sm:text-end">
@@ -1286,7 +1286,7 @@ export default function ReportsPage({
                                 </thead>
                                 <tbody>
                                     {gahakData.rows.length === 0 ? (
-                                        <tr><td colSpan={7} className="p-4 text-center">Koi baqaya udhaar nahi hai</td></tr>
+                                        <tr><td colSpan={7} className="p-4 text-center">No outstanding balances found</td></tr>
                                     ) : (
                                         gahakData.rows.map(r => (
                                             <tr key={r.id} className="border-b border-gray-300">
@@ -1323,7 +1323,7 @@ export default function ReportsPage({
                                 <span className="font-bold">- Rs {formatNum(pnlData.cogs)}</span>
                             </div>
                             <div className="flex justify-between py-1 border-b border-gray-200 bg-gray-100 p-1 font-bold">
-                                <span>Kham Munafa (Gross Profit on Sales):</span>
+                                <span>Gross Profit on Sales:</span>
                                 <span>Rs {formatNum(pnlData.gross_profit)}</span>
                             </div>
                             <div className="flex justify-between py-1 border-b border-gray-200">
@@ -1339,7 +1339,7 @@ export default function ReportsPage({
                                 <span className="font-bold">- Rs {formatNum(pnlData.total_discounts)}</span>
                             </div>
                             <div className="flex justify-between py-2 border-2 border-black p-2 bg-gray-100 font-black text-sm">
-                                <span>SAAF MUNAFA (NET PROFIT):</span>
+                                <span>NET PROFIT:</span>
                                 <span>Rs {formatNum(pnlData.net_profit)}</span>
                             </div>
                         </div>

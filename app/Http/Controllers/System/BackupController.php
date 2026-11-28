@@ -536,7 +536,7 @@ class BackupController extends Controller
                 'id' => 'sales_amroza',
                 'name' => 'Sales & Amroza',
                 'filePrefix' => 'Sales_Amroza',
-                'description' => 'Rozana ki naqad aur udhaar sale ka mukammal record',
+                'description' => 'Complete record of daily cash and credit sales',
                 'icon' => 'Receipt',
                 'record_count' => AmrozaSale::count(),
             ],
@@ -544,7 +544,7 @@ class BackupController extends Controller
                 'id' => 'merchants_wasooli',
                 'name' => 'Merchants & Wasooli',
                 'filePrefix' => 'Merchants_Wasooli',
-                'description' => 'Kharidaar (buyers), baqaya jaat aur wasooli receipts',
+                'description' => 'Buyers, outstanding balances and recovery receipts',
                 'icon' => 'Users',
                 'record_count' => Merchant::count(),
             ],
@@ -582,14 +582,14 @@ class BackupController extends Controller
                 'id' => 'sales_amroza',
                 'name' => 'Sales & Amroza',
                 'filePrefix' => 'Sales_Amroza',
-                'description' => 'Rozana ki naqad aur udhaar sale ka mukammal record',
+                'description' => 'Complete record of daily cash and credit sales',
                 'tables' => ['amroza_sales'],
             ],
             'merchants_wasooli' => [
                 'id' => 'merchants_wasooli',
                 'name' => 'Merchants & Wasooli',
                 'filePrefix' => 'Merchants_Wasooli',
-                'description' => 'Kharidaar (buyers), baqaya jaat aur wasooli receipts',
+                'description' => 'Buyers, outstanding balances and recovery receipts',
                 'tables' => ['merchants', 'merchant_receipts'],
             ],
             'farmers_bijak' => [
@@ -691,7 +691,7 @@ class BackupController extends Controller
             case 'farmers_bijak':
                 $columns = [
                     ['key' => 'entry_no', 'label' => 'Bijak / Parchi #'],
-                    ['key' => 'farmer_name', 'label' => 'Kisan Ka Naam'],
+                    ['key' => 'farmer_name', 'label' => 'Farmer Name'],
                     ['key' => 'date', 'label' => 'Tareekh'],
                     ['key' => 'gross_sale', 'label' => 'Kul Bikri'],
                     ['key' => 'commission', 'label' => 'Commission'],
@@ -724,7 +724,7 @@ class BackupController extends Controller
                     ['key' => 'name', 'label' => 'Sabzi / Item'],
                     ['key' => 'unit', 'label' => 'Unit'],
                     ['key' => 'purchase_rate', 'label' => 'Khareed Rate'],
-                    ['key' => 'sale_rate', 'label' => 'Farokht Rate'],
+                    ['key' => 'sale_rate', 'label' => 'Sale Rate'],
                     ['key' => 'stock_quantity', 'label' => 'Stock Miqdar'],
                     ['key' => 'shelf_life', 'label' => 'Shelf Life'],
                     ['key' => 'status', 'label' => 'Status'],
@@ -743,7 +743,7 @@ class BackupController extends Controller
                         'sale_rate' => (float)($it->default_rate ?? $it->rate ?? 70),
                         'stock_quantity' => $stock,
                         'shelf_life' => $it->shelf_life ?: '4-5 din',
-                        'status' => $stock <= 0 ? 'Khatam' : ($stock < 20 ? 'Kam Stock' : 'Dastiyab'),
+                        'status' => $stock <= 0 ? 'Out of Stock' : ($stock < 20 ? 'Low Stock' : 'Available'),
                     ];
                 }
                 return ['columns' => $columns, 'rows' => $rows];

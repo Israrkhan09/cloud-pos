@@ -275,7 +275,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
         }
 
         if (billItems.length === 0) {
-            toast.error('Baraye meharbani kam az kam aik maal item shamil karein');
+            toast.error('Please add at least one produce item');
             return;
         }
 
@@ -380,7 +380,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                             {/* Kisan */}
                             <div>
                                 <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                                    {isUrdu ? 'کسان' : 'Kisan'}
+                                    {isUrdu ? 'کسان' : 'Farmer'}
                                 </label>
                                 <select
                                     value={farmerId}
@@ -433,7 +433,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                             
                             {/* Card Header */}
                             <div className="flex items-center justify-between">
-                                <h2 className="text-base font-bold text-gray-900">{isUrdu ? 'مال' : 'Maal'}</h2>
+                                <h2 className="text-base font-bold text-gray-900">{isUrdu ? 'مال' : 'Produce Items'}</h2>
                                 <span className="text-xs text-gray-500 font-medium">
                                     {billItems.length} {isUrdu ? 'آئٹم' : 'item'} · {calculations.totalNag} {isUrdu ? 'بوری' : 'bori'}
                                 </span>
@@ -441,7 +441,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
 
                             {/* Quick Add Pills */}
                             <div className="flex items-center gap-1.5 flex-wrap text-xs">
-                                <span className="text-gray-500 font-medium mr-1">{isUrdu ? 'جلدی شامل کریں:' : 'Jaldi add karein:'}</span>
+                                <span className="text-gray-500 font-medium mr-1">{isUrdu ? 'جلدی شامل کریں:' : 'Quick Add:'}</span>
                                 {['Tamatar', 'Aloo', 'Pyaz', 'Gobi', 'Bhindi', 'Hari Mirch'].map(pill => (
                                     <button
                                         key={pill}
@@ -458,8 +458,8 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                             <div className="w-full">
                                 {/* Table Header */}
                                 <div className="grid grid-cols-12 gap-2 px-2 py-2.5 bg-gray-50/90 rounded-lg text-xs font-semibold text-gray-600 mb-2 items-center">
-                                    <div className="col-span-4">{isUrdu ? 'مال' : 'Maal'}</div>
-                                    <div className="col-span-3 text-center">{isUrdu ? 'بوری (تعداد)' : 'Bori (Tadaad)'}</div>
+                                    <div className="col-span-4">{isUrdu ? 'مال' : 'Item'}</div>
+                                    <div className="col-span-3 text-center">{isUrdu ? 'بوری (تعداد)' : 'Quantity / Bags'}</div>
                                     <div className="col-span-2 text-center">{isUrdu ? 'ریٹ (روپے/بوری)' : 'Rate (Rs/bori)'}</div>
                                     <div className="col-span-2 text-right pr-1">{isUrdu ? 'رقم' : 'Raqam'}</div>
                                     <div className="col-span-1 text-center"></div>
@@ -469,7 +469,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                                 <div className="space-y-2">
                                     {billItems.length === 0 ? (
                                         <div className="py-8 text-center text-gray-400 text-xs font-medium border border-dashed border-gray-200 rounded-lg">
-                                            {isUrdu ? 'کوئی مال شامل نہیں ہے۔ اوپر دیے گئے بٹنوں (+ ٹماٹر، + آلو وغیرہ) پر کلک کرکے مال شامل کریں۔' : 'Koi maal shamil nahi hai. Upar diye gaye buttons (+ Tamatar, + Aloo waghera) par click karke maal shamil karein.'}
+                                            {isUrdu ? 'کوئی مال شامل نہیں ہے۔ اوپر دیے گئے بٹنوں (+ ٹماٹر، + آلو وغیرہ) پر کلک کرکے مال شامل کریں۔' : 'No produce added yet. Click the buttons above (+ Tomato, + Potato, etc.) to add items.'}
                                         </div>
                                     ) : (
                                         billItems.map((row, idx) => {
@@ -590,7 +590,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                                                 placeholder="0"
                                                 className="w-14 h-9 px-2 text-center border border-gray-200 rounded-lg text-sm font-medium text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#14532d]"
                                             />
-                                            <span className="text-xs text-gray-500 font-medium">Rs/tadaad</span>
+                                            <span className="text-xs text-gray-500 font-medium">Rs/unit</span>
                                         </div>
                                     </div>
 
@@ -663,7 +663,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                                     disabled={isSaving || billItems.length === 0}
                                     className="w-full py-3 bg-[#14532d] hover:bg-[#0f3f22] text-white font-semibold rounded-xl text-center shadow-xs transition-colors cursor-pointer disabled:opacity-50 text-sm"
                                 >
-                                    {isSaving ? (isUrdu ? 'محفوظ ہو رہا ہے...' : 'Bachaya ja raha hai...') : (isUrdu ? 'بیجک محفوظ کریں' : 'Bill save karein')}
+                                    {isSaving ? (isUrdu ? 'محفوظ ہو رہا ہے...' : 'Saving...') : (isUrdu ? 'بیجک محفوظ کریں' : 'Save Invoice')}
                                 </button>
                             </div>
                         </div>
@@ -810,7 +810,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                             </h1>
                         </div>
                         <p className="text-[11px] font-semibold text-gray-700">
-                            Kisan ka Bill (Bijak) · بیجک
+                            Farmer Invoice · بیجک
                         </p>
                     </div>
 

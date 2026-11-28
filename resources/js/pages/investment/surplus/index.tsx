@@ -133,7 +133,7 @@ export default function InvestmentSurplusPage({
 
     // Export CSV
     const handleExportCSV = () => {
-        const headers = ['Fund Name', 'Kaha Lagaya Hai', 'Lagaya Hua Sarmaya', 'Abhi Ki Qeemat', 'Munafa', 'Wapsi Tareekh', 'Status'];
+        const headers = ['Fund Name', 'Destination / Channel', 'Principal Invested', 'Current Value', 'Profit', 'Return Date', 'Status'];
         const rows = funds.map(f => [
             `"${f.fund_name}"`,
             `"${f.kaha_lagaya || 'Meezan Bank Ltd'}"`,
@@ -188,7 +188,7 @@ export default function InvestmentSurplusPage({
                         {/* Number 2: Mila hua munafa */}
                         <div className="bg-white p-4 md:p-5 rounded-xl border border-gray-200 shadow-2xs">
                             <span className="text-xs font-bold text-[#374151] uppercase tracking-wider block">
-                                {isUrdu ? 'حاصل منافع' : 'Munafa'}
+                                {isUrdu ? 'حاصل منافع' : 'Profit Earned'}
                             </span>
                             <span className="text-2xl font-black text-emerald-700 block mt-2">
                                 + {formatRs(summary.mila_munafa)}
@@ -201,13 +201,13 @@ export default function InvestmentSurplusPage({
                         {/* Number 3: Kul Market Value (Wapsi) */}
                         <div className="bg-white p-4 md:p-5 rounded-xl border border-gray-200 shadow-2xs">
                             <span className="text-xs font-bold text-[#374151] uppercase tracking-wider block">
-                                {isUrdu ? 'کل واپسی (اصل + منافع)' : 'Kul Wapsi (Asal + Munafa)'}
+                                {isUrdu ? 'کل واپسی (اصل + منافع)' : 'Total Return (Principal + Profit)'}
                             </span>
                             <span className="text-2xl font-black text-[#14532d] block mt-2">
                                 {formatRs(summary.wapsi_total)}
                             </span>
                             <span className="text-xs font-medium text-[#4B5563] block mt-1">
-                                {isUrdu ? `اصل Rs. ${formatNum(summary.lagaya_paisa)} + منافع Rs. ${formatNum(summary.mila_munafa)}` : `Asal Rs. ${formatNum(summary.lagaya_paisa)} + Munafa Rs. ${formatNum(summary.mila_munafa)}`}
+                                {isUrdu ? `اصل Rs. ${formatNum(summary.lagaya_paisa)} + منافع Rs. ${formatNum(summary.mila_munafa)}` : `Principal Rs. ${formatNum(summary.lagaya_paisa)} + Profit Rs. ${formatNum(summary.mila_munafa)}`}
                             </span>
                         </div>
                     </div>
@@ -244,7 +244,7 @@ export default function InvestmentSurplusPage({
                                         <th className="py-3 px-4 text-start">{isUrdu ? 'کہاں لگایا ہے' : 'Kaha Lagaya Hai'}</th>
                                         <th className="py-3 px-4 text-end">{isUrdu ? 'لگائی گئی رقم' : 'Lagaya'}</th>
                                         <th className="py-3 px-4 text-end">{isUrdu ? 'ابھی کی قیمت' : 'Abhi Ki Qeemat'}</th>
-                                        <th className="py-3 px-4 text-center">{isUrdu ? 'منافع' : 'Munafa'}</th>
+                                        <th className="py-3 px-4 text-center">{isUrdu ? 'منافع' : 'Profit'}</th>
                                         <th className="py-3 px-4 text-center">{isUrdu ? 'واپسی تاریخ' : 'Wapsi Tareekh'}</th>
                                         <th className="py-3 px-4 text-center">{isUrdu ? 'کارروائی' : 'Action'}</th>
                                     </tr>
@@ -327,15 +327,15 @@ export default function InvestmentSurplusPage({
                                 {/* Clear breakdown card */}
                                 <div className="p-4 rounded-xl bg-gray-50 border border-gray-200 space-y-2.5">
                                     <div className="flex justify-between items-center text-sm">
-                                        <span className="text-[#4B5563]">{isUrdu ? 'اصل لگائی گئی رقم:' : 'Asal Lagayi Gayi Rakam:'}</span>
+                                        <span className="text-[#4B5563]">{isUrdu ? 'اصل لگائی گئی رقم:' : 'Principal Invested:'}</span>
                                         <span className="font-bold text-[#1F2937]">Rs. {formatNum(returnModalFund.principal_amount)}</span>
                                     </div>
                                     <div className="flex justify-between items-center text-sm">
-                                        <span className="text-[#4B5563]">{isUrdu ? 'حاصل شدہ منافع:' : 'Haasil Shuda Munafa:'}</span>
+                                        <span className="text-[#4B5563]">{isUrdu ? 'حاصل شدہ منافع:' : 'Profit Earned:'}</span>
                                         <span className="font-bold text-emerald-700">+ Rs. {formatNum(returnModalFund.profit_or_loss)}</span>
                                     </div>
                                     <div className="pt-2.5 border-t border-gray-200 flex justify-between items-center bg-emerald-50/60 -mx-4 -mb-4 p-4 rounded-b-xl">
-                                        <span className="text-sm font-bold text-[#14532d]">{isUrdu ? 'کل واپسی رقم:' : 'Kul Wapsi Rakam:'}</span>
+                                        <span className="text-sm font-bold text-[#14532d]">{isUrdu ? 'کل واپسی رقم:' : 'Total Return Amount:'}</span>
                                         <span className="text-xl font-black text-[#14532d]">Rs. {formatNum(returnModalFund.total_return)}</span>
                                     </div>
                                 </div>
@@ -343,7 +343,7 @@ export default function InvestmentSurplusPage({
                                 {/* Destination */}
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-[#1F2937] block">
-                                        {isUrdu ? 'واپسی کہاں جمع کریں؟ (ادائیگی ذریعہ)' : 'Wapsi Kahan Jama Karein? (Payment Zariya)'}
+                                        {isUrdu ? 'واپسی کہاں جمع کریں؟ (ادائیگی ذریعہ)' : 'Deposit Return To (Payment Method)'}
                                     </label>
                                     <div className="grid grid-cols-2 gap-3">
                                         <button
@@ -357,7 +357,7 @@ export default function InvestmentSurplusPage({
                                             )}
                                         >
                                             <Icon name="Money" className="size-4" />
-                                            <span>{isUrdu ? 'کیش (گلہ کھاتہ)' : 'Cash (Galla Khata)'}</span>
+                                            <span>{isUrdu ? 'کیش (گلہ کھاتہ)' : 'Cash (Register Account)'}</span>
                                         </button>
                                         <button
                                             type="button"
@@ -378,7 +378,7 @@ export default function InvestmentSurplusPage({
                                 {returnMethod === 'bank' && (
                                     <div className="space-y-1.5 animate-in fade-in">
                                         <label className="text-xs font-bold text-[#374151] block">
-                                            {isUrdu ? 'بینک اکاؤنٹ منتخب کریں:' : 'Bank Account Muntakhib Karein:'}
+                                            {isUrdu ? 'بینک اکاؤنٹ منتخب کریں:' : 'Select Bank Account:'}
                                         </label>
                                         <select
                                             value={returnBankName}
@@ -405,7 +405,7 @@ export default function InvestmentSurplusPage({
                                         className="flex-1 min-h-[44px] px-4 py-2.5 text-xs font-bold text-white bg-[#14532d] hover:bg-[#166534] rounded-xl shadow-xs transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                                     >
                                         <Icon name="Check" className="size-4 stroke-[3]" />
-                                        <span>{isUrdu ? 'واپسی رقم وصول کریں' : 'Wapsi Wasool Karein'}</span>
+                                        <span>{isUrdu ? 'واپسی رقم وصول کریں' : 'Record Return Collection'}</span>
                                     </button>
                                 </div>
                             </form>

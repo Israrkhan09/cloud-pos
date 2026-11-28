@@ -132,7 +132,7 @@ export default function InvestmentLoansPage({
 
         const amt = parseFloat(settleAmount.replace(/,/g, ''));
         if (isNaN(amt) || amt <= 0) {
-            toast.error(isUrdu ? 'براہ کرم درست رقم درج کریں' : 'Barahe karam durust rakam enter karein.');
+            toast.error(isUrdu ? 'براہ کرم درست رقم درج کریں' : 'Please enter a valid amount.');
             return;
         }
 
@@ -151,12 +151,12 @@ export default function InvestmentLoansPage({
                 toast.success(toastMsg, {
                     duration: 10000,
                     action: lastEntry?.id ? {
-                        label: 'Wapas karein (Undo)',
+                        label: 'Undo',
                         onClick: () => {
                             router.post(`/investment/undo/${lastEntry.id}`, {}, {
                                 preserveScroll: true,
                                 onSuccess: () => {
-                                    toast.success(`Entry ${lastEntry.ref_no} undo (mansookh) kardi gayi.`);
+                                    toast.success(`Entry ${lastEntry.ref_no} was voided.`);
                                 },
                             });
                         },
@@ -341,7 +341,7 @@ export default function InvestmentLoansPage({
                                         <th className="py-3 px-4 text-center">{isUrdu ? 'قسم' : 'Qisam'}</th>
                                         <th className="py-3 px-4 text-end">{isUrdu ? 'اصل رقم' : 'Asal'}</th>
                                         <th className="py-3 px-4 text-end">{isUrdu ? 'واپس ہوا' : 'Repaid Amount'}</th>
-                                        <th className="py-3 px-4 text-end text-[#1F2937]">{isUrdu ? 'باقی' : 'Baaki'}</th>
+                                        <th className="py-3 px-4 text-end text-[#1F2937]">{isUrdu ? 'باقی' : 'Balance'}</th>
                                         <th className="py-3 px-4 text-center">{isUrdu ? 'تاریخ' : 'Tareekh'}</th>
                                         <th className="py-3 px-4 text-center">{isUrdu ? 'حالت' : 'Status'}</th>
                                         <th className="py-3 px-4 text-center">{isUrdu ? 'کارروائی' : 'Action'}</th>
@@ -445,7 +445,7 @@ export default function InvestmentLoansPage({
                                                                     <button
                                                                         type="button"
                                                                         onClick={() => handleSendReminder(loan)}
-                                                                        title="WhatsApp Yaad Dehani Bhejein (Roman Urdu)"
+                                                                        title="Send WhatsApp Reminder"
                                                                         className="p-1.5 text-emerald-700 hover:bg-emerald-50 rounded transition-colors cursor-pointer"
                                                                     >
                                                                         <Icon name="WhatsappLogo" className="size-4" />
@@ -509,13 +509,13 @@ export default function InvestmentLoansPage({
                             <form onSubmit={handleConfirmSettle} className="space-y-4 pt-2">
                                 <div>
                                     <label className="text-xs font-bold text-[#374151] block mb-1">
-                                        {settleModalLoan.direction === 'receivable' ? (isUrdu ? 'وصولی رقم (روپے)' : 'Wasooli Rakam (Rs.)') : (isUrdu ? 'ادائیگی رقم (روپے)' : 'Adaigi Rakam (Rs.)')}
+                                        {settleModalLoan.direction === 'receivable' ? (isUrdu ? 'وصولی رقم (روپے)' : 'Recovery Amount (Rs.)') : (isUrdu ? 'ادائیگی رقم (روپے)' : 'Payment Amount (Rs.)')}
                                     </label>
                                     <input
                                         type="text"
                                         value={settleAmount}
                                         onChange={(e) => setSettleAmount(e.target.value)}
-                                        placeholder={isUrdu ? 'رقم درج کریں' : 'Rakam darj karein'}
+                                        placeholder={isUrdu ? 'رقم درج کریں' : 'Enter amount'}
                                         className="w-full h-11 px-3.5 text-base font-bold text-[#1F2937] bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#14532d] focus:outline-none"
                                     />
                                     <div className="flex gap-3 mt-1.5 text-xs">
@@ -538,7 +538,7 @@ export default function InvestmentLoansPage({
 
                                 <div>
                                     <label className="text-xs font-bold text-[#374151] block mb-1">
-                                        {settleModalLoan.direction === 'receivable' ? (isUrdu ? 'کہاں وصول کریں؟' : 'Kahan wasool karein?') : (isUrdu ? 'کہاں سے ادا کریں؟' : 'Kahan se ada karein?')}
+                                        {settleModalLoan.direction === 'receivable' ? (isUrdu ? 'کہاں وصول کریں؟' : 'Receive To') : (isUrdu ? 'کہاں سے ادا کریں؟' : 'Pay From')}
                                     </label>
                                     <div className="grid grid-cols-2 gap-2 p-1 bg-gray-100 rounded-lg border border-gray-200">
                                         <button
@@ -571,7 +571,7 @@ export default function InvestmentLoansPage({
                                 {settlePaymentMethod === 'bank' && (
                                     <div>
                                         <label className="text-xs font-bold text-[#374151] block mb-1">
-                                            {isUrdu ? 'بینک اکاؤنٹ منتخب کریں' : 'Bank Account Muntakhib Karein'}
+                                            {isUrdu ? 'بینک اکاؤنٹ منتخب کریں' : 'Select Bank Account'}
                                         </label>
                                         <select
                                             value={settleBankName}

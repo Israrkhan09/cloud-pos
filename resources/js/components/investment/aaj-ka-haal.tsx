@@ -75,7 +75,7 @@ export default function AajKaHaal({ data, isUrdu = false }: AajKaHaalProps) {
                             {formatRs(data.lena_hai)}
                         </span>
                         <span className="text-xs font-medium text-[#4B5563] block mt-1">
-                            {data.lena_hai_sub || 'Faltu paisa aur munafa wapas aana hai'}
+                            {data.lena_hai_sub || 'Surplus funds and profit receivable'}
                         </span>
                     </div>
                 </Link>
@@ -97,7 +97,7 @@ export default function AajKaHaal({ data, isUrdu = false }: AajKaHaalProps) {
                             {data.kaam_text || '1 qarza overdue (Sohail Rs. 20,000)'}
                         </span>
                         <span className="text-xs font-medium text-[#4B5563] block mt-1">
-                            {data.kaam_sub || 'Wapsi tareekh guzar chuki hai · WhatsApp reminder bhejein'}
+                            {data.kaam_sub || 'Due date passed · Send reminder'}
                         </span>
                     </div>
                 </Link>

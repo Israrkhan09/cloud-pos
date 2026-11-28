@@ -93,7 +93,7 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
 
             const data = await res.json();
             if (res.ok && data.success) {
-                const msg = isUrdu ? 'ڈسکاؤنٹ رول کامیابی سے شامل کر لیا گیا!' : 'Discount rule kamyabi se shamil kar lia gaya!';
+                const msg = isUrdu ? 'ڈسکاؤنٹ رول کامیابی سے شامل کر لیا گیا!' : 'Discount rule added successfully!';
                 setSuccessMessage(msg);
                 toast.success(msg);
                 setIsModalOpen(false);
@@ -144,7 +144,7 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
     };
 
     const handleDelete = async (id: number) => {
-        if (!window.confirm(isUrdu ? 'کیا آپ واقعی اس ڈسکاؤنٹ رول کو ڈیلیٹ کرنا چاہتے ہیں؟' : 'Kya aap waqai is discount rule ko delete karna chahte hain?')) {
+        if (!window.confirm(isUrdu ? 'کیا آپ واقعی اس ڈسکاؤنٹ رول کو ڈیلیٹ کرنا چاہتے ہیں؟' : 'Are you sure you want to delete this discount rule?')) {
             return;
         }
 
@@ -163,7 +163,7 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
             const data = await res.json();
             if (res.ok && data.success) {
                 setRules((prev) => prev.filter((r) => r.id !== id));
-                toast.success(data.message || (isUrdu ? 'رول حذف ہو گیا' : 'Rule delete ho gaya'));
+                toast.success(data.message || (isUrdu ? 'رول حذف ہو گیا' : 'Discount rule deleted successfully'));
             } else {
                 toast.error(data.message || 'Error deleting rule');
             }
@@ -187,7 +187,7 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
                             <span>{isUrdu ? t('discount_rules_section.title') : 'Discount Rules & Payment Settlement'}</span>
                         </span>
                     }
-                    subtitle={isUrdu ? t('discount_rules_section.subtitle') : 'Thok gahakon aur baray bill par khususi riaayat (percentage ya fixed rupay) ke qawaneen'}
+                    subtitle={isUrdu ? t('discount_rules_section.subtitle') : 'Discount rules for wholesale buyers and high volume orders (percentage or flat discount)'}
                     isUrdu={isUrdu}
                 >
                     <button
@@ -249,7 +249,7 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
                                             onClick={() => handleDelete(rule.id)}
                                             disabled={submitting}
                                             className="text-gray-400 hover:text-red-600 p-1 rounded transition-colors disabled:opacity-40 cursor-pointer"
-                                            title={isUrdu ? 'رول حذف کریں' : 'Rule delete karein'}
+                                            title={isUrdu ? 'رول حذف کریں' : 'Delete Rule'}
                                         >
                                             <Icon name="Trash" className="size-4" weight="bold" />
                                         </button>
@@ -295,7 +295,7 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
                                     >
                                         {rule.is_active
                                             ? (isUrdu ? 'بند کریں' : 'Deactivate')
-                                            : (isUrdu ? 'فعال کریں' : 'Fa-aal Karein')}
+                                            : (isUrdu ? 'فعال کریں' : 'Activate')}
                                     </button>
                                 </div>
                             </div>
@@ -304,7 +304,7 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
 
                     {rules.length === 0 && (
                         <div className="col-span-full py-12 text-center text-gray-400 text-sm bg-white rounded-2xl border border-dashed border-gray-200">
-                            {isUrdu ? 'کوئی ڈسکاؤنٹ رول موجود نہیں ہے۔ نیا رول شامل کرنے کے لیے اوپر دیے گئے بٹن پر کلک کریں۔' : 'Koi discount rule mojood nahi hai. Naya rule shamil karne ke liye upar diye gaye button par click karein.'}
+                            {isUrdu ? 'کوئی ڈسکاؤنٹ رول موجود نہیں ہے۔ نیا رول شامل کرنے کے لیے اوپر دیے گئے بٹن پر کلک کریں۔' : 'No discount rules found. Click the button above to add a new rule.'}
                         </div>
                     )}
                 </div>
@@ -329,7 +329,7 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
                                     onChange={(e) =>
                                         setFormData({ ...formData, rule_name: e.target.value })
                                     }
-                                    placeholder={isUrdu ? 'مثلاً: تھوک خریدار 3%' : 'Maslan: Thok Khareedar 3%'}
+                                    placeholder={isUrdu ? 'مثلاً: تھوک خریدار 3%' : 'e.g. Wholesale Buyer 3%'}
                                     className="w-full p-2 border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:border-emerald-600"
                                     required
                                 />
@@ -417,14 +417,14 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
                                     disabled={submitting}
                                     className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold rounded-lg text-xs transition cursor-pointer disabled:opacity-50"
                                 >
-                                    {isUrdu ? 'منسوخ' : 'Mansookh'}
+                                    {isUrdu ? 'منسوخ' : 'Cancel'}
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={submitting}
                                     className="px-5 py-2 bg-[#14532d] hover:bg-[#0f3d21] text-white font-bold rounded-lg text-xs shadow-xs transition cursor-pointer disabled:opacity-50"
                                 >
-                                    {submitting ? (isUrdu ? 'محفوظ ہو رہا ہے...' : 'Save ho raha hai...') : (isUrdu ? 'محفوظ کریں' : 'Save Karein')}
+                                    {submitting ? (isUrdu ? 'محفوظ ہو رہا ہے...' : 'Saving...') : (isUrdu ? 'محفوظ کریں' : 'Save Rule')}
                                 </button>
                             </div>
                         </form>

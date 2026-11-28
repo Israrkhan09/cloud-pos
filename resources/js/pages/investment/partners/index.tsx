@@ -195,7 +195,7 @@ export default function InvestmentPartnersPage({
                         {/* Number 3: Malik Ki Manzoori Baaki */}
                         <div className="bg-white p-4 md:p-5 rounded-xl border border-gray-200 shadow-2xs">
                             <span className="text-xs font-bold text-[#374151] uppercase tracking-wider block">
-                                {isUrdu ? 'مالک کی منظوری باقی' : 'Malik Ki Manzoori Baaki'}
+                                {isUrdu ? 'مالک کی منظوری باقی' : 'Pending Owner Approval'}
                             </span>
                             <div className="mt-2 flex items-center justify-between">
                                 <span className="text-2xl font-black text-amber-800">
@@ -216,7 +216,7 @@ export default function InvestmentPartnersPage({
                         <div className="flex items-center gap-2">
                             <Icon name="Coins" className="size-4 text-[#14532d] shrink-0" />
                             <span className="font-bold text-[#1F2937]">
-                                {isUrdu ? 'ماہانہ منافع پول:' : 'Monthly Munafa Pool:'} <span className="text-[#14532d]">{formatRs(profitPool.total_pool)}</span>
+                                {isUrdu ? 'ماہانہ منافع پول:' : 'Monthly Profit Pool:'} <span className="text-[#14532d]">{formatRs(profitPool.total_pool)}</span>
                             </span>
                         </div>
                         <div className="text-xs font-semibold text-[#4B5563]">
@@ -247,7 +247,7 @@ export default function InvestmentPartnersPage({
                                 <span className="text-[#1F2937] font-bold text-sm">{owner.ownership_percentage}% {isUrdu ? 'مکمل مالک' : 'Mukammal Malik'}</span>
                             </div>
                             <div>
-                                <span className="text-[#4B5563] block">{isUrdu ? 'ماہانہ منافع:' : 'Monthly Munafa:'}</span>
+                                <span className="text-[#4B5563] block">{isUrdu ? 'ماہانہ منافع:' : 'Monthly Profit:'}</span>
                                 <span className="text-[#14532d] font-black text-sm">{formatRs(owner.profit_share)}</span>
                             </div>
                         </div>
@@ -338,7 +338,7 @@ export default function InvestmentPartnersPage({
                                         <th className="py-3 px-4 text-end">{isUrdu ? 'پیسہ ڈالا' : 'Capital In'}</th>
                                         <th className="py-3 px-4 text-end">{isUrdu ? 'نکالا' : 'Drawings'}</th>
                                         <th className="py-3 px-4 text-end">{isUrdu ? 'ایکویٹی' : 'Equity'}</th>
-                                        <th className="py-3 px-4 text-center">{isUrdu ? 'اس مہینے کا منافع شیئر' : 'Is Mahine Ka Munafa Share'}</th>
+                                        <th className="py-3 px-4 text-center">{isUrdu ? 'اس مہینے کا منافع شیئر' : 'Monthly Profit Share'}</th>
                                         <th className="py-3 px-4 text-center">{isUrdu ? 'تفصیل' : 'Details'}</th>
                                     </tr>
                                 </thead>
@@ -377,7 +377,7 @@ export default function InvestmentPartnersPage({
                                                 </span>
                                                 {partner.pending_drawings > 0 && (
                                                     <span className="text-xs text-amber-800 font-bold block mt-0.5 leading-tight">
-                                                        {isUrdu ? `نکاسی زیرِ التواء: -Rs. ${formatNum(partner.pending_drawings)} (منظوری باقی)` : `Pending Drawing: -Rs. ${formatNum(partner.pending_drawings)} (Manzoori baaki)`}
+                                                        {isUrdu ? `نکاسی زیرِ التواء: -Rs. ${formatNum(partner.pending_drawings)} (منظوری باقی)` : `Pending Drawing: -Rs. ${formatNum(partner.pending_drawings)} (Pending Approval)`}
                                                     </span>
                                                 )}
                                             </td>

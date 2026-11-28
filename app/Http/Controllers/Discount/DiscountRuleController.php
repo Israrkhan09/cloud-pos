@@ -47,12 +47,12 @@ class DiscountRuleController extends Controller
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Discount rule kamyabi se shamil kar lia gaya!',
+                'message' => 'Discount rule added successfully!',
                 'rule' => $rule,
             ]);
         }
 
-        return redirect()->back()->with('success', 'Discount rule kamyabi se shamil kar lia gaya!');
+        return redirect()->back()->with('success', 'Discount rule added successfully!');
     }
 
     public function toggle(Request $request, $id)

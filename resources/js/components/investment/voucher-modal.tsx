@@ -126,10 +126,10 @@ export default function VoucherModal({
                         </div>
                         <div className="pt-2 border-t border-gray-200">
                             <span className="text-[#374151] block font-semibold mb-0.5">
-                                Adaigi Ka Zariya:
+                                Payment Method:
                             </span>
                             <span className="font-bold text-xs text-[#1F2937] block">
-                                {voucher.payment_method === 'cash' ? 'CASH (GALLA)' : 'BANK ACCOUNT'}
+                                {voucher.payment_method === 'cash' ? 'CASH (REGISTER)' : 'BANK ACCOUNT'}
                                 {voucher.bank_name && ` — ${voucher.bank_name}`}
                             </span>
                         </div>
@@ -143,8 +143,8 @@ export default function VoucherModal({
                                     : voucher.approval_status === 'pending_owner'
                                     ? 'Owner Manzoori Baqi'
                                     : voucher.approval_status === 'reversed'
-                                    ? 'Mansookh'
-                                    : 'Darj Shuda'}
+                                    ? 'Void / Cancelled'
+                                    : 'Recorded'}
                             </span>
                         </div>
                     </div>
@@ -152,7 +152,7 @@ export default function VoucherModal({
                     {/* Amount Banner */}
                     <div className="p-4 bg-emerald-50 border-2 border-emerald-300 rounded-xl flex items-center justify-between">
                         <span className="text-xs font-bold text-[#374151] uppercase tracking-wide">
-                            Kul Rakam (Total):
+                            Total Amount:
                         </span>
                         <span className="text-2xl font-black text-[#14532d]">
                             {formattedAmount}
@@ -163,7 +163,7 @@ export default function VoucherModal({
                     {voucher.reason && (
                         <div className="text-xs bg-gray-50 p-3.5 rounded-xl border border-gray-200 space-y-1">
                             <span className="font-bold text-[#1F2937] block">
-                                Note / Wajah:
+                                Reason / Notes:
                             </span>
                             <p className="text-[#374151] font-medium leading-relaxed">
                                 {voucher.reason}
@@ -202,7 +202,7 @@ export default function VoucherModal({
                             className="min-h-[40px] px-3.5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
                         >
                             <Icon name="WhatsappLogo" className="size-4" />
-                            <span>WhatsApp Bhejein</span>
+                            <span>Send WhatsApp</span>
                         </button>
 
                         <button
@@ -219,7 +219,7 @@ export default function VoucherModal({
                             onClick={onClose}
                             className="min-h-[40px] px-3.5 py-2 text-xs font-semibold text-[#374151] bg-white border border-gray-300 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
                         >
-                            Band Karein
+                            Close
                         </button>
                     </div>
                 </div>

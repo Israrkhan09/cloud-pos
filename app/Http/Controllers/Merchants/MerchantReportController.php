@@ -684,7 +684,7 @@ class MerchantReportController extends Controller
                         'col7' => ($profit >= 0 ? '+ Rs. ' : '- Rs. ') . number_format(abs($profit)),
                     ];
                 }
-                $response['columns'] = ['#', 'Item', 'Nag Becha', 'Sale Rate', 'Total Sale', 'Kisan Cost', 'Munafa / Nuqsan'];
+                $response['columns'] = ['#', 'Item', 'Units Sold', 'Sale Rate', 'Total Sale', 'Supplier Cost', 'Profit / Loss'];
                 $response['rows'] = $rows;
                 $response['totals'] = [
                     'Total Sale: Rs. ' . number_format($totSale),
@@ -694,7 +694,7 @@ class MerchantReportController extends Controller
                 break;
 
             case 'udhaar_report':
-                $response['title'] = 'Udhaar Report';
+                $response['title'] = 'Customer Receivables Report';
                 $response['title_ur'] = 'ادھار رپورٹ (کس سے کتنا لینا)';
                 $merchants = Merchant::where('status', 'active')->where('code', '!=', 1)->orderBy('code', 'asc')->get();
                 $rows = [];
@@ -712,9 +712,9 @@ class MerchantReportController extends Controller
                         'col7' => (float)$m->current_balance > 0 ? 'Dena Hai' : 'Clear',
                     ];
                 }
-                $response['columns'] = ['#', 'Code', 'Merchant Name', 'Phone', 'Sabiqa', 'Current Udhaar Baqaya', 'Status'];
+                $response['columns'] = ['#', 'Code', 'Customer Name', 'Phone', 'Previous Balance', 'Current Outstanding Balance', 'Status'];
                 $response['rows'] = $rows;
-                $response['totals'] = ['Total Udhaar Baqaya: Rs. ' . number_format($totBaqaya)];
+                $response['totals'] = ['Total Outstanding Balance: Rs. ' . number_format($totBaqaya)];
                 break;
 
             case 'stock_report':
@@ -733,7 +733,7 @@ class MerchantReportController extends Controller
                     $val = $stock * $rate;
                     $totStock += $stock;
                     $totVal += $val;
-                    $status = $stock <= 0 ? 'Khatam' : ($stock < 20 ? 'Kam Stock' : 'Theek');
+                    $status = $stock <= 0 ? 'Out of Stock' : ($stock < 20 ? 'Low Stock' : 'Adequate');
                     $rows[] = [
                         'col1' => $idx + 1,
                         'col2' => '#' . $it->id,
@@ -755,7 +755,7 @@ class MerchantReportController extends Controller
                 break;
 
             case 'kisan_hisaab':
-                $response['title'] = 'Kisan Hisaab Report';
+                $response['title'] = 'Farmer Account Report';
                 $response['title_ur'] = 'کسان حساب رپورٹ (دینا باقی)';
                 $farmers = Farmer::with('area')->orderBy('code', 'asc')->get();
                 $rows = [];
@@ -774,9 +774,9 @@ class MerchantReportController extends Controller
                         'col7' => 'Rs. ' . number_format($f->current_balance),
                     ];
                 }
-                $response['columns'] = ['#', 'Code', 'Kisan Name', 'Area', 'Phone', 'Sabiqa', 'Dena Baqi'];
+                $response['columns'] = ['#', 'Code', 'Farmer Name', 'Area', 'Phone', 'Previous Balance', 'Payable Balance'];
                 $response['rows'] = $rows;
-                $response['totals'] = ['Total Kisan Baqaya (Dena Baqi): Rs. ' . number_format($totDena)];
+                $response['totals'] = ['Total Supplier Payable: Rs. ' . number_format($totDena)];
                 break;
 
             case 'naqdi_print':
@@ -804,7 +804,7 @@ class MerchantReportController extends Controller
 
             case 'wasooli_print':
             case 'merchant_wasooli':
-                $response['title'] = 'Wasooli (Recovery) Report';
+                $response['title'] = 'Payment Recovery Report';
                 $response['title_ur'] = 'وصولی سمری رپورٹ';
                 $receipts = MerchantReceipt::with('merchant')->where('date', $date)->where('type', 'recovery')->get();
                 $totalAmt = 0;
@@ -893,7 +893,7 @@ class MerchantReportController extends Controller
                 break;
 
             case 'wasooli_tafseel':
-                $response['title'] = 'Wasooli Tafseel (Recovery Detail)';
+                $response['title'] = 'Recovery Detail Report';
                 $response['title_ur'] = 'وصولی کی پوری تفصیل';
                 $receipts = MerchantReceipt::with('merchant')->whereBetween('date', [$fromDate, $toDate])->orderBy('date', 'desc')->get();
                 $totalAmt = 0;
@@ -915,7 +915,7 @@ class MerchantReportController extends Controller
                 break;
 
             case 'amroza_wasooli':
-                $response['title'] = 'Amroza / Wasooli Combined Sheet';
+                $response['title'] = 'Daily Sales & Recovery Combined Sheet';
                 $response['title_ur'] = 'سیل اور وصولی شیٹ';
                 $period = new \DatePeriod(new \DateTime($fromDate), new \DateInterval('P1D'), (new \DateTime($toDate))->modify('+1 day'));
                 $rows = [];
@@ -933,7 +933,7 @@ class MerchantReportController extends Controller
                         'col4' => 'Rs. ' . number_format($am - $was),
                     ];
                 }
-                $response['columns'] = ['Date', 'Amroza (Sale)', 'Wasooli (Recovery)', 'Net Diff'];
+                $response['columns'] = ['Date', 'Daily Sales', 'Recoveries', 'Net Diff'];
                 $response['rows'] = $rows;
                 $response['totals'] = ['Total Sale: Rs. ' . number_format($totAmroza), 'Total Recovery: Rs. ' . number_format($totWasooli)];
                 break;
@@ -1093,7 +1093,7 @@ class MerchantReportController extends Controller
                 'name_ur' => $m->name_ur,
                 'phone' => $m->phone ?: '',
                 'city' => $m->city ?: 'Mandi',
-                'customer_type' => $m->customer_type ?: 'Dukandar',
+                'customer_type' => $m->customer_type ?: 'Shopkeeper',
                 'credit_limit' => (float)($m->credit_limit ?? 50000),
                 'balance' => (float)$m->current_balance,
                 'opening_balance' => (float)$m->opening_balance,
@@ -1184,7 +1184,7 @@ class MerchantReportController extends Controller
             $entries[] = [
                 'id' => 'sale_' . $s->id,
                 'entry_date' => $dateStr,
-                'description' => "Farokht Bill #INV-{$s->id} (Kul Maal: Rs " . number_format($gross, 1) . ")",
+                'description' => "Sales Invoice #INV-{$s->id} (Gross: Rs " . number_format($gross, 1) . ")",
                 'ref_type' => 'SALE',
                 'entry_type' => 'debit',
                 'debit' => $debit,
@@ -1207,7 +1207,7 @@ class MerchantReportController extends Controller
             $entries[] = [
                 'id' => 'rcpt_' . $r->id,
                 'entry_date' => $dateStr,
-                'description' => "Wasooli Receipt #REC-{$rcptNum} ({$mode}{$noteStr})",
+                'description' => "Recovery Receipt #REC-{$rcptNum} ({$mode}{$noteStr})",
                 'ref_type' => 'WASOOLI',
                 'entry_type' => 'credit',
                 'debit' => 0,
@@ -1233,7 +1233,7 @@ class MerchantReportController extends Controller
             'name_ur' => $selectedMerchant->name_ur,
             'phone' => $selectedMerchant->phone ?: '',
             'city' => $selectedMerchant->city ?: 'Mandi',
-            'customer_type' => $selectedMerchant->customer_type ?: 'Dukandar',
+            'customer_type' => $selectedMerchant->customer_type ?: 'Shopkeeper',
             'credit_limit' => (float)($selectedMerchant->credit_limit ?? 50000),
             'balance' => $finalBalance,
             'opening_balance' => (float)$selectedMerchant->opening_balance,

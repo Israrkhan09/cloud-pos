@@ -298,7 +298,7 @@ export default function BankAccountsPage({ liveCashGalla = 0, dbTransactions = [
                 {/* Green Header Section */}
                 <MandiPageHeader
                     title={isUrdu ? t('banking.accounts_title') : 'Banking & Cash Accounts'}
-                    subtitle={isUrdu ? t('banking.accounts_subtitle') : 'Bank accounts ka hisaab, raqam jama (deposit), nikasi (withdraw) aur transfer'}
+                    subtitle={isUrdu ? t('banking.accounts_subtitle') : 'Bank account balances, deposits, withdrawals and transfers'}
                     isUrdu={isUrdu}
                 >
                     <button
@@ -306,7 +306,7 @@ export default function BankAccountsPage({ liveCashGalla = 0, dbTransactions = [
                         onClick={handleOpenModal}
                         className="h-9 px-4 rounded-xl text-xs md:text-sm font-semibold bg-white text-emerald-900 hover:bg-emerald-50 shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
                     >
-                        <span>+ {isUrdu ? t('banking.new_account') : 'Naya Account'}</span>
+                        <span>+ {isUrdu ? t('banking.new_account') : 'New Account'}</span>
                     </button>
                 </MandiPageHeader>
 
@@ -319,7 +319,7 @@ export default function BankAccountsPage({ liveCashGalla = 0, dbTransactions = [
                             {/* Top Row: Type Badge and Cash Icon */}
                             <div className="flex items-center justify-between">
                                 <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-200/80">
-                                    {isUrdu ? 'نقد گلہ' : 'CASH GALLA'}
+                                    {isUrdu ? 'نقد گلہ' : 'CASH REGISTER'}
                                 </span>
                                 <div className="text-emerald-700/70 p-1">
                                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -440,7 +440,7 @@ export default function BankAccountsPage({ liveCashGalla = 0, dbTransactions = [
                 {/* Bank aur Cash Transactions Record Table */}
                 <div className="space-y-2.5 pt-4">
                     <h2 className="text-sm font-bold text-gray-800 dark:text-gray-200">
-                        {isUrdu ? t('banking.transactions_record') : 'Bank aur Cash Transactions Record'}
+                        {isUrdu ? t('banking.transactions_record') : 'Bank & Cash Transactions Record'}
                     </h2>
 
                     <div className="w-full bg-white dark:bg-card border border-gray-200/90 dark:border-border rounded-xl shadow-xs overflow-hidden">
@@ -458,15 +458,15 @@ export default function BankAccountsPage({ liveCashGalla = 0, dbTransactions = [
                                         </th>
                                         {/* Column 3: Account Se (From) */}
                                         <th className="py-3 px-3 text-start font-bold text-gray-700 dark:text-gray-300">
-                                            {isUrdu ? t('banking.from') : 'Account Se (From)'}
+                                            {isUrdu ? t('banking.from') : 'Account (From)'}
                                         </th>
                                         {/* Column 4: Account Mein (To) */}
                                         <th className="py-3 px-3 text-start font-bold text-gray-700 dark:text-gray-300">
-                                            {isUrdu ? t('banking.to') : 'Account Mein (To)'}
+                                            {isUrdu ? t('banking.to') : 'Account (To)'}
                                         </th>
                                         {/* Column 5: Raqam (Rs) */}
                                         <th className="py-3 px-3 text-end font-bold text-gray-700 dark:text-gray-300">
-                                            {isUrdu ? t('banking.amount') : 'Raqam (Rs)'}
+                                            {isUrdu ? t('banking.amount') : 'Amount (Rs)'}
                                         </th>
                                         {/* Column 6: Tafseel (Description) */}
                                         <th className="py-3 px-4 text-start font-bold text-gray-700 dark:text-gray-300">
@@ -478,7 +478,7 @@ export default function BankAccountsPage({ liveCashGalla = 0, dbTransactions = [
                                     {allTransactions.length === 0 ? (
                                         <tr>
                                             <td colSpan={6} className="py-10 px-4 text-center text-xs text-gray-400">
-                                                Koi transaction record dastiyab nahi hai.
+                                                No transaction records found.
                                             </td>
                                         </tr>
                                     ) : (
@@ -544,7 +544,7 @@ export default function BankAccountsPage({ liveCashGalla = 0, dbTransactions = [
                                         : 'Edit Bank Account'
                                     : isUrdu
                                     ? 'نیا بینک اکاؤنٹ'
-                                    : 'Naya Bank Account'}
+                                    : 'New Bank Account'}
                             </DialogTitle>
                         </DialogHeader>
 
@@ -552,13 +552,13 @@ export default function BankAccountsPage({ liveCashGalla = 0, dbTransactions = [
                             {/* Account ka naam */}
                             <div>
                                 <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                                    {isUrdu ? 'اکاؤنٹ کا نام' : 'Account ka naam'}
+                                    {isUrdu ? 'اکاؤنٹ کا نام' : 'Account Name'}
                                 </label>
                                 <input
                                     type="text"
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    placeholder="e.g. HBL Mandi A/C"
+                                    placeholder="e.g. HBL Market Branch A/C"
                                     className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-border rounded-lg bg-white dark:bg-background text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#166534] focus:border-[#166534] transition-all"
                                     autoFocus
                                 />
@@ -666,7 +666,7 @@ export default function BankAccountsPage({ liveCashGalla = 0, dbTransactions = [
                             <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
                                 {isUrdu
                                     ? `کیا آپ واقعی "${deleteTargetAccount.name}" کو مستقل طور پر ڈیلیٹ کرنا چاہتے ہیں؟ یہ عمل واپس نہیں کیا جا سکتا۔`
-                                    : `Kya aap waqai "${deleteTargetAccount.name}" ko permanently delete karna chahte hain? Ye record hamesha ke liye khatam ho jayega.`}
+                                    : `Are you sure you want to permanently delete "${deleteTargetAccount.name}"? This record will be permanently removed.`}
                             </p>
 
                             <div className="flex items-center justify-end gap-2.5 pt-2">

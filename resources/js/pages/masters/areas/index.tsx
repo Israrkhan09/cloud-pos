@@ -84,7 +84,7 @@ export default function AreasIndex({ areas, filters }: Props) {
         e.preventDefault();
         const finalName = data.name_en.trim();
         if (!finalName) {
-            toast.error(isUrdu ? 'براہ کرم علاقہ کا نام درج کریں' : 'Barae meherbani area ka naam darj karein');
+            toast.error(isUrdu ? 'براہ کرم علاقہ کا نام درج کریں' : 'Please enter area name');
             return;
         }
 
@@ -111,7 +111,7 @@ export default function AreasIndex({ areas, filters }: Props) {
                 data: payload,
                 onSuccess: () => {
                     setModalOpen(false);
-                    toast.success(isUrdu ? 'علاقہ کامیابی سے شامل ہو گیا' : 'Area kamyabi se shamil ho gaya');
+                    toast.success(isUrdu ? 'علاقہ کامیابی سے شامل ہو گیا' : 'Area added successfully');
                     reset();
                 },
                 onError: (errs) => {

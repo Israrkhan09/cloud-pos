@@ -115,7 +115,7 @@ export default function FarmerKhataIndex({
                             <span className="font-nastaliq font-normal text-emerald-100 text-lg md:text-xl">کسان کھاتہ</span>
                         </span>
                     }
-                    subtitle={isUrdu ? 'کسان کا جمع / بنام (فرد حساب)' : 'Kisan ka Jama / Banam · Fard Hisab'}
+                    subtitle={isUrdu ? 'کسان کا جمع / بنام (فرد حساب)' : 'Farmer Account Statement'}
                     isUrdu={isUrdu}
                 >
                     <button

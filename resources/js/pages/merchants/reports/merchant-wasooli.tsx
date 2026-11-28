@@ -36,7 +36,7 @@ export default function MerchantWasooliReport({ rows, totals, filters }: Props) 
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: isUrdu ? 'رپورٹس' : 'Reports', href: '/reports' },
-        { title: isUrdu ? 'مرچنٹ وصولی' : 'Merchant Wasooli', href: '/merchant-wasooli' },
+        { title: isUrdu ? 'مرچنٹ وصولی' : 'Customer Recovery', href: '/merchant-wasooli' },
     ];
 
     function handleDateChange(newDate: string) {
@@ -45,7 +45,7 @@ export default function MerchantWasooliReport({ rows, totals, filters }: Props) 
             preserveState: false,
             replace: true,
             onSuccess: () => {
-                toast.success(isUrdu ? 'وصولی رپورٹ لوڈ ہو گئی' : 'Merchant wasooli report loaded');
+                toast.success(isUrdu ? 'وصولی رپورٹ لوڈ ہو گئی' : 'Customer recovery report loaded');
             },
         });
     }
@@ -66,15 +66,15 @@ export default function MerchantWasooliReport({ rows, totals, filters }: Props) 
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={isUrdu ? 'مرچنٹ وصولی سمری' : 'Merchant Wasooli Report'} />
+            <Head title={isUrdu ? 'مرچنٹ وصولی سمری' : 'Customer Recovery Summary'} />
 
             {/* Screen UI - Green Theme (Hidden in Print) */}
             <div className="w-full max-w-full overflow-x-hidden -mt-4 -mx-4 pb-20 bg-[#f4f6f4] min-h-[calc(100vh-4rem)] font-sans text-[#1a211c] dark:text-[#e7ece8] print:hidden" dir={isUrdu ? 'rtl' : 'ltr'}>
                 
                 {/* 1. Dark Green Header Banner */}
                 <MandiPageHeader
-                    title={isUrdu ? 'مرچنٹ وصولی سمری' : 'Merchant Wasooli Report'}
-                    subtitle={isUrdu ? 'ماشاخور وار وصولی کا ریکارڈ' : 'Merchant wise recovery · Wasooli'}
+                    title={isUrdu ? 'مرچنٹ وصولی سمری' : 'Customer Recovery Summary'}
+                    subtitle={isUrdu ? 'ماشاخور وار وصولی کا ریکارڈ' : 'Customer-wise payment recoveries'}
                     isUrdu={isUrdu}
                 >
                     <button
@@ -123,7 +123,7 @@ export default function MerchantWasooliReport({ rows, totals, filters }: Props) 
                             </div>
                             <div>
                                 <span className="text-xs text-gray-500 uppercase tracking-wider font-bold">
-                                    {isUrdu ? 'کل وصولی رقم:' : 'Total Wasooli:'}{' '}
+                                    {isUrdu ? 'کل وصولی رقم:' : 'Total Recoveries:'}{' '}
                                 </span>
                                 <strong className="font-mono text-base font-black text-[#14532d] ms-1">
                                     Rs. {Number(totals.total_wasooli).toLocaleString()}
@@ -141,7 +141,7 @@ export default function MerchantWasooliReport({ rows, totals, filters }: Props) 
                                         <th className="p-3 text-start font-bold">{isUrdu ? 'خریدار / مرچنٹ' : 'Merchant'}</th>
                                         <th className="p-3 text-start w-32 font-bold">{isUrdu ? 'قسم' : 'Type'}</th>
                                         <th className="p-3 text-start font-bold">{isUrdu ? 'تفصیل' : 'Details'}</th>
-                                        <th className="p-3 text-end w-36 font-bold">{isUrdu ? 'وصولی رقم' : 'Wasooli'}</th>
+                                        <th className="p-3 text-end w-36 font-bold">{isUrdu ? 'وصولی رقم' : 'Recovery Amount'}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
@@ -165,7 +165,7 @@ export default function MerchantWasooliReport({ rows, totals, filters }: Props) 
                                                             ? 'bg-emerald-100 text-emerald-800'
                                                             : 'bg-green-100 text-green-800'
                                                     }`}>
-                                                        {row.type === 'same_day_cash' ? (isUrdu ? 'نقدی' : 'Naqdi') : (isUrdu ? 'وصولی' : 'Wasooli')}
+                                                        {row.type === 'same_day_cash' ? (isUrdu ? 'نقدی' : 'Cash') : (isUrdu ? 'وصولی' : 'Recovery')}
                                                     </span>
                                                 </td>
                                                 <td className="p-3 text-gray-600">{row.note || '—'}</td>
@@ -179,7 +179,7 @@ export default function MerchantWasooliReport({ rows, totals, filters }: Props) 
                                 <tfoot>
                                     <tr className="bg-gray-100 font-bold border-t-2 border-gray-900">
                                         <td colSpan={5} className="p-3 text-start font-sans text-xs">
-                                            {isUrdu ? 'ٹوٹل وصولی:' : 'Total Wasooli:'}
+                                            {isUrdu ? 'ٹوٹل وصولی:' : 'Total Recoveries:'}
                                         </td>
                                         <td className="p-3 text-end font-mono text-sm font-black text-[#14532d]">
                                             Rs. {Number(totals.total_wasooli).toLocaleString()}
@@ -208,7 +208,7 @@ export default function MerchantWasooliReport({ rows, totals, filters }: Props) 
                     <div className="flex justify-between items-center">
                         <div>
                             <span className="text-sm font-bold uppercase tracking-wide">
-                                {isUrdu ? 'مرچنٹ وار وصولی سمری (Merchant Wasooli Report)' : 'MERCHANT WASOOLI REPORT'}
+                                {isUrdu ? 'مرچنٹ وار وصولی سمری (Merchant Wasooli Report)' : 'CUSTOMER RECOVERY REPORT'}
                             </span>
                         </div>
                         <div className="text-end font-mono text-xs">

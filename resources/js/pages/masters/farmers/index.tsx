@@ -120,7 +120,7 @@ export default function FarmersIndex({ farmers, areas, filters }: Props) {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!data.name_ur && !data.name_en) {
-            toast.error(isUrdu ? 'براہ کرم کسان کا نام درج کریں' : 'Barae meherbani kisan ka naam darj karein');
+            toast.error(isUrdu ? 'براہ کرم کسان کا نام درج کریں' : 'Please enter farmer name');
             return;
         }
 
@@ -138,7 +138,7 @@ export default function FarmersIndex({ farmers, areas, filters }: Props) {
         } else {
             post('/masters/farmers', {
                 onSuccess: () => {
-                    toast.success(isUrdu ? 'کسان کامیابی سے شامل ہو گیا' : 'Farmer kamyabi se shamil ho gaya');
+                    toast.success(isUrdu ? 'کسان کامیابی سے شامل ہو گیا' : 'Farmer added successfully');
                     setModalOpen(false);
                     reset();
                 },
@@ -462,7 +462,7 @@ export default function FarmersIndex({ farmers, areas, filters }: Props) {
                         </div>
 
                         <div className="text-[11px] text-gray-600 bg-emerald-50/70 border border-emerald-200/60 p-2.5 rounded-xl">
-                            {isUrdu ? 'نئے زمیندار کے لیے کوڈ 0 (خود) کی ڈیفالٹ باری خودکار طور پر بن جائے گی۔' : 'Naye kisan ke liye code 0 (Khud/Self) mark automatically ban jayega.'}
+                            {isUrdu ? 'نئے زمیندار کے لیے کوڈ 0 (خود) کی ڈیفالٹ باری خودکار طور پر بن جائے گی۔' : 'Default mark (Self) will be automatically created for the new farmer.'}
                         </div>
 
                         <DialogFooter className="pt-3 gap-2 flex items-center justify-end">

@@ -48,7 +48,7 @@ class FarmerController extends Controller
                 'code' => $f->code ? "#{$f->code}" : "#{$f->id}",
                 'raw_code' => $f->code ?: $f->id,
                 'name' => $f->name_en ?: ($f->name ?: $f->name_ur),
-                'description' => 'Mandi Kisan / Bopari',
+                'description' => 'Market Farmer / Supplier',
                 'phone' => $f->phone ?: '—',
                 'area' => $areaName,
                 'area_id' => $f->area_id,
@@ -116,7 +116,7 @@ class FarmerController extends Controller
             'created_by' => auth()->id(),
         ]);
 
-        return redirect()->back()->with('success', 'Naya kisan kamyabi se shamil ho gaya.');
+        return redirect()->back()->with('success', 'Farmer added successfully.');
     }
 
     /**
@@ -150,7 +150,7 @@ class FarmerController extends Controller
             'area_id' => $areaId,
         ]);
 
-        return redirect()->back()->with('success', 'Kisan ki maloomat update ho gayi.');
+        return redirect()->back()->with('success', 'Farmer details updated successfully.');
     }
 
     /**

@@ -53,7 +53,7 @@ class CustomerController extends Controller
                 'description' => $m->description ?: '',
                 'phone' => $m->phone ?: '—',
                 'city' => $m->city ?: '—',
-                'customer_type' => $m->customer_type ?: 'Dukandar',
+                'customer_type' => $m->customer_type ?: 'Shopkeeper',
                 'credit_limit' => (float) ($m->credit_limit ?? 0),
                 'current_balance' => (float) ($m->current_balance ?? 0),
                 'opening_balance' => (float) ($m->opening_balance ?? 0),
@@ -116,7 +116,7 @@ class CustomerController extends Controller
             // Ignore legacy table conflicts
         }
 
-        return redirect()->back()->with('success', 'Naya gahak shamil ho gaya.');
+        return redirect()->back()->with('success', 'Customer added successfully.');
     }
 
     public function update(Request $request, int $id): RedirectResponse
@@ -178,7 +178,7 @@ class CustomerController extends Controller
             $amount = $s->payment_type === 'split' ? (float) $s->udhaar_amount : (float) $s->gross_amount;
             $entries[] = [
                 'date' => $s->date instanceof \DateTimeInterface ? $s->date->format('Y-m-d') : substr((string) $s->date, 0, 10),
-                'description' => 'Farokht (Udhaar Bill #' . $s->id . ')',
+                'description' => 'Sale (Credit Invoice #' . $s->id . ')',
                 'debit' => $amount,
                 'credit' => 0,
                 'timestamp' => strtotime((string) $s->date . ' 12:00:00'),
@@ -188,7 +188,7 @@ class CustomerController extends Controller
         foreach ($receipts as $r) {
             $entries[] = [
                 'date' => $r->date instanceof \DateTimeInterface ? $r->date->format('Y-m-d') : substr((string) $r->date, 0, 10),
-                'description' => $r->note ?: 'Wasooli Receipt #' . (5000 + $r->id),
+                'description' => $r->note ?: 'Recovery Receipt #' . (5000 + $r->id),
                 'debit' => 0,
                 'credit' => (float) $r->amount,
                 'timestamp' => strtotime((string) $r->date . ' 13:00:00'),
@@ -231,7 +231,7 @@ class CustomerController extends Controller
                 'name' => $merchant->name_en ?: ($merchant->name ?: $merchant->name_ur),
                 'phone' => $merchant->phone ?: '—',
                 'city' => $merchant->city ?: '—',
-                'customer_type' => $merchant->customer_type ?: 'Dukandar',
+                'customer_type' => $merchant->customer_type ?: 'Shopkeeper',
                 'credit_limit' => (float) ($merchant->credit_limit ?? 0),
                 'current_balance' => (float) ($merchant->current_balance ?? 0),
             ],

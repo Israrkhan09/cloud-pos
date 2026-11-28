@@ -45,7 +45,7 @@ class BankController extends Controller
                     'from' => $r->merchant?->name ?? 'Gahak (Wasooli)',
                     'to' => $targetAccount,
                     'amount' => (float) $r->amount,
-                    'description' => $r->note ?: 'Gahak Wasooli (Receipt #' . $r->id . ')',
+                    'description' => $r->note ?: 'Customer Recovery (Receipt #' . $r->id . ')',
                 ];
             });
 

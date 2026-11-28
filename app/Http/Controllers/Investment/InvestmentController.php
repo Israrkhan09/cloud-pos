@@ -252,7 +252,7 @@ class InvestmentController extends Controller
                 $badgeType = 'neutral';
             } elseif ($daysDiff !== null) {
                 if ($daysDiff < 0) {
-                    $badgeText = 'Overdue (' . abs((int)$daysDiff) . ' din pehle)';
+                    $badgeText = 'Overdue (' . abs((int)$daysDiff) . ' days ago)';
                     $badgeType = 'danger';
                 } elseif ($daysDiff === 0) {
                     $badgeText = 'Aaj wapsi';
@@ -654,7 +654,7 @@ class InvestmentController extends Controller
                     'fee_or_interest'  => 0,
                     'paid_amount'      => 0,
                     'status'           => 'active',
-                    'notes'            => $validated['reason'] ?? 'Mandi short-term loan (Payable)',
+                    'notes'            => $validated['reason'] ?? 'Short-term loan (Payable)',
                 ]);
                 $tx->loan_id = $newLoan->id;
                 $tx->save();
@@ -881,7 +881,7 @@ class InvestmentController extends Controller
         $amount = (float) $request->input('amount', $loan->balance_due);
 
         if ($amount <= 0 || $amount > $loan->balance_due) {
-            return redirect()->back()->with('error', 'Darust rakam darj karein.');
+            return redirect()->back()->with('error', 'Please enter a valid amount.');
         }
 
         $isReceivable = ($loan->direction === 'receivable');

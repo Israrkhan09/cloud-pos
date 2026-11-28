@@ -175,23 +175,23 @@ export default function EntryDrawer({
         if (numericAmount <= 0) return null;
 
         const formattedAmt = 'Rs. ' + numericAmount.toLocaleString('en-US');
-        const methodStr = paymentMethod === 'cash' ? 'Cash (Galla)' : `Bank (${bankName})`;
+        const methodStr = paymentMethod === 'cash' ? 'Cash (Register)' : `Bank (${bankName})`;
 
         switch (selectedType) {
             case 'capital_in': {
-                const partnerName = isNewPartner ? (newPartnerName.trim() || 'Naya Partner') : (activePartner?.name || 'Partner');
+                const partnerName = isNewPartner ? (newPartnerName.trim() || 'New Partner') : (activePartner?.name || 'Partner');
                 const currentEq = isNewPartner ? 0 : (activePartner?.net_equity || 0);
                 const newEq = currentEq + numericAmount;
-                return `${methodStr} mein ${formattedAmt} jama honge. ${partnerName} ka sarmaya Rs. ${currentEq.toLocaleString('en-US')} se barh kar Rs. ${newEq.toLocaleString('en-US')} ho jayega.`;
+                return `${methodStr}: ${formattedAmt} deposited. ${partnerName} capital will increase from Rs. ${currentEq.toLocaleString('en-US')} to Rs. ${newEq.toLocaleString('en-US')}.`;
             }
             case 'capital_out': {
                 const partnerName = activePartner?.name || 'Partner';
                 const currentEq = activePartner?.net_equity || 0;
                 if (numericAmount <= currentEq) {
                     const newEq = currentEq - numericAmount;
-                    return `${methodStr} se ${formattedAmt} nikaale jayenge. ${partnerName} ka sarmaya Rs. ${currentEq.toLocaleString('en-US')} se kam ho kar Rs. ${newEq.toLocaleString('en-US')} reh jayega.`;
+                    return `${methodStr}: ${formattedAmt} withdrawn. ${partnerName} capital will decrease from Rs. ${currentEq.toLocaleString('en-US')} to Rs. ${newEq.toLocaleString('en-US')}.`;
                 } else {
-                    return `${methodStr} se ${formattedAmt} kam honge. ${partnerName} ka sarmaya 0 ho jayega aur Rs. ${excessAmount.toLocaleString('en-US')} unke zimme Advance baaqi rahega.`;
+                    return `${methodStr}: ${formattedAmt} deducted. ${partnerName} capital becomes 0 and Rs. ${excessAmount.toLocaleString('en-US')} is recorded as Advance receivable.`;
                 }
             }
             case 'loan_in': {
@@ -200,12 +200,12 @@ export default function EntryDrawer({
             }
             case 'loan_give': {
                 const party = loanPartyName.trim() || 'Borrower';
-                return `${methodStr} se ${formattedAmt} qarza diya jayega. ${party} se wapas lena record hoga.`;
+                return `${methodStr}: ${formattedAmt} loan disbursed. Receivable recorded from ${party}.`;
             }
             case 'loan_out': {
                 const chosenLoan = loans.find(l => l.id === Number(selectedLoanId));
                 const party = chosenLoan?.lender_name || loanPartyName.trim() || 'Account';
-                return `${methodStr} mein ${party} se ${formattedAmt} qarza wapas wasool hoga.`;
+                return `${methodStr}: ${formattedAmt} loan recovery received from ${party}.`;
             }
             case 'surplus_out': {
                 const party = surplusPartyName.trim() || 'Investment Scheme';
@@ -213,7 +213,7 @@ export default function EntryDrawer({
             }
             case 'surplus_in': {
                 const party = surplusFunds.find(s => s.id === Number(selectedSurplusId))?.fund_name || 'Investment Scheme';
-                return `${party} se ${formattedAmt} sarmaya wapas ${methodStr} mein jama kiya jayega.`;
+                return `${party}: ${formattedAmt} capital withdrawal will be deposited into ${methodStr}.`;
             }
             default:
                 return null;
@@ -224,7 +224,7 @@ export default function EntryDrawer({
         e.preventDefault();
 
         if (numericAmount <= 0) {
-            toast.error(isUrdu ? 'براہ کرم درست رقم درج کریں' : 'Barahe karam durust rakam enter karein.');
+            toast.error(isUrdu ? 'براہ کرم درست رقم درج کریں' : 'Please enter a valid amount.');
             return;
         }
 
@@ -236,7 +236,7 @@ export default function EntryDrawer({
                     return;
                 }
             } else if (!selectedPartnerId) {
-                toast.error('Partner muntakhib karein.');
+                toast.error('Please select a partner.');
                 return;
             }
         }
@@ -259,7 +259,7 @@ export default function EntryDrawer({
 
         // Guardrail block check
         if (isExceedingCapital && !isAdvanceConfirmed) {
-            toast.error('Capital se zyada nikaal rahe hain! Advance manzoor karein ya rakam kam karein.');
+            toast.error('Amount exceeds capital balance! Please adjust amount or approve advance.');
             return;
         }
 
@@ -321,12 +321,12 @@ export default function EntryDrawer({
                 toast.success(toastMsg, {
                     duration: 10000,
                     action: lastEntry?.id ? {
-                        label: 'Wapas karein (Undo)',
+                        label: 'Undo',
                         onClick: () => {
                             router.post(`/investment/undo/${lastEntry.id}`, {}, {
                                 preserveScroll: true,
                                 onSuccess: () => {
-                                    toast.success(`Entry ${lastEntry.ref_no} mansookh kardi gayi.`);
+                                    toast.success(`Entry ${lastEntry.ref_no} was voided.`);
                                 },
                             });
                         },
@@ -345,7 +345,7 @@ export default function EntryDrawer({
             onError: (errs) => {
                 setIsSubmitting(false);
                 const firstMsg = Object.values(errs)[0];
-                toast.error(firstMsg || 'Entry save nahi ho saki. Details check karein.');
+                toast.error(firstMsg || 'Failed to save entry. Please check details.');
             },
         });
     };
@@ -372,7 +372,7 @@ export default function EntryDrawer({
                             </span>
                         </SheetTitle>
                         <SheetDescription className="text-xs text-emerald-100/90 mt-0.5">
-                            Sirf zaroori maloomat darj karein, khata khud ba khud update ho jayega.
+                            Enter required details to update the investment ledger automatically.
                         </SheetDescription>
                     </SheetHeader>
                 </div>

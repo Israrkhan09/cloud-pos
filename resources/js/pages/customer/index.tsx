@@ -51,6 +51,15 @@ interface Props {
     };
 }
 
+const getCustomerTypeLabel = (type?: string) => {
+    if (!type) return '-';
+    const t = type.toLowerCase();
+    if (t === 'dukandar') return 'Shopkeeper';
+    if (t === 'mashakhor') return 'Retail / Wholesale Buyer';
+    const opt = CUSTOMER_TYPE_OPTIONS.find(o => o.value.toLowerCase() === t);
+    return opt ? opt.label : type;
+};
+
 const CUSTOMER_TYPE_OPTIONS = [
     { value: 'Dukandar', label: 'Shopkeeper' },
     { value: 'Wholesaler', label: 'Wholesaler' },
@@ -339,7 +348,7 @@ export default function CustomerIndex({ customers = [], filters }: Props) {
                                                     {/* 4. Qism */}
                                                     <td className="py-3 px-3 whitespace-nowrap">
                                                         <span className="inline-block px-2 py-0.5 rounded text-[11px] font-semibold bg-gray-100 text-gray-700">
-                                                            {c.customer_type}
+                                                            {getCustomerTypeLabel(c.customer_type)}
                                                         </span>
                                                     </td>
 
@@ -593,7 +602,7 @@ export default function CustomerIndex({ customers = [], filters }: Props) {
                                     {isUrdu ? 'قسم' : 'TYPE'}
                                 </span>
                                 <span className="text-sm font-bold text-gray-800 mt-0.5 block">
-                                    {khataCustomer.customer_type}
+                                    {getCustomerTypeLabel(khataCustomer.customer_type)}
                                 </span>
                             </div>
                         </div>

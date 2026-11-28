@@ -319,7 +319,7 @@ export default function AmrozaIndex({
         const isExpired = !isKhatam && (item.status === 'expired' || item.computed_status === 'expired' || item.id === 4);
 
         if (isExpired) {
-            toast.error(isUrdu ? 'یہ مال ایکسپائر ہو چکا ہے، فروخت نہیں ہو سکتا' : 'Expired maal sale nahi ho sakta');
+            toast.error(isUrdu ? 'یہ مال ایکسپائر ہو چکا ہے، فروخت نہیں ہو سکتا' : 'Expired produce cannot be sold');
             return;
         }
 
@@ -353,7 +353,7 @@ export default function AmrozaIndex({
                     rate: defaultRate,
                     total: defaultRate,
                 };
-                toast.success(`${cleanName} bill mein shamil ho gaya`);
+                toast.success(`${cleanName} added to bill`);
                 return [...prev, newItem];
             }
         });
@@ -565,11 +565,11 @@ export default function AmrozaIndex({
         }
         for (const ci of cartItems) {
             if (ci.nag <= 0) {
-                toast.error(`${ci.name} ki tadaad darj karein`);
+                toast.error(`Please enter quantity for ${ci.name}`);
                 return;
             }
             if (ci.rate <= 0) {
-                toast.error(`${ci.name} ka rate darj karein`);
+                toast.error(`Please enter rate for ${ci.name}`);
                 return;
             }
         }
@@ -938,7 +938,7 @@ export default function AmrozaIndex({
                                         onClick={handleClearCart}
                                         className="text-xs font-semibold text-red-600 hover:text-red-700 cursor-pointer"
                                     >
-                                        {isUrdu ? t('amroza_page.clear_cart') : 'Cart Saaf Karein'}
+                                        {isUrdu ? t('amroza_page.clear_cart') : 'Clear Cart'}
                                     </button>
                                 )}
                             </div>
@@ -1346,7 +1346,7 @@ export default function AmrozaIndex({
                                         <Icon name="Printer" className="size-4" weight="bold" />
                                         <span>
                                             {editingSale
-                                                ? (isUrdu ? 'تبدیل کریں' : 'Tabdeel Karein')
+                                                ? (isUrdu ? 'تبدیل کریں' : 'Update')
                                                 : (isUrdu ? t('amroza_page.save_and_print') : 'Save Bill & Print Receipt')}
                                         </span>
                                     </Button>
@@ -1564,7 +1564,7 @@ export default function AmrozaIndex({
                                         <span className="font-bold text-black">{slipData.billNo}</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-gray-600 font-semibold">Tareekh:</span>
+                                        <span className="text-gray-600 font-semibold">Date:</span>
                                         <span className="font-bold text-black">{slipData.date} {slipData.time}</span>
                                     </div>
                                     <div className="flex justify-between">
@@ -1581,8 +1581,8 @@ export default function AmrozaIndex({
                                                 : slipData.paymentType === 'bank'
                                                 ? `BANK (${slipData.bankAccount || 'Online'})`
                                                 : slipData.paymentType === 'split'
-                                                ? 'ADHA CASH + ADHA UDHAAR'
-                                                : 'UDHAAR'}
+                                                ? 'HALF CASH + HALF CREDIT'
+                                                : 'CREDIT'}
                                         </span>
                                     </div>
                                 </div>
@@ -1649,8 +1649,8 @@ export default function AmrozaIndex({
 
                                 {/* Footer */}
                                 <div className="text-center pt-1 text-[10px] text-gray-500 space-y-0.5">
-                                    <p className="font-bold text-gray-700">Tashreef Awari Ka Shukriya!</p>
-                                    <p>Malik Sahab · Sabzi Mandi</p>
+                                    <p className="font-bold text-gray-700">Thank you for your business!</p>
+                                    <p>Vegetable Wholesale Market</p>
                                     <p className="text-[9px] text-gray-400">Printed: {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}</p>
                                 </div>
                             </div>
@@ -1671,7 +1671,7 @@ export default function AmrozaIndex({
                                     onClick={() => setSlipModalOpen(false)}
                                     className="h-10 px-5 text-xs sm:text-sm cursor-pointer font-semibold rounded-xl"
                                 >
-                                    Band Karein
+                                    Close
                                 </Button>
                             </div>
                         </div>

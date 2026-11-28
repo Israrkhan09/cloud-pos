@@ -289,7 +289,7 @@ export default function FarmersIndex({ farmers = [], areas = [], filters }: Prop
                                     {filteredFarmers.length === 0 ? (
                                         <tr>
                                             <td colSpan={8} className="py-12 text-center text-gray-400 text-sm">
-                                                {isUrdu ? 'کوئی کسان نہیں ملا۔' : 'Koi kisan nahi mila.'}
+                                                {isUrdu ? 'کوئی کسان نہیں ملا۔' : 'No farmers found.'}
                                             </td>
                                         </tr>
                                     ) : (
@@ -412,13 +412,13 @@ export default function FarmersIndex({ farmers = [], areas = [], filters }: Prop
                             {/* 1. Kisan ka Naam * */}
                             <div>
                                 <label className="block font-bold text-gray-700 mb-1">
-                                    {isUrdu ? 'کسان کا نام' : 'Kisan ka Naam'} <span className="text-red-500">*</span>
+                                    {isUrdu ? 'کسان کا نام' : 'Farmer Name'} <span className="text-red-500">*</span>
                                 </label>
                                 <input
                                     type="text"
                                     value={formName}
                                     onChange={(e) => setFormName(e.target.value)}
-                                    placeholder={isUrdu ? 'مثلاً: حاجی بشیر کسان' : 'Jaise: Haji Bashir Kisan'}
+                                    placeholder={isUrdu ? 'مثلاً: حاجی بشیر کسان' : 'e.g. Haji Bashir Farmer'}
                                     required
                                     className="w-full h-9 px-3 border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:border-[#1e713e]"
                                 />
@@ -443,7 +443,7 @@ export default function FarmersIndex({ farmers = [], areas = [], filters }: Prop
                                     type="text"
                                     value={formArea}
                                     onChange={(e) => setFormArea(e.target.value)}
-                                    placeholder={isUrdu ? 'مثلاً: اوکاڑہ، دیپالپور، منڈی بہاؤالدین' : 'Jaise: Okara, Depalpur, Mandi Bahauddin'}
+                                    placeholder={isUrdu ? 'مثلاً: اوکاڑہ، دیپالپور، منڈی بہاؤالدین' : 'e.g. Okara, Depalpur, Mandi Bahauddin'}
                                     className="w-full h-9 px-3 border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:border-[#1e713e]"
                                 />
                             </div>
@@ -471,7 +471,7 @@ export default function FarmersIndex({ farmers = [], areas = [], filters }: Prop
                                 <textarea
                                     value={formNotes}
                                     onChange={(e) => setFormNotes(e.target.value)}
-                                    placeholder={isUrdu ? 'کسان کے متعلق کوئی خاص تفصیل...' : 'Kisan ke mutalliq koi khas tafseel...'}
+                                    placeholder={isUrdu ? 'کسان کے متعلق کوئی خاص تفصیل...' : 'Any specific notes or details about the farmer...'}
                                     rows={2}
                                     className="w-full p-2.5 border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:border-[#1e713e]"
                                 />
@@ -534,7 +534,7 @@ export default function FarmersIndex({ farmers = [], areas = [], filters }: Prop
                                     </span>
                                 </div>
                                 <span className="text-[11px] text-gray-500">
-                                    {isUrdu ? 'منڈی کی طرف سے کسان کو دینا ہے' : 'Mandi ki taraf se kisan ko dena hai'}
+                                    {isUrdu ? 'منڈی کی طرف سے کسان کو دینا ہے' : 'Market payable to farmer'}
                                 </span>
                             </div>
 
@@ -545,7 +545,7 @@ export default function FarmersIndex({ farmers = [], areas = [], filters }: Prop
                                 </div>
                             ) : !khataData || khataData.entries.length === 0 ? (
                                 <div className="py-8 text-center text-gray-400 text-xs">
-                                    {isUrdu ? 'اس کسان کے کھاتے میں کوئی اندراج موجود نہیں ہے۔' : 'Is kisan ke khate mein koi entry mojood nahi hai.'}
+                                    {isUrdu ? 'اس کسان کے کھاتے میں کوئی اندراج موجود نہیں ہے۔' : 'No entries found in this farmer account.'}
                                 </div>
                             ) : (
                                 <div className="overflow-x-auto border border-gray-200 rounded-lg">
@@ -554,8 +554,8 @@ export default function FarmersIndex({ farmers = [], areas = [], filters }: Prop
                                             <tr>
                                                 <th className="py-2 px-3 text-start">{isUrdu ? 'تاریخ' : 'Date'}</th>
                                                 <th className="py-2 px-3 text-start">{isUrdu ? 'تفصیل' : 'Description'}</th>
-                                                <th className="py-2 px-3 text-end text-red-700">{isUrdu ? 'بنام (ڈیبٹ)' : 'Banam (Debit)'}</th>
-                                                <th className="py-2 px-3 text-end text-emerald-800">{isUrdu ? 'جمع (کریڈٹ)' : 'Jama (Credit)'}</th>
+                                                <th className="py-2 px-3 text-end text-red-700">{isUrdu ? 'بنام (ڈیبٹ)' : 'Debit'}</th>
+                                                <th className="py-2 px-3 text-end text-emerald-800">{isUrdu ? 'جمع (کریڈٹ)' : 'Credit'}</th>
                                                 <th className="py-2 px-3 text-end">{isUrdu ? 'بقایا' : 'Balance'}</th>
                                             </tr>
                                         </thead>

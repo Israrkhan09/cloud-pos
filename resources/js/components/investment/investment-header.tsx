@@ -83,7 +83,7 @@ export default function InvestmentHeader({
                     {pendingApprovalsCount > 0 && (
                         <Link
                             href="/investment/audit?filter=pending"
-                            title="Pending approvals list dekhne ke liye click karein"
+                            title="Click to view pending approvals"
                             className="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-50 text-[#1F2937] border border-amber-300 hover:bg-amber-100 transition-colors flex items-center gap-2 cursor-pointer select-none self-center"
                         >
                             <span className="size-2 rounded-full bg-amber-600 animate-pulse" />

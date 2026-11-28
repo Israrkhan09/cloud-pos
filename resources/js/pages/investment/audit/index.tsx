@@ -140,7 +140,7 @@ export default function InvestmentAuditPage({
         if (!voidModalTx) return;
 
         if (!voidReason.trim()) {
-            toast.error('Mansookh karne ki wajah (Reason) likhna lazmi hai.');
+            toast.error('Reason for voiding is required.');
             return;
         }
 
@@ -183,7 +183,7 @@ export default function InvestmentAuditPage({
 
     // Export CSV
     const handleExportCSV = () => {
-        const headers = ['Voucher No', 'Date & Time', 'Party', 'Type', 'Amount', 'Created By', 'Approve Kisne Kiya', 'Status', 'Wajah'];
+        const headers = ['Voucher No', 'Date & Time', 'Party', 'Type', 'Amount', 'Created By', 'Approved By', 'Status', 'Reason'];
         const rows = filteredTx.map(tx => [
             `"${tx.ref_no}"`,
             `"${tx.created_at_label}"`,
@@ -248,7 +248,7 @@ export default function InvestmentAuditPage({
                                 )}
                             >
                                 <span className="size-2 rounded-full bg-amber-500 animate-pulse" />
-                                <span>{isUrdu ? `مالک کی منظوری باقی (${transactions.filter(t => t.approval_status === 'pending_owner').length})` : `Malik Ki Manzoori Baaki (${transactions.filter(t => t.approval_status === 'pending_owner').length})`}</span>
+                                <span>{isUrdu ? `مالک کی منظوری باقی (${transactions.filter(t => t.approval_status === 'pending_owner').length})` : `Pending Owner Approval (${transactions.filter(t => t.approval_status === 'pending_owner').length})`}</span>
                             </button>
                             <button
                                 type="button"
@@ -260,7 +260,7 @@ export default function InvestmentAuditPage({
                                         : "bg-white text-[#374151] border-gray-200 hover:bg-gray-50"
                                 )}
                             >
-                                {isUrdu ? `منسوخ شدہ (${transactions.filter(t => t.is_reversed).length})` : `Mansookh (${transactions.filter(t => t.is_reversed).length})`}
+                                {isUrdu ? `منسوخ شدہ (${transactions.filter(t => t.is_reversed).length})` : `Voided (${transactions.filter(t => t.is_reversed).length})`}
                             </button>
                         </div>
 
@@ -309,7 +309,7 @@ export default function InvestmentAuditPage({
                                         <th className="py-2.5 px-2 text-start whitespace-nowrap">{isUrdu ? 'تاریخ / وقت' : 'Tareekh / Waqt'}</th>
                                         <th className="py-2.5 px-2 text-start whitespace-nowrap">{isUrdu ? 'پارٹی / کھاتہ' : 'Party / Khata'}</th>
                                         <th className="py-2.5 px-2 text-center whitespace-nowrap">{isUrdu ? 'قسم' : 'Qisam'}</th>
-                                        <th className="py-2.5 px-2 text-end whitespace-nowrap">{isUrdu ? 'رقم' : 'Rakam'}</th>
+                                        <th className="py-2.5 px-2 text-end whitespace-nowrap">{isUrdu ? 'رقم' : 'Amount'}</th>
                                         <th className="py-2.5 px-2 text-center whitespace-nowrap">{isUrdu ? 'ادائیگی ذریعہ' : 'Payment Zariya'}</th>
                                         <th className="py-2.5 px-2 text-center whitespace-nowrap">{isUrdu ? 'حالت' : 'Status'}</th>
                                         <th className="py-2.5 px-2 text-center whitespace-nowrap">{isUrdu ? 'کارروائی' : 'Actions'}</th>
@@ -402,7 +402,7 @@ export default function InvestmentAuditPage({
                                                     {/* Payment Zariya */}
                                                     <td className="py-2.5 px-2 text-center whitespace-nowrap">
                                                         <span
-                                                            title={tx.payment_method === 'bank' ? (tx.bank_name || 'Bank') : 'Cash (Galla)'}
+                                                            title={tx.payment_method === 'bank' ? (tx.bank_name || 'Bank') : 'Cash (Register)'}
                                                             className="text-[11px] text-[#374151] font-medium px-2 py-0.5 rounded bg-gray-100 border border-gray-200 inline-block max-w-[130px] truncate align-middle"
                                                         >
                                                             {tx.payment_method === 'bank' ? displayBank : 'Cash'}
@@ -413,11 +413,11 @@ export default function InvestmentAuditPage({
                                                     <td className="py-2.5 px-2 text-center whitespace-nowrap">
                                                         {tx.is_reversed ? (
                                                             <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-rose-100 text-rose-900 border border-rose-300">
-                                                                {isUrdu ? 'منسوخ' : 'Mansookh'}
+                                                                {isUrdu ? 'منسوخ' : 'Voided'}
                                                             </span>
                                                         ) : tx.approval_status === 'pending_owner' ? (
                                                             <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
-                                                                {isUrdu ? 'منظوری باقی' : 'Manzoori Baaki'}
+                                                                {isUrdu ? 'منظوری باقی' : 'Pending Approval'}
                                                             </span>
                                                         ) : (
                                                             <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-[#14532d] border border-emerald-200">
@@ -434,7 +434,7 @@ export default function InvestmentAuditPage({
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => handleApprove(tx)}
-                                                                    title={isUrdu ? 'منظور کریں' : 'Manzoor karein'}
+                                                                    title={isUrdu ? 'منظور کریں' : 'Approve'}
                                                                     className="px-2 py-1 text-[11px] font-bold text-white bg-[#14532d] hover:bg-[#166534] rounded shadow-2xs transition-colors cursor-pointer"
                                                                 >
                                                                     {isUrdu ? 'منظور' : 'Manzoor'}
@@ -456,7 +456,7 @@ export default function InvestmentAuditPage({
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => handleOpenVoid(tx)}
-                                                                    title={isUrdu ? 'منسوخ' : 'Mansookh (Cancel)'}
+                                                                    title={isUrdu ? 'منسوخ' : 'Void / Cancel'}
                                                                     className="p-1 text-rose-700 hover:text-rose-900 hover:bg-rose-50 rounded transition-colors cursor-pointer"
                                                                 >
                                                                     <Icon name="Prohibit" className="size-4" />

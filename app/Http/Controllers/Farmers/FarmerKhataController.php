@@ -113,7 +113,7 @@ class FarmerKhataController extends Controller
         $selectedFarmer = $selectedFarmerId !== 'all' ? $farmers->firstWhere('id', (int) $selectedFarmerId) : null;
 
         $accounts = [
-            ['id' => 1, 'account_name' => 'Naqad Galla (Cash Counter)'],
+            ['id' => 1, 'account_name' => 'Cash Register (Cash Counter)'],
             ['id' => 2, 'account_name' => 'Meezan Bank Mandi Branch'],
             ['id' => 3, 'account_name' => 'EasyPaisa Israr'],
             ['id' => 4, 'account_name' => 'JazzCash Israr'],
@@ -160,7 +160,7 @@ class FarmerKhataController extends Controller
             }
         }
 
-        return redirect()->back()->with('success', 'Kisan ko baqaya raqam kamyabi se ada kar di gayi!');
+        return redirect()->back()->with('success', 'Payment recorded for farmer successfully!');
     }
 
     /**
