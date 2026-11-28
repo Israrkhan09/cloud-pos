@@ -133,7 +133,7 @@ const DEMO_ACCOUNTS: BankAccount[] = [
 const DEMO_TRANSFERS: TransferEntry[] = [
     {
         id: 1,
-        title: 'EasyPaisa israr mein Naqad Jama',
+        title: 'Cash Deposit → EasyPaisa israr',
         subtext: '2026-11-23 · Slip SLP-20388',
         amount: 5000,
         date: '2026-11-23',

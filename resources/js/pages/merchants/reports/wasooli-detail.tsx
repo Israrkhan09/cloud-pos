@@ -102,7 +102,7 @@ export default function WasooliDetailReport({ rows, totals, filters }: Props) {
                 {/* Printable Report Section */}
                 <div className="bg-white p-6 rounded-lg border shadow-xs print:border-none print:shadow-none print:p-0">
                     <PrintLetterhead
-                        title="Wasooli Detail"
+                        title="Recoveries Detail"
                         titleUrdu="وصولی تفصیلی رپورٹ (ریکوری اندراج)"
                         from_date={fromDate}
                         to_date={toDate}

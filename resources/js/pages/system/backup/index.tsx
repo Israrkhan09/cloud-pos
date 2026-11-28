@@ -375,7 +375,7 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                             className={`size-4 text-[#14532d] ${creatingBackup ? 'animate-spin' : ''}`}
                             weight="bold"
                         />
-                        <span>{creatingBackup ? (isUrdu ? t('backup_mandi.backup_in_progress') : 'Backup Ban Raha Hai...') : (isUrdu ? t('backup_mandi.new_backup') : 'Abhi Naya Backup Banayein')}</span>
+                        <span>{creatingBackup ? (isUrdu ? t('backup_mandi.backup_in_progress') : 'Creating Backup...') : (isUrdu ? t('backup_mandi.new_backup') : 'Create Backup Now')}</span>
                     </button>
                 </MandiPageHeader>
 
@@ -437,7 +437,7 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                     <div className="lg:col-span-8 bg-white dark:bg-card border border-emerald-200/80 dark:border-border rounded-2xl p-4 sm:p-5 shadow-xs space-y-3.5">
                         <div className="flex items-center justify-between pb-1 border-b border-gray-100 dark:border-gray-800">
                             <h3 className="font-bold text-sm sm:text-base text-gray-900 dark:text-white">
-                                {isUrdu ? 'سرور پر موجود بیک اپ لسٹ' : 'Server Par Mojood Backups List'}
+                                {isUrdu ? 'سرور پر موجود بیک اپ لسٹ' : 'Backups on Server'}
                             </h3>
                             <button
                                 type="button"
@@ -450,7 +450,7 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                                     className={`size-3.5 ${loadingBackups ? 'animate-spin' : ''}`}
                                     weight="bold"
                                 />
-                                <span>{isUrdu ? 'تازہ کریں' : 'Taaza Karein'}</span>
+                                <span>{isUrdu ? 'تازہ کریں' : 'Refresh'}</span>
                             </button>
                         </div>
 
@@ -460,7 +460,7 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                                     <tr>
                                         <th className="py-2.5 px-3.5 text-start">{isUrdu ? 'فائل کا نام' : 'File Ka Naam'}</th>
                                         <th className="py-2.5 px-3.5 text-start">{isUrdu ? 'سائز' : 'Size'}</th>
-                                        <th className="py-2.5 px-3.5 text-start">{isUrdu ? 'بنانے کا وقت' : 'Banane Ka Waqt'}</th>
+                                        <th className="py-2.5 px-3.5 text-start">{isUrdu ? 'بنانے کا وقت' : 'Creation Time'}</th>
                                         <th className="py-2.5 px-3.5 text-center">{isUrdu ? 'ڈاؤن لوڈ' : 'Download'}</th>
                                     </tr>
                                 </thead>
@@ -506,14 +506,14 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                     {/* Right Card: Database Restore Karein (4 cols) */}
                     <div className="lg:col-span-4 bg-white dark:bg-card border border-emerald-200/90 dark:border-border rounded-2xl p-4 sm:p-5 shadow-xs space-y-4">
                         <h3 className="font-bold text-sm sm:text-base text-gray-900 dark:text-white border-b border-gray-100 dark:border-gray-800 pb-2">
-                            {isUrdu ? 'ڈیٹا بیس بحال کریں (Restore)' : 'Database Restore Karein'}
+                            {isUrdu ? 'ڈیٹا بیس بحال کریں (Restore)' : 'Restore Database'}
                         </h3>
 
                         {/* Ihtiyaat Warning Box */}
                         <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60 p-3 rounded-xl text-amber-900 dark:text-amber-300 text-xs space-y-1 shadow-2xs">
                             <div className="flex items-center gap-1.5 font-bold text-amber-950 dark:text-amber-200">
                                 <Icon name="Warning" className="size-4 text-amber-600 shrink-0" weight="fill" />
-                                <span>{isUrdu ? 'احتیاط:' : 'Ihtiyaat:'}</span>
+                                <span>{isUrdu ? 'احتیاط:' : 'Warning:'}</span>
                             </div>
                             <p className="leading-relaxed">
                                 {isUrdu
@@ -525,7 +525,7 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                         <form onSubmit={handleRestoreClick} className="space-y-3.5 text-xs sm:text-sm">
                             <div>
                                 <label className="block font-bold text-gray-900 dark:text-gray-100 mb-1.5 text-xs sm:text-[13px]">
-                                    {isUrdu ? 'بیک اپ فائل (.db) منتخب کریں:' : 'Backup File (.db) Muntakhib Karein:'}
+                                    {isUrdu ? 'بیک اپ فائل (.db) منتخب کریں:' : 'Select Backup File (.db):'}
                                 </label>
                                 <input
                                     type="file"
@@ -550,7 +550,7 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                                     className={`size-4 ${restoring ? 'animate-spin' : ''}`}
                                     weight="bold"
                                 />
-                                <span>{restoring ? (isUrdu ? 'بحال ہو رہا ہے...' : 'Restore Ho Raha Hai...') : (isUrdu ? 'ڈیٹا بیس بحال کریں' : 'Database Restore Karein')}</span>
+                                <span>{restoring ? (isUrdu ? 'بحال ہو رہا ہے...' : 'Restoring Database...') : (isUrdu ? 'ڈیٹا بیس بحال کریں' : 'Restore Database')}</span>
                             </button>
                         </form>
                     </div>
@@ -717,7 +717,7 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                                 onClick={executeRestore}
                                 className="px-4 py-2 rounded-xl bg-red-700 hover:bg-red-800 text-white font-bold text-xs cursor-pointer shadow-xs"
                             >
-                                {isUrdu ? 'ہاں، بحال کریں' : 'Haan, Restore Karein'}
+                                {isUrdu ? 'ہاں، بحال کریں' : 'Yes, Restore'}
                             </button>
                         </div>
                     </DialogContent>
@@ -870,7 +870,7 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                                     onClick={() => setPreviewCategory(null)}
                                     className="px-4 py-1.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-bold rounded-lg transition cursor-pointer"
                                 >
-                                    {isUrdu ? 'بند کریں' : 'Band Karein'}
+                                    {isUrdu ? 'بند کریں' : 'Close'}
                                 </button>
                             </div>
                         </div>

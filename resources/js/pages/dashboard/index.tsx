@@ -183,20 +183,20 @@ export default function Dashboard() {
 
     // Range titles
     const saleCardTitle = range === 'today' 
-        ? (isUrdu ? t('dashboard_page.today_sale') : 'Aaj Ki Kul Sale') 
+        ? (isUrdu ? t('dashboard_page.today_sale') : "Today's Total Sales") 
         : (range === 'yesterday' 
-            ? (isUrdu ? t('dashboard_page.yesterday_sale') : 'Kal Ki Kul Sale') 
+            ? (isUrdu ? t('dashboard_page.yesterday_sale') : "Yesterday's Sales") 
             : (range === 'week' 
-                ? (isUrdu ? t('dashboard_page.week_sale') : 'Hafte Ki Kul Sale') 
-                : (isUrdu ? t('dashboard_page.month_sale') : 'Mahine Ki Kul Sale')));
+                ? (isUrdu ? t('dashboard_page.week_sale') : "This Week's Sales") 
+                : (isUrdu ? t('dashboard_page.month_sale') : "This Month's Sales")));
 
     const wasooliCardTitle = range === 'today' 
-        ? (isUrdu ? t('dashboard_page.today_wasooli') : 'Aaj Ki Wasooli') 
+        ? (isUrdu ? t('dashboard_page.today_wasooli') : 'Today\'s Recovery') 
         : (range === 'yesterday' 
-            ? (isUrdu ? t('dashboard_page.yesterday_wasooli') : 'Kal Ki Wasooli') 
+            ? (isUrdu ? t('dashboard_page.yesterday_wasooli') : 'Yesterday\'s Recovery') 
             : (range === 'week' 
-                ? (isUrdu ? t('dashboard_page.week_wasooli') : 'Hafte Ki Wasooli') 
-                : (isUrdu ? t('dashboard_page.month_wasooli') : 'Mahine Ki Wasooli')));
+                ? (isUrdu ? t('dashboard_page.week_wasooli') : 'This Week\'s Recovery') 
+                : (isUrdu ? t('dashboard_page.month_wasooli') : 'This Month\'s Recovery')));
 
     // Top items max calculation for horizontal bars
     const maxItemAmount = Math.max(...topItemsChart.map(i => i.amount || 0), 1);
@@ -288,8 +288,8 @@ export default function Dashboard() {
                             </div>
                         </div>
                         <div className="border-t border-[#f0f2f0] dark:border-[#1e2420] pt-1.5 text-[11px] leading-tight text-[#68736b] dark:text-[#8b968e] flex items-center justify-between gap-1 flex-wrap font-medium">
-                            <span>{isUrdu ? 'نقد:' : 'Naqad:'} <b className="text-emerald-800 dark:text-emerald-300 font-bold">Rs {formatNum(stats.cashSale)}</b></span>
-                            <span>{isUrdu ? 'ادھار:' : 'Udhaar:'} <b className="text-rose-800 dark:text-rose-300 font-bold">Rs {formatNum(stats.creditSale)}</b></span>
+                            <span>{isUrdu ? 'نقد:' : 'Cash:'} <b className="text-emerald-800 dark:text-emerald-300 font-bold">Rs {formatNum(stats.cashSale)}</b></span>
+                            <span>{isUrdu ? 'ادھار:' : 'Credit:'} <b className="text-rose-800 dark:text-rose-300 font-bold">Rs {formatNum(stats.creditSale)}</b></span>
                         </div>
                     </div>
 
@@ -311,7 +311,7 @@ export default function Dashboard() {
                             </div>
                         </div>
                         <div className="border-t border-[#f0f2f0] dark:border-[#1e2420] pt-1.5 text-[11px] leading-tight text-[#68736b] dark:text-[#8b968e] font-medium">
-                            {isUrdu ? `کل ${stats.wasooliCount || stats.recoveryMerchantsCount || 0} وصولی پرچیاں` : `Kul ${stats.wasooliCount || stats.recoveryMerchantsCount || 0} Wasooli Parchiyan`}
+                            {isUrdu ? `کل ${stats.wasooliCount || stats.recoveryMerchantsCount || 0} وصولی پرچیاں` : `Total ${stats.wasooliCount || stats.recoveryMerchantsCount || 0} Recovery Receipts`}
                         </div>
                     </div>
 
@@ -320,7 +320,7 @@ export default function Dashboard() {
                         <div>
                             <div className="flex items-center justify-between gap-1.5">
                                 <span className="text-xs font-bold text-[#68736b] dark:text-[#8b968e] leading-tight">
-                                    {isUrdu ? t('dashboard_page.customer_due') : 'Gahak Baqaya (Lena)'}
+                                    {isUrdu ? t('dashboard_page.customer_due') : 'Customer Balance (Receivable)'}
                                 </span>
                                 <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-200/50">
                                     <Icon name="ArrowDownLeft" className="size-3.5" weight="bold" />
@@ -333,7 +333,7 @@ export default function Dashboard() {
                             </div>
                         </div>
                         <div className="border-t border-[#f0f2f0] dark:border-[#1e2420] pt-1.5 text-[11px] leading-tight text-[#68736b] dark:text-[#8b968e] font-medium">
-                            {isUrdu ? 'مارکیٹ ادھار (وصول طلب)' : 'Market Udhaar (Receivable)'}
+                            {isUrdu ? 'مارکیٹ ادھار (وصول طلب)' : 'Customer Credit (Receivable)'}
                         </div>
                     </div>
 
@@ -342,7 +342,7 @@ export default function Dashboard() {
                         <div>
                             <div className="flex items-center justify-between gap-1.5">
                                 <span className="text-xs font-bold text-[#68736b] dark:text-[#8b968e] leading-tight">
-                                    {isUrdu ? t('dashboard_page.farmer_due') : 'Bopari / Kisan Dena'}
+                                    {isUrdu ? t('dashboard_page.farmer_due') : 'Farmer Balance (Payable)'}
                                 </span>
                                 <div className="w-7 h-7 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 flex items-center justify-center shrink-0 border border-rose-200/50">
                                     <Icon name="ArrowUpRight" className="size-3.5" weight="bold" />
@@ -355,7 +355,7 @@ export default function Dashboard() {
                             </div>
                         </div>
                         <div className="border-t border-[#f0f2f0] dark:border-[#1e2420] pt-1.5 text-[11px] leading-tight text-[#68736b] dark:text-[#8b968e] font-medium">
-                            {isUrdu ? 'کل واجبات (ادائیگی)' : 'Kul Wajibaat (Payables)'}
+                            {isUrdu ? 'کل واجبات (ادائیگی)' : 'Total Payables to Farmers'}
                         </div>
                     </div>
 
@@ -364,7 +364,7 @@ export default function Dashboard() {
                         <div>
                             <div className="flex items-center justify-between gap-1.5">
                                 <span className="text-xs font-bold text-[#68736b] dark:text-[#8b968e] leading-tight">
-                                    {isUrdu ? t('dashboard_page.cash_bank') : 'Naqad Galla + Bank'}
+                                    {isUrdu ? t('dashboard_page.cash_bank') : 'Cash in Hand + Bank'}
                                 </span>
                                 <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-200/50">
                                     <Icon name="Bank" className="size-3.5" weight="bold" />
@@ -377,7 +377,7 @@ export default function Dashboard() {
                             </div>
                         </div>
                         <div className="border-t border-[#f0f2f0] dark:border-[#1e2420] pt-1.5 text-[11px] leading-tight text-[#68736b] dark:text-[#8b968e] font-medium">
-                            {isUrdu ? 'نقد گلہ:' : 'Cash:'} <b className="text-[#1a211c] dark:text-[#e7ece8] font-bold">Rs {formatNum(cashAmount)}</b>
+                            {isUrdu ? 'نقد گلہ:' : 'Cash in Hand:'} <b className="text-[#1a211c] dark:text-[#e7ece8] font-bold">Rs {formatNum(cashAmount)}</b>
                         </div>
                     </div>
 
@@ -386,7 +386,7 @@ export default function Dashboard() {
                         <div>
                             <div className="flex items-center justify-between gap-1.5">
                                 <span className="text-xs font-bold text-[#68736b] dark:text-[#8b968e] leading-tight">
-                                    {isUrdu ? t('dashboard_page.low_stock') : 'Kam Stock Alerts'}
+                                    {isUrdu ? t('dashboard_page.low_stock') : 'Low Stock Alerts'}
                                 </span>
                                 <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-200/50">
                                     <Icon name="Warning" className="size-3.5" weight="bold" />
@@ -399,7 +399,7 @@ export default function Dashboard() {
                             </div>
                         </div>
                         <div className="border-t border-[#f0f2f0] dark:border-[#1e2420] pt-1.5 text-[11px] leading-tight text-[#68736b] dark:text-[#8b968e] font-medium">
-                            {isUrdu ? 'ختم ہونے والی سبزیاں' : 'Khatam hone wali sabzian'}
+                            {isUrdu ? 'ختم ہونے والی سبزیاں' : 'Low stock vegetable items'}
                         </div>
                     </div>
 
@@ -414,14 +414,14 @@ export default function Dashboard() {
                             <div className="flex items-center justify-between gap-2 mb-3">
                                 <div>
                                     <h2 className="text-sm md:text-base font-bold text-[#1a211c] dark:text-[#e7ece8]">
-                                        {isUrdu ? t('dashboard_page.trend_title') : 'Pichle 7 Din Ka Farokht aur Wasooli Trend'}
+                                        {isUrdu ? t('dashboard_page.trend_title') : 'Last 7 Days Sales & Recovery Trend'}
                                     </h2>
                                     <p className="text-xs text-[#68736b] dark:text-[#8b968e]">
-                                        {isUrdu ? t('dashboard_page.trend_sub') : 'Rozana ki Sale aur Wasool shuda raqam ka mawazna'}
+                                        {isUrdu ? t('dashboard_page.trend_sub') : 'Daily sales and cash recovery comparison'}
                                     </p>
                                 </div>
                                 <span className="px-2.5 py-1 text-[11px] font-bold rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-300 shrink-0">
-                                    {isUrdu ? t('dashboard_page.weekly_chart') : 'Haftawar Chart'}
+                                    {isUrdu ? t('dashboard_page.weekly_chart') : 'Weekly Chart'}
                                 </span>
                             </div>
 
@@ -456,8 +456,8 @@ export default function Dashboard() {
                                             formatter={(value: any, name: any) => [
                                                 formatRupees(Number(value)),
                                                 name === 'sale' 
-                                                    ? (isUrdu ? 'کل فروخت (بکری)' : 'Kul Sale (Bikri)') 
-                                                    : (isUrdu ? 'وصولی (ریکوری)' : 'Wasooli (Recovery)'),
+                                                    ? (isUrdu ? 'کل فروخت (بکری)' : 'Total Sales') 
+                                                    : (isUrdu ? 'وصولی (ریکوری)' : 'Recovery'),
                                             ]}
                                             contentStyle={{
                                                 backgroundColor: '#18181b',
@@ -495,13 +495,13 @@ export default function Dashboard() {
                             <div className="flex items-center gap-2">
                                 <span className="w-3 h-3 rounded-full bg-[#15803d]"></span>
                                 <span className="font-bold text-[#1a211c] dark:text-[#e7ece8]">
-                                    {isUrdu ? 'کل فروخت (بکری)' : 'Kul Sale (Bikri)'}
+                                    {isUrdu ? 'کل فروخت (بکری)' : 'Total Sales'}
                                 </span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <span className="w-3 h-3 rounded-full bg-[#0284c7]"></span>
                                 <span className="font-bold text-[#1a211c] dark:text-[#e7ece8]">
-                                    {isUrdu ? 'وصولی (ریکوری)' : 'Wasooli (Recovery)'}
+                                    {isUrdu ? 'وصولی (ریکوری)' : 'Recovery'}
                                 </span>
                             </div>
                         </div>
@@ -513,10 +513,10 @@ export default function Dashboard() {
                             <div className="flex items-center justify-between gap-2 mb-3">
                                 <div>
                                     <h2 className="text-sm md:text-base font-bold text-[#1a211c] dark:text-[#e7ece8]">
-                                        {isUrdu ? t('dashboard_page.top_items_title') : 'Top Farokht Shuda Sabzian'}
+                                        {isUrdu ? t('dashboard_page.top_items_title') : 'Top Selling Items'}
                                     </h2>
                                     <p className="text-xs text-[#68736b] dark:text-[#8b968e]">
-                                        {isUrdu ? t('dashboard_page.top_items_sub') : 'Sab se zyada bikri wali sabzi jins'}
+                                        {isUrdu ? t('dashboard_page.top_items_sub') : 'Top revenue generating vegetable produce'}
                                     </p>
                                 </div>
                                 <Icon name="Sparkle" className="size-4 text-emerald-700" weight="bold" />
@@ -563,9 +563,9 @@ export default function Dashboard() {
 
                         {/* Bottom note */}
                         <div className="border-t border-[#f0f2f0] dark:border-[#1e2420] pt-3 mt-4 flex items-center justify-between text-xs text-[#68736b]">
-                            <span>{isUrdu ? 'کل 5 ٹاپ سبزیاں' : 'Kul 5 Top Sabzian'}</span>
+                            <span>{isUrdu ? 'کل 5 ٹاپ سبزیاں' : 'Top 5 Selling Items'}</span>
                             <Link href="/reports" className="font-bold text-emerald-800 hover:underline">
-                                {isUrdu ? 'رپورٹ دیکھیں ←' : 'Report dekhein →'}
+                                {isUrdu ? 'رپورٹ دیکھیں ←' : 'View Reports →'}
                             </Link>
                         </div>
                     </div>
@@ -577,17 +577,17 @@ export default function Dashboard() {
                     <div className="flex items-center justify-between mb-3">
                         <div>
                             <h2 className="text-sm md:text-base font-bold text-[#1a211c] dark:text-[#e7ece8]">
-                                {isUrdu ? t('dashboard_page.recent_entries_title') : 'Haliya Indraj (Recent Entries)'}
+                                {isUrdu ? t('dashboard_page.recent_entries_title') : 'Recent Entries'}
                             </h2>
                             <p className="text-xs text-[#68736b] dark:text-[#8b968e]">
-                                {isUrdu ? t('dashboard_page.recent_entries_sub') : 'Aaj ki taza tareen bikri aur wasooli'}
+                                {isUrdu ? t('dashboard_page.recent_entries_sub') : "Today's latest sales and payment recoveries"}
                             </p>
                         </div>
                         <Link
                             href="/amroza-detail"
                             className="text-xs font-bold text-emerald-800 hover:text-emerald-950 transition-colors"
                         >
-                            {isUrdu ? t('dashboard_page.view_all') : 'Sab dekhein →'}
+                            {isUrdu ? t('dashboard_page.view_all') : 'View All →'}
                         </Link>
                     </div>
 
@@ -595,12 +595,12 @@ export default function Dashboard() {
                         <table className="w-full text-xs text-start">
                             <thead>
                                 <tr className="border-b border-[#e6e9e6] dark:border-[#262d28] text-[#68736b] dark:text-[#8b968e]">
-                                    <th className="py-2.5 px-3 text-start font-bold">{isUrdu ? t('dashboard_page.th_time') : 'Waqt'}</th>
-                                    <th className="py-2.5 px-3 text-start font-bold">{isUrdu ? t('dashboard_page.th_type') : 'Qisam'}</th>
-                                    <th className="py-2.5 px-3 text-start font-bold">{isUrdu ? t('dashboard_page.th_party') : 'Gahak / Kisan'}</th>
-                                    <th className="py-2.5 px-3 text-start font-bold">{isUrdu ? t('dashboard_page.th_item') : 'Jins'}</th>
-                                    <th className="py-2.5 px-3 text-end font-bold">{isUrdu ? t('dashboard_page.th_nag') : 'Nag'}</th>
-                                    <th className="py-2.5 px-3 text-end font-bold">{isUrdu ? t('dashboard_page.th_amount') : 'Raqam'}</th>
+                                    <th className="py-2.5 px-3 text-start font-bold">{isUrdu ? t('dashboard_page.th_time') : 'Time'}</th>
+                                    <th className="py-2.5 px-3 text-start font-bold">{isUrdu ? t('dashboard_page.th_type') : 'Type'}</th>
+                                    <th className="py-2.5 px-3 text-start font-bold">{isUrdu ? t('dashboard_page.th_party') : 'Customer / Farmer'}</th>
+                                    <th className="py-2.5 px-3 text-start font-bold">{isUrdu ? t('dashboard_page.th_item') : 'Item'}</th>
+                                    <th className="py-2.5 px-3 text-end font-bold">{isUrdu ? t('dashboard_page.th_nag') : 'Units'}</th>
+                                    <th className="py-2.5 px-3 text-end font-bold">{isUrdu ? t('dashboard_page.th_amount') : 'Amount'}</th>
                                 </tr>
                             </thead>
                             <tbody className="tabular-nums divide-y divide-gray-100 dark:divide-zinc-800/60">

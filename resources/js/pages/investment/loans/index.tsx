@@ -103,7 +103,7 @@ export default function InvestmentLoansPage({
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: isUrdu ? 'انویسٹمنٹ' : 'Investment', href: '/investment/partners' },
-        { title: isUrdu ? 'قرضہ (Loans)' : 'Qarza', href: '/investment/loans' },
+        { title: isUrdu ? 'قرضہ (Loans)' : 'Loans', href: '/investment/loans' },
     ];
 
     const activeSelectedLoan = loans.find(l => l.id === selectedLoanId) || loans[0] || null;
@@ -202,10 +202,10 @@ export default function InvestmentLoansPage({
 
     // Export CSV
     const handleExportCSV = () => {
-        const headers = ['Dene Wala', 'Qisam', 'Asal Principal', 'Wapas Hua', 'Baqaya Due', 'Wapsi Tareekh', 'Status'];
+        const headers = ['Party Name', 'Type', 'Principal', 'Repaid Amount', 'Balance Due', 'Due Date', 'Status'];
         const rows = loans.map(l => [
             `"${l.lender_name}"`,
-            `"${l.balance_due <= 0 || l.status === 'settled' ? 'Chukta' : l.direction === 'receivable' ? 'Lena Hai' : 'Dena Hai'}"`,
+            `"${l.balance_due <= 0 || l.status === 'settled' ? 'Settled' : l.direction === 'receivable' ? 'Receivable' : 'Payable'}"`,
             l.principal_amount,
             l.paid_amount,
             l.balance_due,
@@ -277,14 +277,14 @@ export default function InvestmentLoansPage({
                             return (
                                 <div className="bg-white p-4 md:p-5 rounded-xl border border-gray-200 shadow-2xs">
                                     <span className="text-xs font-bold text-[#374151] uppercase tracking-wider block">
-                                        {isUrdu ? 'اوور ڈیو قرضہ' : 'Overdue Qarza'}
+                                        {isUrdu ? 'اوور ڈیو قرضہ' : 'Overdue Loans'}
                                     </span>
                                     <div className="mt-2 flex items-center justify-between">
                                         <span className={cn(
                                             "text-2xl font-black",
                                             overdueCount > 0 ? "text-amber-800" : "text-emerald-800"
                                         )}>
-                                            {overdueCount} {isUrdu ? 'قرضہ' : 'Qarza'}
+                                            {overdueCount} {isUrdu ? 'قرضہ' : 'Loans'}
                                         </span>
                                         {overdueCount > 0 ? (
                                             <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-800 border border-red-300">
@@ -315,7 +315,7 @@ export default function InvestmentLoansPage({
                             <div className="flex items-center gap-2">
                                 <Icon name="HandCoins" className="size-5 text-[#14532d]" />
                                 <h3 className="text-sm font-bold text-[#1F2937]">
-                                    {isUrdu ? 'قرضہ رجسٹر' : 'Qarza Register (Mandi Lenders & Borrowers)'}
+                                    {isUrdu ? 'قرضہ رجسٹر' : 'Loans Register (Lenders & Borrowers)'}
                                 </h3>
                             </div>
                             <div className="flex items-center gap-2">
@@ -340,7 +340,7 @@ export default function InvestmentLoansPage({
                                         <th className="py-3 px-4 text-start">{isUrdu ? 'پارٹی / نام' : 'Party / Naam'}</th>
                                         <th className="py-3 px-4 text-center">{isUrdu ? 'قسم' : 'Qisam'}</th>
                                         <th className="py-3 px-4 text-end">{isUrdu ? 'اصل رقم' : 'Asal'}</th>
-                                        <th className="py-3 px-4 text-end">{isUrdu ? 'واپس ہوا' : 'Wapas Hua'}</th>
+                                        <th className="py-3 px-4 text-end">{isUrdu ? 'واپس ہوا' : 'Repaid Amount'}</th>
                                         <th className="py-3 px-4 text-end text-[#1F2937]">{isUrdu ? 'باقی' : 'Baaki'}</th>
                                         <th className="py-3 px-4 text-center">{isUrdu ? 'تاریخ' : 'Tareekh'}</th>
                                         <th className="py-3 px-4 text-center">{isUrdu ? 'حالت' : 'Status'}</th>
@@ -439,7 +439,7 @@ export default function InvestmentLoansPage({
                                                                     onClick={() => handleOpenSettle(loan)}
                                                                     className="px-3.5 py-1.5 text-xs font-bold text-white bg-[#14532d] hover:bg-[#166534] rounded shadow-2xs transition-colors cursor-pointer"
                                                                 >
-                                                                    {isReceivable ? (isUrdu ? 'واپس لیں' : 'Wapas lein') : (isUrdu ? 'واپس کریں' : 'Wapas karein')}
+                                                                    {isReceivable ? (isUrdu ? 'واپس لیں' : 'Collect') : (isUrdu ? 'واپس کریں' : 'Repay')}
                                                                 </button>
                                                                 {isOverdue && (
                                                                     <button
@@ -479,7 +479,7 @@ export default function InvestmentLoansPage({
                                         onClick={() => handleOpenSettle(activeSelectedLoan)}
                                         className="min-h-[40px] px-5 py-2 text-sm font-bold text-white bg-[#14532d] hover:bg-[#166534] rounded-lg shadow-xs transition-colors cursor-pointer"
                                     >
-                                        {activeSelectedLoan.direction === 'receivable' ? (isUrdu ? 'واپس لیں' : 'Wapas lein') : (isUrdu ? 'واپس کریں' : 'Wapas karein')}
+                                        {activeSelectedLoan.direction === 'receivable' ? (isUrdu ? 'واپس لیں' : 'Collect') : (isUrdu ? 'واپس کریں' : 'Repay')}
                                     </button>
                                 ) : (
                                     <span className="px-4 py-2 text-xs font-bold text-gray-500 bg-gray-100 rounded-lg border border-gray-200 select-none">
@@ -498,8 +498,8 @@ export default function InvestmentLoansPage({
                             <DialogHeader>
                                 <DialogTitle className="text-base font-bold text-[#1F2937]">
                                     {settleModalLoan.direction === 'receivable'
-                                        ? (isUrdu ? 'قرضہ واپس وصول کریں' : 'Qarza Wapas Wasool Karein (Hum Ko Lena Hai)')
-                                        : (isUrdu ? 'قرضہ واپس ادا کریں' : 'Qarza Wapas Ada Karein (Hum Ko Dena Hai)')}
+                                        ? (isUrdu ? 'قرضہ واپس وصول کریں' : 'Record Loan Recovery (Receivable)')
+                                        : (isUrdu ? 'قرضہ واپس ادا کریں' : 'Record Loan Repayment (Payable)')}
                                 </DialogTitle>
                                 <DialogDescription className="text-xs text-[#4B5563]">
                                     {settleModalLoan.direction === 'receivable' ? (isUrdu ? 'پارٹی (وصولی)' : 'Party (Lena Hai)') : (isUrdu ? 'دینے والا' : 'Dene Wala')}: {settleModalLoan.lender_name} — {isUrdu ? 'کل بقایا:' : 'Kul Baqaya:'} Rs. {formatNum(settleModalLoan.balance_due)}
@@ -597,7 +597,7 @@ export default function InvestmentLoansPage({
                                         type="submit"
                                         className="flex-1 min-h-[40px] px-4 py-2 text-xs font-bold text-white bg-[#14532d] hover:bg-[#166534] rounded-lg shadow-xs transition-colors cursor-pointer"
                                     >
-                                        {settleModalLoan.direction === 'receivable' ? (isUrdu ? 'وصول ریکارڈ کریں' : 'Wasool Record Karein') : (isUrdu ? 'واپس ادا کریں' : 'Wapas Ada Karein')}
+                                        {settleModalLoan.direction === 'receivable' ? (isUrdu ? 'وصول ریکارڈ کریں' : 'Record Collection') : (isUrdu ? 'واپس ادا کریں' : 'Record Repayment')}
                                     </button>
                                 </div>
                             </form>

@@ -46,22 +46,22 @@ export default function InvestmentHeader({
         {
             id: 'partners',
             href: '/investment/partners',
-            title: isUrdu ? 'پارٹنرز (حصہ دار)' : 'Partners (Hissedar)',
+            title: isUrdu ? 'پارٹنرز (حصہ دار)' : 'Partners',
         },
         {
             id: 'loans',
             href: '/investment/loans',
-            title: isUrdu ? 'قرضہ (Loans)' : 'Qarza (Loans)',
+            title: isUrdu ? 'قرضہ (Loans)' : 'Loans',
         },
         {
             id: 'surplus',
             href: '/investment/surplus',
-            title: isUrdu ? 'سرمایہ کاری (Investments)' : 'Sarmayakari (Investments)',
+            title: isUrdu ? 'سرمایہ کاری (Investments)' : 'Investments',
         },
         {
             id: 'audit',
             href: '/investment/audit',
-            title: isUrdu ? 'ریکارڈ (Audit)' : 'Record (Audit)',
+            title: isUrdu ? 'ریکارڈ (Audit)' : 'Audit Log',
         },
     ];
 
@@ -76,7 +76,7 @@ export default function InvestmentHeader({
                             {isUrdu ? 'سرمایہ و قرضہ لیجر' : 'Investment & Capital Ledger'}
                         </h1>
                         <p className="text-emerald-100/80 text-xs font-medium mt-0.5">
-                            {isUrdu ? 'سرمایہ، قرضہ اور سرمایہ کاری کھاتہ' : 'Sarmaya, Qarza aur Sarmayakari Khata'}
+                            {isUrdu ? 'سرمایہ، قرضہ اور سرمایہ کاری کھاتہ' : 'Capital, Loans and Investment Management'}
                         </p>
                     </div>
 
@@ -87,7 +87,7 @@ export default function InvestmentHeader({
                             className="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-50 text-[#1F2937] border border-amber-300 hover:bg-amber-100 transition-colors flex items-center gap-2 cursor-pointer select-none self-center"
                         >
                             <span className="size-2 rounded-full bg-amber-600 animate-pulse" />
-                            <span>{pendingApprovalsCount} {isUrdu ? 'منظوریاں باقی' : 'Approval Baqi'}</span>
+                            <span>{pendingApprovalsCount} {isUrdu ? 'منظوریاں باقی' : 'Pending Approvals'}</span>
                             <Icon name="ArrowRight" className="size-3 text-[#374151]" />
                         </Link>
                     )}
@@ -102,7 +102,7 @@ export default function InvestmentHeader({
                             className="min-h-[36px] px-4 py-1.5 rounded-xl text-xs sm:text-sm font-bold bg-white text-[#14532d] hover:bg-emerald-50 border border-white shadow-xs transition-colors flex items-center gap-2 cursor-pointer"
                         >
                             <Icon name="Plus" className="size-4 stroke-[3] text-[#14532d]" />
-                            <span>{isUrdu ? 'نئی اینٹری' : 'Nayi Entry'}</span>
+                            <span>{isUrdu ? 'نئی اینٹری' : 'New Entry'}</span>
                         </button>
                     </div>
                 )}

@@ -206,7 +206,7 @@ export function GlobalSearchDialog({ open, onOpenChange }: GlobalSearchDialogPro
                     {merchants.length > 0 && (
                         <div className="py-2">
                             <div className="px-3 py-1 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                                {isUrdu ? 'گاہک / مرچنٹ (Customers)' : 'Gahak / Customers'}
+                                {isUrdu ? 'گاہک / مرچنٹ (Customers)' : 'Customers'}
                             </div>
                             <div className="space-y-0.5 mt-1">
                                 {merchants.map(merchant => {
@@ -252,7 +252,7 @@ export function GlobalSearchDialog({ open, onOpenChange }: GlobalSearchDialogPro
                     {farmers.length > 0 && (
                         <div className="py-2">
                             <div className="px-3 py-1 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                                {isUrdu ? 'کسان / زمیندار (Farmers)' : 'Farmers (Kisan)'}
+                                {isUrdu ? 'کسان / زمیندار (Farmers)' : 'Farmers'}
                             </div>
                             <div className="space-y-0.5 mt-1">
                                 {farmers.map(farmer => {

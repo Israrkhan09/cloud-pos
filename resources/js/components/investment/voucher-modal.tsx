@@ -79,7 +79,7 @@ export default function VoucherModal({
                             <span>{isUrdu ? 'انویسٹمنٹ پرچی' : 'Investment Record Parchi'}</span>
                         </DialogTitle>
                         <DialogDescription className="text-xs text-[#374151]">
-                            Parchi No: <span className="font-bold text-[#1F2937]">{voucher.ref_no}</span>
+                            Voucher No: <span className="font-bold text-[#1F2937]">{voucher.ref_no}</span>
                         </DialogDescription>
                     </div>
                 </div>
@@ -110,7 +110,7 @@ export default function VoucherModal({
                     <div className="grid grid-cols-2 gap-4 text-xs bg-gray-50/70 p-4 rounded-xl border border-gray-200">
                         <div>
                             <span className="text-[#374151] block font-semibold mb-0.5">
-                                Party / Khata:
+                                Party / Account:
                             </span>
                             <span className="font-bold text-sm text-[#1F2937] block">
                                 {voucher.party}
@@ -211,7 +211,7 @@ export default function VoucherModal({
                             className="min-h-[40px] px-3.5 py-2 text-xs font-bold text-white bg-[#14532d] hover:bg-[#166534] rounded-lg shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
                         >
                             <Icon name="Printer" className="size-4" />
-                            <span>Print Parchi</span>
+                            <span>Print Voucher</span>
                         </button>
 
                         <button

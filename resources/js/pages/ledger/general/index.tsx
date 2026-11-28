@@ -322,10 +322,10 @@ export default function GeneralLedgerIndex({ date, dayMonth, rows, summary }: Pr
                 <table className="w-full text-[10px] border border-black border-collapse mb-3">
                     <thead>
                         <tr className="bg-gray-100 border-b border-black font-bold">
-                            <th className="p-1 text-start border-e border-black">Khata / Naam</th>
-                            <th className="p-1 text-end border-e border-black">Jama</th>
-                            <th className="p-1 text-end border-e border-black">Banam</th>
-                            <th className="p-1 text-end">Baqaya</th>
+                            <th className="p-1 text-start border-e border-black">Account / Name</th>
+                            <th className="p-1 text-end border-e border-black">Credit</th>
+                            <th className="p-1 text-end border-e border-black">Debit</th>
+                            <th className="p-1 text-end">Balance</th>
                         </tr>
                     </thead>
                     <tbody>

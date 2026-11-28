@@ -61,7 +61,7 @@ export default function BreakdownModal({ isOpen, onClose, data }: BreakdownModal
                 {/* Body Content */}
                 <div className="py-3 space-y-3">
                     <span className="text-xs font-bold text-[#374151] tracking-wide uppercase block">
-                        Tafseel (Hisab Kitab):
+                        Details (Statement Breakdown):
                     </span>
 
                     {/* Breakdown Items List */}

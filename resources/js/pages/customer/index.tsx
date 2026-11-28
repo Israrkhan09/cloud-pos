@@ -52,13 +52,13 @@ interface Props {
 }
 
 const CUSTOMER_TYPE_OPTIONS = [
-    { value: 'Dukandar', label: 'Dukandar (Shopkeeper)' },
+    { value: 'Dukandar', label: 'Shopkeeper' },
     { value: 'Wholesaler', label: 'Wholesaler' },
     { value: 'Hotel', label: 'Hotel / Restaurant' },
-    { value: 'Mashakhor', label: 'Mashakhor (Mandi Buyer)' },
+    { value: 'Mashakhor', label: 'Retail / Wholesale Buyer' },
     { value: 'Superstore', label: 'Superstore / Mart' },
-    { value: 'Catering', label: 'Catering / Shaadi Hall' },
-    { value: 'Aam_gahak', label: 'Aam Gahak (Walk-in)' },
+    { value: 'Catering', label: 'Catering / Event Hall' },
+    { value: 'Aam_gahak', label: 'Walk-in Customer' },
 ];
 
 export default function CustomerIndex({ customers = [], filters }: Props) {
@@ -89,8 +89,8 @@ export default function CustomerIndex({ customers = [], filters }: Props) {
     const [khataData, setKhataData] = useState<KhataData | null>(null);
 
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: isUrdu ? 'روزانہ کام' : 'Daily Kaam', href: '#' },
-        { title: isUrdu ? 'گاہک' : 'Gahak (Customers)', href: '/customers' },
+        { title: isUrdu ? 'روزانہ کام' : 'Daily Operations', href: '#' },
+        { title: isUrdu ? 'گاہک' : 'Customers', href: '/customers' },
     ];
 
     // Filtered customers list
@@ -146,7 +146,7 @@ export default function CustomerIndex({ customers = [], filters }: Props) {
         e.preventDefault();
 
         if (!formName.trim()) {
-            toast.error(isUrdu ? 'براہ کرم گاہک یا دکان کا نام درج کریں۔' : 'Baraye meherbani gahak / dukan ka naam darj karein.');
+            toast.error(isUrdu ? 'براہ کرم گاہک یا دکان کا نام درج کریں۔' : 'Please enter customer or shop name.');
             return;
         }
 
@@ -168,11 +168,11 @@ export default function CustomerIndex({ customers = [], filters }: Props) {
                 onSuccess: () => {
                     setSubmitting(false);
                     closeFormModal();
-                    toast.success(isUrdu ? 'گاہک کی معلومات کامیابی سے محفوظ ہو گئیں۔' : 'Gahak ki maloomat mehfooz ho gayi.');
+                    toast.success(isUrdu ? 'گاہک کی معلومات کامیابی سے محفوظ ہو گئیں۔' : 'Customer details saved successfully.');
                 },
                 onError: () => {
                     setSubmitting(false);
-                    toast.error(isUrdu ? 'محفوظ کرنے میں خرابی پیش آئی۔' : 'Save karne mein masla pesh aaya.');
+                    toast.error(isUrdu ? 'محفوظ کرنے میں خرابی پیش آئی۔' : 'Failed to save customer details.');
                 },
             });
         } else {
@@ -181,11 +181,11 @@ export default function CustomerIndex({ customers = [], filters }: Props) {
                 onSuccess: () => {
                     setSubmitting(false);
                     closeFormModal();
-                    toast.success(isUrdu ? 'نیا گاہک کامیابی سے شامل ہو گیا۔' : 'Naya gahak kamyabi se shamil ho gaya.');
+                    toast.success(isUrdu ? 'نیا گاہک کامیابی سے شامل ہو گیا۔' : 'New customer added successfully.');
                 },
                 onError: () => {
                     setSubmitting(false);
-                    toast.error(isUrdu ? 'محفوظ کرنے میں خرابی پیش آئی۔' : 'Save karne mein masla pesh aaya.');
+                    toast.error(isUrdu ? 'محفوظ کرنے میں خرابی پیش آئی۔' : 'Failed to save customer details.');
                 },
             });
         }
@@ -205,7 +205,7 @@ export default function CustomerIndex({ customers = [], filters }: Props) {
             })
             .catch(() => {
                 setKhataLoading(false);
-                toast.error(isUrdu ? 'کھاتہ لوڈ کرنے میں مسئلہ پیش آیا۔' : 'Khata load karne mein masla pesh aaya.');
+                toast.error(isUrdu ? 'کھاتہ لوڈ کرنے میں مسئلہ پیش آیا۔' : 'Failed to load ledger records.');
             });
     }
 
@@ -224,7 +224,7 @@ export default function CustomerIndex({ customers = [], filters }: Props) {
                 {/* Green Header Banner */}
                 <MandiPageHeader
                     title={isUrdu ? 'کسٹمر مینجمنٹ' : 'Customer Management'}
-                    subtitle={isUrdu ? 'گاہکوں کے رابطے، ادھار کی حدود (کریڈٹ لمیٹ)، اور کل بقایا' : 'Gahakon ke rabtay, udhaar ki hudood (credit limit), aur kul baqaya'}
+                    subtitle={isUrdu ? 'گاہکوں کے رابطے، ادھار کی حدود (کریڈٹ لمیٹ)، اور کل بقایا' : 'Customer directory, credit limits, and outstanding balances'}
                     isUrdu={isUrdu}
                 >
                     <button
@@ -233,7 +233,7 @@ export default function CustomerIndex({ customers = [], filters }: Props) {
                         className="min-h-[40px] h-10 px-4 rounded-xl bg-white text-[#14532d] hover:bg-emerald-50 text-xs md:text-sm font-bold shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
                     >
                         <Icon name="Plus" />
-                        <span>{isUrdu ? 'نیا گاہک شامل کریں' : 'Naya Gahak Shamil Karein'}</span>
+                        <span>{isUrdu ? 'نیا گاہک شامل کریں' : 'Add New Customer'}</span>
                     </button>
                 </MandiPageHeader>
 
@@ -248,7 +248,7 @@ export default function CustomerIndex({ customers = [], filters }: Props) {
                                 type="text"
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
-                                placeholder={isUrdu ? 'گاہک کا نام، فون یا علاقہ تلاش کریں...' : 'Gahak ka naam, phone ya ilaqa talash karein...'}
+                                placeholder={isUrdu ? 'گاہک کا نام، فون یا علاقہ تلاش کریں...' : 'Search customer by name, phone or area...'}
                                 className="w-full h-10 px-3.5 rounded-xl border border-gray-200 text-xs md:text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#1e713e] focus:ring-1 focus:ring-[#1e713e] transition-all bg-white"
                             />
                             <button
@@ -269,7 +269,7 @@ export default function CustomerIndex({ customers = [], filters }: Props) {
                                     : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
                             }`}
                         >
-                            {isUrdu ? 'صرف بقایا ادھار والے گاہک' : 'Sirf Baqaya Udhaar Wale Gahak'}
+                            {isUrdu ? 'صرف بقایا ادھار والے گاہک' : 'Customers with Due Balance Only'}
                         </button>
                     </div>
 
@@ -280,22 +280,22 @@ export default function CustomerIndex({ customers = [], filters }: Props) {
                                 <thead>
                                     <tr className="bg-[#f8faf8] border-b border-gray-200 text-gray-700 font-bold">
                                         <th className="py-3 px-3.5 text-start whitespace-nowrap">
-                                            {isUrdu ? 'گاہک کا نام' : 'Gahak Ka Naam'}
+                                            {isUrdu ? 'گاہک کا نام' : 'Customer Name'}
                                         </th>
                                         <th className="py-3 px-3 text-start whitespace-nowrap">
                                             {isUrdu ? 'فون' : 'Phone'}
                                         </th>
                                         <th className="py-3 px-3 text-start whitespace-nowrap">
-                                            {isUrdu ? 'علاقہ / شہر' : 'Ilaqa / City'}
+                                            {isUrdu ? 'علاقہ / شہر' : 'Area / City'}
                                         </th>
                                         <th className="py-3 px-3 text-start whitespace-nowrap">
-                                            {isUrdu ? 'قسم' : 'Qism'}
+                                            {isUrdu ? 'قسم' : 'Type'}
                                         </th>
                                         <th className="py-3 px-3 text-end whitespace-nowrap">
                                             {isUrdu ? 'کریڈٹ لمیٹ' : 'Credit Limit'}
                                         </th>
                                         <th className="py-3 px-3 text-end whitespace-nowrap">
-                                            {isUrdu ? 'بقایا ادھار (لینا)' : 'Baqaya Udhaar (Lena)'}
+                                            {isUrdu ? 'بقایا ادھار (لینا)' : 'Receivable Balance'}
                                         </th>
                                         <th className="py-3 px-3.5 text-center whitespace-nowrap">
                                             {isUrdu ? 'ایکشنز' : 'Actions'}
@@ -306,7 +306,7 @@ export default function CustomerIndex({ customers = [], filters }: Props) {
                                     {filteredCustomers.length === 0 ? (
                                         <tr>
                                             <td colSpan={7} className="py-12 text-center text-gray-400 text-sm">
-                                                {isUrdu ? 'کوئی گاہک نہیں ملا' : 'Koi gahak nahi mila'}
+                                                {isUrdu ? 'کوئی گاہک نہیں ملا' : 'No customers found'}
                                             </td>
                                         </tr>
                                     ) : (
@@ -365,7 +365,7 @@ export default function CustomerIndex({ customers = [], filters }: Props) {
                                                                 onClick={() => openKhataModal(c)}
                                                                 className="px-2.5 py-1 rounded-lg border border-gray-200 bg-white hover:bg-[#eef7f0] hover:border-[#1e713e]/40 hover:text-[#14532d] text-gray-700 text-[11px] font-semibold transition-colors cursor-pointer"
                                                             >
-                                                                {isUrdu ? 'کھاتہ دیکھیں' : 'Khata Dekhein'}
+                                                                {isUrdu ? 'کھاتہ دیکھیں' : 'View Ledger'}
                                                             </button>
                                                             <button
                                                                 type="button"
@@ -396,8 +396,8 @@ export default function CustomerIndex({ customers = [], filters }: Props) {
                         <div className="bg-[#1e713e] text-white px-5 py-3.5 flex items-center justify-between">
                             <h3 className="text-base font-bold">
                                 {editingCustomer
-                                    ? (isUrdu ? 'گاہک کی معلومات میں ترمیم' : 'Edit Gahak')
-                                    : (isUrdu ? 'نیا گاہک شامل کریں' : 'Naya Gahak Shamil Karein')}
+                                    ? (isUrdu ? 'گاہک کی معلومات میں ترمیم' : 'Edit Customer')
+                                    : (isUrdu ? 'نیا گاہک شامل کریں' : 'Add New Customer')}
                             </h3>
                             <button
                                 type="button"
@@ -413,14 +413,14 @@ export default function CustomerIndex({ customers = [], filters }: Props) {
                             {/* 1. Gahak / Dukan ka Naam * (required) */}
                             <div>
                                 <label className="block text-xs font-semibold text-gray-700 mb-1">
-                                    {isUrdu ? 'گاہک / دکان کا نام *' : 'Gahak / Dukan ka Naam *'}
+                                    {isUrdu ? 'گاہک / دکان کا نام *' : 'Customer / Shop Name *'}
                                 </label>
                                 <input
                                     type="text"
                                     required
                                     value={formName}
                                     onChange={e => setFormName(e.target.value)}
-                                    placeholder={isUrdu ? 'مثلاً: حاجی بشیر سبزی اسٹور' : 'Maslan: Haji Bashir Sabzi Store'}
+                                    placeholder={isUrdu ? 'مثلاً: حاجی بشیر سبزی اسٹور' : 'e.g. Haji Bashir Store'}
                                     className="w-full h-10 px-3 rounded-xl border border-gray-200 text-xs md:text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#1e713e] focus:ring-1 focus:ring-[#1e713e] transition-all bg-white"
                                 />
                             </div>
@@ -441,13 +441,13 @@ export default function CustomerIndex({ customers = [], filters }: Props) {
                                 </div>
                                 <div>
                                     <label className="block text-xs font-semibold text-gray-700 mb-1">
-                                        {isUrdu ? 'علاقہ / منڈی ایریا' : 'Ilaqa / Mandi Area'}
+                                        {isUrdu ? 'علاقہ / منڈی ایریا' : 'Area / Market'}
                                     </label>
                                     <input
                                         type="text"
                                         value={formCity}
                                         onChange={e => setFormCity(e.target.value)}
-                                        placeholder={isUrdu ? 'پرانی منڈی، بائی پاس' : 'Purani Mandi, Bypass'}
+                                        placeholder={isUrdu ? 'پرانی منڈی، بائی پاس' : 'Main Market, Bypass'}
                                         className="w-full h-10 px-3 rounded-xl border border-gray-200 text-xs md:text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#1e713e] focus:ring-1 focus:ring-[#1e713e] transition-all bg-white"
                                     />
                                 </div>
@@ -457,7 +457,7 @@ export default function CustomerIndex({ customers = [], filters }: Props) {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
                                     <label className="block text-xs font-semibold text-gray-700 mb-1">
-                                        {isUrdu ? 'قسم (Customer Type)' : 'Qism (Customer Type)'}
+                                        {isUrdu ? 'قسم (Customer Type)' : 'Customer Type'}
                                     </label>
                                     <select
                                         value={formType}
@@ -494,7 +494,7 @@ export default function CustomerIndex({ customers = [], filters }: Props) {
                             {!editingCustomer && (
                                 <div>
                                     <label className="block text-xs font-semibold text-gray-700 mb-1">
-                                        {isUrdu ? 'پرانا / سابقہ بقایا (Opening Balance Rs)' : 'Purana / Sabqa Baqaya (Opening Balance Rs)'}
+                                        {isUrdu ? 'پرانا / سابقہ بقایا (Opening Balance Rs)' : 'Opening Balance (Rs)'}
                                     </label>
                                     <input
                                         type="number"
@@ -510,13 +510,13 @@ export default function CustomerIndex({ customers = [], filters }: Props) {
                             {/* 7. Wazaahat / Notes */}
                             <div>
                                 <label className="block text-xs font-semibold text-gray-700 mb-1">
-                                    {isUrdu ? 'وضاحت / نوٹس' : 'Wazaahat / Notes'}
+                                    {isUrdu ? 'وضاحت / نوٹس' : 'Notes / Remarks'}
                                 </label>
                                 <textarea
                                     rows={2}
                                     value={formNotes}
                                     onChange={e => setFormNotes(e.target.value)}
-                                    placeholder={isUrdu ? 'گاہک کی کوئی خاص تفصیل...' : 'Gahak ki koi khas tafseel...'}
+                                    placeholder={isUrdu ? 'گاہک کی کوئی خاص تفصیل...' : 'Customer notes or remarks...'}
                                     className="w-full p-2.5 rounded-xl border border-gray-200 text-xs md:text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#1e713e] focus:ring-1 focus:ring-[#1e713e] transition-all bg-white resize-none"
                                 />
                             </div>
@@ -528,7 +528,7 @@ export default function CustomerIndex({ customers = [], filters }: Props) {
                                     onClick={closeFormModal}
                                     className="px-4 h-10 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 font-semibold text-xs md:text-sm transition-colors cursor-pointer"
                                 >
-                                    {isUrdu ? 'منسوخ' : 'Mansookh'}
+                                    {isUrdu ? 'منسوخ' : 'Cancel'}
                                 </button>
                                 <button
                                     type="submit"
@@ -537,7 +537,7 @@ export default function CustomerIndex({ customers = [], filters }: Props) {
                                 >
                                     {submitting
                                         ? (isUrdu ? 'محفوظ ہو رہا ہے...' : 'Saving...')
-                                        : (isUrdu ? 'سیو کریں' : 'Save Karein')}
+                                        : (isUrdu ? 'سیو کریں' : 'Save')}
                                 </button>
                             </div>
                         </form>
@@ -572,7 +572,7 @@ export default function CustomerIndex({ customers = [], filters }: Props) {
                         <div className="p-4 bg-[#f8faf8] border-b border-gray-200 grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div className="bg-white p-3 rounded-xl border border-gray-200">
                                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                                    {isUrdu ? 'موجودہ بقایا ادھار' : 'MOJOODA BAQAYA UDHAAR'}
+                                    {isUrdu ? 'موجودہ بقایا ادھار' : 'CURRENT DUE BALANCE'}
                                 </span>
                                 <span className="text-base font-extrabold text-red-600 mt-0.5 block tabular-nums">
                                     Rs {Number(khataCustomer.current_balance || 0).toLocaleString()}
@@ -590,7 +590,7 @@ export default function CustomerIndex({ customers = [], filters }: Props) {
 
                             <div className="bg-white p-3 rounded-xl border border-gray-200">
                                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                                    {isUrdu ? 'قسم' : 'QISM'}
+                                    {isUrdu ? 'قسم' : 'TYPE'}
                                 </span>
                                 <span className="text-sm font-bold text-gray-800 mt-0.5 block">
                                     {khataCustomer.customer_type}
@@ -601,7 +601,7 @@ export default function CustomerIndex({ customers = [], filters }: Props) {
                         {/* Table: Taza Tareen Khata Entries */}
                         <div className="p-4 overflow-y-auto space-y-2 flex-1">
                             <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                {isUrdu ? 'تازہ ترین کھاتہ انٹریز' : 'Taza Tareen Khata Entries'}
+                                {isUrdu ? 'تازہ ترین کھاتہ انٹریز' : 'Recent Ledger Entries'}
                             </h4>
 
                             {khataLoading ? (
@@ -610,7 +610,7 @@ export default function CustomerIndex({ customers = [], filters }: Props) {
                                 </div>
                             ) : !khataData || khataData.entries.length === 0 ? (
                                 <div className="py-8 text-center text-gray-400 text-xs">
-                                    {isUrdu ? 'کوئی کھاتہ انٹری موجود نہیں' : 'Koi khata entry mojood nahi.'}
+                                    {isUrdu ? 'کوئی کھاتہ انٹری موجود نہیں' : 'No ledger entries found.'}
                                 </div>
                             ) : (
                                 <div className="overflow-x-auto rounded-xl border border-gray-200">
@@ -618,19 +618,19 @@ export default function CustomerIndex({ customers = [], filters }: Props) {
                                         <thead>
                                             <tr className="bg-[#f8faf8] border-b border-gray-200 text-gray-700 font-bold">
                                                 <th className="py-2 px-2.5 text-start whitespace-nowrap">
-                                                    {isUrdu ? 'تاریخ' : 'Tareekh'}
+                                                    {isUrdu ? 'تاریخ' : 'Date'}
                                                 </th>
                                                 <th className="py-2 px-2.5 text-start whitespace-nowrap">
-                                                    {isUrdu ? 'تفصیل' : 'Tafseel'}
+                                                    {isUrdu ? 'تفصیل' : 'Description'}
                                                 </th>
                                                 <th className="py-2 px-2.5 text-end whitespace-nowrap text-red-600">
-                                                    {isUrdu ? 'بنام (Debit)' : 'Banam (Debit)'}
+                                                    {isUrdu ? 'بنام (Debit)' : 'Debit (Receivable)'}
                                                 </th>
                                                 <th className="py-2 px-2.5 text-end whitespace-nowrap text-emerald-700">
-                                                    {isUrdu ? 'جمع (Credit)' : 'Jama (Credit)'}
+                                                    {isUrdu ? 'جمع (Credit)' : 'Credit (Received)'}
                                                 </th>
                                                 <th className="py-2 px-2.5 text-end whitespace-nowrap">
-                                                    {isUrdu ? 'بقایا' : 'Baqaya'}
+                                                    {isUrdu ? 'بقایا' : 'Balance'}
                                                 </th>
                                             </tr>
                                         </thead>
@@ -667,7 +667,7 @@ export default function CustomerIndex({ customers = [], filters }: Props) {
                                 onClick={closeKhataModal}
                                 className="px-5 h-9 rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold text-xs md:text-sm transition-colors cursor-pointer"
                             >
-                                {isUrdu ? 'بند کریں' : 'Band Karein'}
+                                {isUrdu ? 'بند کریں' : 'Close'}
                             </button>
                         </div>
                     </div>

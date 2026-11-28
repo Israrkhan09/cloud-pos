@@ -194,7 +194,7 @@ export default function ChequesPage() {
                                 <thead>
                                     <tr className="border-y border-gray-100 dark:border-border bg-gray-50/60 dark:bg-muted/30">
                                         <th className="py-3 px-4 text-start text-xs font-semibold text-gray-600 dark:text-gray-400">
-                                            {isUrdu ? 'تاریخ' : 'Tareekh'}
+                                            {isUrdu ? 'تاریخ' : 'Date'}
                                         </th>
                                         <th className="py-3 px-4 text-start text-xs font-semibold text-gray-600 dark:text-gray-400">
                                             {isUrdu ? 'پارٹی' : 'Party'}

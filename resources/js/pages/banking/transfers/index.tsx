@@ -242,7 +242,7 @@ export default function DepositTransferPage() {
                                     : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                             )}
                         >
-                            {isUrdu ? 'کیش ڈپازٹ (گلہ ← بینک)' : 'Cash Deposit (Galla → Bank)'}
+                            {isUrdu ? 'کیش ڈپازٹ (گلہ ← بینک)' : 'Cash Deposit (Register → Bank)'}
                         </button>
                         <button
                             type="button"
@@ -282,7 +282,7 @@ export default function DepositTransferPage() {
                                             {isUrdu ? 'کہاں سے' : 'Kahan se'}
                                         </label>
                                         <div className="w-full px-3.5 py-2.5 text-sm bg-gray-50 dark:bg-muted/40 border border-gray-200 dark:border-border rounded-lg text-gray-800 dark:text-gray-200 font-medium">
-                                            {isUrdu ? 'کیش ڈراور (گلہ)' : 'Cash Drawer (Galla)'}
+                                            {isUrdu ? 'کیش ڈراور (گلہ)' : 'Cash Drawer / Register'}
                                         </div>
                                     </div>
 
@@ -338,7 +338,7 @@ export default function DepositTransferPage() {
                                             {isUrdu ? 'کہاں جمع ہوگا' : 'Kahan jama hoga'}
                                         </label>
                                         <div className="w-full px-3.5 py-2.5 text-sm bg-gray-50 dark:bg-muted/40 border border-gray-200 dark:border-border rounded-lg text-gray-800 dark:text-gray-200 font-medium">
-                                            {isUrdu ? 'کیش ڈراور (گلہ)' : 'Cash Drawer (Galla)'}
+                                            {isUrdu ? 'کیش ڈراور (گلہ)' : 'Cash Drawer / Register'}
                                         </div>
                                     </div>
                                 </>
@@ -418,7 +418,7 @@ export default function DepositTransferPage() {
                             {/* Tareekh with Popover */}
                             <div>
                                 <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                                    {isUrdu ? 'تاریخ' : 'Tareekh'}
+                                    {isUrdu ? 'تاریخ' : 'Date'}
                                 </label>
                                 <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                                     <PopoverTrigger asChild>

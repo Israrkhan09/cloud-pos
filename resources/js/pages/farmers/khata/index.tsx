@@ -111,7 +111,7 @@ export default function FarmerKhataIndex({
                 <MandiPageHeader
                     title={
                         <span className="flex items-center gap-2">
-                            <span>Farmer Khata</span>
+                            <span>Farmer Ledger</span>
                             <span className="font-nastaliq font-normal text-emerald-100 text-lg md:text-xl">کسان کھاتہ</span>
                         </span>
                     }
@@ -182,7 +182,7 @@ export default function FarmerKhataIndex({
                         {/* 1. Baqaya */}
                         <div className="space-y-0.5">
                             <span className="text-xs font-bold text-[#4B5563] block">
-                                Baqaya
+                                Balance
                             </span>
                             <div className="text-xl md:text-2xl font-black text-[#1F2937]">
                                 {isNegative ? `- Rs. ${absBaqaya.toLocaleString()}` : `Rs. ${absBaqaya.toLocaleString()}`}
@@ -195,7 +195,7 @@ export default function FarmerKhataIndex({
                         {/* 2. Total nag */}
                         <div className="md:ps-5 pt-3 md:pt-0 space-y-0.5">
                             <span className="text-xs font-bold text-[#4B5563] block">
-                                Total nag
+                                Total Units / Bags
                             </span>
                             <div className="text-lg md:text-xl font-black text-[#1F2937]">
                                 {summary.total_nag}
@@ -205,7 +205,7 @@ export default function FarmerKhataIndex({
                         {/* 3. Jama */}
                         <div className="md:ps-5 pt-3 md:pt-0 space-y-0.5">
                             <span className="text-xs font-bold text-[#4B5563] block">
-                                Jama
+                                Credit
                             </span>
                             <div className="text-lg md:text-xl font-black text-[#1F2937]">
                                 Rs. {Number(summary.total_jama).toLocaleString()}
@@ -215,7 +215,7 @@ export default function FarmerKhataIndex({
                         {/* 4. Banam */}
                         <div className="md:ps-5 pt-3 md:pt-0 space-y-0.5">
                             <span className="text-xs font-bold text-[#4B5563] block">
-                                Banam
+                                Debit
                             </span>
                             <div className="text-lg md:text-xl font-black text-[#1F2937]">
                                 Rs. {Number(summary.total_banam).toLocaleString()}
@@ -231,8 +231,8 @@ export default function FarmerKhataIndex({
                                     <tr className="text-[#374151] border-b border-gray-200 font-bold bg-gray-50/80 text-xs md:text-sm">
                                         <th className="px-4 py-3 text-start">Mark</th>
                                         <th className="px-4 py-3 text-end">Nag</th>
-                                        <th className="px-4 py-3 text-end">Jama</th>
-                                        <th className="px-4 py-3 text-end">Banam</th>
+                                        <th className="px-4 py-3 text-end">Credit</th>
+                                        <th className="px-4 py-3 text-end">Debit</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
@@ -325,8 +325,8 @@ export default function FarmerKhataIndex({
                         <tr className="bg-gray-100 border-b border-black font-bold">
                             <th className="p-1 text-start border-e border-black">Mark</th>
                             <th className="p-1 text-end border-e border-black">Nag</th>
-                            <th className="p-1 text-end border-e border-black">Jama</th>
-                            <th className="p-1 text-end">Banam</th>
+                            <th className="p-1 text-end border-e border-black">Credit</th>
+                            <th className="p-1 text-end">Debit</th>
                         </tr>
                     </thead>
                     <tbody>

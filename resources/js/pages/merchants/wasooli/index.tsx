@@ -112,7 +112,7 @@ export default function WasooliIndex({ rows, totals, merchants = [], receipts = 
     const [selectedMerchantId, setSelectedMerchantId] = useState<number | ''>('');
     const [amount, setAmount] = useState<string>('');
     const [paymentMethod, setPaymentMethod] = useState<'cash' | 'bank'>('cash');
-    const [selectedCashAccount, setSelectedCashAccount] = useState<string>('Mandi Naqad Galla (Cash Counter)');
+    const [selectedCashAccount, setSelectedCashAccount] = useState<string>('Main Cash Register');
     const [selectedBankAccount, setSelectedBankAccount] = useState<string>('');
     const [reference, setReference] = useState<string>('');
     const [notes, setNotes] = useState<string>('');
@@ -125,7 +125,7 @@ export default function WasooliIndex({ rows, totals, merchants = [], receipts = 
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: isUrdu ? 'روزانہ کام' : 'Daily Kaam', href: '#' },
-        { title: isUrdu ? 'وصولی' : 'Wasooli', href: '/wasooli' },
+        { title: isUrdu ? 'وصولی' : 'Payment Recovery', href: '/wasooli' },
     ];
 
     // Dropdown list for selecting any active customer to record a payment/wasooli
@@ -191,7 +191,7 @@ export default function WasooliIndex({ rows, totals, merchants = [], receipts = 
     function handleReset() {
         setSelectedMerchantId('');
         setPaymentMethod('cash');
-        setSelectedCashAccount('Mandi Naqad Galla (Cash Counter)');
+        setSelectedCashAccount('Main Cash Register');
         setSelectedBankAccount('');
         setAmount('');
         setReference('');
@@ -230,7 +230,7 @@ export default function WasooliIndex({ rows, totals, merchants = [], receipts = 
             toast.error(
                 isUrdu
                     ? `وصولی کی رقم کل بقایا (Rs. ${Number(totalOutstanding).toLocaleString()}) سے زیادہ نہیں ہو سکتی۔`
-                    : `Wasooli ki raqam baqaya (Rs. ${Number(totalOutstanding).toLocaleString()}) se zyada nahi ho sakti.`
+                    : `Recovery amount cannot exceed outstanding balance (Rs. ${Number(totalOutstanding).toLocaleString()}).`
             );
             return;
         }
@@ -240,7 +240,7 @@ export default function WasooliIndex({ rows, totals, merchants = [], receipts = 
         const accountName = paymentMethod === 'bank' ? selectedBankAccount : selectedCashAccount;
         const noteText = notes.trim()
             ? notes.trim()
-            : `Wasooli via ${paymentMethod === 'bank' ? `Bank (${selectedBankAccount})` : 'Cash'}`;
+            : `Recovery via ${paymentMethod === 'bank' ? `Bank (${selectedBankAccount})` : 'Cash'}`;
 
         router.post('/wasooli', {
             merchant_id: selectedMerchant.merchant_id,
@@ -261,8 +261,8 @@ export default function WasooliIndex({ rows, totals, merchants = [], receipts = 
                     updateAccountBalance(selectedBankAccount, numAmount);
                     addStoredTransfer({
                         id: Date.now(),
-                        title: `Merchant Wasooli -> ${selectedBankAccount}`,
-                        subtext: `${selectedDate} - Dukaan: ${selectedMerchant.name_en || selectedMerchant.name_ur || selectedMerchant.name} - Wasooli`,
+                        title: `Merchant Recovery -> ${selectedBankAccount}`,
+                        subtext: `${selectedDate} - Shop: ${selectedMerchant.name_en || selectedMerchant.name_ur || selectedMerchant.name} - Recovery`,
                         amount: numAmount,
                         date: selectedDate,
                         bankName: selectedBankAccount,
@@ -283,7 +283,7 @@ export default function WasooliIndex({ rows, totals, merchants = [], receipts = 
                 toast.error(
                     isUrdu
                         ? 'محفوظ کرنے میں خرابی پیش آئی۔'
-                        : 'Wasooli save karne mein masla pesh aaya.'
+                        : 'Failed to save payment recovery.'
                 );
             },
         });
@@ -318,8 +318,8 @@ export default function WasooliIndex({ rows, totals, merchants = [], receipts = 
     // Parse tariqa and khaata from note
     function parseReceiptMeta(note?: string | null) {
         const text = (note || '').toLowerCase();
-        let tariqa = 'Naqad';
-        let khaata = 'Mandi Naqad Galla (Cash Counter)';
+        let tariqa = 'Cash';
+        let khaata = 'Main Cash Register';
 
         if (text.includes('bank')) {
             tariqa = 'Bank';
@@ -330,8 +330,8 @@ export default function WasooliIndex({ rows, totals, merchants = [], receipts = 
                 khaata = 'Bank Account';
             }
         } else if (text.includes('cash') || text.includes('naqad')) {
-            tariqa = 'Naqad';
-            khaata = 'Mandi Naqad Galla (Cash Counter)';
+            tariqa = 'Cash';
+            khaata = 'Main Cash Register';
         }
 
         return { tariqa, khaata };
@@ -339,14 +339,14 @@ export default function WasooliIndex({ rows, totals, merchants = [], receipts = 
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={isUrdu ? 'وصولی - جے کے سی' : 'Wasooli (Recovery) - Vegetable POS'} />
+            <Head title={isUrdu ? 'وصولی - جے کے سی' : 'Payment Recovery - Vegetable POS'} />
 
             {/* Main Outer Container */}
             <div className="-mt-4 -mx-4 -mb-4 pb-28 bg-[#eef2ee] min-h-full font-sans text-gray-900" dir={isUrdu ? 'rtl' : 'ltr'}>
                 {/* Green Header Banner */}
                 <MandiPageHeader
-                    title={isUrdu ? 'وصولی (گاہک ادھار ریکوری اور جزوی ادائیگی)' : 'Wasooli (Customer Udhaar Recovery & Partial Payments)'}
-                    subtitle={isUrdu ? 'دکاندار اور گاہکوں سے ادھار کی وصولی، جزوی ادائیگی اور کھاتہ اپ ڈیٹ' : 'Dukandar aur gahakon se udhaar ki wasooli, juzwi adaigi aur khata update'}
+                    title={isUrdu ? 'وصولی (گاہک ادھار ریکوری اور جزوی ادائیگی)' : 'Payment Recovery (Customer Credit & Partial Collections)'}
+                    subtitle={isUrdu ? 'دکاندار اور گاہکوں سے ادھار کی وصولی، جزوی ادائیگی اور کھاتہ اپ ڈیٹ' : 'Customer credit recovery, partial payments and ledger updates'}
                     isUrdu={isUrdu}
                 />
 
@@ -357,14 +357,14 @@ export default function WasooliIndex({ rows, totals, merchants = [], receipts = 
                         {/* LEFT CARD: NAYI WASOOLI ENTRY */}
                         <div className="lg:col-span-4 bg-white rounded-2xl border border-gray-200/90 shadow-xs p-4 md:p-5 space-y-3.5">
                             <h2 className="text-base font-bold text-gray-900 tracking-tight pb-1 border-b border-gray-100">
-                                {isUrdu ? 'نئی وصولی اینٹری' : 'Nayi Wasooli Entry'}
+                                {isUrdu ? 'نئی وصولی اینٹری' : 'New Recovery Entry'}
                             </h2>
 
                             <form onSubmit={handleSave} className="space-y-3">
                                 {/* 1. Gahak Muntakhib Karein */}
                                 <div>
                                     <label className="block text-xs font-semibold text-gray-700 mb-1">
-                                        {isUrdu ? 'گاہک منتخب کریں:' : 'Gahak Muntakhib Karein:'}
+                                        {isUrdu ? 'گاہک منتخب کریں:' : 'Select Customer:'}
                                     </label>
                                     <select
                                         value={selectedMerchantId}
@@ -376,7 +376,7 @@ export default function WasooliIndex({ rows, totals, merchants = [], receipts = 
                                         className="w-full min-h-[40px] h-10 rounded-xl border border-gray-200 px-2.5 text-xs font-medium bg-white text-gray-900 focus:outline-none focus:border-[#1e713e] focus:ring-1 focus:ring-[#1e713e] transition-all cursor-pointer"
                                     >
                                         <option value="">
-                                            {isUrdu ? 'گاہک چنیں...' : 'Gahak chunein...'}
+                                            {isUrdu ? 'گاہک چنیں...' : 'Choose customer...'}
                                         </option>
                                         {dropdownMerchants.map(m => {
                                             const inRow = rows.find(r => r.merchant_id === m.id);
@@ -398,7 +398,7 @@ export default function WasooliIndex({ rows, totals, merchants = [], receipts = 
                                     {selectedMerchant && (
                                         <div className="mt-1.5 p-2 rounded-lg bg-[#eef7f0] border border-[#1e713e]/20 flex items-center justify-between text-xs">
                                             <span className="text-gray-600 font-medium">
-                                                {isUrdu ? 'بقایا (ادھار):' : 'Baqaya (Udhaar):'}
+                                                {isUrdu ? 'بقایا (ادھار):' : 'Outstanding Balance:'}
                                             </span>
                                             <span className="font-bold text-[#14532d] tabular-nums text-xs">
                                                 Rs. {Number(totalOutstanding).toLocaleString()}
@@ -407,10 +407,10 @@ export default function WasooliIndex({ rows, totals, merchants = [], receipts = 
                                     )}
                                 </div>
 
-                                {/* 2. Wasool Shuda Raqam (Rs) */}
+                                {/* 2. Amount Received (Rs) */}
                                 <div>
                                     <label className="block text-xs font-semibold text-gray-700 mb-1">
-                                        {isUrdu ? 'وصول شدہ رقم (Rs):' : 'Wasool Shuda Raqam (Rs):'}
+                                        {isUrdu ? 'وصول شدہ رقم (Rs):' : 'Amount Received (Rs):'}
                                     </label>
                                     <div className="relative">
                                         <input
@@ -463,17 +463,17 @@ export default function WasooliIndex({ rows, totals, merchants = [], receipts = 
                                                 <p className="text-[10px] text-red-600 font-semibold">
                                                     {isUrdu
                                                         ? `وصولی بقایا سے زیادہ نہیں ہو سکتی!`
-                                                        : `Wasooli baqaya se zyada nahi ho sakti!`}
+                                                        : `Recovery cannot exceed balance due!`}
                                                 </p>
                                             )}
                                         </div>
                                     )}
                                 </div>
 
-                                {/* 3. Tariqa-e-Adaigi (Sirf Cash aur Bank) */}
+                                {/* 3. Payment Method */}
                                 <div>
                                     <label className="block text-xs font-semibold text-gray-700 mb-1">
-                                        {isUrdu ? 'طریقہ ادائیگی:' : 'Tariqa-e-Adaigi:'}
+                                        {isUrdu ? 'طریقہ ادائیگی:' : 'Payment Method:'}
                                     </label>
                                     <div className="grid grid-cols-2 gap-2">
                                         <button
@@ -485,7 +485,7 @@ export default function WasooliIndex({ rows, totals, merchants = [], receipts = 
                                                     : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
                                             }`}
                                         >
-                                            {isUrdu ? 'نقد (Cash)' : 'Naqad (Cash)'}
+                                            {isUrdu ? 'نقد (Cash)' : 'Cash'}
                                         </button>
 
                                         <button
@@ -502,10 +502,10 @@ export default function WasooliIndex({ rows, totals, merchants = [], receipts = 
                                     </div>
                                 </div>
 
-                                {/* 4. Khaata (Account) */}
+                                {/* 4. Account */}
                                 <div>
                                     <label className="block text-xs font-semibold text-gray-700 mb-1">
-                                        {isUrdu ? 'کھاتہ (Account):' : 'Khaata (Account):'}
+                                        {isUrdu ? 'کھاتہ (Account):' : 'Account:'}
                                     </label>
                                     {paymentMethod === 'cash' ? (
                                         <select
@@ -514,7 +514,7 @@ export default function WasooliIndex({ rows, totals, merchants = [], receipts = 
                                             className="w-full min-h-[40px] h-10 rounded-xl border border-gray-200 px-2.5 text-xs font-medium bg-white text-gray-900 focus:outline-none focus:border-[#1e713e] focus:ring-1 focus:ring-[#1e713e] cursor-pointer"
                                         >
                                             <option value="Mandi Naqad Galla (Cash Counter)">
-                                                Mandi Naqad Galla (Cash Counter)
+                                                Cash Counter
                                             </option>
                                         </select>
                                     ) : (
@@ -545,7 +545,7 @@ export default function WasooliIndex({ rows, totals, merchants = [], receipts = 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                     <div>
                                         <label className="block text-xs font-semibold text-gray-700 mb-1">
-                                            {isUrdu ? 'تاریخ:' : 'Tareekh:'}
+                                            {isUrdu ? 'تاریخ:' : 'Date:'}
                                         </label>
                                         <input
                                             type="date"
@@ -570,16 +570,16 @@ export default function WasooliIndex({ rows, totals, merchants = [], receipts = 
                                     </div>
                                 </div>
 
-                                {/* 6. Tafseel (Notes) */}
+                                {/* 6. Notes */}
                                 <div>
                                     <label className="block text-xs font-semibold text-gray-700 mb-1">
-                                        {isUrdu ? 'تفصیل (نوٹس):' : 'Tafseel (Notes):'}
+                                        {isUrdu ? 'تفصیل (نوٹس):' : 'Notes / Remarks:'}
                                     </label>
                                     <textarea
                                         rows={2}
                                         value={notes}
                                         onChange={e => setNotes(e.target.value)}
-                                        placeholder={isUrdu ? 'وصولی کی کوئی خاص وجہ یا تفصیل...' : 'Wasooli ki koi khas wajah ya tafseel...'}
+                                        placeholder={isUrdu ? 'وصولی کی کوئی خاص وجہ یا تفصیل...' : 'Notes or remarks about this collection...'}
                                         className="w-full p-2 rounded-xl border border-gray-200 text-xs text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#1e713e] focus:ring-1 focus:ring-[#1e713e] transition-all bg-white resize-none"
                                     />
                                 </div>
@@ -591,7 +591,7 @@ export default function WasooliIndex({ rows, totals, merchants = [], receipts = 
                                         disabled={saving || isOverLimit || !selectedMerchant || numAmount <= 0 || (paymentMethod === 'bank' && !selectedBankAccount)}
                                         className="w-full min-h-[42px] h-10 px-5 rounded-xl bg-[#1e713e] hover:bg-[#165a31] text-white font-bold text-xs md:text-sm shadow-xs cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                     >
-                                        {saving ? (isUrdu ? 'محفوظ ہو رہا ہے...' : 'Saving...') : (isUrdu ? 'وصولی محفوظ کریں' : 'Wasooli Mehfooz Karein')}
+                                        {saving ? (isUrdu ? 'محفوظ ہو رہا ہے...' : 'Saving...') : (isUrdu ? 'وصولی محفوظ کریں' : 'Save Payment Recovery')}
                                     </button>
                                 </div>
                             </form>
@@ -602,7 +602,7 @@ export default function WasooliIndex({ rows, totals, merchants = [], receipts = 
                             {/* Card Top: Title, Search & Filter */}
                             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pb-2.5 border-b border-gray-100">
                                 <h2 className="text-base font-bold text-gray-900 tracking-tight shrink-0">
-                                    {isUrdu ? 'وصولی ریکارڈ اور تاریخ' : 'Wasooli Record & Tareekh'}
+                                    {isUrdu ? 'وصولی ریکارڈ اور تاریخ' : 'Recovery History & Records'}
                                 </h2>
 
                                 <div className="flex flex-wrap items-center gap-2">
@@ -624,7 +624,7 @@ export default function WasooliIndex({ rows, totals, merchants = [], receipts = 
                                         className="h-8 rounded-lg border border-gray-200 px-2 text-xs font-medium bg-white text-gray-900 focus:outline-none focus:border-[#1e713e] focus:ring-1 focus:ring-[#1e713e] cursor-pointer"
                                     >
                                         <option value="all">
-                                            {isUrdu ? 'تمام گاہک' : 'Tamam Gahak'}
+                                            {isUrdu ? 'تمام گاہک' : 'All Customers'}
                                         </option>
                                         {rows.map(m => (
                                             <option key={m.merchant_id} value={m.merchant_id}>
@@ -641,25 +641,25 @@ export default function WasooliIndex({ rows, totals, merchants = [], receipts = 
                                     <thead>
                                         <tr className="bg-[#f8faf8] border-b border-gray-200 text-gray-700 font-bold">
                                             <th className="py-2 px-1.5 text-start whitespace-nowrap">
-                                                {isUrdu ? 'وصولی #' : 'Wasooli #'}
+                                                {isUrdu ? 'وصولی #' : 'Recovery #'}
                                             </th>
                                             <th className="py-2 px-1.5 text-start whitespace-nowrap">
-                                                {isUrdu ? 'گاہک کا نام' : 'Gahak Ka Naam'}
+                                                {isUrdu ? 'گاہک کا نام' : 'Customer Name'}
                                             </th>
                                             <th className="py-2 px-1.5 text-start whitespace-nowrap">
-                                                {isUrdu ? 'تاریخ' : 'Tareekh'}
+                                                {isUrdu ? 'تاریخ' : 'Date'}
                                             </th>
                                             <th className="py-2 px-1.5 text-end whitespace-nowrap">
-                                                {isUrdu ? 'وصول شدہ' : 'Wasool Shuda'}
+                                                {isUrdu ? 'وصول شدہ' : 'Amount Received'}
                                             </th>
                                             <th className="py-2 px-1.5 text-center whitespace-nowrap">
-                                                {isUrdu ? 'طریقہ' : 'Tariqa'}
+                                                {isUrdu ? 'طریقہ' : 'Method'}
                                             </th>
                                             <th className="py-2 px-1.5 text-start whitespace-nowrap">
-                                                {isUrdu ? 'کھاتہ' : 'Khaata'}
+                                                {isUrdu ? 'کھاتہ' : 'Account'}
                                             </th>
                                             <th className="py-2 px-1.5 text-start whitespace-nowrap">
-                                                {isUrdu ? 'وصول کنندہ' : 'Wasool Karta'}
+                                                {isUrdu ? 'وصول کنندہ' : 'Received By'}
                                             </th>
                                         </tr>
                                     </thead>
@@ -667,7 +667,7 @@ export default function WasooliIndex({ rows, totals, merchants = [], receipts = 
                                         {filteredReceipts.length === 0 ? (
                                             <tr>
                                                 <td colSpan={7} className="py-8 text-center text-gray-400">
-                                                    {isUrdu ? 'کوئی وصولی ریکارڈ نہیں ملا' : 'Koi wasooli record nahi mila'}
+                                                    {isUrdu ? 'کوئی وصولی ریکارڈ نہیں ملا' : 'No recovery records found'}
                                                 </td>
                                             </tr>
                                         ) : (

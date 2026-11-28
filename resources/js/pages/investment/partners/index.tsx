@@ -169,7 +169,7 @@ export default function InvestmentPartnersPage({
                         {/* Number 1: Kul Sarmaya */}
                         <div className="bg-white p-4 md:p-5 rounded-xl border border-gray-200 shadow-2xs">
                             <span className="text-xs font-bold text-[#374151] uppercase tracking-wider block">
-                                {isUrdu ? 'کل سرمایہ' : 'Kul Sarmaya'}
+                                {isUrdu ? 'کل سرمایہ' : 'Total Capital'}
                             </span>
                             <span className="text-2xl font-black text-[#1F2937] block mt-2">
                                 {formatRs(summary.net_capital)}
@@ -283,7 +283,7 @@ export default function InvestmentPartnersPage({
                                             />
                                             <div className="absolute end-0 mt-1 w-64 bg-white border border-gray-200 rounded-xl shadow-xl z-30 py-1.5 font-sans animate-in fade-in slide-in-from-top-1 text-start">
                                                 <div className="px-3 py-1.5 text-[11px] font-bold text-[#4B5563] uppercase border-b border-gray-100 flex items-center justify-between">
-                                                    <span>{isUrdu ? 'پارٹی / حصہ دار منتخب کریں' : 'Party / Hissedar Chunein'}</span>
+                                                    <span>{isUrdu ? 'پارٹی / حصہ دار منتخب کریں' : 'Select Partner'}</span>
                                                     <span className="text-[10px] text-gray-400">CSV Export</span>
                                                 </div>
                                                 <button
@@ -335,11 +335,11 @@ export default function InvestmentPartnersPage({
                                     <tr className="bg-gray-50/80 border-b border-gray-200 text-[#374151] uppercase tracking-wider text-xs font-bold">
                                         <th className="py-3 px-4 text-start">{isUrdu ? 'نام' : 'Naam'}</th>
                                         <th className="py-3 px-4 text-center">{isUrdu ? 'حصہ %' : 'Hissa %'}</th>
-                                        <th className="py-3 px-4 text-end">{isUrdu ? 'پیسہ ڈالا' : 'Paisa Dala'}</th>
-                                        <th className="py-3 px-4 text-end">{isUrdu ? 'نکالا' : 'Nikala'}</th>
+                                        <th className="py-3 px-4 text-end">{isUrdu ? 'پیسہ ڈالا' : 'Capital In'}</th>
+                                        <th className="py-3 px-4 text-end">{isUrdu ? 'نکالا' : 'Drawings'}</th>
                                         <th className="py-3 px-4 text-end">{isUrdu ? 'ایکویٹی' : 'Equity'}</th>
                                         <th className="py-3 px-4 text-center">{isUrdu ? 'اس مہینے کا منافع شیئر' : 'Is Mahine Ka Munafa Share'}</th>
-                                        <th className="py-3 px-4 text-center">{isUrdu ? 'تفصیل' : 'Tafseel'}</th>
+                                        <th className="py-3 px-4 text-center">{isUrdu ? 'تفصیل' : 'Details'}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100 text-[#1F2937]">
@@ -400,16 +400,16 @@ export default function InvestmentPartnersPage({
                                                 <button
                                                     type="button"
                                                     onClick={() => setActiveBreakdown({
-                                                        title: `${partner.name} (Shareek) Khata Tafseel`,
+                                                        title: `${partner.name} (Partner) Ledger Details`,
                                                         total: partner.net_equity,
                                                         items: [
-                                                            { label: 'Paisa Dala (Capital In)', amount: partner.cap_in || partner.net_equity, note: 'Karobar mein lagaya hua kul sarmaya' },
-                                                            { label: 'Paisa Nikala (Drawings)', amount: partner.drawings, note: 'Ab tak nikali gayi manzoor shuda rakam' },
-                                                            { label: 'Mawjooda Approved Equity', amount: partner.net_equity, note: 'Approved active sarmaya' },
-                                                            { label: `Is Mahine Ka Munafa Share (${partner.profit_percentage}%)`, amount: partner.draw_preview || (partner.profit_percentage * 200), note: 'Monthly profit pool se hissa' },
-                                                            ...(partner.pending_drawings > 0 ? [{ label: 'Pending Drawing (Zir-e-Tawa)', amount: partner.pending_drawings, note: 'Malik ki manzoori baaki hai' }] : []),
+                                                            { label: 'Capital Invested (In)', amount: partner.cap_in || partner.net_equity, note: 'Total capital invested in business' },
+                                                            { label: 'Drawings Withdrawn', amount: partner.drawings, note: 'Approved total drawings withdrawn to date' },
+                                                            { label: 'Current Approved Equity', amount: partner.net_equity, note: 'Approved active net equity' },
+                                                            { label: `Current Month Profit Share (${partner.profit_percentage}%)`, amount: partner.draw_preview || (partner.profit_percentage * 200), note: 'Share from monthly profit distribution' },
+                                                            ...(partner.pending_drawings > 0 ? [{ label: 'Pending Drawing (Under Review)', amount: partner.pending_drawings, note: 'Pending owner approval' }] : []),
                                                         ],
-                                                        note: `Phone: ${partner.phone || 'N/A'} · Hissa: ${partner.profit_percentage}% · Status: ${partner.status}`,
+                                                        note: `Phone: ${partner.phone || 'N/A'} · Share: ${partner.profit_percentage}% · Status: ${partner.status}`,
                                                     })}
                                                     className="px-2.5 py-1 text-xs font-bold text-[#374151] hover:text-black bg-gray-100 hover:bg-gray-200 rounded transition-colors cursor-pointer"
                                                 >

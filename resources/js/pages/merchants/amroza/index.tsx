@@ -308,7 +308,7 @@ export default function AmrozaIndex({
 
     // Clean vegetable item name (removes parenthetical English)
     function cleanVegetableName(item: ItemOption): string {
-        const raw = item.name_en || item.name_ur || 'Sabzi';
+        const raw = item.name_en || item.name_ur || 'Item';
         return raw.replace(/\s*\(.*?\)\s*/g, '').trim();
     }
 
@@ -556,11 +556,11 @@ export default function AmrozaIndex({
         if (e) e.preventDefault();
 
         if (!selectedMerchant) {
-            toast.error(isUrdu ? 'براہ کرم خریدار (گاہک) منتخب کریں' : 'Gahak (Customer) select karein');
+            toast.error(isUrdu ? 'براہ کرم خریدار (گاہک) منتخب کریں' : 'Please select a customer');
             return;
         }
         if (cartItems.length === 0) {
-            toast.error(isUrdu ? 'کارٹ خالی ہے، سبزی شامل کریں' : 'Cart khali hai. Sabzi shamil karein');
+            toast.error(isUrdu ? 'کارٹ خالی ہے، سبزی شامل کریں' : 'Cart is empty. Please add items.');
             return;
         }
         for (const ci of cartItems) {
@@ -638,7 +638,7 @@ export default function AmrozaIndex({
                         updateAccountBalance(currentBankAcc, currentGrandTotal);
                         addStoredTransfer({
                             id: Date.now(),
-                            title: `Sale Wasooli → ${currentBankAcc}`,
+                            title: `Sale Recovery → ${currentBankAcc}`,
                             subtext: `${selectedDate} · Buyer: ${currentMerchantObj.name_en || currentMerchantObj.name_ur} (Ref: ${currentBankRef || 'Online'})`,
                             amount: currentGrandTotal,
                             date: selectedDate,
@@ -785,7 +785,7 @@ export default function AmrozaIndex({
                 {/* 1. Dark Green Top Header Banner */}
                 <MandiPageHeader
                     title={isUrdu ? 'آج کی بکری (امروزہ)' : "Today's Sales"}
-                    subtitle={isUrdu ? "آج کی سیل اینٹری (امروزہ)" : "Aaj ki sale entry (Amroza)"}
+                    subtitle={isUrdu ? "آج کی سیل اینٹری (امروزہ)" : "Daily Sales Entry (Fast Billing POS)"}
                     isUrdu={isUrdu}
                 >
                     <button
@@ -824,11 +824,11 @@ export default function AmrozaIndex({
                                 <div className="flex items-center gap-2">
                                     <Icon name="ShoppingCart" className="size-5 text-[#1e713e]" weight="bold" />
                                     <h2 className="text-base font-bold text-gray-900">
-                                        {isUrdu ? t('amroza_page.card_sale_title') : 'Naayi Sale (Fast Billing & POS)'}
+                                        {isUrdu ? t('amroza_page.card_sale_title') : 'New Sale (Fast Billing & POS)'}
                                     </h2>
                                 </div>
                                 <p className="text-xs text-gray-500 mt-0.5">
-                                    {isUrdu ? t('amroza_page.card_sale_sub') : 'Sabzi search karein, wazan darj karein aur foran 80mm receipt print karein'}
+                                    {isUrdu ? t('amroza_page.card_sale_sub') : 'Search product, enter quantity and print 80mm thermal receipt'}
                                 </p>
                             </div>
 
@@ -837,7 +837,7 @@ export default function AmrozaIndex({
                                 <Input
                                     value={itemSearchQuery}
                                     onChange={e => setItemSearchQuery(e.target.value)}
-                                    placeholder={isUrdu ? t('amroza_page.search_item_placeholder') : 'Sabzi ka naam talash karein (Maslan: Tamatar, Aloo, Pyaz)...'}
+                                    placeholder={isUrdu ? t('amroza_page.search_item_placeholder') : 'Search products (e.g. Tomato, Potato, Onion)...'}
                                     className="h-10 rounded-xl border-gray-200 ps-10 pe-3 text-xs md:text-sm bg-white text-gray-900 placeholder:text-gray-400 focus:border-[#1e713e] shadow-xs"
                                 />
                                 <Icon name="MagnifyingGlass" className="size-4 text-gray-400 absolute start-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -846,7 +846,7 @@ export default function AmrozaIndex({
                             {/* Available Vegetables Header */}
                             <div className="flex items-center justify-between pt-1">
                                 <span className="text-xs font-bold text-gray-700 tracking-wide uppercase">
-                                    {isUrdu ? t('amroza_page.available_items') : 'Dastiyab Sabzian (Click to Add):'}
+                                    {isUrdu ? t('amroza_page.available_items') : 'Available Products (Click to Add):'}
                                 </span>
                                 <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
                                     {displayItems.length} {isUrdu ? 'سبزیاں' : 'items'}
@@ -910,7 +910,7 @@ export default function AmrozaIndex({
                                                         ? "bg-gray-200 text-gray-600"
                                                         : "bg-emerald-100/70 text-emerald-800"
                                                 )}>
-                                                    {isExpired ? (isUrdu ? 'ایکسپائرڈ' : 'Expired') : isKhatam ? (isUrdu ? 'ختم' : 'Khatam') : `${liveStock} ${isUrdu ? (itemUnit === 'Peti' ? 'پیٹی' : 'بوری') : itemUnit}`}
+                                                    {isExpired ? (isUrdu ? 'ایکسپائرڈ' : 'Expired') : isKhatam ? (isUrdu ? 'ختم' : 'Out of Stock') : `${liveStock} ${isUrdu ? (itemUnit === 'Peti' ? 'پیٹی' : 'بوری') : itemUnit}`}
                                                 </span>
                                             </div>
                                         </button>
@@ -926,7 +926,7 @@ export default function AmrozaIndex({
                                 <div className="flex items-center gap-2">
                                     <Icon name="Receipt" className="size-5 text-[#1e713e]" weight="bold" />
                                     <h2 className="text-base font-bold text-gray-900">
-                                        {isUrdu ? t('amroza_page.bill_title') : 'Farokht Bill Khata'}
+                                        {isUrdu ? t('amroza_page.bill_title') : 'Sales Invoice'}
                                     </h2>
                                     <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
                                         {cartItems.length} {isUrdu ? 'آئٹمز' : 'items'}
@@ -946,7 +946,7 @@ export default function AmrozaIndex({
                             {/* 1. Gahak (Customer) Dropdown - Full Width at Very Top, No Date Field */}
                             <div ref={buyerContainerRef} className="space-y-1">
                                 <label className="block text-xs font-bold text-gray-700">
-                                    {isUrdu ? t('amroza_page.customer_label') : 'Gahak (Customer) *'}
+                                    {isUrdu ? t('amroza_page.customer_label') : 'Customer *'}
                                 </label>
                                 <div className="relative">
                                     <Input
@@ -959,7 +959,7 @@ export default function AmrozaIndex({
                                             }
                                         }}
                                         onClick={() => setBuyerDropdownOpen(true)}
-                                        placeholder={isUrdu ? t('amroza_page.customer_placeholder') : 'Gahak talash karein (Code ya Naam likhein)...'}
+                                        placeholder={isUrdu ? t('amroza_page.customer_placeholder') : 'Search customer by code or name...'}
                                         className="h-10 rounded-xl border-gray-200 px-3 pe-8 text-xs md:text-sm bg-white text-gray-900 placeholder:text-gray-400 focus:border-[#1e713e] shadow-xs"
                                     />
                                     {selectedMerchant ? (
@@ -1002,7 +1002,7 @@ export default function AmrozaIndex({
                                                             </span>
                                                         </div>
                                                         <span className="text-gray-600 shrink-0 text-xs font-semibold tabular-nums">
-                                                            {isUrdu ? 'بقایا:' : 'Baqaya:'} Rs. {Number(m.current_balance).toLocaleString()}
+                                                            {isUrdu ? 'بقایا:' : 'Balance:'} Rs. {Number(m.current_balance).toLocaleString()}
                                                         </span>
                                                     </button>
                                                 ))
@@ -1017,7 +1017,7 @@ export default function AmrozaIndex({
                                             {isUrdu ? 'منتخب شدہ:' : 'Selected:'} #{selectedMerchant.code} - {isUrdu ? (selectedMerchant.name_ur || selectedMerchant.name_en) : (selectedMerchant.name_en || selectedMerchant.name_ur)}
                                         </span>
                                         <span className="font-bold text-emerald-800 tabular-nums shrink-0">
-                                            {isUrdu ? 'بقایا:' : 'Baqaya:'} Rs. {Number(selectedMerchant.current_balance).toLocaleString()}
+                                            {isUrdu ? 'بقایا:' : 'Balance:'} Rs. {Number(selectedMerchant.current_balance).toLocaleString()}
                                         </span>
                                     </div>
                                 )}
@@ -1028,10 +1028,10 @@ export default function AmrozaIndex({
                                 <table className="w-full text-xs">
                                     <thead className="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
                                         <tr>
-                                            <th className="py-2 px-3 text-start">{isUrdu ? t('amroza_page.table_item') : 'Sabzi'}</th>
-                                            <th className="py-2 px-2 text-center w-24">{isUrdu ? t('amroza_page.table_qty') : 'Miqdar'}</th>
+                                            <th className="py-2 px-3 text-start">{isUrdu ? t('amroza_page.table_item') : 'Item'}</th>
+                                            <th className="py-2 px-2 text-center w-24">{isUrdu ? t('amroza_page.table_qty') : 'Quantity'}</th>
                                             <th className="py-2 px-2 text-end w-24">{isUrdu ? t('amroza_page.table_rate') : 'Rate'}</th>
-                                            <th className="py-2 px-3 text-end w-24">{isUrdu ? t('amroza_page.table_total') : 'Kul'}</th>
+                                            <th className="py-2 px-3 text-end w-24">{isUrdu ? t('amroza_page.table_total') : 'Total'}</th>
                                             <th className="py-2 px-2 text-center w-8"></th>
                                         </tr>
                                     </thead>
@@ -1039,7 +1039,7 @@ export default function AmrozaIndex({
                                         {cartItems.length === 0 ? (
                                             <tr>
                                                 <td colSpan={5} className="py-8 px-4 text-center text-gray-400 font-medium">
-                                                    {isUrdu ? t('amroza_page.cart_empty') : 'Cart khali hai. Sabzi par click karke shamil karein.'}
+                                                    {isUrdu ? t('amroza_page.cart_empty') : 'Cart is empty. Click a product to add.'}
                                                 </td>
                                             </tr>
                                         ) : (
@@ -1096,7 +1096,7 @@ export default function AmrozaIndex({
                             {/* 3. Riaayat Rules Chips (dynamically from discount_rules table) */}
                             <div className="space-y-1.5 pt-1">
                                 <label className="block text-xs font-bold text-gray-700">
-                                    {isUrdu ? t('amroza_page.discount_rules_label') : 'Riaayat Rules:'}
+                                    {isUrdu ? t('amroza_page.discount_rules_label') : 'Discount Rules:'}
                                 </label>
                                 <div className="flex flex-wrap gap-2">
                                     {discountRules.map((rule) => {
@@ -1129,7 +1129,7 @@ export default function AmrozaIndex({
                             <div className="space-y-2 pt-1 border-t border-gray-100">
                                 <div className="flex justify-between items-center text-xs">
                                     <span className="font-semibold text-gray-600">
-                                        {isUrdu ? t('amroza_page.subtotal_label') : 'Subtotal (Kham Raqam):'}
+                                        {isUrdu ? t('amroza_page.subtotal_label') : 'Subtotal:'}
                                     </span>
                                     <span className="font-bold text-gray-900 tabular-nums">
                                         Rs. {Number(subtotal).toLocaleString()}
@@ -1139,7 +1139,7 @@ export default function AmrozaIndex({
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
                                         <label className="block text-[11px] font-bold text-gray-700 mb-1">
-                                            {isUrdu ? t('amroza_page.discount_label') : 'Riaayat (Discount Rs):'}
+                                            {isUrdu ? t('amroza_page.discount_label') : 'Discount (Rs):'}
                                         </label>
                                         <input
                                             type="number"
@@ -1153,7 +1153,7 @@ export default function AmrozaIndex({
                                     </div>
                                     <div>
                                         <label className="block text-[11px] font-bold text-gray-700 mb-1">
-                                            {isUrdu ? t('amroza_page.tax_label') : 'Izafi Kharcha (Tax/Toll):'}
+                                            {isUrdu ? t('amroza_page.tax_label') : 'Additional Charges (Tax/Toll):'}
                                         </label>
                                         <input
                                             type="number"
@@ -1169,7 +1169,7 @@ export default function AmrozaIndex({
 
                                 <div className="bg-[#eef6f0] rounded-xl p-3 flex items-center justify-between">
                                     <span className="text-xs font-extrabold text-gray-700 uppercase tracking-wider">
-                                        {isUrdu ? t('amroza_page.grand_total_label') : 'KUL BILL (GRAND TOTAL):'}
+                                        {isUrdu ? t('amroza_page.grand_total_label') : 'GRAND TOTAL:'}
                                     </span>
                                     <div className="text-xl font-bold tabular-nums text-[#14532d]">
                                         Rs. {Number(grandTotal).toLocaleString()}
@@ -1180,7 +1180,7 @@ export default function AmrozaIndex({
                             {/* 5. Payment Type Section (Cash, Udhaar, Bank, Adha Cash + Adha Udhaar) */}
                             <div className="space-y-2 pt-1 border-t border-gray-100">
                                 <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                    {isUrdu ? t('amroza_page.payment_type_label') : '1 PAYMENT TYPE'}
+                                    {isUrdu ? t('amroza_page.payment_type_label') : 'PAYMENT TYPE'}
                                 </label>
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                     <button
@@ -1206,7 +1206,7 @@ export default function AmrozaIndex({
                                                 : "bg-white text-gray-800 border border-gray-200 hover:border-gray-300 hover:bg-gray-50/50"
                                         )}
                                     >
-                                        <span>{isUrdu ? 'ادھار (Credit)' : 'Udhaar'}</span>
+                                        <span>{isUrdu ? 'ادھار (Credit)' : 'Credit'}</span>
                                     </button>
 
                                     <button
@@ -1232,7 +1232,7 @@ export default function AmrozaIndex({
                                                 : "bg-white text-gray-800 border border-gray-200 hover:border-gray-300 hover:bg-gray-50/50"
                                         )}
                                     >
-                                        <span>{isUrdu ? t('amroza_page.split_payment') : 'Adha Cash + Adha udhaar'}</span>
+                                        <span>{isUrdu ? t('amroza_page.split_payment') : 'Half Cash + Half Credit'}</span>
                                     </button>
                                 </div>
 
@@ -1242,7 +1242,7 @@ export default function AmrozaIndex({
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                                             <div>
                                                 <label className="block text-[11px] font-bold text-gray-700 mb-1">
-                                                    {isUrdu ? 'کس اکاؤنٹ میں وصولی ہوگی' : 'Kis Account Mein Wasooli Hogi'}
+                                                    {isUrdu ? 'کس اکاؤنٹ میں وصولی ہوگی' : 'Destination Account for Payment'}
                                                 </label>
                                                 <select
                                                     value={selectedBankAccount}
@@ -1280,15 +1280,15 @@ export default function AmrozaIndex({
                                 {paymentType === 'split' && (
                                     <div className="p-3 bg-amber-50/80 border border-amber-200 rounded-xl space-y-2 animate-in fade-in duration-150">
                                         <div className="flex items-center justify-between text-xs text-amber-950 font-bold">
-                                            <span>{isUrdu ? 'آدھا نقد + آدھا ادھار (اسپلٹ ادائیگی)' : 'Adha Cash + Adha Udhaar (Split Payment)'}</span>
+                                            <span>{isUrdu ? 'آدھا نقد + آدھا ادھار (اسپلٹ ادائیگی)' : 'Split Payment (Cash + Credit)'}</span>
                                             <span className="text-gray-600 font-semibold">
-                                                {isUrdu ? 'کل بل:' : 'Kul Bill:'} <strong className="text-green-900 font-bold">Rs. {Number(grandTotal).toLocaleString()}</strong>
+                                                {isUrdu ? 'کل بل:' : 'Total Bill:'} <strong className="text-green-900 font-bold">Rs. {Number(grandTotal).toLocaleString()}</strong>
                                             </span>
                                         </div>
                                         <div className="grid grid-cols-2 gap-2.5">
                                             <div>
                                                 <label className="block text-[11px] font-bold text-gray-700 mb-1">
-                                                    {isUrdu ? 'ابھی ملے (نقد رقم) *' : 'Abhi Mile (Cash Raqam) *'}
+                                                    {isUrdu ? 'ابھی ملے (نقد رقم) *' : 'Cash Received Now *'}
                                                 </label>
                                                 <input
                                                     type="number"
@@ -1302,7 +1302,7 @@ export default function AmrozaIndex({
                                             </div>
                                             <div>
                                                 <label className="block text-[11px] font-bold text-gray-700 mb-1">
-                                                    {isUrdu ? 'ادھار باقی (بقایا کھاتہ) *' : 'Udhaar Baaqi (Remaining Credit) *'}
+                                                    {isUrdu ? 'ادھار باقی (بقایا کھاتہ) *' : 'Remaining Balance (Credit) *'}
                                                 </label>
                                                 <input
                                                     type="number"
@@ -1347,7 +1347,7 @@ export default function AmrozaIndex({
                                         <span>
                                             {editingSale
                                                 ? (isUrdu ? 'تبدیل کریں' : 'Tabdeel Karein')
-                                                : (isUrdu ? t('amroza_page.save_and_print') : 'Bill Mehfooz Karein aur Raseed Print Karein')}
+                                                : (isUrdu ? t('amroza_page.save_and_print') : 'Save Bill & Print Receipt')}
                                         </span>
                                     </Button>
                                 </div>
@@ -1424,7 +1424,7 @@ export default function AmrozaIndex({
                                                             </span>
                                                         ) : sale.payment_type === 'split' ? (
                                                             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-100 text-amber-900 border border-amber-300">
-                                                                {isUrdu ? 'نقد + ادھار' : 'Cash + Udhaar'}
+                                                                {isUrdu ? 'نقد + ادھار' : 'Cash + Credit'}
                                                             </span>
                                                         ) : isNaqdi ? (
                                                             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-green-100 text-green-900 border border-green-300">
@@ -1432,7 +1432,7 @@ export default function AmrozaIndex({
                                                             </span>
                                                         ) : (
                                                             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-900 border border-blue-300">
-                                                                {isUrdu ? 'ادھار' : 'Udhaar'}
+                                                                {isUrdu ? 'ادھار' : 'Credit'}
                                                             </span>
                                                         )}
                                                     </td>
@@ -1550,10 +1550,10 @@ export default function AmrozaIndex({
                                         VEGETABLE POS
                                     </h2>
                                     <p className="text-[11px] text-gray-700 font-bold">
-                                        Mandi Sabzi Aadhat & POS
+                                        Vegetable Wholesale & POS
                                     </p>
                                     <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-0.5">
-                                        Farokht Raseed (Sales Receipt)
+                                        Sales Receipt
                                     </p>
                                 </div>
 
@@ -1568,7 +1568,7 @@ export default function AmrozaIndex({
                                         <span className="font-bold text-black">{slipData.date} {slipData.time}</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-gray-600 font-semibold">Gahak:</span>
+                                        <span className="text-gray-600 font-semibold">Customer:</span>
                                         <span className="font-bold text-black">
                                             #{slipData.merchantCode} - {slipData.merchantName}
                                         </span>
@@ -1592,7 +1592,7 @@ export default function AmrozaIndex({
                                     <table className="w-full text-[11px]">
                                         <thead>
                                             <tr className="border-b border-gray-300 text-gray-700 font-bold">
-                                                <th className="text-start py-1">Sabzi</th>
+                                                <th className="text-start py-1">Product</th>
                                                 <th className="text-center py-1">Qty</th>
                                                 <th className="text-end py-1">Rate</th>
                                                 <th className="text-end py-1">Total</th>
@@ -1619,30 +1619,30 @@ export default function AmrozaIndex({
                                     </div>
                                     {slipData.discount > 0 && (
                                         <div className="flex justify-between text-emerald-800">
-                                            <span>Riaayat (Discount):</span>
+                                            <span>Discount:</span>
                                             <span className="font-bold">- Rs. {Number(slipData.discount).toLocaleString()}</span>
                                         </div>
                                     )}
                                     {slipData.tax > 0 && (
                                         <div className="flex justify-between text-gray-700">
-                                            <span>Izafi Kharcha (Tax/Toll):</span>
+                                            <span>Additional Charges:</span>
                                             <span className="font-bold">+ Rs. {Number(slipData.tax).toLocaleString()}</span>
                                         </div>
                                     )}
                                     <div className="flex justify-between text-sm font-black text-emerald-950 pt-1 border-t border-dashed border-gray-300">
-                                        <span>KUL BILL (TOTAL):</span>
+                                        <span>TOTAL BILL:</span>
                                         <span>Rs. {Number(slipData.grandTotal).toLocaleString()}</span>
                                     </div>
                                     <div className="flex justify-between text-gray-800 pt-0.5">
-                                        <span>Wasool Shuda:</span>
+                                        <span>Amount Paid:</span>
                                         <span className="font-bold text-emerald-800">Rs. {Number(slipData.wasool).toLocaleString()}</span>
                                     </div>
                                     <div className="flex justify-between text-gray-800">
-                                        <span>Baqaya (Is Bill Ka):</span>
+                                        <span>Invoice Balance Due:</span>
                                         <span className="font-bold text-red-800">Rs. {Number(slipData.baqaya).toLocaleString()}</span>
                                     </div>
                                     <div className="flex justify-between text-gray-900 font-extrabold pt-1 border-t border-gray-200">
-                                        <span>Gahak Ka Kul Mojooda Baqaya:</span>
+                                        <span>Total Outstanding Due:</span>
                                         <span className="font-black text-emerald-900">Rs. {Number(slipData.merchantBalance).toLocaleString()}</span>
                                     </div>
                                 </div>

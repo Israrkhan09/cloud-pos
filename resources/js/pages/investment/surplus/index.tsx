@@ -97,7 +97,7 @@ export default function InvestmentSurplusPage({
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: isUrdu ? 'انویسٹمنٹ' : 'Investment', href: '/investment/partners' },
-        { title: isUrdu ? 'سرمایہ کاری (Investments)' : 'Sarmayakari (Investments)', href: '/investment/surplus' },
+        { title: isUrdu ? 'سرمایہ کاری (Investments)' : 'Investments', href: '/investment/surplus' },
     ];
 
     const formatRs = (val: number) => 'Rs. ' + Number(val || 0).toLocaleString('en-US');
@@ -175,7 +175,7 @@ export default function InvestmentSurplusPage({
                         {/* Number 1: Kul Sarmayakari */}
                         <div className="bg-white p-4 md:p-5 rounded-xl border border-gray-200 shadow-2xs">
                             <span className="text-xs font-bold text-[#374151] uppercase tracking-wider block">
-                                {isUrdu ? 'کل سرمایہ کاری' : 'Kul Sarmayakari'}
+                                {isUrdu ? 'کل سرمایہ کاری' : 'Total Investments'}
                             </span>
                             <span className="text-2xl font-black text-[#1F2937] block mt-2">
                                 {formatRs(summary.lagaya_paisa)}
@@ -194,7 +194,7 @@ export default function InvestmentSurplusPage({
                                 + {formatRs(summary.mila_munafa)}
                             </span>
                             <span className="text-xs font-medium text-[#4B5563] block mt-1">
-                                {isUrdu ? 'سرمایہ کاری سے حاصل شدہ منافع' : 'Sarmayakari se haasil shuda munafa'}
+                                {isUrdu ? 'سرمایہ کاری سے حاصل شدہ منافع' : 'Returns & Profit from Investments'}
                             </span>
                         </div>
 
@@ -218,7 +218,7 @@ export default function InvestmentSurplusPage({
                             <div className="flex items-center gap-2">
                                 <Icon name="TrendUp" className="size-5 text-[#14532d]" />
                                 <h3 className="text-sm font-bold text-[#1F2937]">
-                                    {isUrdu ? 'سرمایہ کاری کھاتہ' : 'Sarmayakari Register (Investment Funds)'}
+                                    {isUrdu ? 'سرمایہ کاری کھاتہ' : 'Investment Funds Register'}
                                 </h3>
                             </div>
                             <div className="flex items-center gap-2">
@@ -295,7 +295,7 @@ export default function InvestmentSurplusPage({
                                                         onClick={() => setReturnModalFund(fund)}
                                                         className="px-3.5 py-1.5 text-xs font-bold text-white bg-[#14532d] hover:bg-[#166534] rounded shadow-2xs transition-colors cursor-pointer"
                                                     >
-                                                        {isUrdu ? 'واپس لیں' : 'Wapas lein'}
+                                                        {isUrdu ? 'واپس لیں' : 'Divest / Collect'}
                                                     </button>
                                                 </td>
                                             </tr>
@@ -316,7 +316,7 @@ export default function InvestmentSurplusPage({
                                     <span className="p-1.5 rounded-lg bg-emerald-100 text-[#14532d]">
                                         <Icon name="ArrowDownLeft" className="size-5" />
                                     </span>
-                                    <span>{isUrdu ? 'سرمایہ کاری واپس حاصل کریں' : 'Sarmayakari Wapas Hasil Karein'}</span>
+                                    <span>{isUrdu ? 'سرمایہ کاری واپس حاصل کریں' : 'Record Investment Divestment / Return'}</span>
                                 </DialogTitle>
                                 <DialogDescription className="text-xs text-[#4B5563]">
                                     Fund: <span className="font-bold text-[#1F2937]">{returnModalFund.fund_name}</span> · {returnModalFund.kaha_lagaya || 'Meezan Bank Ltd'}
@@ -398,7 +398,7 @@ export default function InvestmentSurplusPage({
                                         onClick={() => setReturnModalFund(null)}
                                         className="flex-1 min-h-[44px] px-4 py-2.5 text-xs font-semibold text-[#374151] bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors cursor-pointer"
                                     >
-                                        {isUrdu ? 'منسوخ' : 'Wapas (Cancel)'}
+                                        {isUrdu ? 'منسوخ' : 'Cancel'}
                                     </button>
                                     <button
                                         type="submit"

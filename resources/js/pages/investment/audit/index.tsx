@@ -183,7 +183,7 @@ export default function InvestmentAuditPage({
 
     // Export CSV
     const handleExportCSV = () => {
-        const headers = ['Parchi No', 'Kab', 'Party', 'Qisam', 'Rakam', 'Banaya Kisne', 'Approve Kisne Kiya', 'Status', 'Wajah'];
+        const headers = ['Voucher No', 'Date & Time', 'Party', 'Type', 'Amount', 'Created By', 'Approve Kisne Kiya', 'Status', 'Wajah'];
         const rows = filteredTx.map(tx => [
             `"${tx.ref_no}"`,
             `"${tx.created_at_label}"`,
@@ -270,10 +270,10 @@ export default function InvestmentAuditPage({
                                 type="button"
                                 onClick={() => setIsLegendOpen(true)}
                                 className="px-3 py-2 text-xs font-bold text-[#374151] bg-white border border-gray-200 hover:bg-gray-50 rounded-lg shadow-2xs transition-colors flex items-center gap-1.5 cursor-pointer"
-                                title="Parchi codes ki maloomat"
+                                title="Voucher code reference"
                             >
                                 <Icon name="Info" className="size-4 text-[#14532d]" />
-                                <span>{isUrdu ? 'کوڈز کی معلومات' : 'Codes Ki Maloomat'}</span>
+                                <span>{isUrdu ? 'کوڈز کی معلومات' : 'Voucher Codes'}</span>
                             </button>
 
                             <button
@@ -481,41 +481,41 @@ export default function InvestmentAuditPage({
                             <DialogHeader>
                                 <DialogTitle className="text-base font-bold text-[#1F2937] flex items-center gap-2">
                                     <Icon name="Info" className="size-5 text-[#14532d]" />
-                                    <span>Parchi Codes Ki Maloomat</span>
+                                    <span>Voucher Codes Reference</span>
                                 </DialogTitle>
                                 <DialogDescription className="text-xs text-[#4B5563]">
-                                    Har code ka asaan matlab neeche diya gaya hai:
+                                    Reference guide for transaction voucher prefixes:
                                 </DialogDescription>
                             </DialogHeader>
 
                             <div className="space-y-2 py-3 text-sm">
                                 <div className="p-2.5 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-between">
                                     <span className="font-bold text-[#14532d]">CI</span>
-                                    <span className="font-semibold text-[#1F2937]">Paisa dala (Capital In)</span>
+                                    <span className="font-semibold text-[#1F2937]">Capital Introduced (In)</span>
                                 </div>
                                 <div className="p-2.5 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-between">
                                     <span className="font-bold text-red-700">CO</span>
-                                    <span className="font-semibold text-[#1F2937]">Paisa nikala (Drawings)</span>
+                                    <span className="font-semibold text-[#1F2937]">Drawings (Out)</span>
                                 </div>
                                 <div className="p-2.5 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-between">
                                     <span className="font-bold text-blue-700">LN / LI</span>
-                                    <span className="font-semibold text-[#1F2937]">Qarza liya (Loan In)</span>
+                                    <span className="font-semibold text-[#1F2937]">Loan Borrowed (In)</span>
                                 </div>
                                 <div className="p-2.5 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-between">
                                     <span className="font-bold text-purple-700">LR</span>
-                                    <span className="font-semibold text-[#1F2937]">Qarza wapas (Loan Return)</span>
+                                    <span className="font-semibold text-[#1F2937]">Loan Repaid (Out)</span>
                                 </div>
                                 <div className="p-2.5 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-between">
                                     <span className="font-bold text-amber-700">SO</span>
-                                    <span className="font-semibold text-[#1F2937]">Sarmayakari mein lagaya (Investment)</span>
+                                    <span className="font-semibold text-[#1F2937]">Investment Made</span>
                                 </div>
                                 <div className="p-2.5 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-between">
                                     <span className="font-bold text-emerald-700">SI</span>
-                                    <span className="font-semibold text-[#1F2937]">Sarmayakari se wapsi (Return)</span>
+                                    <span className="font-semibold text-[#1F2937]">Investment Divested / Returned</span>
                                 </div>
                                 <div className="p-2.5 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-between">
                                     <span className="font-bold text-rose-700">REV</span>
-                                    <span className="font-semibold text-[#1F2937]">Mansookh (Cancel entry)</span>
+                                    <span className="font-semibold text-[#1F2937]">Reversal (Void Entry)</span>
                                 </div>
                             </div>
 
@@ -525,7 +525,7 @@ export default function InvestmentAuditPage({
                                     onClick={() => setIsLegendOpen(false)}
                                     className="px-4 py-2 text-xs font-bold text-[#374151] bg-gray-100 hover:bg-gray-200 rounded-lg cursor-pointer"
                                 >
-                                    Band karein
+                                    Close
                                 </button>
                             </div>
                         </DialogContent>
@@ -538,29 +538,29 @@ export default function InvestmentAuditPage({
                         <DialogContent className="max-w-md w-full p-6 bg-white font-sans text-[#1F2937]">
                             <DialogHeader>
                                 <DialogTitle className="text-base font-bold text-[#1F2937]">
-                                    Parchi Mansookh (Cancel) Karein
+                                    Void / Revert Voucher
                                 </DialogTitle>
                                 <DialogDescription className="text-xs text-[#4B5563]">
-                                    Parchi: {voidModalTx.ref_no} — Party: {voidModalTx.party} — Rakam: Rs. {Number(voidModalTx.amount).toLocaleString('en-US')}
+                                    Voucher: {voidModalTx.ref_no} — Party: {voidModalTx.party} — Amount: Rs. {Number(voidModalTx.amount).toLocaleString('en-US')}
                                 </DialogDescription>
                             </DialogHeader>
 
                             <form onSubmit={handleConfirmVoid} className="space-y-4 pt-2">
                                 <div className="p-3 rounded-lg bg-amber-50 border border-amber-300 text-xs text-amber-950">
                                     <p className="leading-relaxed">
-                                        Yeh entry ledger se delete nahi hogi. Is ke bar-aks ek nayi reversal entry ledger mein record hogi taake audit trail mehfooz rahe.
+                                        This entry will not be deleted from the database. Instead, an audit reversal entry will be created to maintain account integrity.
                                     </p>
                                 </div>
 
                                 <div>
                                     <label className="text-xs font-bold text-[#374151] block mb-1">
-                                        Mansookhi Ki Wajah (Reason) *
+                                        Reason for Voiding *
                                     </label>
                                     <textarea
                                         rows={3}
                                         value={voidReason}
                                         onChange={(e) => setVoidReason(e.target.value)}
-                                        placeholder="Wajah darj karein..."
+                                        placeholder="Enter reason for voiding..."
                                         className="w-full p-3 text-xs bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-rose-600 focus:outline-none"
                                         required
                                     />
@@ -579,7 +579,7 @@ export default function InvestmentAuditPage({
                                         disabled={isVoiding}
                                         className="flex-1 min-h-[40px] px-4 py-2 text-xs font-bold text-white bg-rose-700 hover:bg-rose-800 rounded-lg shadow-xs transition-colors cursor-pointer"
                                     >
-                                        {isVoiding ? 'Mansookh Ho Raha Hai...' : 'Mansookh Karein'}
+                                        {isVoiding ? 'Voiding...' : 'Confirm Void'}
                                     </button>
                                 </div>
                             </form>

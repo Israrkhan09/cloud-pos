@@ -87,7 +87,7 @@ export default function MerchantAmrozaReport({ rows, totals, filters }: Props) {
                 {/* Printable Report Section */}
                 <div className="bg-white p-6 rounded-lg border shadow-xs print:border-none print:shadow-none print:p-0">
                     <PrintLetterhead
-                        title="Merchant Amroza"
+                        title="Merchant Daily Sales"
                         titleUrdu="ماشاخور وار امروزہ سمری"
                         date={selectedDate}
                     />

@@ -102,7 +102,7 @@ export default function AmrozaWasooliCombinedReport({ rows, totals, filters }: P
                 {/* Printable Report Section */}
                 <div className="bg-white p-6 rounded-lg border shadow-xs print:border-none print:shadow-none print:p-0">
                     <PrintLetterhead
-                        title="Amroza + Wasooli Detail"
+                        title="Daily Sales & Recoveries Detail"
                         titleUrdu="امروزہ و وصولی روزانہ گوشوارہ"
                         from_date={fromDate}
                         to_date={toDate}

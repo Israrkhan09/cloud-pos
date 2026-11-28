@@ -91,7 +91,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: isUrdu ? 'روزانہ کام' : 'Daily Kaam', href: '#' },
-        { title: isUrdu ? 'کسان کا بل (بیجک)' : 'Farmer Bill (Bijak)', href: '/bijak' },
+        { title: isUrdu ? 'کسان کا بل (بیجک)' : 'Farmer Invoices (Bijak)', href: '/bijak' },
     ];
 
     // Top Card States
@@ -270,7 +270,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
     const handleSaveBill = (e: React.FormEvent) => {
         e.preventDefault();
         if (!farmerId) {
-            toast.error('Baraye meharbani pehle Kisan chunein');
+            toast.error('Please select a farmer first');
             return;
         }
 
@@ -354,7 +354,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Kisan ka Bill (Bijak)" />
+            <Head title="Farmer Invoice" />
 
             {/* Main Outer Container - edge to edge without side or bottom gaps */}
             <div className="-mt-4 -mx-4 -mb-8 pb-28 bg-[#f4f6f4] min-h-screen font-sans text-gray-900 print:hidden" dir={isUrdu ? 'rtl' : 'ltr'}>
@@ -363,11 +363,11 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                 <MandiPageHeader
                     title={
                         <span className="flex items-center gap-2">
-                            <span>{isUrdu ? 'کسان کا بل (بیجک)' : 'Kisan ka Bill (Bijak)'}</span>
+                            <span>{isUrdu ? 'کسان کا بل (بیجک)' : 'Farmer Invoice (Bijak)'}</span>
                             {!isUrdu && <span className="font-normal font-sans text-emerald-100 text-xl md:text-2xl">بیجک</span>}
                         </span>
                     }
-                    subtitle={isUrdu ? 'کسان کے مال کا بل بنائیں' : 'Kisan ke maal ka bill banayein'}
+                    subtitle={isUrdu ? 'کسان کے مال کا بل بنائیں' : 'Create invoice for farmer consignment'}
                     isUrdu={isUrdu}
                 />
 
@@ -387,7 +387,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                                     onChange={e => setFarmerId(e.target.value)}
                                     className="w-full h-10 px-3 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#14532d]"
                                 >
-                                    <option value="">{isUrdu ? '-- کسان منتخب کریں --' : '-- Select Kisan --'}</option>
+                                    <option value="">{isUrdu ? '-- کسان منتخب کریں --' : '-- Select Farmer --'}</option>
                                     {farmers.map(f => (
                                         <option key={f.id} value={f.id}>
                                             {farmerTitle(f)}
@@ -649,7 +649,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                                 {/* Big Green Box: Net Payable */}
                                 <div className="bg-[#14532d] text-white rounded-xl p-4 space-y-1">
                                     <div className="text-xs text-emerald-100 font-medium">
-                                        {isUrdu ? 'کسان کو دینا ہے (خالص واجب الادا)' : 'Kisan ko dena hai (Net payable)'}
+                                        {isUrdu ? 'کسان کو دینا ہے (خالص واجب الادا)' : 'Net Payable to Farmer'}
                                     </div>
                                     <div className="text-2xl font-bold tracking-tight">
                                         Rs. {calculations.netPayable.toLocaleString()}
@@ -691,7 +691,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                         {/* Bill Details */}
                         <div className="bg-gray-50 rounded-xl p-3.5 border border-gray-200 text-xs space-y-2">
                             <div className="flex justify-between items-center pb-1.5 border-b border-gray-200/60">
-                                <span className="text-gray-500 font-medium">{isUrdu ? 'کسان:' : 'Kisan:'}</span>
+                                <span className="text-gray-500 font-medium">{isUrdu ? 'کسان:' : 'Farmer:'}</span>
                                 <strong className="text-gray-900 font-bold">{completedBill.farmer_name}</strong>
                             </div>
                             {completedBill.truck_no && (
@@ -764,7 +764,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                         {/* Net Payable Highlight */}
                         <div className="bg-[#14532d] text-white rounded-xl p-3 text-center space-y-0.5">
                             <span className="text-[11px] text-emerald-100 font-medium">
-                                {isUrdu ? 'کسان کو قابل ادائیگی رقم (Net Payable)' : 'Kisan Net Payable'}
+                                {isUrdu ? 'کسان کو قابل ادائیگی رقم (Net Payable)' : 'Farmer Net Payable'}
                             </span>
                             <div className="text-2xl font-black tracking-tight">
                                 Rs. {Number(completedBill.net_amount).toLocaleString()}
@@ -820,7 +820,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                             <span>{completedBill.date}</span>
                         </div>
                         <div className="pt-0.5 border-t border-gray-200">
-                            <strong>Kisan: </strong>
+                            <strong>Farmer: </strong>
                             <span>{completedBill.farmer_name}</span>
                         </div>
                         {completedBill.truck_no && (
@@ -830,7 +830,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                             </div>
                         )}
                         <div>
-                            <strong>Total Bori: </strong>
+                            <strong>Total Bags: </strong>
                             <span>{completedBill.total_nag || (completedBill.items || []).reduce((acc, it) => acc + (it.nag || 0), 0)} bori</span>
                         </div>
                     </div>
@@ -841,7 +841,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                             <thead>
                                 <tr className="border-b border-t border-gray-400 text-gray-700 text-[10px] uppercase font-bold">
                                     <th className="py-1 text-start">Item</th>
-                                    <th className="py-1 text-center">Bori</th>
+                                    <th className="py-1 text-center">Bags</th>
                                     <th className="py-1 text-end">Rate</th>
                                     <th className="py-1 text-end">Total</th>
                                 </tr>
@@ -889,7 +889,7 @@ export default function BijjakIndex({ farmers, items, saved_bill, filters }: Pro
                             </div>
                         )}
                         <div className="flex justify-between items-center pt-1.5 border-t border-black font-bold text-sm">
-                            <span>Kisan Net Payable:</span>
+                            <span>Farmer Net Payable:</span>
                             <span className="font-black">Rs. {Number(completedBill.net_amount).toLocaleString()}</span>
                         </div>
                     </div>

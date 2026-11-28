@@ -110,7 +110,7 @@ export default function AmrozaDetailReport({ rows, totals, filters }: Props) {
                 {/* Printable Report Section */}
                 <div className="bg-white p-6 rounded-lg border shadow-xs print:border-none print:shadow-none print:p-0">
                     <PrintLetterhead
-                        title="Amroza Detail"
+                        title="Daily Sales Detail"
                         titleUrdu="امروزہ تفصیلی رپورٹ (سیلز اندراج)"
                         from_date={fromDate}
                         to_date={toDate}

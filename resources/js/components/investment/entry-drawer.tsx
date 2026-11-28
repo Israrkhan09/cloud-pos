@@ -204,7 +204,7 @@ export default function EntryDrawer({
             }
             case 'loan_out': {
                 const chosenLoan = loans.find(l => l.id === Number(selectedLoanId));
-                const party = chosenLoan?.lender_name || loanPartyName.trim() || 'Khata';
+                const party = chosenLoan?.lender_name || loanPartyName.trim() || 'Account';
                 return `${methodStr} mein ${party} se ${formattedAmt} qarza wapas wasool hoga.`;
             }
             case 'surplus_out': {
@@ -244,11 +244,11 @@ export default function EntryDrawer({
         // Validate Loan Party
         if (category === 'loans') {
             if (selectedType === 'loan_in' && !loanPartyName.trim()) {
-                toast.error('Qarza dene wale ka naam enter karein.');
+                toast.error('Please enter lender name.');
                 return;
             }
             if (selectedType === 'loan_give' && !loanPartyName.trim()) {
-                toast.error('Qarza lene wale ka naam enter karein.');
+                toast.error('Please enter borrower name.');
                 return;
             }
             if (selectedType === 'loan_out' && !selectedLoanId && !loanPartyName.trim()) {
@@ -365,9 +365,9 @@ export default function EntryDrawer({
                             </span>
                             <span>
                                 {category === 'loans'
-                                    ? 'Nayi Qarza Entry'
+                                    ? 'New Loan Entry'
                                     : category === 'surplus'
-                                        ? 'Nayi Sarmayakari Entry'
+                                        ? 'New Investment Entry'
                                         : 'Nayi Partner Entry'}
                             </span>
                         </SheetTitle>
@@ -401,7 +401,7 @@ export default function EntryDrawer({
                                     )}
                                 >
                                     <span className="text-xs font-bold text-[#1F2937] block">
-                                        Paisa Lagaya (Capital In)
+                                        Capital Introduced (In)
                                     </span>
                                     <span className="text-[11px] text-[#4B5563] mt-0.5 leading-tight">
                                         Karobar mein cash dala
@@ -419,7 +419,7 @@ export default function EntryDrawer({
                                     )}
                                 >
                                     <span className="text-xs font-bold text-[#1F2937] block">
-                                        Paisa Nikala (Drawings)
+                                        Drawings (Capital Out)
                                     </span>
                                     <span className="text-[11px] text-[#4B5563] mt-0.5 leading-tight">
                                         Ghar ya zaati kharch ke liye
@@ -442,10 +442,10 @@ export default function EntryDrawer({
                                     )}
                                 >
                                     <span className="text-xs font-bold text-[#1F2937] block">
-                                        Dena Hai
+                                        Payable (Borrowed)
                                     </span>
                                     <span className="text-[11px] text-[#4B5563] mt-0.5 leading-tight">
-                                        Bahar se udhaar liya
+                                        Borrowed from external source
                                     </span>
                                 </button>
 
@@ -460,10 +460,10 @@ export default function EntryDrawer({
                                     )}
                                 >
                                     <span className="text-xs font-bold text-[#1F2937] block">
-                                        Lena Hai
+                                        Receivable (Lent)
                                     </span>
                                     <span className="text-[11px] text-[#4B5563] mt-0.5 leading-tight">
-                                        Kisi ko udhaar diya
+                                        Lent to external party
                                     </span>
                                 </button>
 
@@ -478,10 +478,10 @@ export default function EntryDrawer({
                                     )}
                                 >
                                     <span className="text-xs font-bold text-[#1F2937] block">
-                                        Qarza Wapis
+                                        Loan Repayment
                                     </span>
                                     <span className="text-[11px] text-[#4B5563] mt-0.5 leading-tight">
-                                        Wasool kiya
+                                        Repayment received
                                     </span>
                                 </button>
                             </div>
@@ -501,10 +501,10 @@ export default function EntryDrawer({
                                     )}
                                 >
                                     <span className="text-xs font-bold text-[#1F2937] block">
-                                        Sarmayakari Mein Lagaya
+                                        Investment Made
                                     </span>
                                     <span className="text-[11px] text-[#4B5563] mt-0.5 leading-tight">
-                                        Bank Term / Fund mein invest
+                                        Invested in bank deposit / fund
                                     </span>
                                 </button>
 
@@ -519,10 +519,10 @@ export default function EntryDrawer({
                                     )}
                                 >
                                     <span className="text-xs font-bold text-[#1F2937] block">
-                                        Sarmayakari Se Wapsi
+                                        Investment Divestment / Return
                                     </span>
                                     <span className="text-[11px] text-[#4B5563] mt-0.5 leading-tight">
-                                        Asal sarmaya + munafa mila
+                                        Principal capital + profit returned
                                     </span>
                                 </button>
                             </div>
@@ -536,7 +536,7 @@ export default function EntryDrawer({
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between">
                                     <label className="text-sm font-bold text-[#1F2937]">
-                                        {selectedType === 'capital_in' ? 'New Partner Add' : 'Partner Chunein (Paisa Nikalne Ke Liye)'}
+                                        {selectedType === 'capital_in' ? 'New Partner Add' : 'Select Partner (For Drawings)'}
                                     </label>
                                 </div>
 
@@ -549,13 +549,13 @@ export default function EntryDrawer({
                                         >
                                             {partners.map((p) => (
                                                 <option key={p.id} value={p.id}>
-                                                    {p.name} ({p.role === 'owner' ? 'Owner / Malik' : 'Partner / Shareek'}) — Net Equity: Rs. {p.net_equity.toLocaleString('en-US')}
+                                                    {p.name} ({p.role === 'owner' ? 'Owner' : 'Partner'}) — Net Equity: Rs. {p.net_equity.toLocaleString('en-US')}
                                                 </option>
                                             ))}
                                         </select>
                                         {activePartner && (
                                             <p className="text-xs text-[#4B5563]">
-                                                Mawjooda Approved Equity: <span className="font-bold text-[#14532d]">Rs. {activePartner.net_equity.toLocaleString('en-US')}</span>
+                                                Current Approved Equity: <span className="font-bold text-[#14532d]">Rs. {activePartner.net_equity.toLocaleString('en-US')}</span>
                                             </p>
                                         )}
                                     </div>
@@ -566,7 +566,7 @@ export default function EntryDrawer({
                                                 type="text"
                                                 value={newPartnerName}
                                                 onChange={(e) => setNewPartnerName(e.target.value)}
-                                                placeholder="Naye partner ka naam (e.g. Kamran Sb)"
+                                                placeholder="Partner name (e.g. Kamran Sb)"
                                                 className="w-full h-11 px-3.5 text-sm font-medium text-[#1F2937] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] transition-all"
                                             />
                                         </div>
@@ -576,7 +576,7 @@ export default function EntryDrawer({
                                                     type="number"
                                                     value={newPartnerProfitPct}
                                                     onChange={(e) => setNewPartnerProfitPct(e.target.value)}
-                                                    placeholder="Hissa %"
+                                                    placeholder="Share %"
                                                     min="0"
                                                     max="100"
                                                     className="w-full h-11 px-3.5 pe-8 text-sm font-bold text-[#1F2937] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] transition-all"
@@ -595,17 +595,17 @@ export default function EntryDrawer({
                                 {selectedType === 'loan_in' && (
                                     <div>
                                         <label className="text-sm font-bold text-[#1F2937] block mb-1.5">
-                                            Kis se Liya? (Qarza Dene Wale Ka Naam)
+                                            Lender Name (Borrowed From)
                                         </label>
                                         <input
                                             type="text"
                                             value={loanPartyName}
                                             onChange={(e) => setLoanPartyName(e.target.value)}
-                                            placeholder="Maslan: Tariq Sb, Haji Aslam, Bank Alfalah..."
+                                            placeholder="e.g. Tariq Sb, Haji Aslam, Bank Alfalah..."
                                             className="w-full h-11 px-3.5 text-sm font-medium text-[#1F2937] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] transition-all"
                                         />
                                         <p className="text-xs text-[#4B5563] mt-1">
-                                            Yeh qarza hum ko wapas dena hai (Payable) ke tor par record hoga.
+                                            This loan will be recorded as a liability (Payable).
                                         </p>
                                     </div>
                                 )}
@@ -613,17 +613,17 @@ export default function EntryDrawer({
                                 {selectedType === 'loan_give' && (
                                     <div>
                                         <label className="text-sm font-bold text-[#1F2937] block mb-1.5">
-                                            Kis ko Diya? (Qarza Lene Wale Ka Naam)
+                                            Borrower Name (Lent To)
                                         </label>
                                         <input
                                             type="text"
                                             value={loanPartyName}
                                             onChange={(e) => setLoanPartyName(e.target.value)}
-                                            placeholder="Maslan: Rashid Merchant, Farooq Farmer..."
+                                            placeholder="e.g. Rashid Merchant, Farooq Farmer..."
                                             className="w-full h-11 px-3.5 text-sm font-medium text-[#1F2937] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] transition-all"
                                         />
                                         <p className="text-xs text-[#4B5563] mt-1">
-                                            Yeh qarza party se hum ko wapas lena hai (Receivable) ke tor par record hoga.
+                                            This loan will be recorded as an asset (Receivable).
                                         </p>
                                     </div>
                                 )}
@@ -631,7 +631,7 @@ export default function EntryDrawer({
                                 {selectedType === 'loan_out' && (
                                     <div>
                                         <label className="text-sm font-bold text-[#1F2937] block mb-1.5">
-                                            Kis ne Wapas Kiya? (Khata Chunein)
+                                            Returned By (Select Account)
                                         </label>
                                         {receivableLoans.length > 0 ? (
                                             <select
@@ -641,7 +641,7 @@ export default function EntryDrawer({
                                             >
                                                 {receivableLoans.map((l) => (
                                                     <option key={l.id} value={l.id}>
-                                                        {l.lender_name} — Baqaya: Rs. {l.balance_due.toLocaleString('en-US')}
+                                                        {l.lender_name} — Balance: Rs. {l.balance_due.toLocaleString('en-US')}
                                                     </option>
                                                 ))}
                                             </select>
@@ -651,11 +651,11 @@ export default function EntryDrawer({
                                                     type="text"
                                                     value={loanPartyName}
                                                     onChange={(e) => setLoanPartyName(e.target.value)}
-                                                    placeholder="Wapas karne wale ka naam (e.g. Rashid Merchant)"
+                                                    placeholder="Party name returning payment (e.g. Rashid Merchant)"
                                                     className="w-full h-11 px-3.5 text-sm font-medium text-[#1F2937] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] transition-all"
                                                 />
                                                 <p className="text-xs text-[#4B5563]">
-                                                    Abhi koi aisa qarza registered nahi jo hum ne diya ho. Aap seedha naam likh sakte hain.
+                                                    No existing receivable loan found. You can enter the party name directly.
                                                 </p>
                                             </div>
                                         )}
@@ -670,20 +670,20 @@ export default function EntryDrawer({
                                 {selectedType === 'surplus_out' ? (
                                     <div>
                                         <label className="text-sm font-bold text-[#1F2937] block mb-1.5">
-                                            Kaha Lagaya? (Bank / Fund Ka Naam)
+                                            Destination (Bank / Fund Name)
                                         </label>
                                         <input
                                             type="text"
                                             value={surplusPartyName}
                                             onChange={(e) => setSurplusPartyName(e.target.value)}
-                                            placeholder="Maslan: Meezan Bank Ltd (15-Day Term Deposit)"
+                                            placeholder="e.g. Meezan Bank Ltd (15-Day Term Deposit)"
                                             className="w-full h-11 px-3.5 text-sm font-medium text-[#1F2937] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] transition-all"
                                         />
                                     </div>
                                 ) : (
                                     <div>
                                         <label className="text-sm font-bold text-[#1F2937] block mb-1.5">
-                                            Fund Muntakhib Karein
+                                            Select Fund
                                         </label>
                                         <select
                                             value={selectedSurplusId}
@@ -692,7 +692,7 @@ export default function EntryDrawer({
                                         >
                                             {surplusFunds.map((s) => (
                                                 <option key={s.id} value={s.id}>
-                                                    {s.fund_name} — Asal: Rs. {s.principal_amount.toLocaleString('en-US')}
+                                                    {s.fund_name} — Principal: Rs. {s.principal_amount.toLocaleString('en-US')}
                                                 </option>
                                             ))}
                                         </select>
@@ -705,21 +705,21 @@ export default function EntryDrawer({
                     {/* Section 3: Rakam aur Adayegi (Point 4: Clean label without numbers) */}
                     <div className="space-y-3">
                         <label className="text-sm font-bold text-[#1F2937] block">
-                            Rakam aur Adayegi
+                            Amount & Payment
                         </label>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
                             {/* Amount input */}
                             <div>
                                 <label className="text-xs font-semibold text-[#374151] block mb-1">
-                                    Rakam (Rs.)
+                                    Amount (Rs.)
                                 </label>
                                 <input
                                     type="text"
                                     inputMode="numeric"
                                     value={amount}
                                     onChange={(e) => setAmount(e.target.value)}
-                                    placeholder="Maslan: 350,000"
+                                    placeholder="e.g. 350,000"
                                     className={cn(
                                         "w-full h-11 px-3.5 text-base font-bold text-[#1F2937] bg-white border rounded-lg focus:outline-none focus:ring-2 transition-all",
                                         isExceedingCapital && !isAdvanceConfirmed
@@ -737,7 +737,7 @@ export default function EntryDrawer({
                             {/* Cash / Bank Toggle */}
                             <div>
                                 <label className="text-xs font-semibold text-[#374151] block mb-1">
-                                    Kahan Se / Kahan
+                                    Payment Channel
                                 </label>
                                 <div className="grid grid-cols-2 gap-1.5 p-1 bg-gray-100 rounded-lg border border-gray-300">
                                     <button
@@ -750,7 +750,7 @@ export default function EntryDrawer({
                                                 : "text-[#374151] hover:text-[#1F2937]"
                                         )}
                                     >
-                                        Cash (Galla)
+                                        Cash (Register)
                                     </button>
                                     <button
                                         type="button"
@@ -772,7 +772,7 @@ export default function EntryDrawer({
                         {paymentMethod === 'bank' && (
                             <div className="pt-1">
                                 <label className="text-xs font-semibold text-[#374151] block mb-1">
-                                    Bank Account Chunein
+                                    Select Bank Account
                                 </label>
                                 <select
                                     value={bankName}
@@ -808,12 +808,12 @@ export default function EntryDrawer({
                                 <div className="space-y-1">
                                     <h4 className="text-xs font-bold text-[#1F2937]">
                                         {isAdvanceConfirmed
-                                            ? 'Advance Payment Manzoor Kar Li Gai Hai'
-                                            : 'Capital se zyada nikaala ja raha hai!'}
+                                            ? 'Advance Payment Approved'
+                                            : 'Withdrawal exceeds available capital!'}
                                     </h4>
                                     <p className="text-xs text-[#374151] leading-relaxed">
-                                        {activePartner?.name} ka capital <span className="font-bold text-[#1F2937]">Rs. {activePartner?.net_equity.toLocaleString('en-US')}</span> hai. Aap <span className="font-bold text-[#1F2937]">Rs. {numericAmount.toLocaleString('en-US')}</span> nikaal rahe hain, yani <span className="font-black text-red-700">Rs. {excessAmount.toLocaleString('en-US')}</span> zyada.
-                                        {!isAdvanceConfirmed && ` Ye Rs. ${excessAmount.toLocaleString('en-US')} ${activePartner?.name} par udhaar (Advance) likhein?`}
+                                        {activePartner?.name}'s capital is <span className="font-bold text-[#1F2937]">Rs. {activePartner?.net_equity.toLocaleString('en-US')}</span>. You are withdrawing <span className="font-bold text-[#1F2937]">Rs. {numericAmount.toLocaleString('en-US')}</span>, which exceeds equity by <span className="font-black text-red-700">Rs. {excessAmount.toLocaleString('en-US')}</span>.
+                                        {!isAdvanceConfirmed && ` Record this excess Rs. ${excessAmount.toLocaleString('en-US')} as an Advance loan to ${activePartner?.name}?`}
                                     </p>
                                 </div>
                             </div>
@@ -825,7 +825,7 @@ export default function EntryDrawer({
                                         onClick={() => setIsAdvanceConfirmed(true)}
                                         className="min-h-[40px] px-3.5 py-2 text-xs font-bold rounded-lg bg-white border border-gray-300 hover:bg-gray-50 text-[#1F2937] shadow-2xs cursor-pointer text-center"
                                     >
-                                        Haan, Advance banayein
+                                        Yes, approve as Advance
                                     </button>
                                     <button
                                         type="button"
@@ -836,18 +836,18 @@ export default function EntryDrawer({
                                         }}
                                         className="min-h-[40px] px-3.5 py-2 text-xs font-medium rounded-lg bg-white border border-gray-300 hover:bg-gray-50 text-[#374151] shadow-2xs cursor-pointer text-center"
                                     >
-                                        Nahi, rakam kam karein
+                                        No, reduce amount
                                     </button>
                                 </div>
                             ) : (
                                 <div className="flex items-center justify-between text-xs text-emerald-900 pt-1 font-semibold">
-                                    <span>Rs. {excessAmount.toLocaleString('en-US')} Advance record kiya jayega.</span>
+                                    <span>Rs. {excessAmount.toLocaleString('en-US')} will be recorded as Advance.</span>
                                     <button
                                         type="button"
                                         onClick={() => setIsAdvanceConfirmed(false)}
                                         className="underline text-[#4B5563] hover:text-[#1F2937] cursor-pointer text-[11px]"
                                     >
-                                        Advance cancel karein
+                                        Cancel Advance
                                     </button>
                                 </div>
                             )}
@@ -858,7 +858,7 @@ export default function EntryDrawer({
                     {livePreview && (
                         <div className="p-3.5 rounded-xl bg-gray-50 border border-gray-200 text-xs text-[#374151] space-y-1">
                             <span className="font-bold text-[#1F2937] block text-[11px] uppercase tracking-wide">
-                                Khata Par Asar (Live Preview):
+                                Account Impact (Live Preview):
                             </span>
                             <p className="leading-relaxed font-medium">
                                 {livePreview}
@@ -886,9 +886,9 @@ export default function EntryDrawer({
                             )}
                         >
                             {isSubmitting ? (
-                                <span>Save ho raha hai...</span>
+                                <span>Saving...</span>
                             ) : (
-                                <span>Entry Save Karein</span>
+                                <span>Save Entry</span>
                             )}
                         </button>
                     </div>

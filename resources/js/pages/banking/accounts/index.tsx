@@ -228,16 +228,16 @@ export default function BankAccountsPage({ liveCashGalla = 0, dbTransactions = [
 
         // 1. Stored local transfers
         storedTransfers.forEach((st) => {
-            let fromAcc = 'Naqad / Counter';
+            let fromAcc = 'Cash Register';
             let toAcc = st.bankName || 'Bank Account';
             let badge: 'jama' | 'nikasi' | 'transfer' = 'jama';
-            let typeLabel = 'Jama';
+            let typeLabel = 'Deposit';
 
             if (st.type === 'withdraw') {
                 fromAcc = st.bankName || 'Bank Account';
-                toAcc = 'Naqad / Counter';
+                toAcc = 'Cash Register';
                 badge = 'nikasi';
-                typeLabel = 'Nikasi';
+                typeLabel = 'Withdrawal';
             } else if (st.type === 'transfer') {
                 const parts = (st.title || '').split('→');
                 fromAcc = parts[0]?.trim() || st.bankName || 'Bank';
@@ -263,7 +263,7 @@ export default function BankAccountsPage({ liveCashGalla = 0, dbTransactions = [
             list.push({
                 id: dt.id,
                 date: dt.date,
-                type: dt.type || 'Jama',
+                type: dt.type || 'Deposit',
                 typeBadge: 'jama',
                 from: dt.from,
                 to: dt.to,
@@ -292,12 +292,12 @@ export default function BankAccountsPage({ liveCashGalla = 0, dbTransactions = [
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={isUrdu ? 'بینک کھاتہ اور نقد گلہ' : 'Bank Khata & Naqad Galla (Banking & Cash Accounts) - Vegetable POS'} />
+            <Head title={isUrdu ? 'بینک کھاتہ اور نقد گلہ' : 'Banking & Cash Accounts - Vegetable POS'} />
 
             <div className="-mt-4 -mx-4 -mb-4 pb-28 bg-[#eef2ee] min-h-full space-y-4" dir={isUrdu ? 'rtl' : 'ltr'}>
                 {/* Green Header Section */}
                 <MandiPageHeader
-                    title={isUrdu ? t('banking.accounts_title') : 'Bank Khata & Naqad Galla (Banking & Cash Accounts)'}
+                    title={isUrdu ? t('banking.accounts_title') : 'Banking & Cash Accounts'}
                     subtitle={isUrdu ? t('banking.accounts_subtitle') : 'Bank accounts ka hisaab, raqam jama (deposit), nikasi (withdraw) aur transfer'}
                     isUrdu={isUrdu}
                 >
@@ -333,7 +333,7 @@ export default function BankAccountsPage({ liveCashGalla = 0, dbTransactions = [
                             {/* Account Name & Code */}
                             <div className="mt-2.5">
                                 <h3 className="font-bold text-sm sm:text-base text-gray-900 dark:text-white leading-snug">
-                                    {isUrdu ? 'منڈی نقد گلہ (کاؤنٹر)' : 'Mandi Naqad Galla (Cash Counter)'}
+                                    {isUrdu ? 'منڈی نقد گلہ (کاؤنٹر)' : 'Main Cash Register'}
                                 </h3>
                                 <p className="text-xs text-gray-400 font-mono mt-0.5 tracking-tight">
                                     CASH-01
@@ -344,7 +344,7 @@ export default function BankAccountsPage({ liveCashGalla = 0, dbTransactions = [
                         {/* Mojooda Balance */}
                         <div className="mt-3 pt-2 border-t border-gray-100 dark:border-border flex items-baseline justify-between">
                             <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-                                {isUrdu ? 'موجودہ بیلنس:' : 'Mojooda Balance:'}
+                                {isUrdu ? 'موجودہ بیلنس:' : 'Current Balance:'}
                             </span>
                             <span className="text-base sm:text-lg font-black text-gray-900 dark:text-white">
                                 {formatCurrency(liveCashGalla)}
@@ -426,7 +426,7 @@ export default function BankAccountsPage({ liveCashGalla = 0, dbTransactions = [
                                 {/* Mojooda Balance */}
                                 <div className="mt-3 pt-2 border-t border-gray-100 dark:border-border flex items-baseline justify-between">
                                     <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-                                        {isUrdu ? 'موجودہ بیلنس:' : 'Mojooda Balance:'}
+                                        {isUrdu ? 'موجودہ بیلنس:' : 'Current Balance:'}
                                     </span>
                                     <span className="text-base sm:text-lg font-black text-gray-900 dark:text-white">
                                         {formatCurrency(acc.current_balance)}
@@ -450,11 +450,11 @@ export default function BankAccountsPage({ liveCashGalla = 0, dbTransactions = [
                                     <tr className="border-b border-gray-100 dark:border-border bg-gray-50/70 dark:bg-muted/30">
                                         {/* Column 1: Tareekh */}
                                         <th className="py-3 px-4 text-start font-bold text-gray-700 dark:text-gray-300">
-                                            {isUrdu ? t('banking.date') : 'Tareekh'}
+                                            {isUrdu ? t('banking.date') : 'Date'}
                                         </th>
                                         {/* Column 2: Qism */}
                                         <th className="py-3 px-3 text-start font-bold text-gray-700 dark:text-gray-300">
-                                            {isUrdu ? t('banking.type') : 'Qism'}
+                                            {isUrdu ? t('banking.type') : 'Type'}
                                         </th>
                                         {/* Column 3: Account Se (From) */}
                                         <th className="py-3 px-3 text-start font-bold text-gray-700 dark:text-gray-300">
@@ -470,7 +470,7 @@ export default function BankAccountsPage({ liveCashGalla = 0, dbTransactions = [
                                         </th>
                                         {/* Column 6: Tafseel (Description) */}
                                         <th className="py-3 px-4 text-start font-bold text-gray-700 dark:text-gray-300">
-                                            {isUrdu ? t('banking.description') : 'Tafseel (Description)'}
+                                            {isUrdu ? t('banking.description') : 'Description'}
                                         </th>
                                     </tr>
                                 </thead>
