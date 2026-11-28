@@ -67,15 +67,15 @@ class MerchantReportController extends Controller
             $totalUdhaar += $udhaar;
 
             $mName = $sale->merchant ? ($sale->merchant->name_en ?: ($sale->merchant->name ?: $sale->merchant->name_ur)) : 'Aam Naqad Gahak';
-            $itName = $sale->item ? ($sale->item->name_en ?: $sale->item->name) : 'Sabzi';
+            $itName = $sale->item ? ($sale->item->name_en ?: $sale->item->name) : 'Produce Item';
 
-            $displayType = 'NAQAD';
+            $displayType = 'CASH';
             if ($pType === 'udhaar') {
-                $displayType = 'UDHAAR';
+                $displayType = 'CREDIT';
             } elseif ($pType === 'bank') {
                 $displayType = 'BANK';
             } elseif ($pType === 'split') {
-                $displayType = 'ADHA CASH / ADHA UDHAAR';
+                $displayType = 'SPLIT (CASH/CREDIT)';
             }
 
             $rozanaRows[] = [
@@ -83,7 +83,7 @@ class MerchantReportController extends Controller
                 'bill_no' => sprintf('INV-%04d', 1000 + $sale->id),
                 'customer_name' => $mName,
                 'date' => $sale->date ? date('Y-m-d', strtotime($sale->date)) : date('Y-m-d'),
-                'item_count' => (int)($sale->nag ?: 1) . ' Sabzian',
+                'item_count' => (int)($sale->nag ?: 1) . ' Items',
                 'item_name' => $itName,
                 'gross_amount' => $gross,
                 'cash_paid' => $cash,

@@ -86,6 +86,41 @@ interface Props {
     freshLots: FreshLotOption[];
 }
 
+const PRODUCE_TRANSLATIONS: Record<string, string> = {
+    'Tamatar': 'Tomato',
+    'Harri Mirch': 'Green Chilli',
+    'Band Gobhi': 'Cabbage',
+    'Piyaz': 'Onion',
+    'Aloo': 'Potato',
+    'Lehsan': 'Garlic',
+    'Mirchi': 'Red Chilli',
+    'Bhindi': 'Ladyfinger',
+    'Adrak': 'Ginger',
+    'Kheera': 'Cucumber',
+};
+
+const REASON_TRANSLATIONS: Record<string, string> = {
+    'Muawza': 'Compensation',
+    'Taaluqat': 'Public Relations (PR)',
+    'Loyalty': 'Loyalty',
+    'Eid': 'Eid',
+    'Sample': 'Sample',
+    'Public Relations (PR)': 'Public Relations (PR)',
+    'Compensation': 'Compensation',
+    'Expire Maal': 'Expired Produce',
+    'Gal Sad Gaya': 'Damaged / Spoiled',
+};
+
+function getDisplayProduce(name: string, isUrdu: boolean): string {
+    if (isUrdu || !name) return name;
+    return PRODUCE_TRANSLATIONS[name] || name;
+}
+
+function getDisplayReason(reason: string, isUrdu: boolean): string {
+    if (isUrdu || !reason) return reason;
+    return REASON_TRANSLATIONS[reason] || reason;
+}
+
 type ModalActionTab = 'discount' | 'gift' | 'return_farmer' | 'wastage';
 
 export default function ExpiryGiftsPage({
@@ -210,7 +245,7 @@ export default function ExpiryGiftsPage({
 
         const qty = parseFloat(actionGiftQty);
         if (isNaN(qty) || qty <= 0 || qty > kyaKareinLot.quantity) {
-            toast.error(`Durust quantity darj karein (1 se ${kyaKareinLot.quantity} ${kyaKareinLot.unit}).`);
+            toast.error(isUrdu ? `درست مقدار درج کریں (1 سے ${kyaKareinLot.quantity} ${kyaKareinLot.unit})` : `Please enter a valid quantity (1 to ${kyaKareinLot.quantity} ${kyaKareinLot.unit}).`);
             return;
         }
 
@@ -225,12 +260,12 @@ export default function ExpiryGiftsPage({
             onSuccess: () => {
                 setIsSubmittingAction(false);
                 closeKyaKareinModal();
-                toast.success('Gift kamyabi se record ho gaya.');
+                toast.success(isUrdu ? 'تحفہ کامیابی سے ریکارڈ ہو گیا' : 'Gift recorded successfully.');
             },
             onError: (errs) => {
                 setIsSubmittingAction(false);
                 const first = Object.values(errs)[0];
-                toast.error(first || 'Gift save nahi ho saka.');
+                toast.error(first || (isUrdu ? 'تحفہ محفوظ نہیں ہو سکا' : 'Failed to save gift.'));
             },
         });
     };
@@ -242,7 +277,7 @@ export default function ExpiryGiftsPage({
 
         const qty = parseFloat(actionReturnQty);
         if (isNaN(qty) || qty <= 0 || qty > kyaKareinLot.quantity) {
-            toast.error(`Durust quantity darj karein (1 se ${kyaKareinLot.quantity} ${kyaKareinLot.unit}).`);
+            toast.error(isUrdu ? `درست مقدار درج کریں (1 سے ${kyaKareinLot.quantity} ${kyaKareinLot.unit})` : `Please enter a valid quantity (1 to ${kyaKareinLot.quantity} ${kyaKareinLot.unit}).`);
             return;
         }
 
@@ -261,7 +296,7 @@ export default function ExpiryGiftsPage({
             onError: (errs) => {
                 setIsSubmittingAction(false);
                 const first = Object.values(errs)[0];
-                toast.error(first || 'Wapsi record karne mein masla aya.');
+                toast.error(first || (isUrdu ? 'واپسی ریکارڈ کرنے میں مسئلہ آیا' : 'Failed to record return to farmer.'));
             },
         });
     };
@@ -273,11 +308,11 @@ export default function ExpiryGiftsPage({
 
         const qty = parseFloat(actionWastageQty);
         if (isNaN(qty) || qty <= 0) {
-            toast.error('Please enter a valid quantity.');
+            toast.error(isUrdu ? 'براہ کرم درست مقدار درج کریں' : 'Please enter a valid quantity.');
             return;
         }
         if (qty > kyaKareinLot.quantity) {
-            toast.error(`Quantity baaki maal (${kyaKareinLot.quantity} ${kyaKareinLot.unit}) se zyada nahi ho sakti.`);
+            toast.error(isUrdu ? `مقدار باقی اسٹاک (${kyaKareinLot.quantity} ${kyaKareinLot.unit}) سے زیادہ نہیں ہو سکتی` : `Quantity cannot exceed remaining stock (${kyaKareinLot.quantity} ${kyaKareinLot.unit}).`);
             return;
         }
 
@@ -344,12 +379,12 @@ export default function ExpiryGiftsPage({
         }
 
         if (giftNumericQty > activeGiftLot.quantity) {
-            toast.error(`Stock kam hai! Sirf ${activeGiftLot.quantity} ${activeGiftLot.unit} dastiyab hai.`);
+            toast.error(isUrdu ? `اسٹاک کم ہے! صرف ${activeGiftLot.quantity} ${activeGiftLot.unit} دستیاب ہے` : `Insufficient stock! Only ${activeGiftLot.quantity} ${activeGiftLot.unit} available.`);
             return;
         }
 
         if (!giftReason) {
-            toast.error('Please select a reason.');
+            toast.error(isUrdu ? 'براہ کرم وجہ منتخب کریں' : 'Please select a reason.');
             return;
         }
 
@@ -368,12 +403,12 @@ export default function ExpiryGiftsPage({
                 setGiftQty('');
                 setGiftReason('');
                 setGiftRecipient('');
-                toast.success('Gift save ho gaya.');
+                toast.success(isUrdu ? 'تحفہ محفوظ ہو گیا' : 'Gift recorded successfully.');
             },
             onError: (errs) => {
                 setIsSubmittingGift(false);
                 const first = Object.values(errs)[0];
-                toast.error(first || 'Gift save nahi ho saka.');
+                toast.error(first || (isUrdu ? 'تحفہ محفوظ نہیں ہو سکا' : 'Failed to save gift.'));
             },
         });
     };
@@ -504,21 +539,7 @@ export default function ExpiryGiftsPage({
                                         <tbody className="divide-y divide-gray-100 text-[#111827]">
                                             {lots.map((lot) => {
                                                 const isDepleted = lot.quantity <= 0;
-
-                                                const produceTranslations: Record<string, string> = {
-                                                    'Tamatar': 'Tomato',
-                                                    'Harri Mirch': 'Green Chilli',
-                                                    'Band Gobhi': 'Cabbage',
-                                                    'Piyaz': 'Onion',
-                                                    'Aloo': 'Potato',
-                                                    'Lehsan': 'Garlic',
-                                                    'Mirchi': 'Red Chilli',
-                                                    'Bhindi': 'Ladyfinger',
-                                                    'Adrak': 'Ginger',
-                                                };
-                                                const displayItemName = !isUrdu && produceTranslations[lot.item_name]
-                                                    ? produceTranslations[lot.item_name]
-                                                    : lot.item_name;
+                                                const displayItemName = getDisplayProduce(lot.item_name, isUrdu);
 
                                                 return (
                                                     <tr
@@ -665,11 +686,16 @@ export default function ExpiryGiftsPage({
                                                 className="w-full h-11 px-3.5 text-xs font-medium text-[#111827] bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d] transition-all cursor-pointer"
                                             >
                                                 <option value="" disabled>{isUrdu ? 'سبزی منتخب کریں' : 'Select Item'}</option>
-                                                {freshLots.map((lot) => (
-                                                    <option key={lot.id} value={lot.id}>
-                                                        {lot.name}
-                                                    </option>
-                                                ))}
+                                                {freshLots.map((lot) => {
+                                                    const displayName = !isUrdu && lot.item_name
+                                                        ? `${getDisplayProduce(lot.item_name, isUrdu)} · ${lot.lot_code} · ${lot.name.includes('·') ? lot.name.split('·').slice(2).join('·').trim() : ''}`
+                                                        : lot.name;
+                                                    return (
+                                                        <option key={lot.id} value={lot.id}>
+                                                            {displayName}
+                                                        </option>
+                                                    );
+                                                })}
                                             </select>
                                         </div>
 
@@ -787,14 +813,14 @@ export default function ExpiryGiftsPage({
                                                                 {gift.recipient_name}
                                                             </span>
                                                             <span className="text-xs text-[#4B5563] block mt-0.5">
-                                                                {gift.item_name} <span className="font-mono">{formatNum(gift.quantity)} {gift.unit}</span>
+                                                                {getDisplayProduce(gift.item_name, isUrdu)} <span className="font-mono">{formatNum(gift.quantity)} {gift.unit}</span>
                                                             </span>
                                                         </td>
                                                         <td className="py-3.5 px-4 text-end font-bold text-sm text-[#111827] font-mono">
                                                             {formatNum(gift.value)}
                                                         </td>
                                                         <td className="py-3.5 px-4 text-center text-xs font-medium text-[#374151]">
-                                                            {gift.reason}
+                                                            {getDisplayReason(gift.reason, isUrdu)}
                                                         </td>
                                                         <td className="py-3.5 px-4 text-center text-xs font-mono font-medium text-[#4B5563]">
                                                             {gift.voucher_no}
@@ -836,7 +862,7 @@ export default function ExpiryGiftsPage({
                                         <div>
                                             <span className="text-xs font-semibold text-[#1F2937] block">{isUrdu ? 'سبزی / لاٹ' : 'Item / Lot'}</span>
                                             <span className="text-base font-extrabold text-[#111827]">
-                                                {kyaKareinLot.item_name} · <span className="font-mono">{kyaKareinLot.lot_code}</span>
+                                                {getDisplayProduce(kyaKareinLot.item_name, isUrdu)} · <span className="font-mono">{kyaKareinLot.lot_code}</span>
                                             </span>
                                         </div>
                                         <div className="text-end">

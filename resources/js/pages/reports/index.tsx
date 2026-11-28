@@ -244,9 +244,9 @@ export default function ReportsPage({
         let fileName = '';
 
         if (activeTab === 'rozana') {
-            fileName = `Rozana_Sale_Report_${filterFromDate}_to_${filterToDate}.csv`;
+            fileName = `Daily_Sales_Report_${filterFromDate}_to_${filterToDate}.csv`;
             if (!rozanaData.rows || rozanaData.rows.length === 0) {
-                csvContent = 'Is tareekh ka koi record nahi\n';
+                csvContent = 'No records found for this date\n';
             } else {
                 csvContent = 'Bill #,Customer Name,Date,Vegetable Items,Total Bill (Rs),Cash Paid (Rs),Balance Due (Rs),Payment Method\n';
                 rozanaData.rows.forEach(r => {
@@ -255,9 +255,9 @@ export default function ReportsPage({
                 csvContent += `Total,,,"${rozanaData.bills_count} Bills","${rozanaData.total_gross.toFixed(2)}","${rozanaData.total_cash.toFixed(2)}","${rozanaData.total_udhaar.toFixed(2)}",\n`;
             }
         } else if (activeTab === 'mahana') {
-            fileName = `Mahana_Sale_Summary_${selectedYear}.csv`;
+            fileName = `Monthly_Sales_Summary_${selectedYear}.csv`;
             if (!mahanaData.rows || mahanaData.rows.length === 0) {
-                csvContent = 'Is saal ka koi record nahi\n';
+                csvContent = 'No records found for this year\n';
             } else {
                 csvContent = 'Month,Total Invoices,Gross Sales (Rs),Cash Recovered (Rs),Balance Due (Rs),Discount (Rs)\n';
                 mahanaData.rows.forEach(r => {
@@ -268,16 +268,16 @@ export default function ReportsPage({
         } else if (activeTab === 'stock') {
             fileName = `Stock_Valuation_${new Date().toISOString().split('T')[0]}.csv`;
             if (!stockData.rows || stockData.rows.length === 0) {
-                csvContent = 'Koi stock record nahi mila\n';
+                csvContent = 'No stock records found\n';
             } else {
-                csvContent = 'Product Name,Mojooda Stock,Unit,Khareed Rate (Rs),Kul Khareed Cost (Rs),Sale Rate (Rs),Total Sales Value (Rs)\n';
+                csvContent = 'Product Name,Current Stock,Unit,Purchase Rate (Rs),Total Cost (Rs),Selling Rate (Rs),Total Sales Value (Rs)\n';
                 stockData.rows.forEach(r => {
                     csvContent += `"${r.name}","${r.stock}","${r.unit}","${r.cost_rate.toFixed(2)}","${r.total_cost.toFixed(2)}","${r.sale_rate.toFixed(2)}","${r.total_sale.toFixed(2)}"\n`;
                 });
                 csvContent += `Total,"${stockData.items_count} Items",,,"${stockData.cost_valuation.toFixed(2)}",,"${stockData.sale_valuation.toFixed(2)}"\n`;
             }
         } else if (activeTab === 'gahak') {
-            fileName = `Gahak_Baqaya_Udhaar_${new Date().toISOString().split('T')[0]}.csv`;
+            fileName = `Customer_Outstanding_Balances_${new Date().toISOString().split('T')[0]}.csv`;
             if (!gahakData.rows || gahakData.rows.length === 0) {
                 csvContent = 'No outstanding balances found\n';
             } else {
@@ -384,7 +384,7 @@ export default function ReportsPage({
             if (!res.ok) throw new Error('Failed');
             const data: ReportDataResponse = await res.json();
             if (!data.rows || data.rows.length === 0) {
-                toast.error('Is tareekh ka koi record nahi');
+                toast.error(isUrdu ? 'اس تاریخ کا کوئی ریکارڈ نہیں' : 'No records found for this date');
                 return;
             }
             let csv = data.columns.join(',') + '\n';
@@ -562,7 +562,7 @@ export default function ReportsPage({
                                         {rozanaData.rows.length === 0 ? (
                                             <tr>
                                                 <td colSpan={8} className="py-12 text-center text-xs text-gray-400">
-                                                    {isUrdu ? 'اس تاریخ کا کوئی ریکارڈ نہیں' : 'Is tareekh ka koi record nahi'}
+                                                    {isUrdu ? 'اس تاریخ کا کوئی ریکارڈ نہیں' : 'No records found for this date'}
                                                 </td>
                                             </tr>
                                         ) : (
@@ -578,7 +578,7 @@ export default function ReportsPage({
                                                         {row.date}
                                                     </td>
                                                     <td className="py-3 px-3.5 text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                                                        {row.item_count}
+                                                        {!isUrdu ? row.item_count.replace(/Sabzian|Sabzi/gi, 'Items') : row.item_count}
                                                     </td>
                                                     <td className="py-3 px-3.5 text-end font-bold text-gray-900 dark:text-white whitespace-nowrap">
                                                         Rs {row.gross_amount.toFixed(2)}
@@ -593,16 +593,21 @@ export default function ReportsPage({
                                                         <span
                                                             className={cn(
                                                                 "inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold tracking-wider",
-                                                                row.payment_type.includes('UDHAAR')
+                                                                row.payment_type.includes('UDHAAR') || row.payment_type.includes('CREDIT')
                                                                     ? "bg-red-50 text-red-800 border border-red-200"
-                                                                    : row.payment_type.includes('ADHA')
+                                                                    : row.payment_type.includes('ADHA') || row.payment_type.includes('SPLIT')
                                                                     ? "bg-amber-50 text-amber-800 border border-amber-200"
                                                                     : row.payment_type.includes('BANK')
                                                                     ? "bg-indigo-50 text-indigo-800 border border-indigo-200"
                                                                     : "bg-emerald-50 text-emerald-800 border border-emerald-200"
                                                             )}
                                                         >
-                                                            {row.payment_type}
+                                                            {!isUrdu ? (
+                                                                row.payment_type.includes('UDHAAR') ? 'CREDIT' :
+                                                                row.payment_type.includes('ADHA') ? 'SPLIT (CASH/CREDIT)' :
+                                                                row.payment_type.includes('NAQAD') ? 'CASH' :
+                                                                row.payment_type
+                                                            ) : row.payment_type}
                                                         </span>
                                                     </td>
                                                 </tr>
@@ -708,7 +713,7 @@ export default function ReportsPage({
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
                             <div className="bg-white dark:bg-card border border-gray-200/90 dark:border-border rounded-xl p-4.5 shadow-2xs">
                                 <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 block">
-                                    {isUrdu ? 'کل سبزی جنس:' : 'Kul Sabzi Items:'}
+                                    {isUrdu ? 'کل سبزی جنس:' : 'Total Produce Items:'}
                                 </span>
                                 <span className="text-2xl font-black text-gray-900 dark:text-white block mt-1.5">
                                     {stockData.items_count} {isUrdu ? 'اجناس' : 'Items'}
@@ -717,7 +722,7 @@ export default function ReportsPage({
 
                             <div className="bg-white dark:bg-card border border-gray-200/90 dark:border-border rounded-xl p-4.5 shadow-2xs">
                                 <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 block">
-                                    {isUrdu ? 'خرید مالیت (Cost):' : 'Khareed Malyaat (Cost):'}
+                                    {isUrdu ? 'خرید مالیت (Cost):' : 'Purchase Cost (Total):'}
                                 </span>
                                 <span className="text-2xl font-black text-gray-900 dark:text-white block mt-1.5">
                                     Rs {Math.round(stockData.cost_valuation).toLocaleString()}
@@ -750,10 +755,10 @@ export default function ReportsPage({
                                     <thead>
                                         <tr className="border-b border-gray-100 dark:border-border bg-emerald-50/40 dark:bg-muted/30">
                                             <th className="py-3 px-4 text-start font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'سبزی کا نام' : 'Product Name'}</th>
-                                            <th className="py-3 px-4 text-center font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'موجودہ اسٹاک' : 'Mojooda Stock'}</th>
-                                            <th className="py-3 px-4 text-end font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'خرید ریٹ' : 'Khareed Rate'}</th>
-                                            <th className="py-3 px-4 text-end font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'کل خرید لاگت' : 'Kul Khareed Cost'}</th>
-                                            <th className="py-3 px-4 text-end font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'فروخت ریٹ' : 'Sale Rate'}</th>
+                                            <th className="py-3 px-4 text-center font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'موجودہ اسٹاک' : 'Current Stock'}</th>
+                                            <th className="py-3 px-4 text-end font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'خرید ریٹ' : 'Purchase Rate'}</th>
+                                            <th className="py-3 px-4 text-end font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'کل خرید لاگت' : 'Total Purchase Cost'}</th>
+                                            <th className="py-3 px-4 text-end font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'فروخت ریٹ' : 'Selling Rate'}</th>
                                             <th className="py-3 px-4 text-end font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'کل فروخت مالیت' : 'Total Sales Value'}</th>
                                         </tr>
                                     </thead>
@@ -761,7 +766,7 @@ export default function ReportsPage({
                                         {stockData.rows.length === 0 ? (
                                             <tr>
                                                 <td colSpan={6} className="py-12 text-center text-xs text-gray-400">
-                                                    {isUrdu ? 'کوئی اسٹاک ڈیٹا دستیاب نہیں ہے' : 'Koi stock data dastiyab nahi hai'}
+                                                    {isUrdu ? 'کوئی اسٹاک ڈیٹا دستیاب نہیں ہے' : 'No stock data available'}
                                                 </td>
                                             </tr>
                                         ) : (
@@ -838,10 +843,10 @@ export default function ReportsPage({
                                         <tr className="border-b border-gray-100 dark:border-border bg-emerald-50/40 dark:bg-muted/30">
                                             <th className="py-3 px-4 text-start font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'گاہک کا نام' : 'Customer Name'}</th>
                                             <th className="py-3 px-3 text-start font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'فون' : 'Phone'}</th>
-                                            <th className="py-3 px-3 text-start font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'علاقہ' : 'Ilaqa'}</th>
+                                            <th className="py-3 px-3 text-start font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'علاقہ' : 'Area / City'}</th>
                                             <th className="py-3 px-3 text-end font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'کریڈٹ لمٹ' : 'Credit Limit'}</th>
                                             <th className="py-3 px-4 text-end font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'بقایا ادھار (Rs)' : 'Outstanding Due (Rs)'}</th>
-                                            <th className="py-3 px-3 text-center font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'آخری سیل' : 'Aakhri Sale'}</th>
+                                            <th className="py-3 px-3 text-center font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'آخری سیل' : 'Last Sale'}</th>
                                             <th className="py-3 px-3 text-center font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'آخری وصولی' : 'Last Recovery'}</th>
                                         </tr>
                                     </thead>
@@ -1145,7 +1150,7 @@ export default function ReportsPage({
                                     <tr className="bg-gray-100 border-b border-gray-400">
                                         <th className="p-2 text-start border border-gray-300 font-bold">Bill #</th>
                                         <th className="p-2 text-start border border-gray-300 font-bold">Customer Name</th>
-                                        <th className="p-2 text-start border border-gray-300 font-bold">Tareekh</th>
+                                        <th className="p-2 text-start border border-gray-300 font-bold">Date</th>
                                         <th className="p-2 text-start border border-gray-300 font-bold">Items</th>
                                         <th className="p-2 text-end border border-gray-300 font-bold">Total Invoices</th>
                                         <th className="p-2 text-end border border-gray-300 font-bold">Cash Paid</th>
