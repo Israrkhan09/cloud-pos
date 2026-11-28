@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToBusiness;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SyncEvent extends Model
 {
+    use BelongsToBusiness;
+
     public const STATUS_RECEIVED = 'received';
     public const STATUS_PROCESSED = 'processed';
     public const STATUS_FAILED = 'failed';
@@ -19,6 +22,7 @@ class SyncEvent extends Model
     protected $table = 'sync_events';
 
     protected $fillable = [
+        'business_id',
         'event_uuid',
         'device_id',
         'entity_type',

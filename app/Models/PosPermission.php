@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToBusiness;
 use Illuminate\Database\Eloquent\Model;
 
 class PosPermission extends Model
 {
+    use BelongsToBusiness;
+
     protected $table = 'pos_permissions';
 
     protected $fillable = [

@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToBusiness;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 class SyncDevice extends Model
 {
+    use BelongsToBusiness;
+
     public const STATUS_ACTIVE = 'active';
     public const STATUS_REVOKED = 'revoked';
     public const STATUS_SUSPENDED = 'suspended';
@@ -15,6 +18,7 @@ class SyncDevice extends Model
     protected $table = 'sync_devices';
 
     protected $fillable = [
+        'business_id',
         'uuid',
         'device_id',
         'device_name',

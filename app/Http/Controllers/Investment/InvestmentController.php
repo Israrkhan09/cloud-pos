@@ -600,7 +600,9 @@ class InvestmentController extends Controller
         $lastId = (InvestmentTransaction::max('id') ?? 0) + 1;
         $refNo = sprintf('%s-%04d', $prefix, $lastId);
 
-        $approvalStatus = 'approved';
+        $approvalStatus = ($role === 'owner') ? 'approved' : 'pending_owner';
+        $approvedBy = ($role === 'owner') ? (auth()->user()?->name ?? 'Owner') : null;
+        $approvedAt = ($role === 'owner') ? now() : null;
 
         $excessAmount = 0;
         if ($type === 'capital_out' && $partner && $isAdvance) {
@@ -609,7 +611,7 @@ class InvestmentController extends Controller
 
         $createdTx = DB::transaction(function () use (
             $refNo, $type, $validated, $partner, $partyName, $amount, $isAdvance,
-            $excessAmount, $approvalStatus, $role
+            $excessAmount, $approvalStatus, $approvedBy, $approvedAt, $role
         ) {
             $tx = InvestmentTransaction::create([
                 'ref_no'             => $refNo,
@@ -626,8 +628,8 @@ class InvestmentController extends Controller
                 'is_advance'         => $isAdvance,
                 'advance_amount'     => $excessAmount,
                 'approval_status'    => $approvalStatus,
-                'approved_by'        => 'Owner (Hajji Muhammad)',
-                'approved_at'        => now(),
+                'approved_by'        => $approvedBy,
+                'approved_at'        => $approvedAt,
                 'created_by_role'    => $role,
                 'created_by_user_id' => auth()->id() ?? 1,
             ]);
@@ -780,7 +782,7 @@ class InvestmentController extends Controller
     {
         $tx = InvestmentTransaction::findOrFail($id);
         $tx->approval_status = 'approved';
-        $tx->approved_by = auth()->user()?->name ?? 'Owner (Hajji Muhammad)';
+        $tx->approved_by = auth()->user()?->name ?? 'Owner';
         $tx->approved_at = now();
         $tx->save();
 

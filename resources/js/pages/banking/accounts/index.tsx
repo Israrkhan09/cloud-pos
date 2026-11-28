@@ -34,7 +34,7 @@ interface Props {
     dbTransactions?: DbTransaction[];
 }
 
-export default function BankAccountsPage({ liveCashGalla = 48813.6, dbTransactions = [] }: Props) {
+export default function BankAccountsPage({ liveCashGalla = 0, dbTransactions = [] }: Props) {
     const { t, i18n } = useTranslation();
     const isUrdu = i18n.language === 'ur';
 

@@ -14,7 +14,7 @@ class BankController extends Controller
     {
         $dashboardService = new DashboardService();
         $stats = $dashboardService->getDashboardItems('today')['stats'] ?? [];
-        $cashGalla = $stats['cashGalla'] ?? 48813.6;
+        $cashGalla = $stats['cashGalla'] ?? 0;
 
         // Fetch real transactions from database
         $dbTransactions = MerchantReceipt::with('merchant')

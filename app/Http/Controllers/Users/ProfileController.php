@@ -37,6 +37,10 @@ class ProfileController extends Controller
 
         $request->user()->save();
 
+        if ($request->is('settings/*') || ($request->header('referer') && str_contains($request->header('referer'), 'settings/profile'))) {
+            return redirect('/settings/profile');
+        }
+
         return to_route('profile.edit');
     }
 
