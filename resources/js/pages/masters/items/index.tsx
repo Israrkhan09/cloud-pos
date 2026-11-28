@@ -101,15 +101,53 @@ export default function ItemsIndex({
     const [purchaseRate, setPurchaseRate] = useState('');
     const [purchaseFarmerName, setPurchaseFarmerName] = useState('');
 
+    const produceTranslations: Record<string, string> = {
+        'aloo': 'Potato',
+        'tamatar': 'Tomato',
+        'piyaz': 'Onion',
+        'harri mirch': 'Green Chilli',
+        'hari mirch': 'Green Chilli',
+        'mirchi': 'Red Chilli',
+        'band gobhi': 'Cabbage',
+        'phool gobhi': 'Cauliflower',
+        'lehsan': 'Garlic',
+        'adrak': 'Ginger',
+        'bhindi': 'Ladyfinger',
+        'kheera': 'Cucumber',
+        'matar': 'Peas',
+        'shimla mirch': 'Capsicum',
+        'palak': 'Spinach',
+        'gajar': 'Carrot',
+        'mooli': 'Radish',
+        'shalgam': 'Turnip',
+        'baingan': 'Brinjal',
+        'karela': 'Bitter Gourd',
+        'tinda': 'Apple Gourd',
+        'kaddu': 'Pumpkin',
+        'arvi': 'Taro Root',
+        'dhaniya': 'Coriander',
+        'podina': 'Mint',
+        'lemon': 'Lemon',
+        'limon': 'Lemon',
+        'leemo': 'Lemon',
+    };
+
     const cleanItemName = (name?: string): string => {
         if (!name) return '-';
-        return name.replace(/\s*\([^)]*\)/g, '').trim();
+        const clean = name.replace(/\s*\([^)]*\)/g, '').trim();
+        if (isUrdu) return clean;
+        const key = clean.toLowerCase();
+        if (produceTranslations[key]) return produceTranslations[key];
+        for (const [urduKey, engVal] of Object.entries(produceTranslations)) {
+            if (key.includes(urduKey)) return engVal;
+        }
+        return clean;
     };
 
     const formatShelfLifeDisplay = (shelfLife?: string): string => {
         if (!shelfLife) return '-';
         const formatted = shelfLife.replace(/din/gi, isUrdu ? 'دن' : 'days');
-        return `${formatted} ${isUrdu ? 'باقی' : 'remaining'}`;
+        return isUrdu ? `${formatted} باقی` : `${formatted} remaining`;
     };
 
     const breadcrumbs: BreadcrumbItem[] = [
@@ -202,7 +240,20 @@ export default function ItemsIndex({
     // Default subtitles for vegetables
     const getItemSubtitle = (it: Item): string => {
         if (it.stock_note && it.stock_note.trim().length > 0) {
-            return it.stock_note;
+            if (isUrdu) return it.stock_note;
+            return it.stock_note
+                .replace(/1\s*Bori\s*=\s*50\s*kg/gi, '1 Bag = 50 kg')
+                .replace(/bori/gi, 'bag')
+                .replace(/Bori/gi, 'Bag')
+                .replace(/peti/gi, 'box')
+                .replace(/Peti/gi, 'Box')
+                .replace(/Stock khatam/gi, 'Out of stock')
+                .replace(/Sirf (\d+) bache/gi, 'Only $1 remaining')
+                .replace(/Sale band/gi, 'Sale paused')
+                .replace(/(\d+)\s*aaya\s*\|\s*(\d+)\s*bika/gi, '$1 received | $2 sold')
+                .replace(/Kisan Farm Phool Gobi/gi, 'Kisan Farm Cauliflower')
+                .replace(/Phool Gobi/gi, 'Cauliflower')
+                .replace(/Desi Mandi Special/gi, 'Special Market Lot');
         }
         const defaultSubtitles: Record<number, string> = {
             1: 'Okara New Crop (50kg Bag)',
@@ -667,12 +718,12 @@ export default function ItemsIndex({
                                                     {/* 5. Mojooda Stock (Bold & Right-Aligned with Unit) */}
                                                     <td className="px-2 py-2.5 text-end font-bold text-gray-900 whitespace-nowrap text-xs sm:text-[13px] tabular-nums w-28">
                                                         <span>{formatNum(currentStock)}</span>{' '}
-                                                        <span className="text-[11px] text-gray-500 font-medium">{isUrdu ? (unitName.toLowerCase().includes('peti') ? 'پیٹی' : 'بوری') : unitName.toLowerCase()}</span>
+                                                        <span className="text-[11px] text-gray-500 font-medium">{isUrdu ? (unitName.toLowerCase().includes('peti') ? 'پیٹی' : 'بوری') : (unitName.toLowerCase().includes('peti') ? (currentStock === 1 ? 'box' : 'boxes') : (currentStock === 1 ? 'bag' : 'bags'))}</span>
                                                     </td>
 
                                                     {/* 6. Shelf Life */}
                                                     <td className="px-2 py-2.5 text-start text-gray-700 whitespace-nowrap text-xs font-medium w-20">
-                                                        {it.shelf_life || (it.shelf_life_days ? `${it.shelf_life_days} ${isUrdu ? 'دن' : 'din'}` : isUrdu ? '4-5 دن' : '4-5 din')}
+                                                        {it.shelf_life ? it.shelf_life.replace(/din/gi, isUrdu ? 'دن' : 'days') : (it.shelf_life_days ? `${it.shelf_life_days} ${isUrdu ? 'دن' : 'days'}` : isUrdu ? '4-5 دن' : '4-5 days')}
                                                     </td>
 
                                                     {/* 7. Status */}
@@ -846,7 +897,7 @@ export default function ItemsIndex({
                                             name_ur: val,
                                         });
                                     }}
-                                    placeholder={isUrdu ? 'مثلاً: ٹماٹر' : 'e.g. Tamatar'}
+                                    placeholder={isUrdu ? 'مثلاً: ٹماٹر' : 'e.g. Tomato'}
                                     className="h-9.5 text-sm border-gray-200 rounded-lg focus:border-[#14532d]"
                                     autoFocus
                                 />
@@ -942,7 +993,7 @@ export default function ItemsIndex({
                                 <Input
                                     value={itemForm.data.stock_note}
                                     onChange={e => itemForm.setData('stock_note', e.target.value)}
-                                    placeholder={isUrdu ? 'مثلاً: قصور اسپیشل، اے کلاس فارم' : 'e.g. Kasur Special, A-Class Farm'}
+                                    placeholder={isUrdu ? 'مثلاً: قصور اسپیشل، اے کلاس فارم' : 'e.g. Special Farm Quality'}
                                     className="h-9.5 text-sm border-gray-200 rounded-lg focus:border-[#14532d]"
                                 />
                             </div>
@@ -955,14 +1006,14 @@ export default function ItemsIndex({
                                 onClick={() => setItemModalOpen(false)}
                                 className="min-h-[40px] px-5 py-2 border border-gray-200 text-gray-700 hover:bg-gray-50 text-xs font-semibold rounded-xl transition-colors cursor-pointer"
                             >
-                                {isUrdu ? 'منسوخ (Cancel)' : 'Cancel'}
+                                {isUrdu ? 'منسوخ' : 'Cancel'}
                             </button>
                             <button
                                 type="submit"
                                 disabled={itemForm.processing}
                                 className="min-h-[40px] px-6 py-2 bg-[#14532d] hover:bg-[#166534] active:bg-[#0f3d21] text-white font-bold text-xs sm:text-sm rounded-xl shadow-xs transition-colors cursor-pointer"
                             >
-                                {isUrdu ? 'محفوظ کریں (Save)' : 'Save Product'}
+                                {isUrdu ? 'محفوظ کریں' : 'Save Product'}
                             </button>
                         </DialogFooter>
                     </form>
@@ -1040,13 +1091,13 @@ export default function ItemsIndex({
                             <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200/80 flex items-center justify-between text-xs">
                                 <span className="text-emerald-900 font-semibold">{isUrdu ? 'موجودہ اسٹاک:' : 'Current Stock:'}</span>
                                 <span className="font-extrabold text-emerald-950 text-sm">
-                                    {stockAddModalItem.current_stock ?? stockAddModalItem.opening_stock ?? 0} {isUrdu ? (stockAddModalItem.unit?.toLowerCase().includes('peti') ? 'پیٹی' : 'بوری') : (stockAddModalItem.unit || 'Bori')}
+                                    {stockAddModalItem.current_stock ?? stockAddModalItem.opening_stock ?? 0} {isUrdu ? (stockAddModalItem.unit?.toLowerCase().includes('peti') ? 'پیٹی' : 'بوری') : (stockAddModalItem.unit?.toLowerCase().includes('peti') ? 'Boxes' : 'Bags')}
                                 </span>
                             </div>
 
                             <div>
                                 <Label className="text-xs font-semibold text-gray-700 block mb-1">
-                                    {isUrdu ? `کتنا اسٹاک شامل کرنا ہے؟ (${stockAddModalItem.unit?.toLowerCase().includes('peti') ? 'پیٹی' : 'بوری'}) *` : `Stock Quantity to Add (${stockAddModalItem.unit || 'Bags'}) *`}
+                                    {isUrdu ? `کتنا اسٹاک شامل کرنا ہے؟ (${stockAddModalItem.unit?.toLowerCase().includes('peti') ? 'پیٹی' : 'بوری'}) *` : `Stock Quantity to Add (${stockAddModalItem.unit?.toLowerCase().includes('peti') ? 'Boxes' : 'Bags'}) *`}
                                 </Label>
                                 <Input
                                     type="number"
@@ -1065,7 +1116,7 @@ export default function ItemsIndex({
                                 <div className="p-2.5 bg-gray-50 rounded-lg text-xs flex justify-between items-center text-gray-700">
                                     <span>{isUrdu ? 'نیا کل اسٹاک ہوگا:' : 'New Total Stock:'}</span>
                                     <span className="font-bold text-emerald-900 text-sm">
-                                        {(stockAddModalItem.current_stock ?? 0) + Number(stockAddQuantity)} {isUrdu ? (stockAddModalItem.unit?.toLowerCase().includes('peti') ? 'پیٹی' : 'بوری') : (stockAddModalItem.unit || 'Bori')}
+                                        {(stockAddModalItem.current_stock ?? 0) + Number(stockAddQuantity)} {isUrdu ? (stockAddModalItem.unit?.toLowerCase().includes('peti') ? 'پیٹی' : 'بوری') : (stockAddModalItem.unit?.toLowerCase().includes('peti') ? 'Boxes' : 'Bags')}
                                     </span>
                                 </div>
                             )}
@@ -1109,7 +1160,7 @@ export default function ItemsIndex({
                             <div className="p-3 bg-amber-50 rounded-xl border border-amber-200/80 flex items-center justify-between text-xs">
                                 <span className="text-amber-900 font-semibold">{isUrdu ? 'سسٹم اسٹاک:' : 'System Stock:'}</span>
                                 <span className="font-extrabold text-amber-950 text-sm">
-                                    {stockAdjustModalItem.current_stock ?? stockAdjustModalItem.opening_stock ?? 0} {isUrdu ? (stockAdjustModalItem.unit?.toLowerCase().includes('peti') ? 'پیٹی' : 'بوری') : (stockAdjustModalItem.unit || 'Bori')}
+                                    {stockAdjustModalItem.current_stock ?? stockAdjustModalItem.opening_stock ?? 0} {isUrdu ? (stockAdjustModalItem.unit?.toLowerCase().includes('peti') ? 'پیٹی' : 'بوری') : (stockAdjustModalItem.unit?.toLowerCase().includes('peti') ? 'Boxes' : 'Bags')}
                                 </span>
                             </div>
 
@@ -1140,7 +1191,7 @@ export default function ItemsIndex({
                                             : "text-rose-800"
                                     )}>
                                         {Number(stockAdjustNewStock) - (stockAdjustModalItem.current_stock ?? 0) > 0 ? '+' : ''}
-                                        {Number(stockAdjustNewStock) - (stockAdjustModalItem.current_stock ?? 0)} {isUrdu ? (stockAdjustModalItem.unit?.toLowerCase().includes('peti') ? 'پیٹی' : 'بوری') : (stockAdjustModalItem.unit || 'Bori')}
+                                        {Number(stockAdjustNewStock) - (stockAdjustModalItem.current_stock ?? 0)} {isUrdu ? (stockAdjustModalItem.unit?.toLowerCase().includes('peti') ? 'پیٹی' : 'بوری') : (stockAdjustModalItem.unit?.toLowerCase().includes('peti') ? 'Boxes' : 'Bags')}
                                     </span>
                                 </div>
                             )}
@@ -1190,7 +1241,7 @@ export default function ItemsIndex({
                                     <Label className="text-xs font-semibold text-gray-700 block mb-1">{isUrdu ? 'جنس' : 'Item'}</Label>
                                     <Input
                                         disabled
-                                        value={`${cleanItemName(purchaseModalItem.name_en)} (${isUrdu ? (purchaseModalItem.unit?.toLowerCase().includes('peti') ? 'پیٹی' : 'بوری') : (purchaseModalItem.unit || 'Bori')})`}
+                                        value={`${cleanItemName(purchaseModalItem.name_en)} (${isUrdu ? (purchaseModalItem.unit?.toLowerCase().includes('peti') ? 'پیٹی' : 'بوری') : (purchaseModalItem.unit?.toLowerCase().includes('peti') ? 'Boxes' : 'Bags')})`}
                                         className="h-9.5 text-xs bg-gray-50 border-gray-200 rounded-lg text-gray-900 font-bold"
                                     />
                                 </div>
@@ -1208,7 +1259,7 @@ export default function ItemsIndex({
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
                                     <Label className="text-xs font-semibold text-gray-700 block mb-1">
-                                        {isUrdu ? `تعداد (${purchaseModalItem.unit?.toLowerCase().includes('peti') ? 'پیٹی' : 'بوری'}) *` : `Quantity (${purchaseModalItem.unit || 'Bags'}) *`}
+                                        {isUrdu ? `تعداد (${purchaseModalItem.unit?.toLowerCase().includes('peti') ? 'پیٹی' : 'بوری'}) *` : `Quantity (${purchaseModalItem.unit?.toLowerCase().includes('peti') ? 'Boxes' : 'Bags'}) *`}
                                     </Label>
                                     <Input
                                         type="number"
@@ -1224,7 +1275,7 @@ export default function ItemsIndex({
                                 </div>
                                 <div>
                                     <Label className="text-xs font-semibold text-gray-700 block mb-1">
-                                        {isUrdu ? `ریٹ فی ${purchaseModalItem.unit?.toLowerCase().includes('peti') ? 'پیٹی' : 'بوری'} (روپے)` : `Rate per ${purchaseModalItem.unit || 'Bag'} (Rs.)`}
+                                        {isUrdu ? `ریٹ فی ${purchaseModalItem.unit?.toLowerCase().includes('peti') ? 'پیٹی' : 'بوری'} (روپے)` : `Rate per ${purchaseModalItem.unit?.toLowerCase().includes('peti') ? 'Box' : 'Bag'} (Rs.)`}
                                     </Label>
                                     <Input
                                         type="number"

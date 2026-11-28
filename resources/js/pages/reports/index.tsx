@@ -308,7 +308,7 @@ export default function ReportsPage({
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
-        toast.success(`${fileName} download ho gaya.`);
+        toast.success(`${fileName} downloaded successfully.`);
     };
 
     // Legacy Reports Categories
@@ -319,13 +319,13 @@ export default function ReportsPage({
             name_ur: 'خریدار (مرچنٹس)',
             icon: 'Users',
             reports: [
-                { id: 'amroza_print', title: 'Amroza Print', title_ur: 'امروزہ پرنٹ', desc: 'Aaj ki sale ki list', desc_ur: 'آج کی سیل کی لسٹ', url: '/amroza' },
-                { id: 'amroza_parchi', title: 'Amroza Parchi', title_ur: 'امروزہ پرچی', desc: 'Merchant ko dene ki parchi', desc_ur: 'مرچنٹ کو دینے کی پرچی', url: '/amroza' },
+                { id: 'amroza_print', title: 'Amroza Print', title_ur: 'امروزہ پرنٹ', desc: 'Today\'s sales list', desc_ur: 'آج کی سیل کی لسٹ', url: '/amroza' },
+                { id: 'amroza_parchi', title: 'Amroza Parchi', title_ur: 'امروزہ پرچی', desc: 'Customer sale receipt', desc_ur: 'مرچنٹ کو دینے کی پرچی', url: '/amroza' },
                 { id: 'naqdi_print', title: 'Cash Collections Print', title_ur: 'نقدی پرنٹ', desc: 'Daily cash collections list', desc_ur: 'نقدی وصولی کی لسٹ', url: '/naqdi' },
                 { id: 'wasooli_print', title: 'Payment Recovery Print', title_ur: 'وصولی پرنٹ', desc: 'Customer recoveries list', desc_ur: 'وصولی (ریکوری) کی لسٹ', url: '/wasooli' },
                 { id: 'merchant_amroza', title: 'Merchant Amroza', title_ur: 'مرچنٹ امروزہ', desc: 'Merchant wise sale', desc_ur: 'مرچنٹ کے مطابق سیل', url: '/merchant-amroza' },
                 { id: 'merchant_wasooli', title: 'Customer Recovery', title_ur: 'مرچنٹ وصولی', desc: 'Customer-wise payment recoveries', desc_ur: 'مرچنٹ کے مطابق وصولی', url: '/merchant-wasooli' },
-                { id: 'amroza_tafseel', title: 'Amroza Tafseel', title_ur: 'امروزہ تفصیل', desc: 'Sale ki poori tafseel', desc_ur: 'سیل کی پوری تفصیل', url: '/amroza-detail', isRange: true },
+                { id: 'amroza_tafseel', title: 'Amroza Tafseel', title_ur: 'امروزہ تفصیل', desc: 'Complete sale details', desc_ur: 'سیل کی پوری تفصیل', url: '/amroza-detail', isRange: true },
                 { id: 'wasooli_tafseel', title: 'Recovery Detail', title_ur: 'وصولی تفصیل', desc: 'Itemized recovery transactions', desc_ur: 'وصولی کی پوری تفصیل', url: '/wasooli-detail', isRange: true },
                 { id: 'amroza_wasooli', title: 'Daily Sales & Recovery', title_ur: 'امروزہ / وصولی سمری', desc: 'Combined daily sales and recoveries', desc_ur: 'سیل اور وصولی ایک ساتھ', url: '/amroza-wasooli', isRange: true },
             ],
@@ -338,9 +338,9 @@ export default function ReportsPage({
             reports: [
                 { id: 'farmer_bill', title: 'Farmer Invoice (Bijak)', title_ur: 'کسان بل (بیجک)', desc: 'Daily farmer invoice accounts', desc_ur: 'کسان کا روزانہ کا حساب', url: '/bijak' },
                 { id: 'farmer_khata', title: 'Farmer Ledger', title_ur: 'کسان کھاتہ', desc: 'Farmer account statement and balance', desc_ur: 'کسان کا جمع / بنام (فرد حساب)', url: '/khata' },
-                { id: 'farmer_list', title: 'Farmer List', title_ur: 'کسان لسٹ', desc: 'Tamaam farmers ki fehrist', desc_ur: 'تمام کسانوں کی فہرست', url: '/masters/farmers' },
-                { id: 'farmer_marks', title: 'Farmer Marks', title_ur: 'کسان مارکس', desc: 'Farmer marks aur bariyan', desc_ur: 'کسان مارکس اور باڑیاں', url: '/masters/marks' },
-                { id: 'farmer_balances', title: 'Farmer Balances', title_ur: 'کسان بقایا جات', desc: 'Farmer baqaya jaat', desc_ur: 'کسان کے بقایا جات', url: '/khata' },
+                { id: 'farmer_list', title: 'Farmer List', title_ur: 'کسان لسٹ', desc: 'All registered farmers list', desc_ur: 'تمام کسانوں کی فہرست', url: '/masters/farmers' },
+                { id: 'farmer_marks', title: 'Farmer Marks', title_ur: 'کسان مارکس', desc: 'Farmer marks and lot references', desc_ur: 'کسان مارکس اور باڑیاں', url: '/masters/marks' },
+                { id: 'farmer_balances', title: 'Farmer Balances', title_ur: 'کسان بقایا جات', desc: 'Farmer outstanding balances', desc_ur: 'کسان کے بقایا جات', url: '/khata' },
             ],
         },
         {
@@ -349,10 +349,10 @@ export default function ReportsPage({
             name_ur: 'لیجر',
             icon: 'BookBookmark',
             reports: [
-                { id: 'sale_report', title: 'Sale Report', title_ur: 'سیل رپورٹ', desc: 'aaj ki list', desc_ur: 'آج کی لسٹ', url: '/amroza' },
+                { id: 'sale_report', title: 'Sale Report', title_ur: 'سیل رپورٹ', desc: 'Daily sales list', desc_ur: 'آج کی لسٹ', url: '/amroza' },
                 { id: 'munafa_nuqsan', title: 'Profit & Loss', title_ur: 'منافع / نقصان', desc: 'Item-wise profit and loss', desc_ur: 'آئٹم کے مطابق', url: '/reports' },
                 { id: 'udhaar_report', title: 'Customer Receivables Report', title_ur: 'ادھار رپورٹ', desc: 'Customer outstanding balances', desc_ur: 'کس سے کتنا لینا', url: '/merchant-khata' },
-                { id: 'stock_report', title: 'Stock Report', title_ur: 'اسٹاک رپورٹ', desc: 'value aur kam stock', desc_ur: 'ویلیو اور کم اسٹاک', url: '/masters/items' },
+                { id: 'stock_report', title: 'Stock Report', title_ur: 'اسٹاک رپورٹ', desc: 'Stock valuation and low stock alerts', desc_ur: 'ویلیو اور کم اسٹاک', url: '/masters/items' },
                 { id: 'kisan_hisaab', title: 'Farmer Account Report', title_ur: 'کسان حساب', desc: 'Payable balance to suppliers', desc_ur: 'دینا باقی', url: '/khata' },
             ],
         },
@@ -499,7 +499,7 @@ export default function ReportsPage({
                                 type="submit"
                                 className="h-9 px-4 rounded-lg bg-[#14532d] hover:bg-[#0f3d21] text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
                             >
-                                {isUrdu ? 'فلٹر لگائیں' : 'Filter Lagayein'}
+                                {isUrdu ? 'فلٹر لگائیں' : 'Apply Filter'}
                             </button>
                         </form>
 
@@ -643,19 +643,19 @@ export default function ReportsPage({
                                 <table className="w-full text-start border-collapse text-xs sm:text-sm">
                                     <thead>
                                         <tr className="border-b border-gray-100 dark:border-border bg-emerald-50/40 dark:bg-muted/30">
-                                            <th className="py-3 px-4 text-start font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'مہینہ (Month)' : 'Mahina (Month)'}</th>
+                                            <th className="py-3 px-4 text-start font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'مہینہ (Month)' : 'Month'}</th>
                                             <th className="py-3 px-4 text-center font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'کل بلز' : 'Total Invoices'}</th>
-                                            <th className="py-3 px-4 text-end font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'کل سیل (Rs)' : 'Kul Sale (Rs)'}</th>
+                                            <th className="py-3 px-4 text-end font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'کل سیل (Rs)' : 'Total Sales (Rs)'}</th>
                                             <th className="py-3 px-4 text-end font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'نقد وصولی (Rs)' : 'Cash Recovery (Rs)'}</th>
                                             <th className="py-3 px-4 text-end font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'ادھار بقایا (Rs)' : 'Balance Due (Rs)'}</th>
-                                            <th className="py-3 px-4 text-end font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'رعایت / ڈسکاؤنٹ (Rs)' : 'Riaayat / Discount (Rs)'}</th>
+                                            <th className="py-3 px-4 text-end font-bold text-gray-700 dark:text-gray-300">{isUrdu ? 'رعایت / ڈسکاؤنٹ (Rs)' : 'Discount (Rs)'}</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100 dark:divide-border">
                                         {mahanaData.rows.length === 0 ? (
                                             <tr>
                                                 <td colSpan={6} className="py-12 text-center text-xs text-gray-400">
-                                                    {isUrdu ? 'اس سال کا کوئی ریکارڈ نہیں' : 'Is saal ka koi record nahi'}
+                                                    {isUrdu ? 'اس سال کا کوئی ریکارڈ نہیں' : 'No records found for this year'}
                                                 </td>
                                             </tr>
                                         ) : (
@@ -928,7 +928,7 @@ export default function ReportsPage({
                                 type="submit"
                                 className="h-9 px-4 rounded-lg bg-[#14532d] hover:bg-[#0f3d21] text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
                             >
-                                {isUrdu ? 'فلٹر لگائیں' : 'Filter Lagayein'}
+                                {isUrdu ? 'فلٹر لگائیں' : 'Apply Filter'}
                             </button>
                         </form>
 
@@ -1038,7 +1038,7 @@ export default function ReportsPage({
                                 {isUrdu ? 'باقی رپورٹس (گاہک، کسان اور لیجر دستاویزی)' : 'Additional Reports (Customers, Farmers & Ledgers)'}
                             </h3>
                             <p className="text-xs text-gray-500 dark:text-gray-400">
-                                {isUrdu ? 'روزنامچہ، پرچی، امروزہ اور کھاتہ کے الگ الگ پرنٹس' : 'Roznamcha, Parchi, Amroza, aur Khata ke alag alag prints'}
+                                {isUrdu ? 'روزنامچہ، پرچی، امروزہ اور کھاتہ کے الگ الگ پرنٹس' : 'Individual print formats for daily journal, receipts, invoices and ledger accounts'}
                             </p>
                         </div>
                         <button
@@ -1147,15 +1147,15 @@ export default function ReportsPage({
                                         <th className="p-2 text-start border border-gray-300 font-bold">Customer Name</th>
                                         <th className="p-2 text-start border border-gray-300 font-bold">Tareekh</th>
                                         <th className="p-2 text-start border border-gray-300 font-bold">Items</th>
-                                        <th className="p-2 text-end border border-gray-300 font-bold">Kul Bill</th>
+                                        <th className="p-2 text-end border border-gray-300 font-bold">Total Invoices</th>
                                         <th className="p-2 text-end border border-gray-300 font-bold">Cash Paid</th>
                                         <th className="p-2 text-end border border-gray-300 font-bold">Balance Due</th>
-                                        <th className="p-2 text-center border border-gray-300 font-bold">Tariqa</th>
+                                        <th className="p-2 text-center border border-gray-300 font-bold">Payment Method</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {rozanaData.rows.length === 0 ? (
-                                        <tr><td colSpan={8} className="p-4 text-center">Is tareekh ka koi record nahi</td></tr>
+                                        <tr><td colSpan={8} className="p-4 text-center">No records found for this date</td></tr>
                                     ) : (
                                         rozanaData.rows.map(r => (
                                             <tr key={r.id} className="border-b border-gray-300">
@@ -1189,9 +1189,9 @@ export default function ReportsPage({
                             <table className="w-full text-xs border border-gray-400 border-collapse">
                                 <thead>
                                     <tr className="bg-gray-100 border-b border-gray-400">
-                                        <th className="p-2 text-start border border-gray-300 font-bold">Mahina (Month)</th>
+                                        <th className="p-2 text-start border border-gray-300 font-bold">Month</th>
                                         <th className="p-2 text-center border border-gray-300 font-bold">Total Invoices</th>
-                                        <th className="p-2 text-end border border-gray-300 font-bold">Kul Sale (Rs)</th>
+                                        <th className="p-2 text-end border border-gray-300 font-bold">Total Sales (Rs)</th>
                                         <th className="p-2 text-end border border-gray-300 font-bold">Cash Recovery (Rs)</th>
                                         <th className="p-2 text-end border border-gray-300 font-bold">Balance Due (Rs)</th>
                                         <th className="p-2 text-end border border-gray-300 font-bold">Discount (Rs)</th>
@@ -1199,7 +1199,7 @@ export default function ReportsPage({
                                 </thead>
                                 <tbody>
                                     {mahanaData.rows.length === 0 ? (
-                                        <tr><td colSpan={6} className="p-4 text-center">Is saal ka koi record nahi</td></tr>
+                                        <tr><td colSpan={6} className="p-4 text-center">No records found for this year</td></tr>
                                     ) : (
                                         mahanaData.rows.map(r => (
                                             <tr key={r.month} className="border-b border-gray-300">
@@ -1233,16 +1233,16 @@ export default function ReportsPage({
                                 <thead>
                                     <tr className="bg-gray-100 border-b border-gray-400">
                                         <th className="p-2 text-start border border-gray-300 font-bold">Product Name</th>
-                                        <th className="p-2 text-center border border-gray-300 font-bold">Mojooda Stock</th>
-                                        <th className="p-2 text-end border border-gray-300 font-bold">Khareed Rate</th>
-                                        <th className="p-2 text-end border border-gray-300 font-bold">Kul Khareed Cost</th>
-                                        <th className="p-2 text-end border border-gray-300 font-bold">Sale Rate</th>
+                                        <th className="p-2 text-center border border-gray-300 font-bold">Current Stock</th>
+                                        <th className="p-2 text-end border border-gray-300 font-bold">Purchase Rate</th>
+                                        <th className="p-2 text-end border border-gray-300 font-bold">Total Cost</th>
+                                        <th className="p-2 text-end border border-gray-300 font-bold">Selling Rate</th>
                                         <th className="p-2 text-end border border-gray-300 font-bold">Total Sales Value</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {stockData.rows.length === 0 ? (
-                                        <tr><td colSpan={6} className="p-4 text-center">Koi stock record nahi</td></tr>
+                                        <tr><td colSpan={6} className="p-4 text-center">No stock records found</td></tr>
                                     ) : (
                                         stockData.rows.map(r => (
                                             <tr key={r.id} className="border-b border-gray-300">
@@ -1277,10 +1277,10 @@ export default function ReportsPage({
                                     <tr className="bg-gray-100 border-b border-gray-400">
                                         <th className="p-2 text-start border border-gray-300 font-bold">Customer Name</th>
                                         <th className="p-2 text-start border border-gray-300 font-bold">Phone</th>
-                                        <th className="p-2 text-start border border-gray-300 font-bold">Ilaqa</th>
+                                        <th className="p-2 text-start border border-gray-300 font-bold">Area / City</th>
                                         <th className="p-2 text-end border border-gray-300 font-bold">Credit Limit</th>
                                         <th className="p-2 text-end border border-gray-300 font-bold">Outstanding Due</th>
-                                        <th className="p-2 text-center border border-gray-300 font-bold">Aakhri Sale</th>
+                                        <th className="p-2 text-center border border-gray-300 font-bold">Last Sale</th>
                                         <th className="p-2 text-center border border-gray-300 font-bold">Last Recovery</th>
                                     </tr>
                                 </thead>
@@ -1303,7 +1303,7 @@ export default function ReportsPage({
                                 </tbody>
                                 <tfoot>
                                     <tr className="bg-gray-100 font-bold border-t border-gray-400">
-                                        <td colSpan={4} className="p-2 border border-gray-300 text-end">Kul Outstanding Due:</td>
+                                        <td colSpan={4} className="p-2 border border-gray-300 text-end">Total Outstanding Due:</td>
                                         <td className="p-2 border border-gray-300 text-end font-bold">Rs {Math.round(gahakData.total_market_udhaar).toLocaleString()}</td>
                                         <td colSpan={2} className="p-2 border border-gray-300"></td>
                                     </tr>

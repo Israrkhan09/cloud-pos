@@ -344,12 +344,12 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={isUrdu ? 'ڈیٹا بیس بیک اپ اور بحالی' : 'Database Backup aur Restore - Vegetable POS'} />
+            <Head title={isUrdu ? 'ڈیٹا بیس بیک اپ اور بحالی' : 'Database Backup & Restore - Vegetable POS'} />
 
             <div className={`-mt-4 -mx-4 -mb-4 pb-28 bg-[#eef2ee] min-h-full space-y-4 ${isUrdu ? 'font-urdu' : ''}`} dir={isUrdu ? 'rtl' : 'ltr'}>
                 {/* 1. Green Header Section */}
                 <MandiPageHeader
-                    title={isUrdu ? t('backup_mandi.title') : 'Database Backup aur Restore'}
+                    title={isUrdu ? t('backup_mandi.title') : 'Database Backup & Restore'}
                     subtitle={isUrdu ? t('backup_mandi.subtitle') : 'SQLite database backup, timestamped downloads and system restore'}
                     isUrdu={isUrdu}
                 >
@@ -421,7 +421,7 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                     </div>
                     <div className="space-y-1">
                         <h4 className="font-bold text-emerald-950 dark:text-emerald-200 text-sm">
-                            {isUrdu ? 'خودکار (Automatic) بیک اپ نظام فعال ہے' : 'Khud-kaar (Automatic) Backup Nizam Fa-aal Hai'}
+                            {isUrdu ? 'خودکار (Automatic) بیک اپ نظام فعال ہے' : 'Automatic Backup System is Active'}
                         </h4>
                         <p className="text-emerald-900/90 dark:text-emerald-300/90 leading-relaxed text-xs sm:text-[13px]">
                             {isUrdu
@@ -458,7 +458,7 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                             <table className="w-full text-start text-xs sm:text-[13px]">
                                 <thead className="bg-emerald-50/70 dark:bg-muted text-gray-800 dark:text-gray-200 border-b border-emerald-100 dark:border-border font-bold">
                                     <tr>
-                                        <th className="py-2.5 px-3.5 text-start">{isUrdu ? 'فائل کا نام' : 'File Ka Naam'}</th>
+                                        <th className="py-2.5 px-3.5 text-start">{isUrdu ? 'فائل کا نام' : 'File Name'}</th>
                                         <th className="py-2.5 px-3.5 text-start">{isUrdu ? 'سائز' : 'Size'}</th>
                                         <th className="py-2.5 px-3.5 text-start">{isUrdu ? 'بنانے کا وقت' : 'Creation Time'}</th>
                                         <th className="py-2.5 px-3.5 text-center">{isUrdu ? 'ڈاؤن لوڈ' : 'Download'}</th>
@@ -470,7 +470,7 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                                             <td colSpan={4} className="py-8 text-center text-gray-400 dark:text-gray-500 text-xs">
                                                 {isUrdu
                                                     ? 'ابھی کوئی بیک اپ فائل سرور پر موجود نہیں ہے۔ اوپر دیے گئے بٹن سے بیک اپ بنائیں۔'
-                                                    : 'Abhi koi backup file server par mojood nahi hai. Upar diye gaye button se backup banayein.'}
+                                                    : 'No backup files found on the server. Click the button above to create a backup.'}
                                             </td>
                                         </tr>
                                     ) : (
@@ -740,7 +740,7 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                                     <div>
                                         <h3 className="font-bold text-sm">{isUrdu ? 'پریویو: ' : 'Preview: '}{previewCategory.name}</h3>
                                         <p className="text-[11px] text-emerald-100">
-                                            {isUrdu ? 'ڈیٹا بیس سے لائیو ڈیٹا ' : 'Database se live data '}({previewData ? previewData.rows.length : '...'} {isUrdu ? 'ریکارڈز' : 'records'})
+                                            {isUrdu ? 'ڈیٹا بیس سے لائیو ڈیٹا ' : 'Live database records '}({previewData ? previewData.rows.length : '...'} {isUrdu ? 'ریکارڈز' : 'records'})
                                         </p>
                                     </div>
                                 </div>
@@ -790,18 +790,18 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                                 {loadingPreview ? (
                                     <div className="py-16 text-center text-xs text-gray-500 space-y-2">
                                         <Icon name="SpinnerGap" className="size-6 animate-spin text-emerald-700 mx-auto" />
-                                        <p className="font-bold">{isUrdu ? 'ڈیٹا بیس سے ڈیٹا لوڈ ہو رہا ہے...' : 'Database se data load ho raha hai...'}</p>
+                                        <p className="font-bold">{isUrdu ? 'ڈیٹا بیس سے ڈیٹا لوڈ ہو رہا ہے...' : 'Loading database records...'}</p>
                                     </div>
                                 ) : !previewData || previewData.rows.length === 0 ? (
                                     <div className="py-16 text-center text-xs text-gray-500 space-y-2 bg-gray-50 dark:bg-muted/40 rounded-xl border border-dashed border-gray-300 dark:border-gray-700 p-8">
                                         <Icon name="WarningCircle" className="size-8 text-amber-600 mx-auto" weight="fill" />
                                         <p className="font-bold text-sm text-gray-900 dark:text-white">
-                                            {isUrdu ? 'اس کیٹیگری میں کوئی ریکارڈ نہیں' : 'Is category mein koi record nahi'}
+                                            {isUrdu ? 'اس کیٹیگری میں کوئی ریکارڈ نہیں' : 'No records found in this category'}
                                         </p>
                                         <p className="text-gray-400">
                                             {isUrdu
                                                 ? 'ڈیٹا بیس میں اس کیٹیگری سے متعلق کوئی ڈیٹا موجود نہیں ہے، اس لیے فائل ڈاؤن لوڈ نہیں ہو سکتی۔'
-                                                : 'Database mein is category se mutaliq koi data mojood nahi hai, is liye file download nahi ho sakti.'}
+                                                : 'No data found for this category in the database.'}
                                         </p>
                                     </div>
                                 ) : (
@@ -863,7 +863,7 @@ export default function BackupIndex({ backups: initialBackups = [], categories: 
                             {/* Modal Footer */}
                             <div className="bg-gray-50 dark:bg-muted/40 px-5 py-3 border-t border-gray-200 dark:border-gray-800 flex justify-between items-center text-xs shrink-0">
                                 <span className="text-gray-600 dark:text-gray-400 font-medium">
-                                    {isUrdu ? 'کل ریکارڈز: ' : 'Kul Records: '}<strong className="text-gray-900 dark:text-white font-mono">{previewData?.rows?.length || 0}</strong>
+                                    {isUrdu ? 'کل ریکارڈز: ' : 'Total Records: '}<strong className="text-gray-900 dark:text-white font-mono">{previewData?.rows?.length || 0}</strong>
                                 </span>
                                 <button
                                     type="button"

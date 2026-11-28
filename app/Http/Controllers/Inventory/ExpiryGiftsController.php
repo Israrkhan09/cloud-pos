@@ -95,7 +95,7 @@ class ExpiryGiftsController extends Controller
             return [
                 'id' => $l->id,
                 'item_id' => $l->item_id,
-                'name' => "{$l->item_name} · {$l->lot_code} · {$l->expiry_countdown['text']} baaki",
+                'name' => "{$l->item_name} · {$l->lot_code} · {$l->expiry_countdown['text']} remaining",
                 'item_name' => $l->item_name,
                 'lot_code' => $l->lot_code,
                 'rate' => $l->rate,
@@ -154,7 +154,7 @@ class ExpiryGiftsController extends Controller
                 'monthly_budget' => $monthlyBudget,
                 'budget_baaki' => $budgetBaaki,
                 'budget_progress_pct' => min(100, round(($currentMonthGifts / $monthlyBudget) * 100)),
-                'budget_used_label' => number_format($currentMonthGifts) . ' / ' . number_format($monthlyBudget) . ' istemal',
+                'budget_used_label' => number_format($currentMonthGifts) . ' / ' . number_format($monthlyBudget) . ' used',
                 'top_recipients' => $topRecipients,
             ],
             'freshLots' => $freshLots,
@@ -241,7 +241,7 @@ class ExpiryGiftsController extends Controller
             $lot->item->save();
         }
 
-        return redirect()->back()->with('success', "Wastage voucher {$voucherNo} (Rs. " . number_format($loss) . ") kamyabi se record ho gaya.");
+        return redirect()->back()->with('success', "Wastage voucher {$voucherNo} (Rs. " . number_format($loss) . ") recorded successfully.");
     }
 
     public function returnToFarmer(Request $request)
@@ -254,7 +254,7 @@ class ExpiryGiftsController extends Controller
 
         $lot = ExpiryLot::findOrFail($validated['lot_id']);
         $qty = min($lot->quantity, (float) $validated['quantity']);
-        $farmer = !empty($validated['farmer_name']) ? trim($validated['farmer_name']) : 'Kisan';
+        $farmer = !empty($validated['farmer_name']) ? trim($validated['farmer_name']) : 'Farmer';
 
         $lot->quantity = max(0, $lot->quantity - $qty);
         $lot->nuqsan = $lot->quantity * $lot->rate;
@@ -268,7 +268,7 @@ class ExpiryGiftsController extends Controller
             $lot->item->save();
         }
 
-        return redirect()->back()->with('success', "{$lot->item_name} ({$qty} {$lot->unit}) {$farmer} ko wapas karne ka record darj ho gaya.");
+        return redirect()->back()->with('success', "Successfully recorded return of {$lot->item_name} ({$qty} {$lot->unit}) to {$farmer}.");
     }
 
     public function storeGift(Request $request)
@@ -318,6 +318,6 @@ class ExpiryGiftsController extends Controller
             $lot->item->save();
         }
 
-        return redirect()->back()->with('success', "Gift voucher {$voucherNo} (Rs. " . number_format($value) . ") {$recipient} ke naam record ho gaya.");
+        return redirect()->back()->with('success', "Gift voucher {$voucherNo} (Rs. " . number_format($value) . ") recorded successfully for {$recipient}.");
     }
 }

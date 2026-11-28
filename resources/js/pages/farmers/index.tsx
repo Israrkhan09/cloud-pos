@@ -527,7 +527,7 @@ export default function FarmersIndex({ farmers = [], areas = [], filters }: Prop
                             <div className="bg-emerald-50/70 border border-emerald-200 rounded-xl p-3.5 flex justify-between items-center">
                                 <div>
                                     <span className="text-[10px] font-bold text-gray-500 uppercase block">
-                                        {isUrdu ? 'موجودہ بقایا (دینا ہے)' : 'Mojooda Baqaya (Dena Hai)'}
+                                        {isUrdu ? 'موجودہ بقایا (دینا ہے)' : 'Current Balance (Payable)'}
                                     </span>
                                     <span className="text-xl font-bold text-red-700 mt-0.5 block">
                                         {formatRs(khataData?.farmer?.current_balance ?? khataFarmer.current_balance)}
@@ -541,7 +541,7 @@ export default function FarmersIndex({ farmers = [], areas = [], filters }: Prop
                             {/* Entries Table */}
                             {khataLoading ? (
                                 <div className="py-8 text-center text-gray-400 text-xs">
-                                    {isUrdu ? 'کھاتہ لوڈ ہو رہا ہے...' : 'Khata load ho raha hai...'}
+                                    {isUrdu ? 'کھاتہ لوڈ ہو رہا ہے...' : 'Loading ledger...'}
                                 </div>
                             ) : !khataData || khataData.entries.length === 0 ? (
                                 <div className="py-8 text-center text-gray-400 text-xs">

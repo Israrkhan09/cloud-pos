@@ -823,7 +823,7 @@ class MerchantReportController extends Controller
                 }
                 $response['columns'] = ['#', 'Code', 'Merchant', 'Type', 'Detail', 'Amount'];
                 $response['rows'] = $rows;
-                $response['totals'] = ['Total Wasooli: Rs. ' . number_format($totalAmt)];
+                $response['totals'] = ['Total Recovery: Rs. ' . number_format($totalAmt)];
                 break;
 
             case 'merchant_amroza':
@@ -988,7 +988,7 @@ class MerchantReportController extends Controller
                         'col7' => 'Rs. ' . number_format($f->current_balance),
                     ];
                 }
-                $response['columns'] = ['#', 'Code', 'Farmer Name', 'Phone', 'Area', 'Sabiqa', 'Current Baqaya'];
+                $response['columns'] = ['#', 'Code', 'Farmer Name', 'Phone', 'Area', 'Previous Balance', 'Current Balance'];
                 $response['rows'] = $rows;
                 $response['totals'] = ['Total Farmer Balance: Rs. ' . number_format($totalBal)];
                 break;
@@ -1027,8 +1027,8 @@ class MerchantReportController extends Controller
                 $expenses = Expense::where('date', $date)->get();
 
                 $rows = [
-                    ['col1' => $date, 'col2' => 'Aaj ki Naqdi', 'col3' => 'Cash sales', 'col4' => 'Rs. ' . number_format($cashSales), 'col5' => '—'],
-                    ['col1' => $date, 'col2' => 'Aaj ki Wasooli', 'col3' => 'Recoveries', 'col4' => 'Rs. ' . number_format($wasooli), 'col5' => '—'],
+                    ['col1' => $date, 'col2' => 'Today\'s Cash Sales', 'col3' => 'Cash sales', 'col4' => 'Rs. ' . number_format($cashSales), 'col5' => '—'],
+                    ['col1' => $date, 'col2' => 'Today\'s Recoveries', 'col3' => 'Recoveries', 'col4' => 'Rs. ' . number_format($wasooli), 'col5' => '—'],
                 ];
                 $totJama = $cashSales + $wasooli;
                 $totBanam = 0;
@@ -1158,8 +1158,8 @@ class MerchantReportController extends Controller
             $entries[] = [
                 'id' => 'sabiqa_0',
                 'entry_date' => $fromDate,
-                'description' => 'Sabiqa Baqaya (Opening Balance)',
-                'ref_type' => 'SABIQA',
+                'description' => 'Previous Balance (Opening Balance)',
+                'ref_type' => 'OPENING',
                 'entry_type' => $initialSabqa >= 0 ? 'debit' : 'credit',
                 'debit' => $initialSabqa >= 0 ? $initialSabqa : 0,
                 'credit' => $initialSabqa < 0 ? abs($initialSabqa) : 0,
@@ -1208,7 +1208,7 @@ class MerchantReportController extends Controller
                 'id' => 'rcpt_' . $r->id,
                 'entry_date' => $dateStr,
                 'description' => "Recovery Receipt #REC-{$rcptNum} ({$mode}{$noteStr})",
-                'ref_type' => 'WASOOLI',
+                'ref_type' => 'RECOVERY',
                 'entry_type' => 'credit',
                 'debit' => 0,
                 'credit' => $credit,

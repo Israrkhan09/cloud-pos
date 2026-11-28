@@ -230,7 +230,7 @@ export default function FarmerKhataIndex({
                                 <thead>
                                     <tr className="text-[#374151] border-b border-gray-200 font-bold bg-gray-50/80 text-xs md:text-sm">
                                         <th className="px-4 py-3 text-start">Mark</th>
-                                        <th className="px-4 py-3 text-end">Nag</th>
+                                        <th className="px-4 py-3 text-end">Units</th>
                                         <th className="px-4 py-3 text-end">Credit</th>
                                         <th className="px-4 py-3 text-end">Debit</th>
                                     </tr>
@@ -313,7 +313,7 @@ export default function FarmerKhataIndex({
 
                 {/* Baqaya Box */}
                 <div className="border border-black rounded p-2 mb-3 text-center bg-gray-50">
-                    <span className="text-[10px] text-gray-600 uppercase font-bold block">Baqaya (بقایا)</span>
+                    <span className="text-[10px] text-gray-600 uppercase font-bold block">{isUrdu ? 'بقایا' : 'Outstanding Balance'}</span>
                     <strong className="text-base font-black text-gray-900">
                         {isNegative ? `– Rs. ${absBaqaya.toLocaleString()}` : `Rs. ${absBaqaya.toLocaleString()}`}
                     </strong>
@@ -324,7 +324,7 @@ export default function FarmerKhataIndex({
                     <thead>
                         <tr className="bg-gray-100 border-b border-black font-bold">
                             <th className="p-1 text-start border-e border-black">Mark</th>
-                            <th className="p-1 text-end border-e border-black">Nag</th>
+                            <th className="p-1 text-end border-e border-black">Units</th>
                             <th className="p-1 text-end border-e border-black">Credit</th>
                             <th className="p-1 text-end">Debit</th>
                         </tr>

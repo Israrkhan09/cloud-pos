@@ -49,8 +49,8 @@ class InvestmentLoan extends Model
     {
         if ($this->status === 'settled') {
             return [
-                'text'  => 'Chukta (Settled)',
-                'label' => 'Chukta (Settled)',
+                'text'  => 'Settled',
+                'label' => 'Settled',
                 'type'  => 'neutral',
                 'color' => 'bg-gray-100 text-gray-700 border-gray-300',
             ];
@@ -58,8 +58,8 @@ class InvestmentLoan extends Model
 
         if (!$this->due_date) {
             return [
-                'text'  => 'Khula (Open)',
-                'label' => 'Khula (Open)',
+                'text'  => 'Open',
+                'label' => 'Open',
                 'type'  => 'neutral',
                 'color' => 'bg-blue-50 text-blue-700 border-blue-200',
             ];
@@ -72,16 +72,16 @@ class InvestmentLoan extends Model
         if ($due < $today) {
             $days = $diff->days;
             return [
-                'text'  => "Overdue {$days} din",
-                'label' => "Overdue {$days} din",
+                'text'  => "Overdue {$days} days",
+                'label' => "Overdue {$days} days",
                 'type'  => 'danger',
                 'color' => 'bg-red-100 text-red-800 border-red-300',
             ];
         }
 
         return [
-            'text'  => 'Wapsi ' . $due->format('j M'),
-            'label' => 'Wapsi ' . $due->format('j M'),
+            'text'  => 'Due ' . $due->format('j M'),
+            'label' => 'Due ' . $due->format('j M'),
             'type'  => 'warning',
             'color' => 'bg-amber-100 text-amber-800 border-amber-300',
         ];

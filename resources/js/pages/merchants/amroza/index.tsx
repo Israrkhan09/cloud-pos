@@ -306,10 +306,54 @@ export default function AmrozaIndex({
         }
     }, [grandTotal, paymentType]);
 
+    const produceTranslations: Record<string, string> = {
+        'aloo': 'Potato',
+        'tamatar': 'Tomato',
+        'piyaz': 'Onion',
+        'harri mirch': 'Green Chilli',
+        'hari mirch': 'Green Chilli',
+        'mirchi': 'Red Chilli',
+        'band gobhi': 'Cabbage',
+        'phool gobhi': 'Cauliflower',
+        'lehsan': 'Garlic',
+        'adrak': 'Ginger',
+        'bhindi': 'Ladyfinger',
+        'kheera': 'Cucumber',
+        'matar': 'Peas',
+        'shimla mirch': 'Capsicum',
+        'palak': 'Spinach',
+        'gajar': 'Carrot',
+        'mooli': 'Radish',
+        'shalgam': 'Turnip',
+        'baingan': 'Brinjal',
+        'karela': 'Bitter Gourd',
+        'tinda': 'Apple Gourd',
+        'kaddu': 'Pumpkin',
+        'arvi': 'Taro Root',
+        'dhaniya': 'Coriander',
+        'podina': 'Mint',
+        'lemon': 'Lemon',
+        'limon': 'Lemon',
+        'leemo': 'Lemon',
+    };
+
+    function translateProduceName(name: string): string {
+        const clean = name.replace(/\s*\(.*?\)\s*/g, '').trim();
+        const key = clean.toLowerCase();
+        if (produceTranslations[key]) return produceTranslations[key];
+        for (const [urduKey, engVal] of Object.entries(produceTranslations)) {
+            if (key.includes(urduKey)) return engVal;
+        }
+        return clean;
+    }
+
     // Clean vegetable item name (removes parenthetical English)
     function cleanVegetableName(item: ItemOption): string {
+        if (isUrdu) {
+            return (item.name_ur || item.name_en || 'Item').replace(/\s*\(.*?\)\s*/g, '').trim();
+        }
         const raw = item.name_en || item.name_ur || 'Item';
-        return raw.replace(/\s*\(.*?\)\s*/g, '').trim();
+        return translateProduceName(raw);
     }
 
     // Add vegetable to cart
@@ -324,7 +368,7 @@ export default function AmrozaIndex({
         }
 
         const cleanName = cleanVegetableName(item);
-        const itemUnit = (item.unit && item.unit.toLowerCase().includes('peti')) ? 'Peti' : 'Bori';
+        const itemUnit = (item.unit && item.unit.toLowerCase().includes('peti')) ? 'Box' : 'Bag';
         const defaultRate = item.default_rate || recentRates[item.id] || 0;
 
         setCartItems(prev => {
@@ -514,8 +558,8 @@ export default function AmrozaIndex({
         }
 
         const it = items.find(i => i.id === sale.item_id);
-        const cleanName = it ? cleanVegetableName(it) : (sale.item?.name_en || sale.item?.name_ur || 'Item');
-        const itUnit = (sale.item?.unit && sale.item.unit.toLowerCase().includes('peti')) ? 'Peti' : 'Bori';
+        const cleanName = it ? cleanVegetableName(it) : (isUrdu ? (sale.item?.name_ur || sale.item?.name_en || 'Item') : translateProduceName(sale.item?.name_en || sale.item?.name_ur || 'Item'));
+        const itUnit = (sale.item?.unit && sale.item.unit.toLowerCase().includes('peti')) ? 'Box' : 'Bag';
 
         setCartItems([{
             id: `edit-${sale.id}`,
@@ -574,11 +618,11 @@ export default function AmrozaIndex({
             }
         }
         if (!paymentType) {
-            toast.error('Payment type select karein');
+            toast.error(isUrdu ? 'ادائیگی کا طریقہ منتخب کریں' : 'Please select a payment method');
             return;
         }
         if (paymentType === 'bank' && !selectedBankAccount) {
-            toast.error('Bank account select karna zaroori hai');
+            toast.error(isUrdu ? 'بینک اکاؤنٹ منتخب کرنا ضروری ہے' : 'Please select a bank account');
             return;
         }
 
@@ -700,8 +744,8 @@ export default function AmrozaIndex({
     // Open Thermal Slip Modal for a row in Records table
     function openRecordSlip(sale: Sale) {
         const it = items.find(i => i.id === sale.item_id);
-        const cleanName = it ? cleanVegetableName(it) : (sale.item?.name_en || sale.item?.name_ur || 'Item');
-        const itUnit = (sale.item?.unit && sale.item.unit.toLowerCase().includes('peti')) ? 'Peti' : 'Bori';
+        const cleanName = it ? cleanVegetableName(it) : (isUrdu ? (sale.item?.name_ur || sale.item?.name_en || 'Item') : translateProduceName(sale.item?.name_en || sale.item?.name_ur || 'Item'));
+        const itUnit = (sale.item?.unit && sale.item.unit.toLowerCase().includes('peti')) ? 'Box' : 'Bag';
         const mName = isUrdu ? (sale.merchant?.name_ur || sale.merchant?.name_en) : (sale.merchant?.name_en || sale.merchant?.name_ur);
         const wasoolAmt = sale.payment_type === 'naqdi' ? Number(sale.gross_amount) : sale.payment_type === 'bank' ? Number(sale.gross_amount) : sale.payment_type === 'split' ? Number(sale.cash_received || 0) : 0;
         const baqayaAmt = sale.payment_type === 'udhaar' ? Number(sale.gross_amount) : sale.payment_type === 'split' ? Number(sale.udhaar_amount || 0) : 0;
@@ -857,7 +901,7 @@ export default function AmrozaIndex({
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-[540px] overflow-y-auto pe-1">
                                 {displayItems.map(item => {
                                     const cleanName = cleanVegetableName(item);
-                                    const itemUnit = (item.unit && item.unit.toLowerCase().includes('peti')) ? 'Peti' : 'Bori';
+                                    const itemUnit = (item.unit && item.unit.toLowerCase().includes('peti')) ? 'Box' : 'Bag';
                                     const liveStock = item.current_stock ?? item.opening_stock ?? 0;
                                     const isKhatam = item.status === 'khatam' || item.computed_status === 'khatam' || liveStock <= 0;
                                     const isExpired = !isKhatam && (item.status === 'expired' || item.computed_status === 'expired' || item.id === 4);
@@ -900,7 +944,7 @@ export default function AmrozaIndex({
                                             <div className="flex items-center justify-between gap-1 mt-2 pt-1.5 border-t border-gray-100 text-[11px]">
                                                 <span className="font-black text-[#0f3d21] tabular-nums">
                                                     Rs. {defaultRate > 0 ? Number(defaultRate).toLocaleString() : '0'}
-                                                    <span className="text-[10px] text-gray-700 font-medium">/{isUrdu ? (itemUnit === 'Peti' ? 'پیٹی' : 'بوری') : itemUnit.toLowerCase()}</span>
+                                                    <span className="text-[10px] text-gray-700 font-medium">/{isUrdu ? (itemUnit === 'Box' ? 'پیٹی' : 'بوری') : itemUnit.toLowerCase()}</span>
                                                 </span>
                                                 <span className={cn(
                                                     "text-[10px] font-semibold px-1.5 py-0.5 rounded",
@@ -910,7 +954,7 @@ export default function AmrozaIndex({
                                                         ? "bg-gray-200 text-gray-600"
                                                         : "bg-emerald-100/70 text-emerald-800"
                                                 )}>
-                                                    {isExpired ? (isUrdu ? 'ایکسپائرڈ' : 'Expired') : isKhatam ? (isUrdu ? 'ختم' : 'Out of Stock') : `${liveStock} ${isUrdu ? (itemUnit === 'Peti' ? 'پیٹی' : 'بوری') : itemUnit}`}
+                                                    {isExpired ? (isUrdu ? 'ایکسپائرڈ' : 'Expired') : isKhatam ? (isUrdu ? 'ختم' : 'Out of Stock') : `${liveStock} ${isUrdu ? (itemUnit === 'Box' ? 'پیٹی' : 'بوری') : (liveStock === 1 ? itemUnit : `${itemUnit}s`)}`}
                                                 </span>
                                             </div>
                                         </button>
@@ -1050,7 +1094,7 @@ export default function AmrozaIndex({
                                                             {ci.name}
                                                         </span>
                                                         <span className="text-[10px] text-gray-400 font-medium">
-                                                            {isUrdu ? (ci.unit?.toLowerCase().includes('peti') ? 'پیٹی' : 'بوری') : ci.unit}
+                                                            {isUrdu ? (ci.unit?.toLowerCase().includes('peti') ? 'پیٹی' : 'بوری') : (ci.unit?.toLowerCase().includes('peti') ? (ci.nag === 1 ? 'Box' : 'Boxes') : (ci.nag === 1 ? 'Bag' : 'Bags'))}
                                                         </span>
                                                     </td>
                                                     <td className="py-2 px-2 text-center">
@@ -1404,7 +1448,7 @@ export default function AmrozaIndex({
                                     ) : (
                                         sales.map((sale, idx) => {
                                             const isNaqdi = sale.payment_type === 'naqdi';
-                                            const unitName = (sale.item?.unit && sale.item.unit.toLowerCase().includes('peti')) ? 'peti' : 'bori';
+                                            const unitName = (sale.item?.unit && sale.item.unit.toLowerCase().includes('peti')) ? 'Box' : 'Bag';
 
                                             return (
                                                 <tr
@@ -1445,12 +1489,12 @@ export default function AmrozaIndex({
 
                                                     <td className="p-2.5 text-[13px]">
                                                         <span className="font-semibold text-gray-900">
-                                                            {(isUrdu ? (sale.item?.name_ur || sale.item?.name_en) : (sale.item?.name_en || sale.item?.name_ur) || 'Item').replace(/\s*\(.*?\)\s*/g, '').trim()}
+                                                            {isUrdu ? (sale.item?.name_ur || sale.item?.name_en || 'Item').replace(/\s*\(.*?\)\s*/g, '').trim() : translateProduceName(sale.item?.name_en || sale.item?.name_ur || 'Item')}
                                                         </span>
                                                     </td>
 
                                                     <td className="p-2.5 text-end tabular-nums font-bold text-[13px] text-gray-900">
-                                                        {sale.nag} {isUrdu ? (unitName.includes('peti') ? 'پیٹی' : 'بوری') : unitName}
+                                                        {sale.nag} {isUrdu ? (unitName === 'Box' ? 'پیٹی' : 'بوری') : (sale.nag === 1 ? unitName : (unitName === 'Box' ? 'Boxes' : 'Bags'))}
                                                     </td>
 
                                                     <td className="p-2.5 text-end tabular-nums text-[13px] font-medium text-gray-900">
@@ -1602,7 +1646,7 @@ export default function AmrozaIndex({
                                             {slipData.items.map((it, idx) => (
                                                 <tr key={idx}>
                                                     <td className="py-1 font-bold text-black">{it.name}</td>
-                                                    <td className="py-1 text-center font-bold text-black">{it.nag} {it.unit.toLowerCase()}</td>
+                                                    <td className="py-1 text-center font-bold text-black">{it.nag} {it.unit?.toLowerCase().includes('box') || it.unit?.toLowerCase().includes('peti') ? (it.nag === 1 ? 'box' : 'boxes') : (it.nag === 1 ? 'bag' : 'bags')}</td>
                                                     <td className="py-1 text-end text-gray-800">{Number(it.rate).toLocaleString()}</td>
                                                     <td className="py-1 text-end font-bold text-black">{Number(it.total).toLocaleString()}</td>
                                                 </tr>

@@ -71,7 +71,7 @@ class BackupController extends Controller
             if (!file_exists($dbPath)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'SQLite database file nahi mili.'
+                    'message' => 'SQLite database file not found.'
                 ], 500);
             }
 
@@ -100,7 +100,7 @@ class BackupController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => "Database backup kamyabi se ban gaya! File: {$filename}",
+                'message' => "Database backup created successfully! File: {$filename}",
                 'filename' => $filename,
                 'size_kb' => $sizeKb,
                 'created_at' => date('Y-m-d H:i:s', filemtime($destPath)),
@@ -108,7 +108,7 @@ class BackupController extends Controller
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Backup banane mein masla aya: ' . $e->getMessage()
+                'message' => 'Error creating backup: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -124,7 +124,7 @@ class BackupController extends Controller
         if (!file_exists($filePath)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Backup file nahi mili.'
+                'message' => 'Backup file not found.'
             ], 404);
         }
 
@@ -177,7 +177,7 @@ class BackupController extends Controller
         if (!in_array($ext, ['db', 'sqlite', 'sqlite3'])) {
             return response()->json([
                 'success' => false,
-                'message' => 'Ghalat file format: Sirf .db backup file qabool hai!'
+                'message' => 'Invalid file format: Only .db backup files are accepted.'
             ], 400);
         }
 
@@ -190,7 +190,7 @@ class BackupController extends Controller
         if (substr($header, 0, 15) !== "SQLite format 3") {
             return response()->json([
                 'success' => false,
-                'message' => 'Ghalat file: Yeh ek durust SQLite database file nahi hai (Header check failed).'
+                'message' => 'Invalid file: Not a valid SQLite database file (Header check failed).'
             ], 400);
         }
 
@@ -202,7 +202,7 @@ class BackupController extends Controller
                 $testDb->close();
                 return response()->json([
                     'success' => false,
-                    'message' => "Database file corrupted hai: Integrity check fail ho gaya ({$integrity})."
+                    'message' => "Database file corrupted: Integrity check failed ({$integrity})."
                 ], 400);
             }
 
@@ -218,7 +218,7 @@ class BackupController extends Controller
             if (!$hasKeyTable) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Invalid database: Zaroori tables (items, merchants, sales) mojood nahi hain.'
+                    'message' => 'Invalid database: Required tables (items, merchants, sales) not found.'
                 ], 400);
             }
         } catch (\Throwable $e) {
@@ -266,7 +266,7 @@ class BackupController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Database kamyabi se restore ho gaya hai! Page refresh ho raha hai...'
+                'message' => 'Database restored successfully! Refreshing page...'
             ]);
         } catch (\Throwable $e) {
             // Rollback from safety backup
@@ -279,7 +279,7 @@ class BackupController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Restore fail ho gaya, purani database mehfooz rahi (Rollback mukammal): ' . $e->getMessage()
+                'message' => 'Database restore failed, previous database preserved (Rollback complete): ' . $e->getMessage()
             ], 500);
         }
     }
@@ -304,7 +304,7 @@ class BackupController extends Controller
         if (!$cfg) {
             return response()->json([
                 'success' => false,
-                'message' => 'Ghalat category muntakhib ki gayi hai.'
+                'message' => 'Invalid category selected.'
             ], 404);
         }
 
@@ -330,14 +330,14 @@ class BackupController extends Controller
     {
         $cfg = $this->getCategoryConfig($categoryId);
         if (!$cfg) {
-            return response()->json(['success' => false, 'message' => 'Ghalat category.'], 404);
+            return response()->json(['success' => false, 'message' => 'Invalid category.'], 404);
         }
 
         $data = $this->fetchCategoryRowsAndColumns($categoryId);
         if (empty($data['rows'])) {
             return response()->json([
                 'success' => false,
-                'message' => "Is category ({$cfg['name']}) mein koi record nahi hai, khali file download nahi ki ja sakti."
+                'message' => "No records found in category ({$cfg['name']}). Cannot download empty file."
             ], 400);
         }
 
@@ -363,14 +363,14 @@ class BackupController extends Controller
     {
         $cfg = $this->getCategoryConfig($categoryId);
         if (!$cfg) {
-            return response()->json(['success' => false, 'message' => 'Ghalat category.'], 404);
+            return response()->json(['success' => false, 'message' => 'Invalid category.'], 404);
         }
 
         $data = $this->fetchCategoryRowsAndColumns($categoryId);
         if (empty($data['rows'])) {
             return response()->json([
                 'success' => false,
-                'message' => "Is category ({$cfg['name']}) mein koi record nahi hai, khali database download nahi kiya ja sakta."
+                'message' => "No records found in category ({$cfg['name']}). Cannot download empty database."
             ], 400);
         }
 
@@ -416,7 +416,7 @@ class BackupController extends Controller
             if (file_exists($tempPath)) @unlink($tempPath);
             return response()->json([
                 'success' => false,
-                'message' => 'SQLite database file banane mein masla aya: ' . $e->getMessage()
+                'message' => 'Error generating SQLite database file: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -552,7 +552,7 @@ class BackupController extends Controller
                 'id' => 'farmers_bijak',
                 'name' => 'Farmers & Bijak',
                 'filePrefix' => 'Farmers_Bijak',
-                'description' => 'Farmers masters, bills (bijak), charges aur commissions',
+                'description' => 'Farmer records, bills, charges and commissions',
                 'icon' => 'Sprout',
                 'record_count' => Farmer::count() + FarmerBill::count(),
             ],
@@ -560,7 +560,7 @@ class BackupController extends Controller
                 'id' => 'products_stock',
                 'name' => 'Products & Stock',
                 'filePrefix' => 'Products_Stock',
-                'description' => 'Tamaam sabzi items, stock, rates aur shelf life',
+                'description' => 'All produce items, stock, rates and shelf life',
                 'icon' => 'Boxes',
                 'record_count' => Item::count(),
             ],
@@ -568,7 +568,7 @@ class BackupController extends Controller
                 'id' => 'ledger_expenses',
                 'name' => 'Ledger & Expenses',
                 'filePrefix' => 'Ledger_Expenses',
-                'description' => 'Dukaan ke rozana kharcha, cash book aur aamad o kharch',
+                'description' => 'Daily business expenses, cash book and income & expense log',
                 'icon' => 'BookOpen',
                 'record_count' => Expense::count(),
             ],
@@ -596,21 +596,21 @@ class BackupController extends Controller
                 'id' => 'farmers_bijak',
                 'name' => 'Farmers & Bijak',
                 'filePrefix' => 'Farmers_Bijak',
-                'description' => 'Farmers masters, bills (bijak), charges aur commissions',
+                'description' => 'Farmer records, bills, charges and commissions',
                 'tables' => ['farmers', 'farmer_bills'],
             ],
             'products_stock' => [
                 'id' => 'products_stock',
                 'name' => 'Products & Stock',
                 'filePrefix' => 'Products_Stock',
-                'description' => 'Tamaam sabzi items, stock, rates aur shelf life',
+                'description' => 'All produce items, stock, rates and shelf life',
                 'tables' => ['items'],
             ],
             'ledger_expenses' => [
                 'id' => 'ledger_expenses',
                 'name' => 'Ledger & Expenses',
                 'filePrefix' => 'Ledger_Expenses',
-                'description' => 'Dukaan ke rozana kharcha, cash book aur aamad o kharch',
+                'description' => 'Daily business expenses, cash book and income & expense log',
                 'tables' => ['expenses'],
             ],
         ];
@@ -620,31 +620,58 @@ class BackupController extends Controller
 
     protected function fetchCategoryRowsAndColumns(string $categoryId): array
     {
+        $produceTranslations = [
+            'Aloo' => 'Potato',
+            'Tamatar' => 'Tomato',
+            'Piyaz' => 'Onion',
+            'Harri Mirch' => 'Green Chilli',
+            'Band Gobhi' => 'Cabbage',
+            'Lehsan' => 'Garlic',
+            'Mirchi' => 'Red Chilli',
+            'Bhindi' => 'Ladyfinger',
+            'Adrak' => 'Ginger',
+            'Kheera' => 'Cucumber',
+        ];
+
         switch ($categoryId) {
             case 'sales_amroza':
                 $columns = [
                     ['key' => 'invoice_no', 'label' => 'Invoice #'],
-                    ['key' => 'date', 'label' => 'Tareekh'],
-                    ['key' => 'customer_name', 'label' => 'Gahak / Buyer'],
-                    ['key' => 'item_name', 'label' => 'Sabzi / Item'],
+                    ['key' => 'date', 'label' => 'Date'],
+                    ['key' => 'customer_name', 'label' => 'Customer / Buyer'],
+                    ['key' => 'item_name', 'label' => 'Produce Item'],
                     ['key' => 'quantity', 'label' => 'Quantity'],
                     ['key' => 'rate', 'label' => 'Rate'],
-                    ['key' => 'grand_total', 'label' => 'Kul Raqam'],
-                    ['key' => 'paid_amount', 'label' => 'Wasool'],
-                    ['key' => 'remaining_amount', 'label' => 'Baqaya Udhaar'],
-                    ['key' => 'payment_mode', 'label' => 'Tariqa'],
+                    ['key' => 'grand_total', 'label' => 'Total Amount'],
+                    ['key' => 'paid_amount', 'label' => 'Paid'],
+                    ['key' => 'remaining_amount', 'label' => 'Balance Due'],
+                    ['key' => 'payment_mode', 'label' => 'Payment Method'],
                 ];
                 $sales = AmrozaSale::with(['merchant', 'item'])->orderBy('id', 'desc')->limit(500)->get();
                 $rows = [];
                 foreach ($sales as $s) {
-                    $mName = $s->merchant ? ($s->merchant->name_en ?: ($s->merchant->name ?: $s->merchant->name_ur)) : 'Naqad';
+                    $mName = $s->merchant ? ($s->merchant->name_en ?: ($s->merchant->name ?: $s->merchant->name_ur)) : 'Cash';
                     $iName = $s->item ? ($s->item->name_en ?: ($s->item->name ?: $s->item->name_ur)) : 'Item';
                     $iName = trim(preg_replace('/\s*\(.*?\)\s*/', '', $iName));
-                    $unit = $s->item && $s->item->unit ? $s->item->unit : 'Bori';
+                    $iName = $produceTranslations[$iName] ?? $iName;
+
+                    $unit = $s->item && $s->item->unit ? $s->item->unit : 'Bags';
+                    if (strtolower($unit) === 'bori') $unit = 'Bags';
+                    if (strtolower($unit) === 'peti') $unit = 'Boxes';
+
                     $dateStr = $s->date instanceof \DateTimeInterface ? $s->date->format('Y-m-d') : substr((string)$s->date, 0, 10);
                     $tot = (float)($s->gross_amount ?? ($s->nag * $s->rate));
                     $paid = (float)($s->cash_received ?? ($s->payment_type === 'cash' || $s->payment_type === 'naqdi' ? $tot : 0));
                     $rem = (float)($s->udhaar_amount ?? max(0, $tot - $paid));
+
+                    $rawMode = strtoupper($s->payment_type ?: 'CREDIT');
+                    $mode = match($rawMode) {
+                        'UDHAAR' => 'CREDIT',
+                        'NAQDI', 'CASH' => 'CASH',
+                        'SPLIT' => 'SPLIT',
+                        'BANK' => 'BANK',
+                        default => $rawMode,
+                    };
 
                     $rows[] = [
                         'invoice_no' => 'INV-' . $s->id,
@@ -656,7 +683,7 @@ class BackupController extends Controller
                         'grand_total' => $tot,
                         'paid_amount' => $paid,
                         'remaining_amount' => $rem,
-                        'payment_mode' => strtoupper($s->payment_type ?: 'UDHAAR'),
+                        'payment_mode' => $mode,
                     ];
                 }
                 return ['columns' => $columns, 'rows' => $rows];
@@ -664,12 +691,12 @@ class BackupController extends Controller
             case 'merchants_wasooli':
                 $columns = [
                     ['key' => 'code', 'label' => 'Code'],
-                    ['key' => 'name', 'label' => 'Kharidaar / Buyer'],
+                    ['key' => 'name', 'label' => 'Customer / Buyer'],
                     ['key' => 'phone', 'label' => 'Phone'],
-                    ['key' => 'city', 'label' => 'Ilaqa / City'],
+                    ['key' => 'city', 'label' => 'City / Area'],
                     ['key' => 'credit_limit', 'label' => 'Credit Limit'],
-                    ['key' => 'opening_balance', 'label' => 'Sabiqa Balance'],
-                    ['key' => 'current_balance', 'label' => 'Baqaya Udhaar'],
+                    ['key' => 'opening_balance', 'label' => 'Opening Balance'],
+                    ['key' => 'current_balance', 'label' => 'Outstanding Balance'],
                     ['key' => 'status', 'label' => 'Status'],
                 ];
                 $merchants = Merchant::orderBy('code', 'asc')->get();
@@ -679,7 +706,7 @@ class BackupController extends Controller
                         'code' => '#' . $m->code,
                         'name' => $m->name_en ?: ($m->name ?: $m->name_ur),
                         'phone' => $m->phone ?: '—',
-                        'city' => $m->city ?: 'Mandi',
+                        'city' => $m->city ?: 'Market',
                         'credit_limit' => (float)($m->credit_limit ?? 0),
                         'opening_balance' => (float)($m->opening_balance ?? 0),
                         'current_balance' => (float)($m->current_balance ?? 0),
@@ -690,20 +717,20 @@ class BackupController extends Controller
 
             case 'farmers_bijak':
                 $columns = [
-                    ['key' => 'entry_no', 'label' => 'Bijak / Parchi #'],
+                    ['key' => 'entry_no', 'label' => 'Consignment #'],
                     ['key' => 'farmer_name', 'label' => 'Farmer Name'],
-                    ['key' => 'date', 'label' => 'Tareekh'],
-                    ['key' => 'gross_sale', 'label' => 'Kul Bikri'],
+                    ['key' => 'date', 'label' => 'Date'],
+                    ['key' => 'gross_sale', 'label' => 'Gross Sales'],
                     ['key' => 'commission', 'label' => 'Commission'],
-                    ['key' => 'mazdoori', 'label' => 'Mazdoori'],
-                    ['key' => 'net_payable', 'label' => 'Saaf Raqam'],
-                    ['key' => 'paid_amount', 'label' => 'Ada Shuda'],
-                    ['key' => 'remaining', 'label' => 'Baqaya Dena'],
+                    ['key' => 'mazdoori', 'label' => 'Labor'],
+                    ['key' => 'net_payable', 'label' => 'Net Payable'],
+                    ['key' => 'paid_amount', 'label' => 'Paid Amount'],
+                    ['key' => 'remaining', 'label' => 'Remaining Balance'],
                 ];
                 $bills = FarmerBill::with('farmer')->orderBy('id', 'desc')->get();
                 $rows = [];
                 foreach ($bills as $b) {
-                    $fName = $b->farmer ? ($b->farmer->name_en ?: ($b->farmer->name ?: $b->farmer->name_ur)) : 'Kisan';
+                    $fName = $b->farmer ? ($b->farmer->name_en ?: ($b->farmer->name ?: $b->farmer->name_ur)) : 'Farmer';
                     $rows[] = [
                         'entry_no' => 'BJK-' . ($b->bill_number ?: $b->id),
                         'farmer_name' => $fName,
@@ -721,11 +748,11 @@ class BackupController extends Controller
             case 'products_stock':
                 $columns = [
                     ['key' => 'code', 'label' => 'Item Code'],
-                    ['key' => 'name', 'label' => 'Sabzi / Item'],
+                    ['key' => 'name', 'label' => 'Produce Item'],
                     ['key' => 'unit', 'label' => 'Unit'],
-                    ['key' => 'purchase_rate', 'label' => 'Khareed Rate'],
-                    ['key' => 'sale_rate', 'label' => 'Sale Rate'],
-                    ['key' => 'stock_quantity', 'label' => 'Stock Miqdar'],
+                    ['key' => 'purchase_rate', 'label' => 'Purchase Rate'],
+                    ['key' => 'sale_rate', 'label' => 'Selling Rate'],
+                    ['key' => 'stock_quantity', 'label' => 'Stock Quantity'],
                     ['key' => 'shelf_life', 'label' => 'Shelf Life'],
                     ['key' => 'status', 'label' => 'Status'],
                 ];
@@ -734,15 +761,24 @@ class BackupController extends Controller
                 foreach ($items as $it) {
                     $rawName = $it->name_en ?: ($it->name ?: $it->name_ur);
                     $itName = trim(preg_replace('/\s*\(.*?\)\s*/', '', $rawName));
+                    $itName = $produceTranslations[$itName] ?? $itName;
+
+                    $unit = $it->unit ?: 'Bags';
+                    if (strtolower($unit) === 'bori') $unit = 'Bags';
+                    if (strtolower($unit) === 'peti') $unit = 'Boxes';
+
+                    $shelf = $it->shelf_life ?: '4-5 days';
+                    $shelf = str_replace('din', 'days', $shelf);
+
                     $stock = (int)($it->current_stock ?? $it->opening_stock ?? 0);
                     $rows[] = [
                         'code' => $it->code ?: ('ITM-' . $it->id),
                         'name' => $itName,
-                        'unit' => $it->unit ?: 'Bori',
+                        'unit' => $unit,
                         'purchase_rate' => (float)($it->purchase_rate ?? 50),
                         'sale_rate' => (float)($it->default_rate ?? $it->rate ?? 70),
                         'stock_quantity' => $stock,
-                        'shelf_life' => $it->shelf_life ?: '4-5 din',
+                        'shelf_life' => $shelf,
                         'status' => $stock <= 0 ? 'Out of Stock' : ($stock < 20 ? 'Low Stock' : 'Available'),
                     ];
                 }
@@ -752,10 +788,10 @@ class BackupController extends Controller
             default:
                 $columns = [
                     ['key' => 'id', 'label' => '#'],
-                    ['key' => 'date', 'label' => 'Tareekh'],
-                    ['key' => 'name', 'label' => 'Kharcha / Expense'],
-                    ['key' => 'note', 'label' => 'Tafseel (Notes)'],
-                    ['key' => 'amount', 'label' => 'Raqam (Amount)'],
+                    ['key' => 'date', 'label' => 'Date'],
+                    ['key' => 'name', 'label' => 'Expense Name'],
+                    ['key' => 'note', 'label' => 'Description / Notes'],
+                    ['key' => 'amount', 'label' => 'Amount'],
                 ];
                 $expenses = Expense::orderBy('id', 'desc')->limit(500)->get();
                 $rows = [];

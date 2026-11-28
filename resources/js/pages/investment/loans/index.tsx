@@ -244,20 +244,20 @@ export default function InvestmentLoansPage({
                         {/* Number 1: Kul Baqaya (Hum ko dena hai) */}
                         <div className="bg-white p-4 md:p-5 rounded-xl border border-gray-200 shadow-2xs">
                             <span className="text-xs font-bold text-[#374151] uppercase tracking-wider block">
-                                {isUrdu ? 'ہم کو دینا ہے (کل بقایا)' : 'Hum Ko Dena Hai (Kul Baqaya)'}
+                                {isUrdu ? 'ہم کو دینا ہے (کل بقایا)' : 'Total Payable (Balance Due)'}
                             </span>
                             <span className="text-2xl font-black text-red-700 block mt-2">
                                 {formatRs(summary.total_balance_due)}
                             </span>
                             <span className="text-xs font-medium text-[#4B5563] block mt-1">
-                                {isUrdu ? `${summary.lenders_count || 3} افراد کا قرضہ واپس کرنا ہے` : `${summary.lenders_count || 3} logon ka qarza wapas karna hai`}
+                                {isUrdu ? `${summary.lenders_count || 3} افراد کا قرضہ واپس کرنا ہے` : `${summary.lenders_count || 3} loans payable to lenders`}
                             </span>
                         </div>
 
                         {/* Number 2: Hum ko lena hai (Receivable Loans) */}
                         <div className="bg-white p-4 md:p-5 rounded-xl border border-gray-200 shadow-2xs">
                             <span className="text-xs font-bold text-[#374151] uppercase tracking-wider block">
-                                {isUrdu ? 'ہم کو لینا ہے (دیا ہوا قرضہ)' : 'Hum Ko Lena Hai (Receivable)'}
+                                {isUrdu ? 'ہم کو لینا ہے (دیا ہوا قرضہ)' : 'Total Receivable (Receivable Balance)'}
                             </span>
                             <span className="text-2xl font-black text-[#1F2937] block mt-2">
                                 {formatRs(summary.total_receivable || 0)}
@@ -265,7 +265,7 @@ export default function InvestmentLoansPage({
                             <span className="text-xs font-medium text-[#4B5563] block mt-1">
                                 {isUrdu
                                     ? (summary.borrowers_count ? `${summary.borrowers_count} افراد سے لینا ہے` : 'دیے گئے قرضے جو واپس آنے ہیں')
-                                    : (summary.borrowers_count ? `${summary.borrowers_count} logon se lena hai` : 'Diye gaye qarze jo wapas aane hain')}
+                                    : (summary.borrowers_count ? `${summary.borrowers_count} loans to be collected` : 'Loans disbursed to be collected')}
                             </span>
                         </div>
 
@@ -288,11 +288,11 @@ export default function InvestmentLoansPage({
                                         </span>
                                         {overdueCount > 0 ? (
                                             <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-800 border border-red-300">
-                                                {isUrdu ? 'واپسی تاریخ گزر چکی' : 'Wapsi Tareekh Guzar Chuki'}
+                                                {isUrdu ? 'واپسی تاریخ گزر چکی' : 'Overdue'}
                                             </span>
                                         ) : (
                                             <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                                                {isUrdu ? 'کوئی اوور ڈیو نہیں' : 'Koi Overdue Nahi'}
+                                                {isUrdu ? 'کوئی اوور ڈیو نہیں' : 'No Overdue Loans'}
                                             </span>
                                         )}
                                     </div>
@@ -302,7 +302,7 @@ export default function InvestmentLoansPage({
                                     )}>
                                         {overdueCount > 0
                                             ? overdueLoans.map((l) => `${l.lender_name} baqaya ${formatRs(l.balance_due)}`).join(', ')
-                                            : (isUrdu ? 'تمام تاریخیں بروقت ہیں' : 'Tamam tareekhein bar-waqt hain')}
+                                            : (isUrdu ? 'تمام تاریخیں بروقت ہیں' : 'All loans are on schedule')}
                                     </span>
                                 </div>
                             );
@@ -328,7 +328,7 @@ export default function InvestmentLoansPage({
                                     <span>Excel / CSV</span>
                                 </button>
                                 <span className="text-xs text-[#4B5563]">
-                                    {isUrdu ? `${loans.length} قرضے` : `${loans.length} Qarze`}
+                                    {isUrdu ? `${loans.length} قرضے` : `${loans.length} Loans`}
                                 </span>
                             </div>
                         </div>
@@ -337,12 +337,12 @@ export default function InvestmentLoansPage({
                             <table className="w-full text-start text-sm border-collapse">
                                 <thead>
                                     <tr className="bg-gray-50/80 border-b border-gray-200 text-[#374151] uppercase tracking-wider text-xs font-bold">
-                                        <th className="py-3 px-4 text-start">{isUrdu ? 'پارٹی / نام' : 'Party / Naam'}</th>
-                                        <th className="py-3 px-4 text-center">{isUrdu ? 'قسم' : 'Qisam'}</th>
-                                        <th className="py-3 px-4 text-end">{isUrdu ? 'اصل رقم' : 'Asal'}</th>
+                                        <th className="py-3 px-4 text-start">{isUrdu ? 'پارٹی / نام' : 'Party / Name'}</th>
+                                        <th className="py-3 px-4 text-center">{isUrdu ? 'قسم' : 'Type'}</th>
+                                        <th className="py-3 px-4 text-end">{isUrdu ? 'اصل رقم' : 'Principal'}</th>
                                         <th className="py-3 px-4 text-end">{isUrdu ? 'واپس ہوا' : 'Repaid Amount'}</th>
                                         <th className="py-3 px-4 text-end text-[#1F2937]">{isUrdu ? 'باقی' : 'Balance'}</th>
-                                        <th className="py-3 px-4 text-center">{isUrdu ? 'تاریخ' : 'Tareekh'}</th>
+                                        <th className="py-3 px-4 text-center">{isUrdu ? 'تاریخ' : 'Due Date'}</th>
                                         <th className="py-3 px-4 text-center">{isUrdu ? 'حالت' : 'Status'}</th>
                                         <th className="py-3 px-4 text-center">{isUrdu ? 'کارروائی' : 'Action'}</th>
                                     </tr>
@@ -379,7 +379,7 @@ export default function InvestmentLoansPage({
                                                 <td className="py-3.5 px-4 text-center">
                                                     {isSettled ? (
                                                         <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold border bg-gray-100 text-gray-700 border-gray-300">
-                                                            {isUrdu ? 'چکتا' : 'Chukta'}
+                                                            {isUrdu ? 'چکتا' : 'Settled'}
                                                         </span>
                                                     ) : (
                                                         <span className={cn(
@@ -388,7 +388,7 @@ export default function InvestmentLoansPage({
                                                                 ? "bg-blue-50 text-blue-800 border-blue-200"
                                                                 : "bg-amber-50 text-amber-900 border-amber-200"
                                                         )}>
-                                                            {isReceivable ? (isUrdu ? 'لینا ہے' : 'Lena Hai') : (isUrdu ? 'دینا ہے' : 'Dena Hai')}
+                                                            {isReceivable ? (isUrdu ? 'لینا ہے' : 'Receivable') : (isUrdu ? 'دینا ہے' : 'Payable')}
                                                         </span>
                                                     )}
                                                 </td>
@@ -430,7 +430,7 @@ export default function InvestmentLoansPage({
                                                     <div className="flex items-center justify-center gap-1.5">
                                                         {isSettled ? (
                                                             <span className="px-3.5 py-1.5 text-xs font-bold text-gray-500 bg-gray-100 rounded border border-gray-200 cursor-default select-none">
-                                                                {isUrdu ? 'چکتا' : 'Chukta'}
+                                                                {isUrdu ? 'چکتا' : 'Settled'}
                                                             </span>
                                                         ) : (
                                                             <>
@@ -502,7 +502,7 @@ export default function InvestmentLoansPage({
                                         : (isUrdu ? 'قرضہ واپس ادا کریں' : 'Record Loan Repayment (Payable)')}
                                 </DialogTitle>
                                 <DialogDescription className="text-xs text-[#4B5563]">
-                                    {settleModalLoan.direction === 'receivable' ? (isUrdu ? 'پارٹی (وصولی)' : 'Party (Lena Hai)') : (isUrdu ? 'دینے والا' : 'Dene Wala')}: {settleModalLoan.lender_name} — {isUrdu ? 'کل بقایا:' : 'Kul Baqaya:'} Rs. {formatNum(settleModalLoan.balance_due)}
+                                    {settleModalLoan.direction === 'receivable' ? (isUrdu ? 'پارٹی (وصولی)' : 'Party (Receivable)') : (isUrdu ? 'دینے والا' : 'Lender')}: {settleModalLoan.lender_name} — {isUrdu ? 'کل بقایا:' : 'Total Due:'} Rs. {formatNum(settleModalLoan.balance_due)}
                                 </DialogDescription>
                             </DialogHeader>
 
@@ -524,14 +524,14 @@ export default function InvestmentLoansPage({
                                             onClick={() => setSettleAmount(settleModalLoan.balance_due.toString())}
                                             className="text-[#14532d] font-bold underline cursor-pointer"
                                         >
-                                            {isUrdu ? `پورا بقایا (Rs. ${formatNum(settleModalLoan.balance_due)})` : `Poora Baqaya (Rs. ${formatNum(settleModalLoan.balance_due)})`}
+                                            {isUrdu ? `پورا بقایا (Rs. ${formatNum(settleModalLoan.balance_due)})` : `Full Balance (Rs. ${formatNum(settleModalLoan.balance_due)})`}
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => setSettleAmount(Math.round(settleModalLoan.balance_due / 2).toString())}
                                             className="text-[#4B5563] underline cursor-pointer"
                                         >
-                                            {isUrdu ? 'نصف (50%)' : 'Nisf (50%)'}
+                                            {isUrdu ? 'نصف (50%)' : 'Half (50%)'}
                                         </button>
                                     </div>
                                 </div>
@@ -551,7 +551,7 @@ export default function InvestmentLoansPage({
                                                     : "text-[#374151]"
                                             )}
                                         >
-                                            {isUrdu ? 'کیش کھاتہ' : 'Cash Khata'}
+                                            {isUrdu ? 'کیش کھاتہ' : 'Cash Account'}
                                         </button>
                                         <button
                                             type="button"
@@ -563,7 +563,7 @@ export default function InvestmentLoansPage({
                                                     : "text-[#374151]"
                                             )}
                                         >
-                                            {isUrdu ? 'بینک کھاتہ' : 'Bank Khata'}
+                                            {isUrdu ? 'بینک کھاتہ' : 'Bank Account'}
                                         </button>
                                     </div>
                                 </div>

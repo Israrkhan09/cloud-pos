@@ -274,7 +274,7 @@ export default function FarmerKhataPage({
                                 {isUrdu ? 'کل منڈی آمد نگ:' : 'Total Consignment Units:'}
                             </span>
                             <div className="text-xl font-bold text-gray-900 mt-1">
-                                {kisanSummary?.total_nags || 0} {isUrdu ? 'نگ / بوریاں' : 'Nag / Borian'}
+                                {kisanSummary?.total_nags || 0} {isUrdu ? 'نگ / بوریاں' : 'Units / Bags'}
                             </div>
                             <span className="text-[10px] text-gray-500 mt-0.5 block">
                                 {kisanSummary?.total_entries || 0} {isUrdu ? 'آمد لاٹس' : 'Arrival Lots'}
@@ -284,7 +284,7 @@ export default function FarmerKhataPage({
                         {/* Card 3: Mandi Commission */}
                         <div className="bg-white border border-emerald-200 rounded-xl p-3.5 shadow-2xs">
                             <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">
-                                {isUrdu ? 'منڈی کمیشن (آمدنی):' : 'Mandi Commission (Aamdani):'}
+                                {isUrdu ? 'منڈی کمیشن (آمدنی):' : 'Market Commission (Income):'}
                             </span>
                             <div className="text-xl font-bold text-emerald-800 mt-1">
                                 {formatRs(kisanSummary?.total_commission || 0)}
@@ -342,7 +342,7 @@ export default function FarmerKhataPage({
                                                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                         }`}
                                     >
-                                        {farmerPayableOnly ? (isUrdu ? 'ہاں' : 'Haan') : (isUrdu ? 'نہیں' : 'Nahi')}
+                                        {farmerPayableOnly ? (isUrdu ? 'ہاں' : 'Yes') : (isUrdu ? 'نہیں' : 'No')}
                                     </button>
                                 </div>
                             </div>
@@ -373,7 +373,7 @@ export default function FarmerKhataPage({
                                             )}
                                         </div>
                                         <span className="text-[10px] text-gray-500 block mt-0.5">
-                                            {isUrdu ? `کل منڈی پرچیاں (${entries.length})` : `Kul Mandi Parchiyan (${entries.length})`}
+                                            {isUrdu ? `کل منڈی پرچیاں (${entries.length})` : `All Consignment Bills (${entries.length})`}
                                         </span>
                                     </div>
                                     <div className="text-end flex-shrink-0">
@@ -506,14 +506,14 @@ export default function FarmerKhataPage({
                                 <table className="w-full text-start text-xs">
                                     <thead className="bg-emerald-50 text-gray-900 border-b border-emerald-200 font-bold">
                                         <tr>
-                                            <th className="py-2.5 px-3 text-start">{isUrdu ? 'پرچی #' : 'Parchi #'}</th>
+                                            <th className="py-2.5 px-3 text-start">{isUrdu ? 'پرچی #' : 'Invoice #'}</th>
                                             <th className="py-2.5 px-3 text-start">{isUrdu ? 'نام' : 'Name'}</th>
                                             <th className="py-2.5 px-3 text-start">{isUrdu ? 'تاریخ' : 'Date'}</th>
-                                            <th className="py-2.5 px-3 text-start">{isUrdu ? 'سبزی جنس' : 'Sabzi Jins'}</th>
-                                            <th className="py-2.5 px-3 text-end">{isUrdu ? 'نگ' : 'Nag'}</th>
-                                            <th className="py-2.5 px-3 text-end">{isUrdu ? 'کل بکری (خام)' : 'Kul Bikri (Gross)'}</th>
+                                            <th className="py-2.5 px-3 text-start">{isUrdu ? 'سبزی جنس' : 'Produce Item'}</th>
+                                            <th className="py-2.5 px-3 text-end">{isUrdu ? 'نگ' : 'Units'}</th>
+                                            <th className="py-2.5 px-3 text-end">{isUrdu ? 'کل بکری (خام)' : 'Gross Sales'}</th>
                                             <th className="py-2.5 px-3 text-end">{isUrdu ? 'کمیشن' : 'Commission'}</th>
-                                            <th className="py-2.5 px-3 text-end">{isUrdu ? 'صافی رقم (Net)' : 'Raqam (Net)'}</th>
+                                            <th className="py-2.5 px-3 text-end">{isUrdu ? 'صافی رقم (Net)' : 'Net Payable'}</th>
                                             <th className="py-2.5 px-3 text-end">{isUrdu ? 'بقایا دینا' : 'Payable Balance'}</th>
                                             <th className="py-2.5 px-3 text-center">{isUrdu ? 'کارروائی' : 'Actions'}</th>
                                         </tr>
@@ -566,7 +566,7 @@ export default function FarmerKhataPage({
                                                                 className="bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 px-2 py-1 rounded text-[11px] font-bold transition inline-flex items-center space-x-1 cursor-pointer"
                                                             >
                                                                 <Icon name="Printer" className="w-3 h-3" />
-                                                                <span>{isUrdu ? 'پرچی' : 'Parchi'}</span>
+                                                                <span>{isUrdu ? 'پرچی' : 'Invoice'}</span>
                                                             </button>
 
                                                             {hasDue && (
@@ -650,17 +650,17 @@ export default function FarmerKhataPage({
                                         <p><span className="font-bold">Voucher #:</span> {parchiData.entry_no}</p>
                                         <p className="text-right"><span className="font-bold">Date:</span> {parchiData.entry_date}</p>
                                         <p><span className="font-bold">Farmer:</span> {parchiData.kisan_name}</p>
-                                        <p className="text-right"><span className="font-bold">Ilaqa:</span> {parchiData.kisan_area}</p>
+                                        <p className="text-right"><span className="font-bold">Area / City:</span> {parchiData.kisan_area}</p>
                                     </div>
 
                                     <div className="border border-gray-300 rounded overflow-hidden">
                                         <table className="w-full text-xs">
                                             <thead className="bg-gray-100 font-bold border-b">
                                                 <tr>
-                                                    <th className="p-2 text-left">Sabzi Jins</th>
-                                                    <th className="p-2 text-right">Nag</th>
+                                                    <th className="p-2 text-left">Produce Item</th>
+                                                    <th className="p-2 text-right">Units</th>
                                                     <th className="p-2 text-right">Rate</th>
-                                                    <th className="p-2 text-right">Kul Bikri</th>
+                                                    <th className="p-2 text-right">Gross Sales</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -677,7 +677,7 @@ export default function FarmerKhataPage({
                                     {/* Deductions breakdown */}
                                     <div className="space-y-1.5 pt-2 border-t text-xs">
                                         <div className="flex justify-between">
-                                            <span className="text-gray-600">Kul Bikri (Gross):</span>
+                                            <span className="text-gray-600">Gross Sales:</span>
                                             <span className="font-bold">{formatRs(parchiData.gross_sale)}</span>
                                         </div>
                                         <div className="flex justify-between text-emerald-800">
@@ -686,18 +686,18 @@ export default function FarmerKhataPage({
                                         </div>
                                         {parchiData.mazdoori > 0 && (
                                             <div className="flex justify-between text-gray-600">
-                                                <span>Mazdoori:</span>
+                                                <span>Labor Charges:</span>
                                                 <span>- {formatRs(parchiData.mazdoori)}</span>
                                             </div>
                                         )}
                                         {parchiData.kiraya_deduction > 0 && (
                                             <div className="flex justify-between text-gray-600">
-                                                <span>Kiraya:</span>
+                                                <span>Freight / Transport:</span>
                                                 <span>- {formatRs(parchiData.kiraya_deduction)}</span>
                                             </div>
                                         )}
                                         <div className="flex justify-between border-t pt-2 font-bold text-sm text-gray-900">
-                                            <span>Saaf Raqam (Net Payable):</span>
+                                            <span>Net Payable:</span>
                                             <span>{formatRs(parchiData.net_payable)}</span>
                                         </div>
                                         <div className="flex justify-between font-bold text-red-700">
@@ -837,12 +837,12 @@ export default function FarmerKhataPage({
                         <tr className="bg-gray-100 border-b border-gray-400">
                             <th className="p-2 text-start border border-gray-300 font-bold">Voucher #</th>
                             <th className="p-2 text-start border border-gray-300 font-bold">Name</th>
-                            <th className="p-2 text-start border border-gray-300 font-bold">Tareekh</th>
-                            <th className="p-2 text-start border border-gray-300 font-bold">Sabzi Jins</th>
-                            <th className="p-2 text-end border border-gray-300 font-bold">Nag</th>
-                            <th className="p-2 text-end border border-gray-300 font-bold">Kul Bikri (Gross)</th>
+                            <th className="p-2 text-start border border-gray-300 font-bold">Date</th>
+                            <th className="p-2 text-start border border-gray-300 font-bold">Produce Item</th>
+                            <th className="p-2 text-end border border-gray-300 font-bold">Units</th>
+                            <th className="p-2 text-end border border-gray-300 font-bold">Gross Sales</th>
                             <th className="p-2 text-end border border-gray-300 font-bold">Commission</th>
-                            <th className="p-2 text-end border border-gray-300 font-bold">Raqam (Net)</th>
+                            <th className="p-2 text-end border border-gray-300 font-bold">Net Payable</th>
                             <th className="p-2 text-end border border-gray-300 font-bold">Balance Payable</th>
                         </tr>
                     </thead>
@@ -850,7 +850,7 @@ export default function FarmerKhataPage({
                         {currentEntries.length === 0 ? (
                             <tr>
                                 <td colSpan={9} className="p-4 text-center border border-gray-300 text-gray-500">
-                                    Koi parchi mojood nahi hai.
+                                    No consignment bills found.
                                 </td>
                             </tr>
                         ) : (

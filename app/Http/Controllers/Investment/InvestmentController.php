@@ -255,17 +255,17 @@ class InvestmentController extends Controller
                     $badgeText = 'Overdue (' . abs((int)$daysDiff) . ' days ago)';
                     $badgeType = 'danger';
                 } elseif ($daysDiff === 0) {
-                    $badgeText = 'Aaj wapsi';
+                    $badgeText = 'Due Today';
                     $badgeType = 'warning';
                 } elseif ($daysDiff <= 7) {
-                    $badgeText = 'Wapsi: ' . $l->due_date->format('j M');
+                    $badgeText = 'Due: ' . $l->due_date->format('j M');
                     $badgeType = 'warning';
                 } else {
-                    $badgeText = 'Wapsi: ' . $l->due_date->format('j M');
+                    $badgeText = 'Due: ' . $l->due_date->format('j M');
                     $badgeType = 'neutral';
                 }
             } else {
-                $badgeText = 'Khula';
+                $badgeText = 'Open';
             }
 
             return [
@@ -308,32 +308,32 @@ class InvestmentController extends Controller
 
         $breakdowns = [
             'total_balance_due' => [
-                'title' => 'Kul Baqaya Qarza (Hum Ko Dena Hai) Tafseel',
+                'title' => 'Total Payable Balance Details',
                 'total' => $totalBalanceDue,
                 'items' => $activePayableLoans->count() > 0
                     ? $activePayableLoans->map(fn($p) => [
-                        'label'  => "{$p['lender_name']} (Baqaya Qarza)",
+                        'label'  => "{$p['lender_name']} (Balance Due)",
                         'amount' => $p['balance_due'],
-                        'note'   => "Tareekh: {$p['due_date_label']}",
+                        'note'   => "Due Date: {$p['due_date_label']}",
                     ])->values()->all()
                     : [
-                        ['label' => 'Filhal koi qarza dena baaqi nahi', 'amount' => 0, 'note' => 'Tamaam qarze chukta ho chuke hain'],
+                        ['label' => 'No outstanding payable loans', 'amount' => 0, 'note' => 'All loans have been settled'],
                     ],
-                'note' => 'Hum par wajib-ul-ada baqaya qarzat jo wapas ada karne hain.',
+                'note' => 'Outstanding loans payable to lenders.',
             ],
             'total_receivable' => [
-                'title' => 'Kul Baqaya Qarza (Hum Ko Wapas Lena Hai) Tafseel',
+                'title' => 'Total Receivable Balance Details',
                 'total' => $totalReceivable,
                 'items' => $activeReceivableLoans->count() > 0 
                     ? $activeReceivableLoans->map(fn($r) => [
                         'label'  => $r['lender_name'],
                         'amount' => $r['balance_due'],
-                        'note'   => 'Tareekh: ' . $r['due_date_label'],
+                        'note'   => 'Due Date: ' . $r['due_date_label'],
                     ])->values()->all()
                     : [
-                        ['label' => 'Filhal koi qarza lena baaqi nahi', 'amount' => 0, 'note' => 'Diye gaye tamaam qarze wasool shuda hain'],
+                        ['label' => 'No outstanding receivable loans', 'amount' => 0, 'note' => 'All disbursed loans have been collected'],
                     ],
-                'note' => 'Hum ne jin logon ko qarza diya hai aur wapas wasool karna hai.',
+                'note' => 'Disbursed loans to be collected.',
             ],
         ];
 

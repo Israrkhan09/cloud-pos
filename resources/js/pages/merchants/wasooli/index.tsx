@@ -438,14 +438,14 @@ export default function WasooliIndex({ rows, totals, merchants = [], receipts = 
                                                     onClick={() => setAmount(String(totalOutstanding))}
                                                     className="px-2 py-0.5 rounded border border-gray-200 bg-white hover:bg-gray-50 text-[10px] font-semibold text-gray-700 transition-colors cursor-pointer"
                                                 >
-                                                    {isUrdu ? 'پورا' : 'Poora'} ({Number(totalOutstanding).toLocaleString()})
+                                                    {isUrdu ? 'پورا' : 'Full'} ({Number(totalOutstanding).toLocaleString()})
                                                 </button>
                                                 <button
                                                     type="button"
                                                     onClick={() => setAmount(String(Math.round(totalOutstanding / 2)))}
                                                     className="px-2 py-0.5 rounded border border-gray-200 bg-white hover:bg-gray-50 text-[10px] font-semibold text-gray-700 transition-colors cursor-pointer"
                                                 >
-                                                    {isUrdu ? 'آدھا' : 'Aadha'} ({Number(Math.round(totalOutstanding / 2)).toLocaleString()})
+                                                    {isUrdu ? 'آدھا' : 'Half'} ({Number(Math.round(totalOutstanding / 2)).toLocaleString()})
                                                 </button>
                                                 <button
                                                     type="button"

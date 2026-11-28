@@ -220,7 +220,7 @@ export default function MerchantKhataIndex({
                                 {formatRs(topSummary?.total_receivable || 0)}
                             </div>
                             <span className="text-[10px] text-gray-500 mt-0.5 block">
-                                {isUrdu ? 'دکانداروں سے وصول کرنا ہے' : 'Dukandaron se wasool karna hai'}
+                                {isUrdu ? 'دکانداروں سے وصول کرنا ہے' : 'Total receivable from customers'}
                             </span>
                         </div>
 
@@ -233,7 +233,7 @@ export default function MerchantKhataIndex({
                                 {topSummary?.debt_customers_count || 0} / {topSummary?.total_customers || 0}
                             </div>
                             <span className="text-[10px] text-gray-500 mt-0.5 block">
-                                {isUrdu ? 'جن کے ذمے بقایا ہے' : 'Jinke zimmay baqaya hai'}
+                                {isUrdu ? 'جن کے ذمے بقایا ہے' : 'Customers with outstanding balance'}
                             </span>
                         </div>
 
@@ -259,7 +259,7 @@ export default function MerchantKhataIndex({
                                 {formatRs(topSummary?.today_recovery || 0)}
                             </div>
                             <span className="text-[10px] text-gray-500 mt-0.5 block">
-                                {isUrdu ? 'آج وصول شدہ نقد' : 'Aaj wasool shuda naqad'}
+                                {isUrdu ? 'آج وصول شدہ نقد' : 'Cash recovered today'}
                             </span>
                         </div>
                     </div>
@@ -302,7 +302,7 @@ export default function MerchantKhataIndex({
                                                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                         }`}
                                     >
-                                        {debtOnly ? (isUrdu ? 'ہاں' : 'Haan') : (isUrdu ? 'نہیں' : 'Nahi')}
+                                        {debtOnly ? (isUrdu ? 'ہاں' : 'Yes') : (isUrdu ? 'نہیں' : 'No')}
                                     </button>
                                 </div>
                             </div>
@@ -311,7 +311,7 @@ export default function MerchantKhataIndex({
                             <div className="max-h-[540px] overflow-y-auto space-y-1.5 pr-1">
                                 {filteredMerchants.length === 0 ? (
                                     <div className="py-8 text-center text-gray-400 text-xs">
-                                        {isUrdu ? 'کوئی گاہک نہیں ملا۔' : 'Koi gahak nahi mila.'}
+                                        {isUrdu ? 'کوئی گاہک نہیں ملا۔' : 'No customers found.'}
                                     </div>
                                 ) : (
                                     filteredMerchants.map((m) => {
@@ -423,14 +423,14 @@ export default function MerchantKhataIndex({
                                                 {isUrdu ? 'کھاتہ روزنامچہ اسٹیٹمنٹ:' : 'Customer Ledger Statement:'}
                                             </span>
                                             <div className="flex items-center gap-1.5 text-xs">
-                                                <span className="text-gray-500 text-[11px] font-medium">{isUrdu ? 'سے:' : 'Se:'}</span>
+                                                <span className="text-gray-500 text-[11px] font-medium">{isUrdu ? 'سے:' : 'From:'}</span>
                                                 <input
                                                     type="date"
                                                     value={fromDate}
                                                     onChange={(e) => handleDateChange(e.target.value, toDate)}
                                                     className="h-7.5 px-2 border border-gray-300 rounded text-xs text-gray-800 focus:outline-none focus:border-emerald-600 bg-white"
                                                 />
-                                                <span className="text-gray-500 text-[11px] font-medium">{isUrdu ? 'تک:' : 'Tak:'}</span>
+                                                <span className="text-gray-500 text-[11px] font-medium">{isUrdu ? 'تک:' : 'To:'}</span>
                                                 <input
                                                     type="date"
                                                     value={toDate}
@@ -468,7 +468,7 @@ export default function MerchantKhataIndex({
                                                 {entries.length === 0 ? (
                                                     <tr>
                                                         <td colSpan={5} className="py-8 text-center text-gray-400">
-                                                            {isUrdu ? 'اس گاہک کے کھاتے میں اس مدت میں کوئی اندراج موجود نہیں ہے۔' : 'Is gahak ke khate mein is muddad mein koi entry mojood nahi hai.'}
+                                                            {isUrdu ? 'اس گاہک کے کھاتے میں اس مدت میں کوئی اندراج موجود نہیں ہے۔' : 'No ledger entries found for this customer in the selected date range.'}
                                                         </td>
                                                     </tr>
                                                 ) : (
@@ -497,7 +497,7 @@ export default function MerchantKhataIndex({
                                                 <tfoot className="bg-gray-50 font-bold border-t border-gray-200 text-xs">
                                                     <tr>
                                                         <td colSpan={2} className="py-2.5 px-4 text-start font-bold text-gray-800">
-                                                            {isUrdu ? 'کل ٹوٹل' : 'Kul Total'}
+                                                            {isUrdu ? 'کل ٹوٹل' : 'Total'}
                                                         </td>
                                                         <td className="py-2.5 px-4 text-end text-red-700 font-bold whitespace-nowrap">
                                                             {formatRs(statement?.total_debit || 0)}
@@ -552,7 +552,7 @@ export default function MerchantKhataIndex({
                                     (#{selectedMerchant.code})
                                 </p>
                                 <p className="mt-1">
-                                    <span className="font-bold">Qism (Category):</span>{' '}
+                                    <span className="font-bold">Category:</span>{' '}
                                     {selectedMerchant.customer_type || 'Customer'}
                                 </p>
                                 <p className="mt-1">
@@ -561,7 +561,7 @@ export default function MerchantKhataIndex({
                             </div>
                             <div className="text-right">
                                 <p>
-                                    <span className="font-bold">Ilaqa (City):</span> {selectedMerchant.city || '-'}
+                                    <span className="font-bold">City / Area:</span> {selectedMerchant.city || '-'}
                                 </p>
                                 <p className="mt-1">
                                     <span className="font-bold">Credit Limit:</span>{' '}
@@ -579,7 +579,7 @@ export default function MerchantKhataIndex({
                             <thead>
                                 <tr className="bg-gray-100 border-b border-gray-400">
                                     <th className="p-2 text-start border border-gray-300 font-bold">Description</th>
-                                    <th className="p-2 text-start border border-gray-300 font-bold">Hawala</th>
+                                    <th className="p-2 text-start border border-gray-300 font-bold">Reference</th>
                                     <th className="p-2 text-end border border-gray-300 font-bold text-red-700">Receivable (Debit)</th>
                                     <th className="p-2 text-end border border-gray-300 font-bold text-emerald-800">Recovery (Credit)</th>
                                     <th className="p-2 text-end border border-gray-300 font-bold">Balance</th>
@@ -589,7 +589,7 @@ export default function MerchantKhataIndex({
                                 {entries.length === 0 ? (
                                     <tr>
                                         <td colSpan={5} className="p-4 text-center border border-gray-300 text-gray-500">
-                                            Is muddad mein koi entry mojood nahi hai.
+                                            No entries found for this period.
                                         </td>
                                     </tr>
                                 ) : (
@@ -622,7 +622,7 @@ export default function MerchantKhataIndex({
                                 <tfoot>
                                     <tr className="bg-gray-100 border-t-2 border-gray-400 font-bold">
                                         <td colSpan={2} className="p-2 border border-gray-300 text-start font-bold">
-                                            Kul Total
+                                            Total
                                         </td>
                                         <td className="p-2 border border-gray-300 text-end font-black text-red-700 whitespace-nowrap">
                                             {formatRs(statement?.total_debit || 0)}

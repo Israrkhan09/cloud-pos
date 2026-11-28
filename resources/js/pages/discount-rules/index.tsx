@@ -132,7 +132,7 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
                 setRules((prev) =>
                     prev.map((r) => (r.id === id ? { ...r, is_active: !r.is_active } : r))
                 );
-                toast.success(data.message || (isUrdu ? 'اسٹیٹس تبدیل کر دیا گیا' : 'Status tabdeel kar diya gaya'));
+                toast.success(data.message || (isUrdu ? 'اسٹیٹس تبدیل کر دیا گیا' : 'Status updated successfully'));
             } else {
                 toast.error(data.message || 'Error toggling rule status');
             }
@@ -241,8 +241,8 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
                                             }`}
                                         >
                                             {rule.is_active
-                                                ? (isUrdu ? 'فعال (ACTIVE)' : 'FA-AAL (ACTIVE)')
-                                                : (isUrdu ? 'غیر فعال' : 'GHAIR FA-AAL')}
+                                                ? (isUrdu ? 'فعال (ACTIVE)' : 'ACTIVE')
+                                                : (isUrdu ? 'غیر فعال' : 'INACTIVE')}
                                         </span>
                                         <button
                                             type="button"
@@ -262,11 +262,11 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
                                     <div className="text-xl font-bold text-[#14532d] mt-1 font-mono">
                                         {isPct
                                             ? (isUrdu ? `${rule.discount_value}% رعایت` : `${rule.discount_value}% Off`)
-                                            : (isUrdu ? `Rs ${Number(rule.discount_value).toLocaleString('en-PK')} کم` : `Rs ${Number(rule.discount_value).toLocaleString('en-PK')} Kam`)}
+                                            : (isUrdu ? `Rs ${Number(rule.discount_value).toLocaleString('en-PK')} کم` : `Rs ${Number(rule.discount_value).toLocaleString('en-PK')} Off`)}
                                     </div>
 
                                     <p className="text-[11px] text-gray-600 mt-1">
-                                        {isUrdu ? 'کم از کم آرڈر: ' : 'Kam az kam order: '}
+                                        {isUrdu ? 'کم از کم آرڈر: ' : 'Min Order: '}
                                         <span className="font-bold text-gray-900 font-mono">
                                             {formatRs(rule.min_order_amount)}
                                         </span>
@@ -281,7 +281,7 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
 
                                 <div className="mt-4 pt-3 border-t border-gray-100 flex justify-between items-center text-xs">
                                     <span className="text-gray-500 text-[11px]">
-                                        {isUrdu ? 'فاسٹ پی او ایس بلنگ میں دستیاب' : 'Fast POS Billing mein Dastiyab'}
+                                        {isUrdu ? 'فاسٹ پی او ایس بلنگ میں دستیاب' : 'Available in Fast POS Billing'}
                                     </span>
                                     <button
                                         type="button"
@@ -321,7 +321,7 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
                             {/* 1. Rule Ka Naam * */}
                             <div>
                                 <label className="block font-bold text-gray-900 mb-1">
-                                    {isUrdu ? 'رول کا نام *' : 'Rule Ka Naam *'}
+                                    {isUrdu ? 'رول کا نام *' : 'Rule Name *'}
                                 </label>
                                 <input
                                     type="text"
@@ -351,8 +351,8 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
                                         }
                                         className="w-full p-2 border border-gray-300 rounded-lg text-xs text-gray-900 font-semibold focus:outline-none focus:border-emerald-600 bg-white cursor-pointer"
                                     >
-                                        <option value="percentage">{isUrdu ? 'فیصد (Percentage %)' : 'Feesad (Percentage %)'}</option>
-                                        <option value="fixed">{isUrdu ? 'روپے (Fixed Rs)' : 'Rupay (Fixed Rs)'}</option>
+                                        <option value="percentage">{isUrdu ? 'فیصد (Percentage %)' : 'Percentage (%)'}</option>
+                                        <option value="fixed">{isUrdu ? 'روپے (Fixed Rs)' : 'Fixed Amount (Rs)'}</option>
                                     </select>
                                 </div>
 
@@ -367,7 +367,7 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
                                         onChange={(e) =>
                                             setFormData({ ...formData, discount_value: e.target.value })
                                         }
-                                        placeholder={isUrdu ? 'مثلاً: 3 (یعنی 3%) یا 200' : 'Maslan: 3 (yaani 3%) ya 200'}
+                                        placeholder={isUrdu ? 'مثلاً: 3 (یعنی 3%) یا 200' : 'e.g. 3 (for 3%) or 200'}
                                         className="w-full p-2 border border-emerald-400 rounded-lg text-xs font-bold text-gray-900 focus:outline-none focus:border-emerald-600 font-mono"
                                         required
                                     />
@@ -377,7 +377,7 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
                             {/* 4. Kam az kam Order Raqam (Rs) */}
                             <div>
                                 <label className="block font-bold text-gray-900 mb-1">
-                                    {isUrdu ? 'کم از کم آرڈر رقم (Rs)' : 'Kam az kam Order Raqam (Rs)'}
+                                    {isUrdu ? 'کم از کم آرڈر رقم (Rs)' : 'Minimum Order Amount (Rs)'}
                                 </label>
                                 <input
                                     type="number"
@@ -396,7 +396,7 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
                             {/* 5. Wazaahat (Description) */}
                             <div>
                                 <label className="block font-bold text-gray-900 mb-1">
-                                    {isUrdu ? 'وضاحت (تفصیل)' : 'Wazaahat (Description)'}
+                                    {isUrdu ? 'وضاحت (تفصیل)' : 'Description'}
                                 </label>
                                 <input
                                     type="text"
@@ -404,7 +404,7 @@ export default function DiscountRulesIndex({ rules: initialRules = [] }: Props) 
                                     onChange={(e) =>
                                         setFormData({ ...formData, description: e.target.value })
                                     }
-                                    placeholder={isUrdu ? 'اس رول کی وضاحت...' : 'Is rule ki wazaahat...'}
+                                    placeholder={isUrdu ? 'اس رول کی وضاحت...' : 'Rule description...'}
                                     className="w-full p-2 border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:border-emerald-600"
                                 />
                             </div>

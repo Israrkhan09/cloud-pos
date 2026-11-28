@@ -54,7 +54,7 @@ class ExpiryLot extends Model
     {
         if ($this->action_taken === 'wastage' || $this->quantity <= 0) {
             return [
-                'text'       => 'Wastage likha gaya',
+                'text'       => 'Recorded as Wastage',
                 'type'       => 'neutral',
                 'hours_left' => null,
             ];
@@ -73,7 +73,7 @@ class ExpiryLot extends Model
 
         if ($diffMinutes <= 0) {
             return [
-                'text'       => 'Expire ho chuka',
+                'text'       => 'Expired',
                 'type'       => 'expired',
                 'hours_left' => 0,
             ];
@@ -84,7 +84,7 @@ class ExpiryLot extends Model
         $mins = (int) ($diffMinutes % 60);
 
         if ($days >= 3) {
-            $text = "{$days} din";
+            $text = "{$days} days";
             $type = 'fresh';
         } elseif ($days > 0) {
             $text = "{$days}d {$hours}h";

@@ -61,17 +61,17 @@ class DiscountRuleController extends Controller
         $rule->is_active = !$rule->is_active;
         $rule->save();
 
-        $statusText = $rule->is_active ? 'Fa-aal' : 'Ghair fa-aal';
+        $statusText = $rule->is_active ? 'Active' : 'Inactive';
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
-                'message' => "Discount rule {$statusText} kar diya gaya hai.",
+                'message' => "Discount rule is now {$statusText}.",
                 'rule' => $rule,
             ]);
         }
 
-        return redirect()->back()->with('success', "Discount rule {$statusText} kar diya gaya hai.");
+        return redirect()->back()->with('success', "Discount rule is now {$statusText}.");
     }
 
     public function destroy(Request $request, $id)
@@ -82,10 +82,10 @@ class DiscountRuleController extends Controller
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Discount rule delete kar diya gaya hai.',
+                'message' => 'Discount rule deleted successfully.',
             ]);
         }
 
-        return redirect()->back()->with('success', 'Discount rule delete kar diya gaya hai.');
+        return redirect()->back()->with('success', 'Discount rule deleted successfully.');
     }
 }
